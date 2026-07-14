@@ -1,11 +1,13 @@
 import { createClient } from "@libsql/client";
+import path from "path";
 
 // Get database configuration from environment variables.
 // Fallback to local SQLite file for development.
-const url = process.env.TURSO_DATABASE_URL || "file:data/lotto.db";
+const dbPath = path.join(process.cwd(), "data/lotto.db");
+const url = process.env.TURSO_DATABASE_URL || `file:${dbPath}`;
 const authToken = process.env.TURSO_AUTH_TOKEN;
 
-console.log(`[Database] Connecting to: ${url.startsWith("file:") ? "local SQLite file" : "Turso Cloud DB"}`);
+console.log(`[Database] Connecting to: ${url.startsWith("file:") ? "local SQLite file (" + dbPath + ")" : "Turso Cloud DB"}`);
 
 export const db = createClient({
   url,
