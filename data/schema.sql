@@ -1,0 +1,32 @@
+CREATE TABLE IF NOT EXISTS draws (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  draw_number INTEGER UNIQUE,
+  draw_date TEXT NOT NULL,
+  num1 INTEGER NOT NULL,
+  num2 INTEGER NOT NULL,
+  num3 INTEGER NOT NULL,
+  num4 INTEGER NOT NULL,
+  num5 INTEGER NOT NULL,
+  powerball INTEGER NOT NULL,
+  multiplier TEXT,
+  jackpot TEXT
+);
+
+CREATE TABLE IF NOT EXISTS playwhe_draws (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  draw_number INTEGER UNIQUE,
+  draw_date TEXT NOT NULL,
+  draw_time_slot TEXT NOT NULL,
+  winning_number INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS eligible_combinations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  num1 INTEGER NOT NULL,
+  num2 INTEGER NOT NULL,
+  num3 INTEGER NOT NULL,
+  num4 INTEGER NOT NULL,
+  num5 INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_eligible_nums ON eligible_combinations(num1, num2, num3, num4, num5);

@@ -1,0 +1,61 @@
+name: NLCB Daily Draw Sync
+
+on:
+  schedule:
+    # Daily draws occur at 10:30 AM, 1:00 PM, 4:00 PM, 7:00 PM AST (UTC-4)
+    # 3 minutes after AST times:
+    # 10:33 AM AST -> 14:33 UTC
+    # 1:03 PM AST -> 17:03 UTC
+    # 4:03 PM AST -> 20:03 UTC
+    # 7:03 PM AST -> 23:03 UTC
+    - cron: '33 14,23 * * *'
+    - cron: '3 17,20 * * *'
+    # Lotto Plus draws Wednesday & Saturday nights at 8:30 PM AST
+    # 3 minutes after AST: 8:33 PM AST -> 00:33 UTC (Thursday & Sunday UTC)
+    - cron: '33 0 * * 4,7'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  sync-draws:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
+
+      - name: Run Lotto Plus Scraper
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: python scripts/scraper.py --game lotto-plus
+
+      - name: Run Play Whe Scraper
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: python scripts/scraper.py --game play-whe
+
+      - name: Commit and Push DB changes (if local SQLite was updated)
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/lotto.db || true
+          if git diff --staged --quiet; then
+            echo "No database changes to commit."
+          else
+            git commit -m "Auto-sync draws: $(date -u)"
+            git push
+          fi

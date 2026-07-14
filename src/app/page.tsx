@@ -1,65 +1,377 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import DashboardTab from "@/components/DashboardTab";
+import HistoryTab from "@/components/HistoryTab";
+import BuilderTab from "@/components/BuilderTab";
+import CheckerTab from "@/components/CheckerTab";
+import PlayWheTab from "@/components/PlayWheTab";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, Sparkles, HelpCircle } from "lucide-react";
+
+const SlotMachine = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    {/* Slot Machine Main Cabinet */}
+    <rect x="4" y="3" width="14" height="18" rx="2" />
+    
+    {/* Lever Handle */}
+    <path d="M18 12h2.5a1.5 1.5 0 0 0 1.5-1.5V6" />
+    <circle cx="22" cy="4" r="1.5" fill="currentColor" />
+    
+    {/* Reel Display Window */}
+    <rect x="7" y="6" width="8" height="5" rx="0.5" />
+    <line x1="10" y1="6" x2="10" y2="11" />
+    <line x1="12" y1="6" x2="12" y2="11" />
+    
+    {/* Coin Payout Tray */}
+    <rect x="7" y="14" width="8" height="3" rx="0.5" />
+    <path d="M11 14v3" />
+  </svg>
+);
+
+const LottoPlusIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    {/* Circular lottery ball body */}
+    <circle cx="12" cy="12" r="9" />
+    {/* Centered '+' symbol inside the ball */}
+    <line x1="12" y1="8" x2="12" y2="16" />
+    <line x1="8" y1="12" x2="16" y2="12" />
+    {/* Stylish gloss shine curve */}
+    <path d="M7.5 7.5a6 6 0 0 1 9 0" strokeWidth="1.5" strokeDasharray="2 2" />
+  </svg>
+);
+
+const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    {/* Outer wheel ring */}
+    <circle cx="12" cy="12" r="9" />
+    {/* Inner target circle */}
+    <circle cx="12" cy="12" r="4" />
+    {/* Radial spoke dividers */}
+    <line x1="12" y1="3" x2="12" y2="8" />
+    <line x1="12" y1="16" x2="12" y2="21" />
+    <line x1="3" y1="12" x2="8" y2="12" />
+    <line x1="16" y1="12" x2="21" y2="12" />
+  </svg>
+);
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<"lotto-plus" | "scanner" | "play-whe">("lotto-plus");
+  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder">("dashboard");
+  
+  // Scraper Sync States
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  
+  // Dashboard Stats States
+  const [timeframe, setTimeframe] = useState("alltime");
+  const [stats, setStats] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  
+  // History Draws States
+  const [draws, setDraws] = useState<any[]>([]);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 15, pages: 1 });
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyNumberFilter, setHistoryNumberFilter] = useState("");
+  const [historyLoading, setHistoryLoading] = useState(true);
+  
+  // Prediction Builder Cached Draws (for live delta calculations)
+  const [allDraws, setAllDraws] = useState<any[]>([]);
+
+  // 1. Fetch dashboard statistics
+  const fetchStats = async () => {
+    setStatsLoading(true);
+    try {
+      const res = await fetch(`/api/stats?timeframe=${timeframe}`);
+      const data = await res.json();
+      if (data.success) {
+        setStats(data);
+      }
+    } catch (err) {
+      console.error("Error fetching stats:", err);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  // 2. Fetch history draws
+  const fetchHistoryDraws = async (page: number = 1) => {
+    setHistoryLoading(true);
+    try {
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: pagination.limit.toString(),
+        search: historySearch,
+        number: historyNumberFilter
+      });
+      const res = await fetch(`/api/draws?${queryParams.toString()}`);
+      const data = await res.json();
+      if (data.success) {
+        setDraws(data.draws);
+        setPagination(data.pagination);
+      }
+    } catch (err) {
+      console.error("Error fetching history draws:", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // 3. Fetch all draws for client-side delta analysis
+  const fetchAllDraws = async () => {
+    try {
+      const res = await fetch(`/api/draws?limit=5000`);
+      const data = await res.json();
+      if (data.success) {
+        setAllDraws(data.draws);
+      }
+    } catch (err) {
+      console.error("Error fetching all draws:", err);
+    }
+  };
+
+  // Trigger stats reload on timeframe change
+  useEffect(() => {
+    fetchStats();
+  }, [timeframe]);
+
+  // Trigger history reload on search or filter change
+  useEffect(() => {
+    fetchHistoryDraws(pagination.page);
+  }, [pagination.page, historySearch, historyNumberFilter]);
+
+  // Load initial data on mount
+  useEffect(() => {
+    fetchStats();
+    fetchHistoryDraws(1);
+    fetchAllDraws();
+  }, []);
+
+  // 4. Sync handler
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncMessage("Syncing database with latest draws from NLCB... (this may take up to 30 seconds)");
+    try {
+      const res = await fetch("/api/sync", { method: "POST", body: JSON.stringify({ full: false }) });
+      const data = await res.json();
+      if (data.success) {
+        setSyncMessage(`Sync successful! ${data.details}`);
+        // Reload all data
+        fetchStats();
+        fetchHistoryDraws(1);
+        fetchAllDraws();
+      } else {
+        setSyncMessage(`Sync failed: ${data.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      setSyncMessage(`Sync failed: ${err.message || "Network error"}`);
+    } finally {
+      setSyncing(false);
+      // Auto clear message after 6 seconds
+      setTimeout(() => setSyncMessage(null), 6000);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex flex-col min-h-screen bg-base text-foreground font-sans">
+      
+      {/* Global Terminal Header */}
+      <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-4 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-950/70 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 border border-primary/20 text-primary rounded-lg shadow-[0_0_15px_rgba(56,189,248,0.25)]">
+            <SlotMachine className="w-6 h-6 animate-pulse" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black tracking-widest text-white uppercase font-mono">
+              The Win Concept
+            </h1>
+            <p className="text-[10px] tracking-wider text-primary font-mono font-semibold uppercase">
+              Your Online Gaming Resource
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Global Navigation Tabs */}
+        <nav className="flex bg-slate-900/60 p-1 rounded-lg border border-white/5 w-full md:w-auto overflow-x-auto">
+          <button
+            onClick={() => setActiveTab("lotto-plus")}
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+              activeTab === "lotto-plus"
+                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
+                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+            }`}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <LottoPlusIcon className="w-3.5 h-3.5" />
+            LOTTO PLUS
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("play-whe")}
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+              activeTab === "play-whe"
+                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
+                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+            }`}
           >
-            Documentation
-          </a>
+            <PlayWheIcon className="w-3.5 h-3.5" />
+            PLAY WHE
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("scanner")}
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+              activeTab === "scanner"
+                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
+                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+            }`}
+          >
+            <Camera className="w-3.5 h-3.5" />
+            TICKET SCANNER
+          </button>
+        </nav>
+      </header>
+
+      {/* Sync Status Alert Banner */}
+      {syncMessage && (
+        <div className="mx-6 md:mx-12 mt-4">
+          <div className={`p-4 rounded-xl border text-xs font-mono flex items-center justify-between ${
+            syncMessage.includes("failed") 
+              ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
+              : syncMessage.includes("successful")
+              ? "bg-green-500/10 border-green-500/30 text-green-400 animate-pulse"
+              : "bg-primary/10 border-primary/30 text-primary"
+          }`}>
+            <span>{syncMessage}</span>
+            {syncing && (
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            )}
+          </div>
         </div>
+      )}
+
+      {/* Main Viewport Container */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 py-8">
+        
+        {/* Lotto Plus Sub-navigation menu */}
+        {activeTab === "lotto-plus" && (
+          <div className="flex bg-slate-950/40 p-1 rounded-lg border border-white/5 w-fit mb-6 overflow-x-auto">
+            <button
+              onClick={() => setLottoSubTab("dashboard")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+                lottoSubTab === "dashboard"
+                  ? "bg-primary text-slate-950 font-bold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <BarChart2 className="w-3.5 h-3.5" />
+              DASHBOARD
+            </button>
+            <button
+              onClick={() => setLottoSubTab("history")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+                lottoSubTab === "history"
+                  ? "bg-primary text-slate-950 font-bold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              DRAW LOG
+            </button>
+            <button
+              onClick={() => setLottoSubTab("builder")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+                lottoSubTab === "builder"
+                  ? "bg-primary text-slate-950 font-bold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <ClipboardList className="w-3.5 h-3.5" />
+              PREDICTION BUILDER
+            </button>
+          </div>
+        )}
+
+        {/* Render Active View Tab */}
+        {activeTab === "lotto-plus" && lottoSubTab === "dashboard" && (
+          <DashboardTab
+            stats={stats}
+            statsLoading={statsLoading}
+            timeframe={timeframe}
+            setTimeframe={setTimeframe}
+            syncing={syncing}
+            onSync={handleSync}
+          />
+        )}
+        
+        {activeTab === "lotto-plus" && lottoSubTab === "history" && (
+          <HistoryTab
+            draws={draws}
+            pagination={pagination}
+            loading={historyLoading}
+            onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+            onSearchChange={setHistorySearch}
+            onNumberFilterChange={setHistoryNumberFilter}
+          />
+        )}
+        
+        {activeTab === "lotto-plus" && lottoSubTab === "builder" && (
+          <BuilderTab
+            historicalDraws={allDraws}
+          />
+        )}
+
+        {activeTab === "scanner" && (
+          <CheckerTab />
+        )}
+
+        {activeTab === "play-whe" && (
+          <PlayWheTab />
+        )}
+
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-white/5 py-6 text-center text-[10px] text-gray-500 font-mono tracking-wider space-y-1.5 bg-slate-950/20">
+        <div 
+          className="text-white/90 font-bold" 
+          style={{ textShadow: "0 0 8px rgba(56, 189, 248, 0.6), 0 0 16px rgba(56, 189, 248, 0.3)" }}
+        >
+          THE WIN CONCEPT | TRINIDAD AND TOBAGO ONLINE GAMING ANALYTICAL SYSTEM © {new Date().getFullYear()}
+        </div>
+        <div 
+          className="text-gray-400 text-[9px] tracking-normal uppercase" 
+          style={{ textShadow: "0 0 6px rgba(255, 255, 255, 0.25)" }}
+        >
+          This app is not affiliated with the National Lotteries Control Board (NLCB) and does not guarantee any winning combinations.
+        </div>
+      </footer>
+
     </div>
   );
 }

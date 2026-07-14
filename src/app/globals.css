@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+@theme {
+  --color-primary: #38bdf8;
+  --color-secondary: #c084fc;
+  --color-base: #0f1418;
+  --color-panel: rgba(30, 41, 59, 0.6);
+  --color-panel-border: rgba(255, 255, 255, 0.1);
+  --color-surface-high: rgba(30, 41, 59, 0.8);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #0f1418;
+  --foreground: #dee3e8;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), sans-serif;
+}
+
+/* Glassmorphism custom classes */
+.glass-panel {
+  background-color: var(--color-panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-panel-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.glass-panel-glow-blue {
+  background-color: var(--color-panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-panel-border);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+}
+
+.glass-panel-glow-purple {
+  background-color: var(--color-panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-panel-border);
+  box-shadow: 0 0 20px rgba(192, 132, 252, 0.1);
+}
+
+/* Pulse animation for jackpot */
+@keyframes pulse-glow {
+  0%, 100% {
+    text-shadow: 0 0 4px rgba(56, 189, 248, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 16px rgba(56, 189, 248, 0.8);
+    transform: scale(1.02);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite ease-in-out;
 }
