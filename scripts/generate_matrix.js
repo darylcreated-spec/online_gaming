@@ -1,9 +1,31 @@
 const { createClient } = require("@libsql/client");
 const fs = require("fs");
 const path = require("path");
+// Load Environment Variables from .env files
+function loadEnv() {
+  const envPaths = [".env.production.local", ".env.local", ".env.production", ".env"];
+  const envVars = {};
+  for (const file of envPaths) {
+    const fullPath = path.join(process.cwd(), file);
+    if (fs.existsSync(fullPath)) {
+      const content = fs.readFileSync(fullPath, "utf8");
+      content.split(/\r?\n/).forEach(line => {
+        if (line.trim().startsWith("#") || !line.includes("=")) return;
+        const [key, ...valParts] = line.split("=");
+        let value = valParts.join("=").trim();
+        if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+        if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
+        envVars[key.trim()] = value;
+      });
+      break;
+    }
+  }
+  return envVars;
+}
 
-const url = process.env.TURSO_DATABASE_URL || "file:data/lotto.db";
-const authToken = process.env.TURSO_AUTH_TOKEN;
+const env = loadEnv();
+const url = process.env.TURSO_DATABASE_URL || env.TURSO_DATABASE_URL || "file:data/lotto.db";
+const authToken = process.env.TURSO_AUTH_TOKEN || env.TURSO_AUTH_TOKEN;
 
 async function main() {
   console.log(`Connecting to database: ${url}`);
