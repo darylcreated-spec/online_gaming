@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     const selectSql = `
       SELECT * FROM playwhe_draws 
       ${whereClause} 
-      ORDER BY draw_date DESC, draw_number DESC 
+      ORDER BY draw_number DESC 
       LIMIT ? OFFSET ?
     `;
     const draws = await query(selectSql, [...args, limit, offset]);

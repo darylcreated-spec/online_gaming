@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     // 1. Fetch draws
     const sql = `
       SELECT * FROM playwhe_draws 
-      ORDER BY draw_date DESC, draw_number DESC 
+      ORDER BY draw_number DESC 
       LIMIT ?
     `;
     const draws = await query<any>(sql, [limit]);
