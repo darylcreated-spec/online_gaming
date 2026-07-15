@@ -16,9 +16,10 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}));
     const full = !!body.full;
+    const year = body.year ? parseInt(body.year) : undefined;
     
-    console.log(`[API /api/sync] Triggering sync (full=${full})...`);
-    const result = await syncLatest(full);
+    console.log(`[API /api/sync] Triggering sync (full=${full}, year=${year})...`);
+    const result = await syncLatest(full, year);
     
     return NextResponse.json(result);
   } catch (error: any) {

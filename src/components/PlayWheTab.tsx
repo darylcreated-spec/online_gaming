@@ -211,34 +211,70 @@ export default function PlayWheTab() {
   const handleSync = async (full: boolean = false) => {
     if (syncing) return;
     setSyncing(true);
-    setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Starting Play Whe sync (full=${full})...`]);
     setSyncSuccess(null);
 
-    try {
-      const res = await fetch("/api/playwhe/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ full })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setSyncLogs(prev => [
-          ...prev, 
-          `[${new Date().toLocaleTimeString()}] Sync Success! Added/Updated ${data.drawsAdded} draws.`,
-          `[${new Date().toLocaleTimeString()}] Details: ${data.details}`
-        ]);
+    if (full) {
+      setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Starting Play Whe FULL history sync (Year by Year)...`]);
+      try {
+        const currentYear = new Date().getFullYear();
+        const startYear = 2001;
+        let totalAdded = 0;
+        
+        for (let y = currentYear; y >= startYear; y--) {
+          setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Syncing Play Whe Year ${y}...`]);
+          const res = await fetch("/api/playwhe/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ year: y })
+          });
+          const data = await res.json();
+          if (data.success) {
+            totalAdded += data.drawsAdded;
+            setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Year ${y} complete: Added ${data.drawsAdded} draws.`]);
+          } else {
+            setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Year ${y} failed: ${data.error || data.details}`]);
+          }
+          // Sleep 600ms to be polite
+          await new Promise(r => setTimeout(r, 600));
+        }
+        setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Full Sync Complete! Total draws added: ${totalAdded}`]);
         setSyncSuccess(true);
-        // Refresh data
         fetchStats();
         fetchHistory();
-      } else {
-        throw new Error(data.error || data.details || "Sync failed");
+      } catch (err: any) {
+        setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Full Sync Error: ${err.message}`]);
+        setSyncSuccess(false);
+      } finally {
+        setSyncing(false);
       }
-    } catch (err: any) {
-      setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Sync Error: ${err.message}`]);
-      setSyncSuccess(false);
-    } finally {
-      setSyncing(false);
+    } else {
+      setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Starting Play Whe sync (Recent 4 Years)...`]);
+      try {
+        const res = await fetch("/api/playwhe/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ full: false })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSyncLogs(prev => [
+            ...prev, 
+            `[${new Date().toLocaleTimeString()}] Sync Success! Added/Updated ${data.drawsAdded} draws.`,
+            `[${new Date().toLocaleTimeString()}] Details: ${data.details}`
+          ]);
+          setSyncSuccess(true);
+          // Refresh data
+          fetchStats();
+          fetchHistory();
+        } else {
+          throw new Error(data.error || data.details || "Sync failed");
+        }
+      } catch (err: any) {
+        setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Sync Error: ${err.message}`]);
+        setSyncSuccess(false);
+      } finally {
+        setSyncing(false);
+      }
     }
   };
 

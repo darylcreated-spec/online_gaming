@@ -202,8 +202,8 @@ export async function saveDraw(draw: any): Promise<void> {
   await db.execute({ sql, args });
 }
 
-// Sync latest draws (runs homepage scrape + current/previous year)
-export async function syncLatest(full: boolean = false): Promise<{ success: boolean, drawsAdded: number, details: string }> {
+// Sync latest draws (runs homepage scrape + current/previous year, or specific targetYear)
+export async function syncLatest(full: boolean = false, targetYear?: number): Promise<{ success: boolean, drawsAdded: number, details: string }> {
   let drawsAdded = 0;
   let details = "";
   
@@ -226,27 +226,34 @@ export async function syncLatest(full: boolean = false): Promise<{ success: bool
       )
     `);
     
-    // 2. Fetch homepage
-    const { latestDraw, sid } = await scrapeHomepage();
-    if (latestDraw) {
-      const check = await db.execute({
-        sql: "SELECT 1 FROM draws WHERE draw_number = ?",
-        args: [latestDraw.draw_number]
-      });
-      if (check.rows.length === 0) {
-        await saveDraw(latestDraw);
-        drawsAdded++;
-        details += `Added Draw #${latestDraw.draw_number} (${latestDraw.draw_date}) from homepage. `;
+    // 2. Fetch homepage (only do this for recent syncs, skip for specific historical years to speed up)
+    let sid = null;
+    if (!targetYear) {
+      const homeRes = await scrapeHomepage();
+      sid = homeRes.sid;
+      if (homeRes.latestDraw) {
+        const check = await db.execute({
+          sql: "SELECT 1 FROM draws WHERE draw_number = ?",
+          args: [homeRes.latestDraw.draw_number]
+        });
+        if (check.rows.length === 0) {
+          await saveDraw(homeRes.latestDraw);
+          drawsAdded++;
+          details += `Added Draw #${homeRes.latestDraw.draw_number} (${homeRes.latestDraw.draw_date}) from homepage. `;
+        }
       }
+    } else {
+      sid = await scrapeHomepage().then(r => r.sid);
     }
     
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const currentYear = new Date().getFullYear();
-    const startYear = full ? 2001 : currentYear - 3; // last 4 years for delta sync, or all for full
+    const startYear = targetYear ? targetYear : (full ? 2001 : currentYear - 3);
+    const endYear = targetYear ? targetYear : currentYear;
     
     const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-    for (let y = currentYear; y >= startYear; y--) {
+    for (let y = endYear; y >= startYear; y--) {
       for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
         const month = months[mIdx];
         const monthDraws = await scrapeMonth(month, y, sid);
@@ -261,8 +268,8 @@ export async function syncLatest(full: boolean = false): Promise<{ success: bool
             drawsAdded++;
           }
         }
-
-        await sleep(500); // Be polite to avoid server timeouts
+        
+        await sleep(400); // Be polite to avoid rate limits
       }
     }
     
@@ -396,7 +403,7 @@ export async function savePlayWheDraw(draw: any): Promise<void> {
   });
 }
 
-export async function syncPlayWhe(full: boolean = false): Promise<{ success: boolean; drawsAdded: number; details: string }> {
+export async function syncPlayWhe(full: boolean = false, targetYear?: number): Promise<{ success: boolean; drawsAdded: number; details: string }> {
   let drawsAdded = 0;
   let details = "";
   try {
@@ -418,11 +425,12 @@ export async function syncPlayWhe(full: boolean = false): Promise<{ success: boo
     
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const currentYear = new Date().getFullYear();
-    const startYear = full ? 2001 : currentYear - 3;
+    const startYear = targetYear ? targetYear : (full ? 2001 : currentYear - 3);
+    const endYear = targetYear ? targetYear : currentYear;
     
     const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     
-    for (let y = currentYear; y >= startYear; y--) {
+    for (let y = endYear; y >= startYear; y--) {
       for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
         const month = months[mIdx];
         const monthDraws = await scrapePlayWheMonth(month, y, sid);
@@ -438,7 +446,7 @@ export async function syncPlayWhe(full: boolean = false): Promise<{ success: boo
           }
         }
         
-        await sleep(500); // Be polite to avoid rate limits
+        await sleep(400); // Be polite to avoid rate limits
       }
     }
     

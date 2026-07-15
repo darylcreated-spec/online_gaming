@@ -176,32 +176,63 @@ export default function Home() {
   // 4. Sync handler
   const handleSync = async (full: boolean = false) => {
     setSyncing(true);
-    setSyncMessage(full
-      ? "Syncing FULL history from 2001 to Present... (this may take up to 2-3 minutes, please do not close this window)"
-      : "Syncing database with latest draws from NLCB... (this may take up to 30 seconds)"
-    );
-    try {
-      const res = await fetch("/api/sync", { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ full }) 
-      });
-      const data = await res.json();
-      if (data.success) {
-        setSyncMessage(`Sync successful! ${data.details}`);
-        // Reload all data
+    if (full) {
+      setSyncMessage("Initializing Full Sync (Year by Year). Please keep this tab open...");
+      try {
+        const currentYear = new Date().getFullYear();
+        const startYear = 2001;
+        let totalAdded = 0;
+        for (let y = currentYear; y >= startYear; y--) {
+          setSyncMessage(`Syncing Lotto Plus Year ${y} (from 2001 to Present)... (${totalAdded} draws added so far)`);
+          const res = await fetch("/api/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ year: y })
+          });
+          const data = await res.json();
+          if (data.success) {
+            totalAdded += data.drawsAdded;
+          } else {
+            console.error(`Failed to sync year ${y}: ${data.error || data.details}`);
+          }
+          // Small polite pause to prevent server load spikes
+          await new Promise(r => setTimeout(r, 600));
+        }
+        setSyncMessage(`Full sync successful! Seeded all years. Added ${totalAdded} draws.`);
         fetchStats();
         fetchHistoryDraws(1);
         fetchAllDraws();
-      } else {
-        setSyncMessage(`Sync failed: ${data.error || "Unknown error"}`);
+      } catch (err: any) {
+        setSyncMessage(`Full sync error: ${err.message || "Network error"}`);
+      } finally {
+        setSyncing(false);
+        setTimeout(() => setSyncMessage(null), 8000);
       }
-    } catch (err: any) {
-      setSyncMessage(`Sync failed: ${err.message || "Network error"}`);
-    } finally {
-      setSyncing(false);
-      // Auto clear message after 6 seconds
-      setTimeout(() => setSyncMessage(null), 6000);
+    } else {
+      setSyncMessage("Syncing database with latest draws from NLCB... (this may take up to 30 seconds)");
+      try {
+        const res = await fetch("/api/sync", { 
+          method: "POST", 
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ full: false }) 
+        });
+        const data = await res.json();
+        if (data.success) {
+          setSyncMessage(`Sync successful! ${data.details}`);
+          // Reload all data
+          fetchStats();
+          fetchHistoryDraws(1);
+          fetchAllDraws();
+        } else {
+          setSyncMessage(`Sync failed: ${data.error || "Unknown error"}`);
+        }
+      } catch (err: any) {
+        setSyncMessage(`Sync failed: ${err.message || "Network error"}`);
+      } finally {
+        setSyncing(false);
+        // Auto clear message after 6 seconds
+        setTimeout(() => setSyncMessage(null), 6000);
+      }
     }
   };
 
