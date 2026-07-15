@@ -31,7 +31,7 @@ export async function GET(request: Request) {
       SELECT num1, num2, num3, num4, num5, powerball, draw_date 
       FROM draws 
       ${whereClause}
-      ORDER BY draw_number DESC
+      ORDER BY CAST(draw_number AS INTEGER) DESC
     `;
     const draws = await query(drawsSql, args);
     const totalDraws = draws.length;
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
     let latestDraw = null;
     if (totalDraws > 0) {
       const latestRow = await query<any>(
-        "SELECT draw_number, draw_date, num1, num2, num3, num4, num5, powerball, jackpot FROM draws ORDER BY draw_number DESC LIMIT 1"
+        "SELECT draw_number, draw_date, num1, num2, num3, num4, num5, powerball, jackpot FROM draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 1"
       );
       if (latestRow.length > 0) {
         latestDraw = latestRow[0];

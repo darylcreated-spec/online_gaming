@@ -32,13 +32,13 @@ export async function GET(request: Request) {
       WITH RecentDraws AS (
         SELECT winning_number, draw_date, draw_number 
         FROM playwhe_draws 
-        ORDER BY draw_number DESC 
+        ORDER BY CAST(draw_number AS INTEGER) DESC 
         LIMIT ?
       ),
       OrderedDraws AS (
         SELECT 
           winning_number as current_number,
-          LEAD(winning_number) OVER (ORDER BY draw_number ASC) as next_number
+          LEAD(winning_number) OVER (ORDER BY CAST(draw_number AS INTEGER) ASC) as next_number
         FROM RecentDraws
       )
       SELECT 
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
       WITH RecentDraws AS (
         SELECT winning_number, draw_date, draw_number
         FROM playwhe_draws
-        ORDER BY draw_number DESC
+        ORDER BY CAST(draw_number AS INTEGER) DESC
         LIMIT ?
       )
       SELECT 
