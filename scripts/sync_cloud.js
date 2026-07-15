@@ -236,7 +236,8 @@ async function main() {
   for (let y = currentYear; y >= currentYear - 3; y--) {
     if (playWheStop) break;
     console.log(` -> Syncing Year ${y}...`);
-    for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+    const startMonthIdx = (y === currentYear) ? new Date().getMonth() : months.length - 1;
+    for (let mIdx = startMonthIdx; mIdx >= 0; mIdx--) {
       const month = months[mIdx];
       const draws = await scrapePlayWheMonth(month, y);
       
@@ -274,7 +275,8 @@ async function main() {
   for (let y = currentYear; y >= currentYear - 3; y--) {
     if (lottoStop) break;
     console.log(` -> Syncing Year ${y}...`);
-    for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+    const startMonthIdx = (y === currentYear) ? new Date().getMonth() : months.length - 1;
+    for (let mIdx = startMonthIdx; mIdx >= 0; mIdx--) {
       const month = months[mIdx];
       const draws = await scrapeLottoMonth(month, y);
       
