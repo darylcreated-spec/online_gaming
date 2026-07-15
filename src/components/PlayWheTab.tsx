@@ -917,6 +917,7 @@ export default function PlayWheTab() {
                 <option value={100}>Last 100 Draws</option>
                 <option value={500}>Last 500 Draws</option>
                 <option value={1000}>Last 1000 Draws</option>
+                <option value={999999}>All-Time Draws</option>
               </select>
             </div>
             
