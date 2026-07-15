@@ -182,6 +182,15 @@ export default function PlayWheTab() {
     fetchHistory();
   }, [pagination.page, historySearch, historyNumberFilter]);
 
+  // Poll for updates every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchStats();
+      fetchHistory();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [statsLimit, pagination.page, historySearch, historyNumberFilter]);
+
   // Populate with all 36 marks initially on mount
   useEffect(() => {
     const initial = Object.keys(CHINAPOO_CHART).map(n => {

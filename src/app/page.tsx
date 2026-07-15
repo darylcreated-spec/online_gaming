@@ -173,6 +173,15 @@ export default function Home() {
     fetchAllDraws();
   }, []);
 
+  // Poll for updates every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchStats();
+      fetchHistoryDraws(pagination.page);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [timeframe, pagination.page, historySearch, historyNumberFilter]);
+
   // 4. Sync handler
   const handleSync = async (full: boolean = false) => {
     setSyncing(true);
