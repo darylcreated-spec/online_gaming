@@ -227,6 +227,8 @@ async function main() {
     )
   `);
   
+  const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
   // 2. Play Whe Sync (Recent 4 Years)
   console.log("\n[Play Whe] Syncing draws (2023 - Present)...");
   let playWheAdded = 0;
@@ -249,6 +251,7 @@ async function main() {
           playWheAdded++;
         }
       }
+      await sleep(1000); // Be polite to avoid rate limits
     }
   }
   console.log(`[Play Whe] Done! Added ${playWheAdded} new drawings.`);
@@ -275,6 +278,7 @@ async function main() {
           lottoAdded++;
         }
       }
+      await sleep(1000); // Be polite to avoid rate limits
     }
   }
   console.log(`[Lotto Plus] Done! Added ${lottoAdded} new drawings.`);
