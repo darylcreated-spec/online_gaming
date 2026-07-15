@@ -145,41 +145,34 @@ export default function DashboardTab({
           <div className="absolute top-0 left-0 w-1.5 h-full bg-secondary" />
           <div className="space-y-3 w-full">
             <div className="flex justify-between items-center w-full">
-              <span className="text-xs font-semibold tracking-wider text-gray-400 uppercase font-mono">Latest Draw Date</span>
-              <span className="text-xs text-gray-400 font-mono flex items-center gap-1">
+              <span className="text-xs font-semibold tracking-wider text-gray-400 uppercase font-mono">Latest Draw Results</span>
+              <span className="text-xs text-secondary font-mono font-bold flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-secondary" />
-                {statsLoading ? "Loading..." : stats?.lastDrawDate ? new Date(stats.lastDrawDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : "N/A"}
+                {statsLoading ? "Loading..." : stats?.latestDraw ? `Draw #${stats.latestDraw.draw_number} on ${new Date(stats.latestDraw.draw_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}` : "N/A"}
               </span>
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
               {statsLoading ? (
                 <div className="text-sm text-gray-500">Loading draws...</div>
-              ) : (
-                <>
-                  {stats?.rankings?.hotNumbers?.length > 0 ? (
-                    // Display actual draw numbers if available (we will fetch from stats or directly page)
-                    // Wait, we can pass latest draw info inside stats or load it. For now let's show static-looking balls 
-                    // representing that we are loaded, or let's extract from stats. We will fetch this details from the API.
-                    // Let's look up hot numbers or show the actual numbers
-                    <div className="flex gap-2 items-center">
-                      <span className="text-xs text-gray-500 font-mono mr-1">Hot 3:</span>
-                      {hotNums.slice(0, 3).map((n: any) => (
-                        <div key={n.number} className="w-8 h-8 rounded-full bg-primary/10 border border-primary text-primary flex items-center justify-center font-bold font-mono text-sm shadow-[0_0_8px_rgba(56,189,248,0.2)]">
-                          {n.number}
-                        </div>
-                      ))}
-                      <span className="text-xs text-gray-500 font-mono mx-1">Hot PB:</span>
-                      {hotPbs.slice(0, 1).map((n: any) => (
-                        <div key={n.number} className="w-8 h-8 rounded-full bg-secondary/10 border border-secondary text-secondary flex items-center justify-center font-bold font-mono text-sm shadow-[0_0_8px_rgba(192,132,252,0.2)]">
-                          {n.number}
-                        </div>
-                      ))}
+              ) : stats?.latestDraw ? (
+                <div className="flex gap-1.5 items-center w-full justify-between flex-wrap">
+                  <div className="flex gap-1.5 items-center">
+                    {[stats.latestDraw.num1, stats.latestDraw.num2, stats.latestDraw.num3, stats.latestDraw.num4, stats.latestDraw.num5].map((n: number, idx: number) => (
+                      <div key={idx} className="w-8 h-8 rounded-full bg-primary/10 border border-primary/40 text-primary flex items-center justify-center font-bold font-mono text-sm shadow-[0_0_8px_rgba(56,189,248,0.15)]">
+                        {n}
+                      </div>
+                    ))}
+                    <div className="w-8 h-8 rounded-full bg-secondary/10 border border-secondary/40 text-secondary flex items-center justify-center font-bold font-mono text-sm shadow-[0_0_8px_rgba(192,132,252,0.15)] ml-1">
+                      {stats.latestDraw.powerball}
                     </div>
-                  ) : (
-                    <span className="text-gray-500 text-xs font-mono">No data seeded yet. Click Sync.</span>
-                  )}
-                </>
+                  </div>
+                  <span className="text-[10px] text-gray-400 font-mono">
+                    Next Draw: <span className="text-white font-bold">{getNextDrawDate()}</span>
+                  </span>
+                </div>
+              ) : (
+                <span className="text-gray-500 text-xs font-mono">No data seeded yet. Click Sync.</span>
               )}
             </div>
           </div>

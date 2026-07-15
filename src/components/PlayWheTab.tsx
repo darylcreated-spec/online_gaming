@@ -53,13 +53,40 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const getNextPlayWheDraw = () => {
+  if (typeof window === "undefined") {
+    return { name: "Morning Draw", time: "10:30 AM", day: "Today" };
+  }
+  const now = new Date();
+  const schedules = [
+    { name: "Morning Draw", hour: 10, minute: 30 },
+    { name: "Midday Draw", hour: 13, minute: 0 },
+    { name: "Afternoon Draw", hour: 16, minute: 0 },
+    { name: "Evening Draw", hour: 19, minute: 0 }
+  ];
+  
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  for (const sched of schedules) {
+    if (currentHour < sched.hour || (currentHour === sched.hour && currentMinute < sched.minute)) {
+      return { 
+        name: sched.name, 
+        time: `${sched.hour === 12 ? 12 : sched.hour % 12}:${sched.minute.toString().padStart(2, "0")} ${sched.hour >= 12 ? "PM" : "AM"}`, 
+        day: "Today" 
+      };
+    }
+  }
+  return { name: "Morning Draw", time: "10:30 AM", day: "Tomorrow" };
+};
+
 export default function PlayWheTab() {
   const [subTab, setSubTab] = useState<"translator" | "dashboard" | "relationship" | "history" | "sync">("dashboard");
   
   // Analytics States
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [statsLimit, setStatsLimit] = useState(1000);
+  const [statsLimit, setStatsLimit] = useState(999999);
   
   // Chinapoo Dictionary States
   const [manualSearchQuery, setManualSearchQuery] = useState("");
@@ -574,6 +601,72 @@ export default function PlayWheTab() {
       {subTab === "dashboard" && (
         <div className="space-y-6">
           
+          {/* Latest Play Whe Draw & Next Draw Card */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Latest Draw Card */}
+            <div className="glass-panel p-5 rounded-xl flex items-center justify-between relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-secondary" />
+              <div className="space-y-2 w-full">
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-[10px] font-semibold tracking-wider text-gray-400 uppercase font-mono">Latest Draw Results</span>
+                  <span className="text-[10px] text-secondary font-mono font-bold">
+                    {statsLoading ? "Loading..." : stats?.latestDraw ? `Draw #${stats.latestDraw.draw_number}` : "N/A"}
+                  </span>
+                </div>
+                
+                {statsLoading ? (
+                  <div className="text-xs text-gray-500 font-mono">Loading...</div>
+                ) : stats?.latestDraw ? (
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary text-primary flex items-center justify-center font-bold font-mono text-base shadow-[0_0_10px_rgba(56,189,248,0.2)]">
+                        {stats.latestDraw.winning_number}
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-white font-mono uppercase tracking-wider block">
+                          {CHINAPOO_CHART[stats.latestDraw.winning_number]?.mark || "Unknown"}
+                        </span>
+                        <span className="text-[9px] text-gray-500 font-mono uppercase block">
+                          {stats.latestDraw.draw_time_slot} SLOT
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-mono text-right">
+                      {formatDateString(stats.latestDraw.draw_date)}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-gray-500 text-xs font-mono">No data seeded yet.</span>
+                )}
+              </div>
+            </div>
+
+            {/* Next Draw Card */}
+            <div className="glass-panel p-5 rounded-xl flex items-center justify-between relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
+              <div className="space-y-2 w-full">
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-[10px] font-semibold tracking-wider text-gray-400 uppercase font-mono">Next Scheduled Draw</span>
+                  <span className="text-[10px] text-primary font-mono font-bold uppercase">PLAY WHE</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-sm font-bold text-white font-mono uppercase tracking-wider block">
+                      {getNextPlayWheDraw().name}
+                    </span>
+                    <span className="text-[10px] text-primary font-bold font-mono mt-0.5 block">
+                      {getNextPlayWheDraw().time} ({getNextPlayWheDraw().day})
+                    </span>
+                  </div>
+                  <span className="text-[9px] text-gray-500 font-mono max-w-[150px] text-right leading-relaxed">
+                    Draws run daily at 10:30 AM, 1:00 PM, 4:00 PM, and 7:00 PM
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Top Analytical Cards */}
           {statsLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -809,9 +902,14 @@ export default function PlayWheTab() {
             
             {/* Line Distribution Chart */}
             <div className="glass-panel p-6 rounded-xl space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xs font-bold font-mono uppercase text-gray-300 tracking-wider">Line Frequencies</h3>
-                <span className="text-[10px] text-gray-500 font-mono">ROWS: 1–6</span>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs font-bold font-mono uppercase text-gray-300 tracking-wider">Line Frequencies</h3>
+                  <span className="text-[10px] text-gray-500 font-mono">ROWS: 1–6</span>
+                </div>
+                <p className="text-[10px] text-gray-400 font-mono leading-relaxed">
+                  Lines group the 36 play numbers into 6 consecutive rows (Line 1: 1–6, Line 2: 7–12, ..., Line 6: 31–36).
+                </p>
               </div>
               
               <div className="h-64 w-full">
@@ -841,9 +939,14 @@ export default function PlayWheTab() {
 
             {/* Suit Distribution Chart */}
             <div className="glass-panel p-6 rounded-xl space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xs font-bold font-mono uppercase text-gray-300 tracking-wider">Suit Frequencies</h3>
-                <span className="text-[10px] text-gray-500 font-mono">COLUMNS: ENdING 1–6</span>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs font-bold font-mono uppercase text-gray-300 tracking-wider">Suit Frequencies</h3>
+                  <span className="text-[10px] text-gray-500 font-mono">COLUMNS: ENDING 1–6</span>
+                </div>
+                <p className="text-[10px] text-gray-400 font-mono leading-relaxed">
+                  Suits group the numbers by their ending digits 1 to 6 (e.g., Suit 1 ends in 1, Suit 6 ends in 6). Numbers ending in 7, 8, 9, 0 are excluded.
+                </p>
               </div>
               
               <div className="h-64 w-full">
@@ -916,7 +1019,7 @@ export default function PlayWheTab() {
                 No matching dictionary marks found.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              <div className="flex overflow-x-auto gap-4 pb-4 pt-1 snap-x scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
                 {manualSearchResults.map((res) => {
                   // Get stats for this number if available
                   const freqEntry = stats?.frequencies?.find((f: any) => f.number === res.number);
@@ -926,7 +1029,7 @@ export default function PlayWheTab() {
                   return (
                     <div 
                       key={res.number} 
-                      className="glass-panel p-4 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden group hover:border-primary/30 hover:bg-primary/[0.01] transition-all flex flex-col justify-between"
+                      className="glass-panel p-4 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden group hover:border-primary/30 hover:bg-primary/[0.01] transition-all flex flex-col justify-between shrink-0 w-[245px] snap-start"
                     >
                       <div className="absolute top-0 right-0 p-2 text-right">
                         <span className="text-2xl font-black text-primary/5 group-hover:text-primary/15 font-mono transition-all">

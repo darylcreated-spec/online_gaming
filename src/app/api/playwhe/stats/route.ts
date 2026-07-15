@@ -104,6 +104,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       totalDraws: draws.length,
+      latestDraw: draws[0],
       frequencies,
       slotStats,
       lines,
