@@ -174,11 +174,18 @@ export default function Home() {
   }, []);
 
   // 4. Sync handler
-  const handleSync = async () => {
+  const handleSync = async (full: boolean = false) => {
     setSyncing(true);
-    setSyncMessage("Syncing database with latest draws from NLCB... (this may take up to 30 seconds)");
+    setSyncMessage(full
+      ? "Syncing FULL history from 2001 to Present... (this may take up to 2-3 minutes, please do not close this window)"
+      : "Syncing database with latest draws from NLCB... (this may take up to 30 seconds)"
+    );
     try {
-      const res = await fetch("/api/sync", { method: "POST", body: JSON.stringify({ full: false }) });
+      const res = await fetch("/api/sync", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ full }) 
+      });
       const data = await res.json();
       if (data.success) {
         setSyncMessage(`Sync successful! ${data.details}`);

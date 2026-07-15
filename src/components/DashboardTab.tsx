@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   CartesianGrid
 } from "recharts";
-import { RefreshCw, TrendingUp, Calendar, Award, DollarSign } from "lucide-react";
+import { RefreshCw, TrendingUp, Calendar, Award, DollarSign, Database } from "lucide-react";
 
 interface DashboardTabProps {
   stats: any;
@@ -18,7 +18,7 @@ interface DashboardTabProps {
   timeframe: string;
   setTimeframe: (val: string) => void;
   syncing: boolean;
-  onSync: () => void;
+  onSync: (full: boolean) => void;
 }
 
 // Custom tooltip for Recharts
@@ -102,14 +102,23 @@ export default function DashboardTab({
             ))}
           </div>
 
-          {/* Sync Button */}
+          {/* Sync Buttons */}
           <button
-            onClick={onSync}
+            onClick={() => onSync(false)}
             disabled={syncing}
-            className="flex items-center justify-center gap-2 bg-slate-950 hover:bg-slate-900 border border-primary/50 hover:border-primary text-primary px-4 py-2 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_10px_rgba(56,189,248,0.15)] hover:shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
+            className="flex items-center justify-center gap-2 bg-slate-950 hover:bg-slate-900 border border-primary/50 hover:border-primary text-primary px-3.5 py-2 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_10px_rgba(56,189,248,0.15)] hover:shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "SYNCING..." : "SYNC LATEST DRAWS"}
+            {syncing ? "SYNCING..." : "SYNC RECENT"}
+          </button>
+          
+          <button
+            onClick={() => onSync(true)}
+            disabled={syncing}
+            className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-850 border border-white/10 hover:border-primary/30 text-gray-300 hover:text-white px-3.5 py-2 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+          >
+            <Database className="w-3.5 h-3.5" />
+            {syncing ? "SYNCING..." : "SYNC FULL (2001+)"}
           </button>
         </div>
       </div>
