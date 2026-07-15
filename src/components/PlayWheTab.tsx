@@ -61,10 +61,7 @@ export default function PlayWheTab() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsLimit, setStatsLimit] = useState(1000);
   
-  // Dream Translator States
-  const [dreamText, setDreamText] = useState("");
-  const [matchedNumbers, setMatchedNumbers] = useState<any[]>([]);
-  const [translatorSearched, setTranslatorSearched] = useState(false);
+  // Chinapoo Dictionary States
   const [manualSearchQuery, setManualSearchQuery] = useState("");
   const [manualSearchResults, setManualSearchResults] = useState<any[]>([]);
 
@@ -158,21 +155,25 @@ export default function PlayWheTab() {
     fetchHistory();
   }, [pagination.page, historySearch, historyNumberFilter]);
 
-  // Handle dream translation
-  const handleTranslateDream = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!dreamText.trim()) return;
-    
-    const results = tokenizeAndMatch(dreamText);
-    setMatchedNumbers(results);
-    setTranslatorSearched(true);
-  };
+  // Populate with all 36 marks initially on mount
+  useEffect(() => {
+    const initial = Object.keys(CHINAPOO_CHART).map(n => {
+      const num = parseInt(n);
+      return { number: num, mark: CHINAPOO_CHART[num].mark, keywords: CHINAPOO_CHART[num].keywords };
+    });
+    setManualSearchResults(initial);
+  }, []);
 
   // Handle manual dictionary search
   const handleManualSearch = (val: string) => {
     setManualSearchQuery(val);
     if (!val.trim()) {
-      setManualSearchResults([]);
+      // Revert to all 36 marks
+      const initial = Object.keys(CHINAPOO_CHART).map(n => {
+        const num = parseInt(n);
+        return { number: num, mark: CHINAPOO_CHART[num].mark, keywords: CHINAPOO_CHART[num].keywords };
+      });
+      setManualSearchResults(initial);
       return;
     }
     
@@ -334,7 +335,7 @@ export default function PlayWheTab() {
             }`}
           >
             <BookOpen className="w-3.5 h-3.5" />
-            DREAM TRANSLATOR
+            CHINAPOO DICTIONARY
           </button>
           
           <button
@@ -362,188 +363,6 @@ export default function PlayWheTab() {
           </button>
         </div>
       </div>
-
-      {/* RENDER SUB-TABS */}
-
-      {/* TAB 1: DREAM TRANSLATOR */}
-      {subTab === "translator" && (
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-          
-          {/* Input Panel - Span 3 */}
-          <div className="xl:col-span-3 space-y-6">
-            <div className="glass-panel p-6 rounded-xl border-primary/15 bg-primary/[0.01] space-y-4">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-primary animate-pulse" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Translate Your Dream</h3>
-              </div>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Describe details from your dream below. The engine tokenizes your text, matches items against the traditional Chinapoo marks, and suggests matching numbers backed by live draw statistics.
-              </p>
-              
-              <form onSubmit={handleTranslateDream} className="space-y-4">
-                <textarea
-                  value={dreamText}
-                  onChange={(e) => setDreamText(e.target.value)}
-                  placeholder="Example: I dreamt I was chased by a dog and climbed a tree where I saw a monkey eating bananas near a big snake..."
-                  className="w-full min-h-[140px] bg-slate-950/70 border border-white/10 rounded-lg p-4 text-sm text-foreground focus:outline-none focus:border-primary transition-all resize-none placeholder-gray-600 font-mono"
-                />
-                
-                <button
-                  type="submit"
-                  disabled={!dreamText.trim()}
-                  className="w-full py-3 bg-primary hover:bg-primary-light text-slate-950 font-bold font-mono text-xs uppercase tracking-wider rounded-lg shadow-[0_0_15px_rgba(56, 189, 248,0.25)] hover:shadow-[0_0_20px_rgba(56, 189, 248,0.4)] disabled:opacity-50 disabled:pointer-events-none transition-all"
-                >
-                  INTERPRET DREAM MARKS
-                </button>
-              </form>
-            </div>
-
-            {/* Translation Results */}
-            {translatorSearched && (
-              <div className="glass-panel p-6 rounded-xl space-y-4">
-                <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                  <h3 className="text-xs font-bold font-mono uppercase text-gray-300 tracking-wider">Matched Dream Marks</h3>
-                  <span className="text-[10px] bg-primary/10 border border-primary/20 text-primary font-bold px-2 py-0.5 rounded-full font-mono">
-                    {matchedNumbers.length} MATCHES
-                  </span>
-                </div>
-                
-                {matchedNumbers.length === 0 ? (
-                  <div className="text-center py-10 space-y-2">
-                    <HelpCircle className="w-8 h-8 text-gray-600 mx-auto" />
-                    <p className="text-xs text-gray-400 font-mono">No matching keywords found in the Chinapoo Chart.</p>
-                    <p className="text-[10px] text-gray-500 max-w-xs mx-auto">Try describing objects, animals, people, actions, or emotions in more detail, or use the dictionary search on the right.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {matchedNumbers.map((match) => {
-                      // Get stats for this number if available
-                      const freqEntry = stats?.frequencies?.find((f: any) => f.number === match.number);
-                      const drawsList = stats?.totalDraws || 1;
-                      const appearances = freqEntry ? freqEntry.count : 0;
-                      
-                      return (
-                        <div key={match.number} className="glass-panel p-4 rounded-lg border-white/5 bg-slate-950/40 relative overflow-hidden group hover:border-primary/20 transition-all">
-                          <div className="absolute top-0 right-0 p-2 text-right">
-                            <span className="text-3xl font-black text-primary/10 group-hover:text-primary/20 font-mono transition-all">
-                              {match.number.toString().padStart(2, "0")}
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-sm font-mono shadow-[0_0_10px_rgba(56, 189, 248,0.15)]">
-                              {match.number}
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-bold text-white font-mono uppercase tracking-wider">{match.mark}</h4>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {match.matchedKeywords.map((kw: string) => (
-                                  <span key={kw} className="text-[9px] bg-white/5 text-gray-400 border border-white/5 px-1.5 py-0.5 rounded font-mono">
-                                    {kw}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/5 text-[10px] font-mono text-gray-400">
-                            <div>
-                              APPEARANCES: <span className="text-white font-bold">{appearances}</span> ({((appearances / drawsList)*100).toFixed(1)}%)
-                            </div>
-                            <div>
-                              PARTNER GROUP: <span className="text-primary font-bold">#{Math.ceil(match.number / 6)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Dictionary Panel - Span 2 */}
-          <div className="xl:col-span-2 space-y-6">
-            <div className="glass-panel p-6 rounded-xl space-y-4">
-              <div className="flex items-center gap-2">
-                <Search className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Chinapoo Dictionary Search</h3>
-              </div>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Directly search the traditional Chinapoo Chart dictionary by keyword, mark name, or number (1–36) to look up symbol associations.
-              </p>
-              
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
-                <input
-                  type="text"
-                  value={manualSearchQuery}
-                  onChange={(e) => handleManualSearch(e.target.value)}
-                  placeholder="Search 'cow', 'old lady', '35'..."
-                  className="w-full bg-slate-950/70 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-xs text-foreground focus:outline-none focus:border-primary transition-all font-mono"
-                />
-              </div>
-
-              {manualSearchQuery.trim() && (
-                <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
-                  {manualSearchResults.length === 0 ? (
-                    <div className="text-center py-8 text-[11px] text-gray-500 font-mono">
-                      No matching dictionary marks found.
-                    </div>
-                  ) : (
-                    manualSearchResults.map((res) => (
-                      <div key={res.number} className="p-3 bg-slate-950/50 rounded-lg border border-white/5 flex justify-between items-center gap-3">
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-mono font-bold flex items-center justify-center">
-                            {res.number}
-                          </span>
-                          <div>
-                            <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">{res.mark}</span>
-                            <div className="text-[9px] text-gray-500 max-w-[200px] truncate">
-                              Keywords: {res.keywords.join(", ")}
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-[8px] border border-white/5 bg-white/5 text-gray-400 px-1.5 py-0.5 rounded font-mono">
-                          LINE {Math.ceil(res.number / 6)}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Quick Chart Grid (Only visible if not searching) */}
-            {!manualSearchQuery.trim() && (
-              <div className="glass-panel p-6 rounded-xl space-y-4">
-                <h4 className="text-xs font-bold uppercase font-mono text-gray-300 tracking-wider">Traditional Marks Reference</h4>
-                <div className="grid grid-cols-6 gap-1.5 max-h-[350px] overflow-y-auto pr-1">
-                  {Array.from({ length: 36 }).map((_, idx) => {
-                    const num = idx + 1;
-                    return (
-                      <div
-                        key={num}
-                        title={`${num}: ${CHINAPOO_CHART[num].mark}`}
-                        onClick={() => {
-                          setDreamText(prev => prev ? `${prev} ${CHINAPOO_CHART[num].mark.toLowerCase()}` : CHINAPOO_CHART[num].mark.toLowerCase());
-                          setManualSearchQuery(CHINAPOO_CHART[num].mark);
-                          handleManualSearch(CHINAPOO_CHART[num].mark);
-                        }}
-                        className="aspect-square bg-slate-950/40 border border-white/5 rounded flex flex-col justify-center items-center cursor-pointer hover:border-primary/30 hover:bg-primary/[0.02] transition-all"
-                      >
-                        <span className="text-[11px] font-bold text-white font-mono">{num}</span>
-                        <span className="text-[7px] text-gray-500 font-mono truncate max-w-[40px] uppercase">{CHINAPOO_CHART[num].mark.split(" ")[0]}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* TAB 1.5: RELATIONSHIP MAP */}
       {subTab === "relationship" && (
@@ -1054,6 +873,101 @@ export default function PlayWheTab() {
 
           </div>
 
+        </div>
+      )}
+
+      {/* TAB 2: CHINAPOO DICTIONARY */}
+      {subTab === "translator" && (
+        <div className="space-y-6">
+          <div className="glass-panel p-6 rounded-xl space-y-4">
+            <div className="flex items-center gap-2">
+              <Search className="w-5 h-5 text-primary" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Chinapoo Dictionary Search</h3>
+            </div>
+            <p className="text-xs text-gray-400 leading-relaxed max-w-3xl font-mono">
+              Directly search the traditional Chinapoo Chart dictionary by keyword, mark name, or number (1–36) to look up symbol associations. Shows the complete list of 36 traditional marks by default.
+            </p>
+            
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+              <input
+                type="text"
+                value={manualSearchQuery}
+                onChange={(e) => handleManualSearch(e.target.value)}
+                placeholder="Search 'cow', 'old lady', '35'..."
+                className="w-full bg-slate-950/70 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-xs text-foreground focus:outline-none focus:border-primary transition-all font-mono"
+              />
+            </div>
+          </div>
+
+          {/* Results Grid */}
+          <div className="glass-panel p-6 rounded-xl space-y-4">
+            <div className="flex justify-between items-center border-b border-white/5 pb-3">
+              <h3 className="text-xs font-bold font-mono uppercase text-gray-300 tracking-wider">
+                {manualSearchQuery.trim() ? "Search Results" : "Traditional Chinapoo Marks"}
+              </h3>
+              <span className="text-[10px] bg-primary/10 border border-primary/20 text-primary font-bold px-2 py-0.5 rounded-full font-mono">
+                {manualSearchResults.length} {manualSearchResults.length === 1 ? "MARK" : "MARKS"}
+              </span>
+            </div>
+
+            {manualSearchResults.length === 0 ? (
+              <div className="text-center py-12 text-sm text-gray-500 font-mono">
+                No matching dictionary marks found.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {manualSearchResults.map((res) => {
+                  // Get stats for this number if available
+                  const freqEntry = stats?.frequencies?.find((f: any) => f.number === res.number);
+                  const drawsList = stats?.totalDraws || 1;
+                  const appearances = freqEntry ? freqEntry.count : 0;
+                  
+                  return (
+                    <div 
+                      key={res.number} 
+                      className="glass-panel p-4 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden group hover:border-primary/30 hover:bg-primary/[0.01] transition-all flex flex-col justify-between"
+                    >
+                      <div className="absolute top-0 right-0 p-2 text-right">
+                        <span className="text-2xl font-black text-primary/5 group-hover:text-primary/15 font-mono transition-all">
+                          {res.number.toString().padStart(2, "0")}
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs font-mono shadow-[0_0_8px_rgba(56,189,248,0.1)] group-hover:shadow-[0_0_12px_rgba(56,189,248,0.25)] transition-all">
+                            {res.number}
+                          </div>
+                          <span className="text-[8px] border border-white/5 bg-white/5 text-gray-500 px-1.5 py-0.5 rounded font-mono group-hover:text-gray-400">
+                            LINE {Math.ceil(res.number / 6)}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider group-hover:text-primary transition-all">
+                            {res.mark}
+                          </h4>
+                          <div className="flex flex-wrap gap-1 mt-1.5 max-h-[80px] overflow-y-auto">
+                            {res.keywords.map((kw: string) => (
+                              <span key={kw} className="text-[8px] bg-white/5 text-gray-400 border border-white/5 px-1 py-0.5 rounded font-mono">
+                                {kw}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-white/5 text-[9px] font-mono text-gray-500 flex justify-between items-center">
+                        <span>APPEARS: <b className="text-white">{appearances}x</b></span>
+                        <span>({((appearances / drawsList) * 100).toFixed(1)}%)</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
