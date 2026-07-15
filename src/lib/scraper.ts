@@ -420,7 +420,7 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
 
     const sid = await scrapePlayWheSid();
     if (!sid) {
-      throw new Error("Could not retrieve CSRF sid token for Play Whe.");
+      console.warn("WARNING: Could not retrieve CSRF sid token for Play Whe. Sync might fail but proceeding...");
     }
     
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
