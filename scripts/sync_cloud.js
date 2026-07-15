@@ -232,23 +232,34 @@ async function main() {
   // 2. Play Whe Sync (Recent 4 Years)
   console.log("\n[Play Whe] Syncing draws (2023 - Present)...");
   let playWheAdded = 0;
+  let playWheStop = false;
   for (let y = currentYear; y >= currentYear - 3; y--) {
+    if (playWheStop) break;
     console.log(` -> Syncing Year ${y}...`);
     for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
       const month = months[mIdx];
       const draws = await scrapePlayWheMonth(month, y);
       
-      for (const d of draws) {
-        const check = await db.execute({
-          sql: "SELECT 1 FROM playwhe_draws WHERE draw_number = ?",
-          args: [d.draw_number]
-        });
-        if (check.rows.length === 0) {
-          await db.execute({
-            sql: "INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)",
-            args: [d.draw_number, d.draw_date, d.draw_time_slot, d.winning_number]
+      if (draws.length > 0) {
+        let allExist = true;
+        for (const d of draws) {
+          const check = await db.execute({
+            sql: "SELECT 1 FROM playwhe_draws WHERE draw_number = ?",
+            args: [d.draw_number]
           });
-          playWheAdded++;
+          if (check.rows.length === 0) {
+            await db.execute({
+              sql: "INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)",
+              args: [d.draw_number, d.draw_date, d.draw_time_slot, d.winning_number]
+            });
+            playWheAdded++;
+            allExist = false;
+          }
+        }
+        if (allExist) {
+          console.log(`[Play Whe] All draws for ${month} ${y} already exist. Database is up to date. Stopping sync.`);
+          playWheStop = true;
+          break;
         }
       }
       await sleep(1000); // Be polite to avoid rate limits
@@ -259,23 +270,34 @@ async function main() {
   // 3. Lotto Plus Sync (Recent 4 Years)
   console.log("\n[Lotto Plus] Syncing draws (2023 - Present)...");
   let lottoAdded = 0;
+  let lottoStop = false;
   for (let y = currentYear; y >= currentYear - 3; y--) {
+    if (lottoStop) break;
     console.log(` -> Syncing Year ${y}...`);
     for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
       const month = months[mIdx];
       const draws = await scrapeLottoMonth(month, y);
       
-      for (const d of draws) {
-        const check = await db.execute({
-          sql: "SELECT 1 FROM draws WHERE draw_number = ?",
-          args: [d.draw_number]
-        });
-        if (check.rows.length === 0) {
-          await db.execute({
-            sql: "INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.powerball, d.multiplier, d.jackpot]
+      if (draws.length > 0) {
+        let allExist = true;
+        for (const d of draws) {
+          const check = await db.execute({
+            sql: "SELECT 1 FROM draws WHERE draw_number = ?",
+            args: [d.draw_number]
           });
-          lottoAdded++;
+          if (check.rows.length === 0) {
+            await db.execute({
+              sql: "INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.powerball, d.multiplier, d.jackpot]
+            });
+            lottoAdded++;
+            allExist = false;
+          }
+        }
+        if (allExist) {
+          console.log(`[Lotto Plus] All draws for ${month} ${y} already exist. Database is up to date. Stopping sync.`);
+          lottoStop = true;
+          break;
         }
       }
       await sleep(1000); // Be polite to avoid rate limits
