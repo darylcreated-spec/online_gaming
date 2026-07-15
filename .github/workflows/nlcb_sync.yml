@@ -12,7 +12,7 @@ on:
     - cron: '3 17,20 * * *'
     # Lotto Plus draws Wednesday & Saturday nights at 8:30 PM AST
     # 3 minutes after AST: 8:33 PM AST -> 00:33 UTC (Thursday & Sunday UTC)
-    - cron: '33 0 * * 4,7'
+    - cron: '33 0 * * 0,4'
   workflow_dispatch: # Allows manual trigger from GitHub UI
 
 jobs:
