@@ -71,11 +71,20 @@ export async function GET() {
   const passed = results.filter(r => r.status === "passed").length;
   const failed = results.filter(r => r.status === "failed").length;
 
+  const drawsVal = await query<any>("SELECT COUNT(*) as cnt FROM draws").catch(() => [{ cnt: -1 }]);
+  const playwheVal = await query<any>("SELECT COUNT(*) as cnt FROM playwhe_draws").catch(() => [{ cnt: -1 }]);
+  const combosVal = await query<any>("SELECT COUNT(*) as cnt FROM eligible_combinations").catch(() => [{ cnt: -1 }]);
+
   return NextResponse.json({
     success: failed === 0,
     totalTests: total,
     passed,
     failed,
+    counts: {
+      draws: drawsVal[0]?.cnt,
+      playwhe: playwheVal[0]?.cnt,
+      combos: combosVal[0]?.cnt
+    },
     results
   });
 }
