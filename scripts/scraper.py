@@ -378,7 +378,11 @@ def scrape_play_whe_month(session, month_str, year_val, sid):
 
 def run_play_whe_scraper(args, conn):
     session = requests.Session()
-    sid = scrape_play_whe_sid(session)
+    try:
+        sid = scrape_play_whe_sid(session)
+    except Exception as e:
+        print(f"WARNING: Could not retrieve CSRF sid token for Play Whe: {e}")
+        sid = None
     
     if args.test:
         print(f"\nTEST RUN COMPLETE. Play Whe SID token found: {sid}")
