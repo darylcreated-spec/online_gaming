@@ -81,7 +81,8 @@ const getNextPlayWheDraw = () => {
 };
 
 export default function PlayWheTab() {
-  const [subTab, setSubTab] = useState<"translator" | "dashboard" | "relationship" | "history" | "sync">("dashboard");
+  const [subTab, setSubTab] = useState<"translator" | "dashboard" | "relationship" | "history">("dashboard");
+  const [showHelp, setShowHelp] = useState(false);
   
   // Analytics States
   const [stats, setStats] = useState<any>(null);
@@ -103,11 +104,6 @@ export default function PlayWheTab() {
     total: 0,
     pages: 1
   });
-
-  // Sync States
-  const [syncing, setSyncing] = useState(false);
-  const [syncLogs, setSyncLogs] = useState<string[]>([]);
-  const [syncSuccess, setSyncSuccess] = useState<boolean | null>(null);
 
   // Correlation States
   const [focusedNumber, setFocusedNumber] = useState<number>(1);
@@ -244,76 +240,7 @@ export default function PlayWheTab() {
     setManualSearchResults(results);
   };
 
-  // Trigger sync
-  const handleSync = async (full: boolean = false) => {
-    if (syncing) return;
-    setSyncing(true);
-    setSyncSuccess(null);
 
-    if (full) {
-      setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Starting Play Whe FULL history sync (Year by Year)...`]);
-      try {
-        const currentYear = new Date().getFullYear();
-        const startYear = 2001;
-        let totalAdded = 0;
-        
-        for (let y = currentYear; y >= startYear; y--) {
-          setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Syncing Play Whe Year ${y}...`]);
-          const res = await fetch("/api/playwhe/sync", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ year: y })
-          });
-          const data = await res.json();
-          if (data.success) {
-            totalAdded += data.drawsAdded;
-            setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Year ${y} complete: Added ${data.drawsAdded} draws.`]);
-          } else {
-            setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Year ${y} failed: ${data.error || data.details}`]);
-          }
-          // Sleep 600ms to be polite
-          await new Promise(r => setTimeout(r, 600));
-        }
-        setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Full Sync Complete! Total draws added: ${totalAdded}`]);
-        setSyncSuccess(true);
-        fetchStats();
-        fetchHistory();
-      } catch (err: any) {
-        setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Full Sync Error: ${err.message}`]);
-        setSyncSuccess(false);
-      } finally {
-        setSyncing(false);
-      }
-    } else {
-      setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Starting Play Whe sync (Recent 4 Years)...`]);
-      try {
-        const res = await fetch("/api/playwhe/sync", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full: false })
-        });
-        const data = await res.json();
-        if (data.success) {
-          setSyncLogs(prev => [
-            ...prev, 
-            `[${new Date().toLocaleTimeString()}] Sync Success! Added/Updated ${data.drawsAdded} draws.`,
-            `[${new Date().toLocaleTimeString()}] Details: ${data.details}`
-          ]);
-          setSyncSuccess(true);
-          // Refresh data
-          fetchStats();
-          fetchHistory();
-        } else {
-          throw new Error(data.error || data.details || "Sync failed");
-        }
-      } catch (err: any) {
-        setSyncLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] Sync Error: ${err.message}`]);
-        setSyncSuccess(false);
-      } finally {
-        setSyncing(false);
-      }
-    }
-  };
 
   // Format date helper
   const formatDateString = (ds: string) => {
@@ -337,68 +264,118 @@ export default function PlayWheTab() {
           <h2 className="text-xl font-bold tracking-tight text-white font-mono uppercase">PLAY WHE</h2>
         </div>
         
-        <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 overflow-x-auto w-full md:w-auto">
-          <button
-            onClick={() => setSubTab("dashboard")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-              subTab === "dashboard"
-                ? "bg-primary text-slate-950 font-bold"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <BarChart2 className="w-3.5 h-3.5" />
-            ANALYTICS DASHBOARD
-          </button>
-          
-          <button
-            onClick={() => setSubTab("relationship")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-              subTab === "relationship"
-                ? "bg-primary text-slate-950 font-bold"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <TrendingUp className="w-3.5 h-3.5" />
-            RELATIONSHIP MAP
-          </button>
+        <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto">
+          <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 overflow-x-auto w-full md:w-auto">
+            <button
+              onClick={() => setSubTab("dashboard")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+                subTab === "dashboard"
+                  ? "bg-primary text-slate-950 font-bold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <BarChart2 className="w-3.5 h-3.5" />
+              ANALYTICS DASHBOARD
+            </button>
+            
+            <button
+              onClick={() => setSubTab("relationship")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+                subTab === "relationship"
+                  ? "bg-primary text-slate-950 font-bold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <TrendingUp className="w-3.5 h-3.5" />
+              RELATIONSHIP MAP
+            </button>
 
-          <button
-            onClick={() => setSubTab("translator")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-              subTab === "translator"
-                ? "bg-primary text-slate-950 font-bold"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            CHINAPOO DICTIONARY
-          </button>
+            <button
+              onClick={() => setSubTab("translator")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+                subTab === "translator"
+                  ? "bg-primary text-slate-950 font-bold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              CHINAPOO DICTIONARY
+            </button>
+            
+            <button
+              onClick={() => setSubTab("history")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+                subTab === "history"
+                  ? "bg-primary text-slate-950 font-bold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              DRAW LOG
+            </button>
+          </div>
           
           <button
-            onClick={() => setSubTab("history")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-              subTab === "history"
-                ? "bg-primary text-slate-950 font-bold"
-                : "text-gray-400 hover:text-white"
+            onClick={() => setShowHelp(!showHelp)}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-[11px] font-bold font-mono tracking-wider transition shrink-0 ${
+              showHelp
+                ? "bg-primary/20 border-primary text-primary"
+                : "bg-slate-950 border-white/10 text-gray-300 hover:bg-slate-900"
             }`}
           >
-            <Calendar className="w-3.5 h-3.5" />
-            DRAW LOG
-          </button>
-          
-          <button
-            onClick={() => setSubTab("sync")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-              subTab === "sync"
-                ? "bg-primary text-slate-950 font-bold"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            SYNC CENTER
+            <HelpCircle className="w-3.5 h-3.5" />
+            {showHelp ? "HIDE GUIDE" : "EXPLAIN SECTIONS"}
           </button>
         </div>
       </div>
+
+      {/* Toggleable Explainer Section */}
+      {showHelp && (
+        <div className="glass-panel border border-white/5 p-5 rounded-xl bg-slate-950/20 space-y-4">
+          <h3 className="text-xs font-bold text-white uppercase font-mono tracking-widest border-b border-white/5 pb-2">
+            Play Whe Dashboard Explainer Guide
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold">1. JAMES BOND FIGURES</h4>
+              <p>
+                Tracks double figures (11, 22, 33) and zeroes (10, 20, 30).
+              </p>
+              <p>
+                In a balanced random model of 36 marks, each group has a theoretical frequency of <strong>8.33%</strong>. Significant deviation signals an active hot/cold variance.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold">2. OVERDUE PARTNERS</h4>
+              <p>
+                Based on traditional Chinapoo groupings (e.g. 1 & 16, 2 & 17).
+              </p>
+              <p>
+                If a primary number is drawn frequently but its partner mark has not played in a long time (forming a high gap), it is flagged as overdue for co-occurrence.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold">3. SATURDAY PLAYBACKS</h4>
+              <p>
+                Tracks if the Saturday Evening (7:00 PM) draw number returns ("plays back") during the subsequent week.
+              </p>
+              <p>
+                Historically, playbacks have a very high recurrence rate within 6 days.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold">4. RELATIONSHIP MAP</h4>
+              <p>
+                Analyzes the <strong>Relationship Focus</strong>. Select any number to view its:
+              </p>
+              <ul className="list-disc pl-3.5 space-y-1">
+                <li><strong>Successors:</strong> Numbers drawn immediately after.</li>
+                <li><strong>Companions:</strong> Numbers drawn on the same day.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TAB 1.5: RELATIONSHIP MAP */}
       {subTab === "relationship" && (
@@ -1209,89 +1186,6 @@ export default function PlayWheTab() {
 
         </div>
       )}
-
-      {/* TAB 4: SYNC CENTER */}
-      {subTab === "sync" && (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          
-          {/* Controls - Span 2 */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="glass-panel p-6 rounded-xl space-y-4">
-              <div className="flex items-center gap-2">
-                <RefreshCw className={`w-5 h-5 text-primary ${syncing ? "animate-spin" : ""}`} />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Sync Control Center</h3>
-              </div>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Manually trigger the Play Whe web scraper to pull draws from the official results page. The parser extracts the winning marks and commits them to the local SQLite database.
-              </p>
-              
-              <div className="grid grid-cols-1 gap-3 pt-2">
-                <button
-                  onClick={() => handleSync(false)}
-                  disabled={syncing}
-                  className="py-3 bg-primary hover:bg-primary-light text-slate-950 font-mono font-bold text-xs uppercase tracking-wider rounded-lg shadow-[0_0_15px_rgba(56, 189, 248,0.2)] disabled:opacity-50 disabled:pointer-events-none transition-all flex items-center justify-center gap-2"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
-                  SYNC RECENT DRAWS (4 Years)
-                </button>
-                
-                <button
-                  onClick={() => handleSync(true)}
-                  disabled={syncing}
-                  className="py-3 bg-slate-900 border border-white/10 hover:border-primary/40 text-gray-300 hover:text-white font-mono font-bold text-xs uppercase tracking-wider rounded-lg disabled:opacity-50 disabled:pointer-events-none transition-all flex items-center justify-center gap-2"
-                >
-                  <Database className="w-3.5 h-3.5" />
-                  SYNC FULL HISTORY (2001 - Present)
-                </button>
-              </div>
-            </div>
-
-            <div className="glass-panel p-6 rounded-xl space-y-3 font-mono text-xs">
-              <div className="flex justify-between items-center text-gray-400 border-b border-white/5 pb-2">
-                <span>DATABASE STATUS</span>
-                <span className="text-[10px] text-green-400 font-bold">ONLINE</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">PLAY WHE DRAWS SEEDED:</span>
-                <span className="text-white font-bold">{pagination.total}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">LAST SYNCED DRAW:</span>
-                <span className="text-white font-bold">
-                  {draws.length > 0 ? `#${draws[0].draw_number}` : "None"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Sync logs output console - Span 3 */}
-          <div className="lg:col-span-3">
-            <div className="glass-panel rounded-xl h-full flex flex-col overflow-hidden border-white/5 bg-slate-950/60 min-h-[300px]">
-              <div className="bg-slate-950 px-4 py-2 border-b border-white/5 flex justify-between items-center">
-                <span className="text-[10px] font-bold font-mono text-gray-500 uppercase tracking-wider">Sync Console Output</span>
-                {syncSuccess !== null && (
-                  <span className={`text-[9px] font-bold font-mono px-2 py-0.5 rounded ${
-                    syncSuccess ? "bg-green-500/10 border border-green-500/20 text-green-400" : "bg-red-500/10 border border-red-500/20 text-red-400"
-                  }`}>
-                    {syncSuccess ? "SYNC SUCCESS" : "SYNC ERROR"}
-                  </span>
-                )}
-              </div>
-              <div className="flex-1 p-4 overflow-y-auto font-mono text-[10px] text-green-400 space-y-1 bg-slate-950/70 select-text max-h-[350px]">
-                {syncLogs.length === 0 ? (
-                  <div className="text-gray-600 italic">No console logs available. Click a sync button to trigger.</div>
-                ) : (
-                  syncLogs.map((log, idx) => (
-                    <div key={idx} className="whitespace-pre-wrap leading-relaxed">{log}</div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      )}
-
     </div>
   );
 }

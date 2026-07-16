@@ -6,6 +6,7 @@ import HistoryTab from "@/components/HistoryTab";
 import BuilderTab from "@/components/BuilderTab";
 import CheckerTab from "@/components/CheckerTab";
 import PlayWheTab from "@/components/PlayWheTab";
+import SettingsTab from "@/components/SettingsTab";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, Sparkles, HelpCircle } from "lucide-react";
 
 const SlotMachine = (props: React.SVGProps<SVGSVGElement>) => (
@@ -48,13 +49,12 @@ const LottoPlusIcon = (props: React.SVGProps<SVGSVGElement>) => (
     strokeLinejoin="round"
     {...props}
   >
-    {/* Circular lottery ball body */}
-    <circle cx="12" cy="12" r="9" />
-    {/* Centered '+' symbol inside the ball */}
-    <line x1="12" y1="8" x2="12" y2="16" />
-    <line x1="8" y1="12" x2="16" y2="12" />
-    {/* Stylish gloss shine curve */}
-    <path d="M7.5 7.5a6 6 0 0 1 9 0" strokeWidth="1.5" strokeDasharray="2 2" />
+    {/* Outer circle */}
+    <circle cx="12" cy="12" r="10" />
+    {/* L letter */}
+    <path d="M9 7v10h6" />
+    {/* Plus sign */}
+    <path d="M12 7v4M10 9h4" />
   </svg>
 );
 
@@ -82,7 +82,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"lotto-plus" | "scanner" | "play-whe">("lotto-plus");
+  const [activeTab, setActiveTab] = useState<"lotto-plus" | "scanner" | "play-whe" | "settings">("lotto-plus");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder">("dashboard");
   
   // Scraper Sync States
@@ -228,25 +228,23 @@ export default function Home() {
         const data = await res.json();
         if (data.success) {
           setSyncMessage(`Sync successful! ${data.details}`);
-          // Reload all data
           fetchStats();
           fetchHistoryDraws(1);
           fetchAllDraws();
         } else {
-          setSyncMessage(`Sync failed: ${data.error || "Unknown error"}`);
+          setSyncMessage(`Sync failed: ${data.error || data.details}`);
         }
       } catch (err: any) {
-        setSyncMessage(`Sync failed: ${err.message || "Network error"}`);
+        setSyncMessage(`Sync error: ${err.message || "Network error"}`);
       } finally {
         setSyncing(false);
-        // Auto clear message after 6 seconds
-        setTimeout(() => setSyncMessage(null), 6000);
+        setTimeout(() => setSyncMessage(null), 8000);
       }
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-base text-foreground font-sans">
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col selection:bg-primary/30 selection:text-white">
       
       {/* Global Terminal Header */}
       <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-4 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-950/70 backdrop-blur-md">
@@ -268,59 +266,69 @@ export default function Home() {
         <nav className="flex bg-slate-900/60 p-1 rounded-lg border border-white/5 w-full md:w-auto overflow-x-auto">
           <button
             onClick={() => setActiveTab("lotto-plus")}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
               activeTab === "lotto-plus"
                 ? "bg-primary/10 border border-primary/20 text-primary font-bold"
                 : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
             }`}
           >
-            <LottoPlusIcon className="w-3.5 h-3.5" />
+            <img 
+              src="/images/lotto_plus_icon.png" 
+              alt="Lotto Plus" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
+            />
             LOTTO PLUS
           </button>
           
           <button
             onClick={() => setActiveTab("play-whe")}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
               activeTab === "play-whe"
                 ? "bg-primary/10 border border-primary/20 text-primary font-bold"
                 : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
             }`}
           >
-            <PlayWheIcon className="w-3.5 h-3.5" />
+            <img 
+              src="/images/play_whe_icon.png" 
+              alt="Play Whe" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
+            />
             PLAY WHE
           </button>
           
           <button
             onClick={() => setActiveTab("scanner")}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
               activeTab === "scanner"
                 ? "bg-primary/10 border border-primary/20 text-primary font-bold"
                 : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
             }`}
           >
-            <Camera className="w-3.5 h-3.5" />
+            <img 
+              src="/images/scanner_icon.png" 
+              alt="Scanner" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(74,222,128,0.4)]" 
+            />
             TICKET SCANNER
+          </button>
+
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+              activeTab === "settings"
+                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
+                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+            }`}
+          >
+            <img 
+              src="/images/settings_icon.png" 
+              alt="Settings" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
+            />
+            SETTINGS
           </button>
         </nav>
       </header>
-
-      {/* Sync Status Alert Banner */}
-      {syncMessage && (
-        <div className="mx-6 md:mx-12 mt-4">
-          <div className={`p-4 rounded-xl border text-xs font-mono flex items-center justify-between ${
-            syncMessage.includes("failed") 
-              ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
-              : syncMessage.includes("successful")
-              ? "bg-green-500/10 border-green-500/30 text-green-400 animate-pulse"
-              : "bg-primary/10 border-primary/30 text-primary"
-          }`}>
-            <span>{syncMessage}</span>
-            {syncing && (
-              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Main Viewport Container */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 py-8">
@@ -371,8 +379,6 @@ export default function Home() {
             statsLoading={statsLoading}
             timeframe={timeframe}
             setTimeframe={setTimeframe}
-            syncing={syncing}
-            onSync={handleSync}
           />
         )}
         
@@ -399,6 +405,10 @@ export default function Home() {
 
         {activeTab === "play-whe" && (
           <PlayWheTab />
+        )}
+
+        {activeTab === "settings" && (
+          <SettingsTab />
         )}
 
       </main>

@@ -10,15 +10,14 @@ import {
   ResponsiveContainer,
   CartesianGrid
 } from "recharts";
-import { RefreshCw, TrendingUp, Calendar, Award, DollarSign, Database } from "lucide-react";
+import { RefreshCw, TrendingUp, Calendar, Award, DollarSign, Database, HelpCircle } from "lucide-react";
+import { useState } from "react";
 
 interface DashboardTabProps {
   stats: any;
   statsLoading: boolean;
   timeframe: string;
   setTimeframe: (val: string) => void;
-  syncing: boolean;
-  onSync: (full: boolean) => void;
 }
 
 // Custom tooltip for Recharts
@@ -38,10 +37,9 @@ export default function DashboardTab({
   stats,
   statsLoading,
   timeframe,
-  setTimeframe,
-  syncing,
-  onSync
+  setTimeframe
 }: DashboardTabProps) {
+  const [showHelp, setShowHelp] = useState(false);
   
   // Helper to calculate next Lotto Plus draw date (Wednesday or Saturday at 8:30 PM)
   const getNextDrawDate = () => {
@@ -102,26 +100,58 @@ export default function DashboardTab({
             ))}
           </div>
 
-          {/* Sync Buttons */}
+          {/* Help Toggle Button */}
           <button
-            onClick={() => onSync(false)}
-            disabled={syncing}
-            className="flex items-center justify-center gap-2 bg-slate-950 hover:bg-slate-900 border border-primary/50 hover:border-primary text-primary px-3.5 py-2 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_10px_rgba(56,189,248,0.15)] hover:shadow-[0_0_15px_rgba(56,189,248,0.3)] shrink-0"
+            onClick={() => setShowHelp(!showHelp)}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-xs font-semibold font-mono tracking-wider transition ${
+              showHelp
+                ? "bg-primary/20 border-primary text-primary"
+                : "bg-slate-950 border-white/10 text-gray-300 hover:bg-slate-900"
+            }`}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "SYNCING..." : "SYNC RECENT"}
-          </button>
-          
-          <button
-            onClick={() => onSync(true)}
-            disabled={syncing}
-            className="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-850 border border-white/10 hover:border-primary/30 text-gray-300 hover:text-white px-3.5 py-2 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-          >
-            <Database className="w-3.5 h-3.5" />
-            {syncing ? "SYNCING..." : "SYNC FULL (2001+)"}
+            <HelpCircle className="w-4 h-4" />
+            {showHelp ? "HIDE GUIDE" : "EXPLAIN SECTIONS"}
           </button>
         </div>
       </div>
+
+      {/* Toggleable Explainer Section */}
+      {showHelp && (
+        <div className="glass-panel border border-white/5 p-5 rounded-xl bg-slate-950/20 space-y-4">
+          <h3 className="text-xs font-bold text-white uppercase font-mono tracking-widest border-b border-white/5 pb-2">
+            Lotto Plus Dashboard Explainer Guide
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold">1. TOTAL DRAWS & JACKPOT</h4>
+              <p>
+                <strong>Total Draws:</strong> Represents the entire historical database of official Lotto Plus drawings.
+              </p>
+              <p>
+                <strong>Estimated Jackpot:</strong> Fetched live from the NLCB website to show current prize pool stakes.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold">2. HOT & COLD NUMBERS</h4>
+              <p>
+                <strong>Hot Numbers/Powerballs:</strong> The most frequently drawn numbers in your selected timeframe (e.g. 3 Months).
+              </p>
+              <p>
+                <strong>Cold Numbers/Powerballs:</strong> The numbers drawn least frequently, or with the largest draw gaps.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold">3. FREQUENCIES & DELTAS</h4>
+              <p>
+                <strong>Frequencies:</strong> A bar chart visualizing how many times each number (1-35) was drawn.
+              </p>
+              <p>
+                <strong>Delta Spacing:</strong> Measures the gaps/distances between sorted consecutive numbers in a single draw (e.g. 5, 12, 13, 20, 31 has deltas: 7, 1, 7, 11). Aids in observing dispersion trends.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
