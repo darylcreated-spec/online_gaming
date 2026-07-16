@@ -105,6 +105,7 @@ export async function GET(request: Request) {
       success: true,
       totalDraws: draws.length,
       latestDraw: draws[0],
+      latestDraws: draws.slice(0, 4),
       frequencies,
       slotStats,
       lines,

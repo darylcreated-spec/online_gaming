@@ -596,30 +596,30 @@ export default function PlayWheTab() {
                 <div className="flex justify-between items-center w-full">
                   <span className="text-[10px] font-semibold tracking-wider text-gray-400 uppercase font-mono">Latest Draw Results</span>
                   <span className="text-[10px] text-secondary font-mono font-bold">
-                    {statsLoading ? "Loading..." : stats?.latestDraw ? `Draw #${stats.latestDraw.draw_number}` : "N/A"}
+                    {statsLoading ? "Loading..." : stats?.latestDraws?.length > 0 ? "Last 4 Draws" : "N/A"}
                   </span>
                 </div>
                 
                 {statsLoading ? (
-                  <div className="text-xs text-gray-500 font-mono">Loading...</div>
-                ) : stats?.latestDraw ? (
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary text-primary flex items-center justify-center font-bold font-mono text-base shadow-[0_0_10px_rgba(56,189,248,0.2)]">
-                        {stats.latestDraw.winning_number}
-                      </div>
-                      <div>
-                        <span className="text-sm font-bold text-white font-mono uppercase tracking-wider block">
-                          {CHINAPOO_CHART[stats.latestDraw.winning_number]?.mark || "Unknown"}
+                  <div className="text-xs text-gray-500 font-mono py-2">Loading...</div>
+                ) : stats?.latestDraws?.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                    {stats.latestDraws.map((draw: any) => (
+                      <div key={draw.id} className="p-2 bg-slate-950/40 border border-white/5 rounded-lg flex flex-col items-center justify-between font-mono text-center">
+                        <span className="text-[8px] text-gray-500 uppercase tracking-wider font-bold">
+                          {draw.draw_time_slot}
                         </span>
-                        <span className="text-[9px] text-gray-500 font-mono uppercase block">
-                          {stats.latestDraw.draw_time_slot} SLOT
+                        <div className="w-9 h-9 my-1.5 rounded-full bg-primary/10 border border-primary text-primary flex items-center justify-center font-bold text-sm shadow-[0_0_10px_rgba(56,189,248,0.2)]">
+                          {draw.winning_number}
+                        </div>
+                        <span className="text-[9px] font-bold text-white uppercase truncate max-w-[70px]" title={CHINAPOO_CHART[draw.winning_number]?.mark || ""}>
+                          {CHINAPOO_CHART[draw.winning_number]?.mark.split(" ")[0] || "Unknown"}
+                        </span>
+                        <span className="text-[7px] text-gray-500 mt-0.5">
+                          #{draw.draw_number}
                         </span>
                       </div>
-                    </div>
-                    <span className="text-[10px] text-gray-400 font-mono text-right">
-                      {formatDateString(stats.latestDraw.draw_date)}
-                    </span>
+                    ))}
                   </div>
                 ) : (
                   <span className="text-gray-500 text-xs font-mono">No data seeded yet.</span>
