@@ -233,6 +233,12 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
         jackpot TEXT
       )
     `);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+      )
+    `);
     
     // 2. Fetch homepage (only do this for recent syncs, skip for specific historical years to speed up)
     let sid = null;
@@ -240,6 +246,14 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
       const homeRes = await scrapeHomepage();
       sid = homeRes.sid;
       if (homeRes.latestDraw) {
+        // Save live next estimated jackpot to settings
+        if (homeRes.latestDraw.jackpot && homeRes.latestDraw.jackpot !== "Unknown") {
+          await db.execute({
+            sql: "INSERT OR REPLACE INTO settings (key, value) VALUES ('lotto_next_jackpot', ?)",
+            args: [homeRes.latestDraw.jackpot]
+          });
+        }
+        
         const check = await db.execute({
           sql: "SELECT 1 FROM draws WHERE draw_number = ?",
           args: [homeRes.latestDraw.draw_number]

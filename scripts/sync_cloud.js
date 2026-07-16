@@ -51,11 +51,33 @@ const db = createClient({
 });
 
 const HEADERS = {
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, win64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
   "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
   "Accept-Language": "en-US,en;q=0.9",
   "Cache-Control": "max-age=0"
 };
+
+function getScrapeUrl(url) {
+  const apiKey = process.env.SCRAPER_API_KEY || env.SCRAPER_API_KEY;
+  if (apiKey) {
+    return `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
+async function scrapeLiveJackpot() {
+  const url = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/";
+  try {
+    const res = await fetch(getScrapeUrl(url), { headers: HEADERS });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    return $("#jackpot").text().trim() || null;
+  } catch (e) {
+    console.error("[Proxy] Error scraping live jackpot:", e);
+    return null;
+  }
+}
 
 // Standardize dates
 function parseLottoDate(dateStr) {
@@ -85,7 +107,7 @@ async function scrapePlayWheMonth(month, year) {
     formData.append("playwhe_year", year.toString());
     formData.append("dateBtn", "SEARCH");
     
-    const res = await fetch(url, {
+    const res = await fetch(getScrapeUrl(url), {
       method: "POST",
       headers: {
         ...HEADERS,
@@ -134,7 +156,7 @@ async function scrapeLottoMonth(month, year) {
     formData.append("lotto_year", year.toString());
     formData.append("month_year_btn", "SEARCH");
     
-    const res = await fetch(url, {
+    const res = await fetch(getScrapeUrl(url), {
       method: "POST",
       headers: {
         ...HEADERS,
@@ -226,6 +248,12 @@ async function main() {
       winning_number INTEGER NOT NULL
     )
   `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    )
+  `);
   
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -270,6 +298,21 @@ async function main() {
   
   // 3. Lotto Plus Sync (Recent 4 Years)
   console.log("\n[Lotto Plus] Syncing draws (2023 - Present)...");
+  
+  // Scrape and update live estimated jackpot
+  try {
+    const liveJackpot = await scrapeLiveJackpot();
+    if (liveJackpot) {
+      console.log(`[Lotto Plus] Live Next Estimated Jackpot parsed: ${liveJackpot}`);
+      await db.execute({
+        sql: "INSERT OR REPLACE INTO settings (key, value) VALUES ('lotto_next_jackpot', ?)",
+        args: [liveJackpot]
+      });
+    }
+  } catch (err) {
+    console.error("Error updating estimated jackpot settings:", err);
+  }
+
   let lottoAdded = 0;
   let lottoStop = false;
   for (let y = currentYear; y >= currentYear - 3; y--) {

@@ -252,6 +252,20 @@ export default function PlayWheTab() {
     }
   };
 
+  const formatShortDate = (ds: string) => {
+    try {
+      const parts = ds.split("-");
+      if (parts.length === 3) {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const mIdx = parseInt(parts[1]) - 1;
+        return `${months[mIdx]} ${parts[2]}`;
+      }
+      return ds;
+    } catch (e) {
+      return ds;
+    }
+  };
+
   return (
     <div className="space-y-6">
       
@@ -596,7 +610,7 @@ export default function PlayWheTab() {
                 <div className="flex justify-between items-center w-full">
                   <span className="text-[10px] font-semibold tracking-wider text-gray-400 uppercase font-mono">Latest Draw Results</span>
                   <span className="text-[10px] text-secondary font-mono font-bold">
-                    {statsLoading ? "Loading..." : stats?.latestDraws?.length > 0 ? `Last 4 Draws (${formatDateString(stats.latestDraws[0].draw_date)})` : "N/A"}
+                    {statsLoading ? "Loading..." : stats?.latestDraws?.length > 0 ? "Last 4 Draws" : "N/A"}
                   </span>
                 </div>
                 
@@ -606,9 +620,14 @@ export default function PlayWheTab() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
                     {stats.latestDraws.map((draw: any) => (
                       <div key={draw.id} className="p-2 bg-slate-950/40 border border-white/5 rounded-lg flex flex-col items-center justify-between font-mono text-center">
-                        <span className="text-[8px] text-gray-500 uppercase tracking-wider font-bold">
-                          {draw.draw_time_slot}
-                        </span>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="text-[8px] text-gray-500 uppercase tracking-wider font-bold">
+                            {draw.draw_time_slot}
+                          </span>
+                          <span className="text-[7px] text-gray-400 font-semibold leading-none">
+                            {formatShortDate(draw.draw_date)}
+                          </span>
+                        </div>
                         <div className="w-9 h-9 my-1.5 rounded-full bg-primary/10 border border-primary text-primary flex items-center justify-center font-bold text-sm shadow-[0_0_10px_rgba(56,189,248,0.2)]">
                           {draw.winning_number}
                         </div>

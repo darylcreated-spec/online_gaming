@@ -215,7 +215,7 @@ export default function DashboardTab({
             <div className="space-y-0.5">
               <span className="text-xs font-semibold tracking-wider text-gray-400 uppercase font-mono">Estimated Jackpot</span>
               <div className="text-2xl font-black font-mono text-primary pulse-glow uppercase">
-                {statsLoading ? "..." : (stats?.latestDraw?.jackpot || "$10.2 MILLION").replace(/^\$/, "")}
+                {statsLoading ? "..." : (stats?.nextJackpot || stats?.latestDraw?.jackpot || "$10.2 MILLION").replace(/^\$/, "")}
               </div>
             </div>
             

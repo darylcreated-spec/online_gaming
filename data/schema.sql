@@ -30,3 +30,8 @@ CREATE TABLE IF NOT EXISTS eligible_combinations (
 );
 
 CREATE INDEX IF NOT EXISTS idx_eligible_nums ON eligible_combinations(num1, num2, num3, num4, num5);
+
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);

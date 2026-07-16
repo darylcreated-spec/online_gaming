@@ -106,12 +106,26 @@ export async function GET(request: Request) {
     
     let lastDrawDate = latestDraw ? latestDraw.draw_date : "No Draws";
     
+    // Get live next estimated jackpot from settings
+    let nextJackpot = null;
+    try {
+      const settingsRow = await query<any>(
+        "SELECT value FROM settings WHERE key = 'lotto_next_jackpot' LIMIT 1"
+      );
+      if (settingsRow.length > 0) {
+        nextJackpot = settingsRow[0].value;
+      }
+    } catch (e) {
+      console.warn("Could not retrieve next estimated jackpot from settings:", e);
+    }
+    
     return NextResponse.json({
       success: true,
       timeframe,
       totalDraws,
       lastDrawDate,
       latestDraw,
+      nextJackpot,
       mainFrequencies: mainFreqList,
       powerballFrequencies: pbFreqList,
       gapFrequencies: gapFreqList,
