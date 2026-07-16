@@ -3,6 +3,14 @@ import { db } from "./db";
 
 const BASE_URL = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/";
 
+function getScrapeUrl(url: string): string {
+  const apiKey = process.env.SCRAPER_API_KEY;
+  if (apiKey) {
+    return `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 const HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 };
@@ -35,7 +43,7 @@ export function parseDate(dateStr: string): string {
 // Scrape Homepage to get latest draw & active CSRF token (sid)
 export async function scrapeHomepage(): Promise<{ latestDraw: any | null, sid: string | null }> {
   try {
-    const res = await fetch(BASE_URL, { 
+    const res = await fetch(getScrapeUrl(BASE_URL), { 
       headers: HEADERS,
       signal: AbortSignal.timeout(30000)
     });
@@ -110,7 +118,7 @@ export async function scrapeMonth(monthStr: string, yearVal: number, sid: string
       formData.append("sid", sid);
     }
     
-    const res = await fetch(BASE_URL, {
+    const res = await fetch(getScrapeUrl(BASE_URL), {
       method: "POST",
       headers: {
         ...HEADERS,
@@ -310,7 +318,7 @@ export function parsePlayWheDate(dateStr: string): string {
 
 export async function scrapePlayWheSid(): Promise<string | null> {
   try {
-    const res = await fetch(PLAYWHE_URL, { 
+    const res = await fetch(getScrapeUrl(PLAYWHE_URL), { 
       headers: HEADERS,
       signal: AbortSignal.timeout(30000)
     });
@@ -334,7 +342,7 @@ export async function scrapePlayWheMonth(monthStr: string, yearVal: number, sid:
       formData.append("sid", sid);
     }
     
-    const res = await fetch(PLAYWHE_URL, {
+    const res = await fetch(getScrapeUrl(PLAYWHE_URL), {
       method: "POST",
       headers: {
         ...HEADERS,

@@ -11,6 +11,13 @@ from bs4 import BeautifulSoup
 # Base URL for NLCB Lotto Plus Results
 BASE_URL = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/"
 
+import urllib.parse
+def get_scrape_url(url):
+    api_key = os.environ.get("SCRAPER_API_KEY", "")
+    if api_key:
+        return f"https://api.scraperapi.com?api_key={api_key}&url={urllib.parse.quote(url)}"
+    return url
+
 # Database setup
 DB_FILE = "data/lotto.db"
 SCHEMA_FILE = "data/schema.sql"
@@ -140,7 +147,7 @@ def save_draw(conn, draw_data):
 # Parse latest draw from the main landing page
 def scrape_homepage(session):
     print("Scraping main landing page...")
-    response = session.get(BASE_URL, headers=HEADERS, timeout=30)
+    response = session.get(get_scrape_url(BASE_URL), headers=HEADERS, timeout=30)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
     
@@ -222,7 +229,7 @@ def scrape_month(session, month_str, year_val, sid):
     if sid:
         payload["sid"] = sid
         
-    response = session.post(BASE_URL, data=payload, headers=HEADERS, timeout=30)
+    response = session.post(get_scrape_url(BASE_URL), data=payload, headers=HEADERS, timeout=30)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
     
@@ -317,7 +324,7 @@ def save_play_whe_draw(conn, draw_data):
 def scrape_play_whe_sid(session):
     url = "https://www.nlcbplaywhelotto.com/nlcb-play-whe-results/"
     print(f"Scraping Play Whe page for sid: {url}")
-    response = session.get(url, headers=HEADERS, timeout=30)
+    response = session.get(get_scrape_url(url), headers=HEADERS, timeout=30)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
     sid_input = soup.find("input", {"name": "sid"})
@@ -333,7 +340,7 @@ def scrape_play_whe_month(session, month_str, year_val, sid):
         "dateBtn": "SEARCH",
         "sid": sid
     }
-    response = session.post(url, data=payload, headers=HEADERS, timeout=30)
+    response = session.post(get_scrape_url(url), data=payload, headers=HEADERS, timeout=30)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
     
