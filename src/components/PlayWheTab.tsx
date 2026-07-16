@@ -596,7 +596,7 @@ export default function PlayWheTab() {
                 <div className="flex justify-between items-center w-full">
                   <span className="text-[10px] font-semibold tracking-wider text-gray-400 uppercase font-mono">Latest Draw Results</span>
                   <span className="text-[10px] text-secondary font-mono font-bold">
-                    {statsLoading ? "Loading..." : stats?.latestDraws?.length > 0 ? "Last 4 Draws" : "N/A"}
+                    {statsLoading ? "Loading..." : stats?.latestDraws?.length > 0 ? `Last 4 Draws (${formatDateString(stats.latestDraws[0].draw_date)})` : "N/A"}
                   </span>
                 </div>
                 
