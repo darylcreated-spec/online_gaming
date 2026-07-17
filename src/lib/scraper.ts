@@ -270,13 +270,20 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
     
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const currentYear = new Date().getFullYear();
-    const startYear = targetYear ? targetYear : (full ? 2001 : currentYear - 3);
+    const startYear = targetYear ? targetYear : (full ? 2001 : currentYear);
     const endYear = targetYear ? targetYear : currentYear;
+    const currentMonthIdx = new Date().getMonth();
     
     const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
     for (let y = endYear; y >= startYear; y--) {
       for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+        // If not full sync, only check current and previous month of the current year
+        if (!full && !targetYear && y === currentYear) {
+          if (mIdx > currentMonthIdx || mIdx < currentMonthIdx - 1) {
+            continue;
+          }
+        }
         const month = months[mIdx];
         const monthDraws = await scrapeMonth(month, y, sid);
         
@@ -447,13 +454,20 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
     
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const currentYear = new Date().getFullYear();
-    const startYear = targetYear ? targetYear : (full ? 2001 : currentYear - 3);
+    const startYear = targetYear ? targetYear : (full ? 2001 : currentYear);
     const endYear = targetYear ? targetYear : currentYear;
+    const currentMonthIdx = new Date().getMonth();
     
     const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     
     for (let y = endYear; y >= startYear; y--) {
       for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+        // If not full sync, only check current and previous month of the current year
+        if (!full && !targetYear && y === currentYear) {
+          if (mIdx > currentMonthIdx || mIdx < currentMonthIdx - 1) {
+            continue;
+          }
+        }
         const month = months[mIdx];
         const monthDraws = await scrapePlayWheMonth(month, y, sid);
         

@@ -65,6 +65,19 @@ function getScrapeUrl(url) {
   return url;
 }
 
+async function scrapeSid(url) {
+  try {
+    const res = await fetch(getScrapeUrl(url), { headers: HEADERS });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    return $('input[name="sid"]').val() || null;
+  } catch (e) {
+    console.error("[Proxy] Error scraping sid token:", e);
+    return null;
+  }
+}
+
 async function scrapeLiveJackpot() {
   const url = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/";
   try {
@@ -99,13 +112,16 @@ function parseLottoDate(dateStr) {
   return `${year}-${month}-${day}`;
 }
 
-async function scrapePlayWheMonth(month, year) {
+async function scrapePlayWheMonth(month, year, sid) {
   const url = "https://www.nlcbplaywhelotto.com/nlcb-play-whe-results/";
   try {
     const formData = new URLSearchParams();
     formData.append("playwhe_month", month);
     formData.append("playwhe_year", year.toString());
     formData.append("dateBtn", "SEARCH");
+    if (sid) {
+      formData.append("sid", sid);
+    }
     
     const res = await fetch(getScrapeUrl(url), {
       method: "POST",
@@ -148,13 +164,16 @@ async function scrapePlayWheMonth(month, year) {
   }
 }
 
-async function scrapeLottoMonth(month, year) {
+async function scrapeLottoMonth(month, year, sid) {
   const url = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/";
   try {
     const formData = new URLSearchParams();
     formData.append("lotto_month", month);
     formData.append("lotto_year", year.toString());
     formData.append("month_year_btn", "SEARCH");
+    if (sid) {
+      formData.append("sid", sid);
+    }
     
     const res = await fetch(getScrapeUrl(url), {
       method: "POST",
@@ -257,6 +276,10 @@ async function main() {
   
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+  // Retrieve active CSRF tokens for both targets
+  const playWheSid = await scrapeSid("https://www.nlcbplaywhelotto.com/nlcb-play-whe-results/");
+  const lottoSid = await scrapeSid("https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/");
+
   // 2. Play Whe Sync (Recent 4 Years)
   console.log("\n[Play Whe] Syncing draws (2023 - Present)...");
   let playWheAdded = 0;
@@ -267,7 +290,7 @@ async function main() {
     const startMonthIdx = (y === currentYear) ? new Date().getMonth() : months.length - 1;
     for (let mIdx = startMonthIdx; mIdx >= 0; mIdx--) {
       const month = months[mIdx];
-      const draws = await scrapePlayWheMonth(month, y);
+      const draws = await scrapePlayWheMonth(month, y, playWheSid);
       
       if (draws.length > 0) {
         let allExist = true;
@@ -321,7 +344,7 @@ async function main() {
     const startMonthIdx = (y === currentYear) ? new Date().getMonth() : months.length - 1;
     for (let mIdx = startMonthIdx; mIdx >= 0; mIdx--) {
       const month = months[mIdx];
-      const draws = await scrapeLottoMonth(month, y);
+      const draws = await scrapeLottoMonth(month, y, lottoSid);
       
       if (draws.length > 0) {
         let allExist = true;
