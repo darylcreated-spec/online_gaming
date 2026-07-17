@@ -8,7 +8,7 @@ import CheckerTab from "@/components/CheckerTab";
 import PlayWheTab from "@/components/PlayWheTab";
 import SettingsTab from "@/components/SettingsTab";
 import WelcomeTab from "@/components/WelcomeTab";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, Sparkles, HelpCircle } from "lucide-react";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, Sparkles, HelpCircle, Menu, X } from "lucide-react";
 
 const SlotMachine = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -85,6 +85,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "settings">("welcome");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder">("dashboard");
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Scraper Sync States
   const [syncing, setSyncing] = useState(false);
@@ -248,7 +249,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#020617] text-white flex flex-col selection:bg-primary/30 selection:text-white">
       
       {/* Global Terminal Header */}
-      <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-4 px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-950/70 backdrop-blur-md">
+      <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-4 px-6 md:px-12 flex justify-between items-center bg-slate-950/70 backdrop-blur-md w-full">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 border border-primary/20 text-primary rounded-lg shadow-[0_0_15px_rgba(56,189,248,0.25)]">
             <SlotMachine className="w-6 h-6 animate-pulse" />
@@ -263,8 +264,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Global Navigation Tabs */}
-        <nav className="flex flex-wrap md:flex-nowrap justify-center gap-1 bg-slate-900/60 p-1 rounded-lg border border-white/5 w-full md:w-auto">
+        {/* Global Navigation Tabs (Desktop Only) */}
+        <nav className="hidden md:flex bg-slate-900/60 p-1 rounded-lg border border-white/5 gap-1">
           <button
             onClick={() => setActiveTab("welcome")}
             className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
@@ -345,6 +346,14 @@ export default function Home() {
             SETTINGS
           </button>
         </nav>
+
+        {/* Mobile Hamburger Trigger (Mobile Only) */}
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="md:hidden p-2 rounded-lg bg-slate-900 border border-white/5 text-gray-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
       </header>
 
       {/* Main Viewport Container */}
@@ -454,6 +463,112 @@ export default function Home() {
           This app is not affiliated with the National Lotteries Control Board (NLCB) and does not guarantee any winning combinations.
         </div>
       </footer>
+
+      {/* Mobile Drawer (Side Draw) Menu */}
+      {drawerOpen && (
+        <>
+          {/* Custom CSS Animation Keyframes for Drawer */}
+          <style>{`
+            @keyframes drawerSlideIn {
+              from { transform: translateX(100%); }
+              to { transform: translateX(0); }
+            }
+            .animate-drawer-slide-in {
+              animation: drawerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+          `}</style>
+
+          {/* Backdrop Overlay */}
+          <div 
+            onClick={() => setDrawerOpen(false)} 
+            className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm transition-opacity duration-300 md:hidden"
+          />
+          
+          {/* Drawer Sidebar Panel */}
+          <div 
+            className="fixed top-0 right-0 h-full w-64 bg-slate-950 border-l border-white/10 z-[101] p-6 flex flex-col gap-6 md:hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-drawer-slide-in"
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-white/5 pb-4">
+              <span className="font-mono font-bold text-xs uppercase tracking-wider text-gray-400">NAVIGATION</span>
+              <button 
+                onClick={() => setDrawerOpen(false)} 
+                className="text-gray-400 hover:text-white p-1 rounded hover:bg-white/5 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Nav Stack */}
+            <nav className="flex flex-col gap-2">
+              <button
+                onClick={() => { setActiveTab("welcome"); setDrawerOpen(false); }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all cursor-pointer ${
+                  activeTab === "welcome"
+                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <img src="/images/welcome_icon.png" alt="Home" className="w-5 h-5 object-contain" />
+                HOME
+              </button>
+              
+              <button
+                onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("dashboard"); setDrawerOpen(false); }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all cursor-pointer ${
+                  activeTab === "lotto-plus"
+                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <img src="/images/lotto_plus_icon.png" alt="Lotto Plus" className="w-5 h-5 object-contain" />
+                LOTTO PLUS
+              </button>
+
+              <button
+                onClick={() => { setActiveTab("play-whe"); setDrawerOpen(false); }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all cursor-pointer ${
+                  activeTab === "play-whe"
+                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <img src="/images/play_whe_icon.png" alt="Play Whe" className="w-5 h-5 object-contain" />
+                PLAY WHE
+              </button>
+
+              <button
+                onClick={() => { setActiveTab("scanner"); setDrawerOpen(false); }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all cursor-pointer ${
+                  activeTab === "scanner"
+                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <img src="/images/scanner_icon.png" alt="Scanner" className="w-5 h-5 object-contain" />
+                TICKET SCANNER
+              </button>
+
+              <button
+                onClick={() => { setActiveTab("settings"); setDrawerOpen(false); }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all cursor-pointer ${
+                  activeTab === "settings"
+                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <img src="/images/settings_icon.png" alt="Settings" className="w-5 h-5 object-contain" />
+                SETTINGS
+              </button>
+            </nav>
+
+            {/* Footer inside drawer */}
+            <div className="mt-auto border-t border-white/5 pt-4 text-center">
+              <span className="text-[9px] font-mono text-gray-500 block uppercase">The Win Concept</span>
+            </div>
+          </div>
+        </>
+      )}
 
     </div>
   );
