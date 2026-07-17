@@ -80,9 +80,25 @@ const getNextPlayWheDraw = () => {
   return { name: "Morning Draw", time: "10:30 AM", day: "Tomorrow" };
 };
 
-export default function PlayWheTab() {
-  const [subTab, setSubTab] = useState<"translator" | "dashboard" | "relationship" | "history">("dashboard");
-  const [showHelp, setShowHelp] = useState(false);
+export default function PlayWheTab({
+  activeSubTab,
+  onSubTabChange,
+  showExplainer,
+  onShowExplainerChange
+}: {
+  activeSubTab?: "translator" | "dashboard" | "relationship" | "history";
+  onSubTabChange?: (tab: "translator" | "dashboard" | "relationship" | "history") => void;
+  showExplainer?: boolean;
+  onShowExplainerChange?: (show: boolean) => void;
+} = {}) {
+  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "relationship" | "history">("dashboard");
+  const [localShowHelp, setLocalShowHelp] = useState(false);
+
+  const subTab = activeSubTab !== undefined ? activeSubTab : localSubTab;
+  const setSubTab = onSubTabChange !== undefined ? onSubTabChange : setLocalSubTab;
+
+  const showHelp = showExplainer !== undefined ? showExplainer : localShowHelp;
+  const setShowHelp = onShowExplainerChange !== undefined ? onShowExplainerChange : setLocalShowHelp;
   
   // Analytics States
   const [stats, setStats] = useState<any>(null);
