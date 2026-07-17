@@ -286,13 +286,7 @@ export default function PlayWheTab({
     <div className="space-y-6">
       
       {/* Tab Sub-Navigation Menu */}
-      <div className="flex flex-col md:flex-row gap-4 border-b border-white/5 pb-4 items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 border border-primary/20 text-primary rounded-lg shadow-[0_0_15px_rgba(56,189,248,0.25)]">
-            <PlayWheIcon className="w-6 h-6 animate-pulse" />
-          </div>
-          <h2 className="text-xl font-bold tracking-tight text-white font-mono uppercase">PLAY WHE</h2>
-        </div>
+      <div className="flex flex-col md:flex-row gap-4 border-b border-white/5 pb-4 items-center">
         <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto">
           <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 overflow-x-auto w-full md:w-auto">
             <button
