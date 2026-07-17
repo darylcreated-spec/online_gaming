@@ -44,12 +44,34 @@ export default function WelcomeTab({ onNavigate }: WelcomeTabProps) {
           75% { transform: translate(30px, 20px); }
         }
         
+        @keyframes text-shine {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        
         .animate-bounce-ball-1 { animation: bounce-ball-1 4.5s infinite ease-in-out; }
         .animate-bounce-ball-2 { animation: bounce-ball-2 5s infinite ease-in-out; }
         .animate-bounce-ball-3 { animation: bounce-ball-3 4s infinite ease-in-out; }
         .animate-bounce-ball-4 { animation: bounce-ball-4 5.5s infinite ease-in-out; }
         .animate-bounce-ball-5 { animation: bounce-ball-5 3.8s infinite ease-in-out; }
         .animate-spin-slow { animation: spin 25s infinite linear; }
+        
+        .animate-text-shine {
+          background: linear-gradient(
+            to right,
+            #ffffff 20%,
+            #38bdf8 38%,
+            #a78bfa 50%,
+            #38bdf8 62%,
+            #ffffff 80%
+          );
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: text-shine 4s linear infinite;
+        }
       `}</style>
 
       {/* Visual Header Grid */}
@@ -97,7 +119,7 @@ export default function WelcomeTab({ onNavigate }: WelcomeTabProps) {
 
         {/* Welcome Text block (Col Span 7) */}
         <div className="md:col-span-7 space-y-4">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white font-mono uppercase bg-gradient-to-r from-white via-slate-100 to-primary bg-clip-text text-transparent">
+          <h1 className="text-4xl font-extrabold tracking-tight font-mono uppercase animate-text-shine drop-shadow-[0_0_15px_rgba(56,189,248,0.2)]">
             THE WIN CONCEPT
           </h1>
           <p className="text-sm text-gray-400 leading-relaxed font-mono">
