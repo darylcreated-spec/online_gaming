@@ -773,7 +773,7 @@ export default function PlayWheTab({
                 <span className="text-[10px] text-primary uppercase tracking-widest font-bold">Predictive analytics</span>
                 <h3 className="text-sm font-bold text-white uppercase flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-                  Google Antigravity Draw Predictor
+                  Draw Predictor
                 </h3>
               </div>
               <span className="text-[9px] text-gray-500 font-mono">
