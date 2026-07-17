@@ -411,7 +411,7 @@ export default function Home() {
               }`}
             >
               <HelpCircle className="w-3.5 h-3.5" />
-              HOE IT WORKS
+              HOW IT WORKS
             </button>
           </div>
         )}
