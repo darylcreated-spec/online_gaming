@@ -293,7 +293,6 @@ export default function PlayWheTab({
           </div>
           <h2 className="text-xl font-bold tracking-tight text-white font-mono uppercase">PLAY WHE</h2>
         </div>
-        
         <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto">
           <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 overflow-x-auto w-full md:w-auto">
             <button
@@ -305,7 +304,7 @@ export default function PlayWheTab({
               }`}
             >
               <BarChart2 className="w-3.5 h-3.5" />
-              ANALYTICS DASHBOARD
+              DASHBOARD
             </button>
             
             <button
@@ -354,7 +353,7 @@ export default function PlayWheTab({
             }`}
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            {showHelp ? "HIDE GUIDE" : "EXPLAIN SECTIONS"}
+            {showHelp ? "HIDE GUIDE" : "HOW IT WORKS"}
           </button>
         </div>
       </div>

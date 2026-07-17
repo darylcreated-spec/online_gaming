@@ -402,7 +402,7 @@ export default function Home() {
               }`}
             >
               <ClipboardList className="w-3.5 h-3.5" />
-              PREDICTION BUILDER
+              ODDS REDUCTION
             </button>
             <button
               onClick={() => setLottoSubTab("explain")}
@@ -422,8 +422,12 @@ export default function Home() {
         {activeTab === "welcome" && (
           <WelcomeTab
             onNavigate={(tab) => {
-              setActiveTab(tab === "lotto" ? "lotto-plus" : "play-whe");
-              if (tab === "lotto") setLottoSubTab("dashboard");
+              setActiveTab(tab);
+              if (tab === "lotto-plus") setLottoSubTab("dashboard");
+              if (tab === "play-whe") {
+                setPlayWheSubTab("dashboard");
+                setPlayWheExplain(false);
+              }
             }}
           />
         )}
@@ -650,7 +654,7 @@ export default function Home() {
                     }`}
                   >
                     <ClipboardList className="w-3 h-3" />
-                    WHEELING BUILDER
+                    ODDS REDUCTION
                   </button>
                   <button
                     onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("explain"); setDrawerOpen(false); }}
@@ -704,7 +708,7 @@ export default function Home() {
                     }`}
                   >
                     <Sparkles className="w-3 h-3" />
-                    TRANSLATOR
+                    CHINAPOO DICTIONARY
                   </button>
                   <button
                     onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("relationship"); setPlayWheExplain(false); setDrawerOpen(false); }}

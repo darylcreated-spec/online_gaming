@@ -1,13 +1,42 @@
 "use client";
 
-import React from "react";
-import { Info, Sparkles, Heart } from "lucide-react";
+import React, { useState } from "react";
+import { Info, Heart, ChevronDown, Layers } from "lucide-react";
 
 interface WelcomeTabProps {
-  onNavigate: (tab: "lotto" | "playwhe") => void;
+  onNavigate: (tab: "lotto-plus" | "play-whe" | "scanner" | "settings") => void;
 }
 
 export default function WelcomeTab({ onNavigate }: WelcomeTabProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const options = [
+    { 
+      id: "lotto-plus", 
+      label: "Lotto Plus Analytics", 
+      desc: "Odds reduction, draw logs & guides", 
+      icon: "/images/lotto_plus_icon.png" 
+    },
+    { 
+      id: "play-whe", 
+      label: "Play Whe Analytics", 
+      desc: "Relationship map, dictionary & logs", 
+      icon: "/images/play_whe_icon.png" 
+    },
+    { 
+      id: "scanner", 
+      label: "Ticket Scanner", 
+      desc: "Scan physical slips with camera", 
+      icon: "/images/scanner_icon.png" 
+    },
+    { 
+      id: "settings", 
+      label: "System Settings", 
+      desc: "Database diagnostics & updates", 
+      icon: "/images/settings_icon.png" 
+    }
+  ] as const;
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-10">
       
@@ -82,42 +111,42 @@ export default function WelcomeTab({ onNavigate }: WelcomeTabProps) {
           {/* Glowing Background Radial */}
           <div className="absolute w-48 h-48 bg-primary/20 rounded-full blur-[60px] animate-pulse" />
           
-          {/* Tumbler Stand (SVG Background) */}
+          {/* Tumbler Stand */}
           <svg viewBox="0 0 100 100" className="absolute w-52 h-52 text-slate-700/60 stroke-current fill-none stroke-[2.5] z-0">
             <path d="M20,85 L35,40 L65,40 L80,85" strokeLinecap="round" />
             <path d="M15,85 L85,85" strokeLinecap="round" strokeWidth="4" />
             <circle cx="50" cy="40" r="5" fill="#020617" stroke="white" strokeWidth="2" />
           </svg>
 
-          {/* Outer Spin Tumbler Cage (Front layer) */}
+          {/* Outer Spin Tumbler Cage */}
           <div className="absolute w-44 h-44 border border-dashed border-white/10 rounded-full animate-spin-slow z-10 pointer-events-none" />
           
           {/* Bouncing Balls Glass Capsule Container */}
           <div className="relative w-32 h-32 rounded-full bg-slate-950/60 border border-white/15 overflow-hidden backdrop-blur-md shadow-[inset_0_0_25px_rgba(255,255,255,0.08)] z-20 flex items-center justify-center">
-            {/* Ball 1 (Cyan) */}
+            {/* Ball 1 */}
             <div className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white font-mono font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(56,189,248,0.5)] animate-bounce-ball-1 select-none">
               14
             </div>
-            {/* Ball 2 (Purple) */}
+            {/* Ball 2 */}
             <div className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-mono font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(168,85,247,0.5)] animate-bounce-ball-2 select-none">
               30
             </div>
-            {/* Ball 3 (Emerald) */}
+            {/* Ball 3 */}
             <div className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 text-white font-mono font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(52,211,153,0.5)] animate-bounce-ball-3 select-none">
               9
             </div>
-            {/* Ball 4 (Amber) */}
+            {/* Ball 4 */}
             <div className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-white font-mono font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.5)] animate-bounce-ball-4 select-none">
               35
             </div>
-            {/* Ball 5 (Rose) */}
+            {/* Ball 5 */}
             <div className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 text-white font-mono font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(244,63,94,0.5)] animate-bounce-ball-5 select-none">
               1
             </div>
           </div>
         </div>
 
-        {/* Welcome Text block (Col Span 7) */}
+        {/* Welcome Text block */}
         <div className="md:col-span-7 space-y-4">
           <h1 className="text-4xl font-extrabold tracking-tight font-mono uppercase animate-text-shine drop-shadow-[0_0_15px_rgba(56,189,248,0.2)]">
             THE WIN CONCEPT
@@ -128,45 +157,49 @@ export default function WelcomeTab({ onNavigate }: WelcomeTabProps) {
         </div>
       </div>
 
-      {/* Dual Portal Selection Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      {/* Dropdown Selection Panel */}
+      <div className="max-w-md mx-auto space-y-3 relative font-mono">
+        <label className="text-[10px] font-bold tracking-widest text-primary uppercase block text-center">
+          Select Analytical Portal
+        </label>
         
-        {/* Lotto Plus Card */}
         <button
-          onClick={() => onNavigate("lotto")}
-          className="glass-panel p-6 rounded-2xl border-primary/15 bg-primary/[0.01] hover:border-primary/45 hover:bg-primary/[0.03] transition-all text-left group space-y-4 relative overflow-hidden flex flex-col justify-between cursor-pointer"
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between px-5 py-4 rounded-xl border border-white/10 bg-slate-900/40 hover:bg-slate-900/60 hover:border-primary/45 transition-all text-xs font-bold text-white shadow-lg cursor-pointer"
         >
-          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
-          <div className="space-y-3">
-            <span className="text-[10px] font-bold tracking-widest text-primary uppercase font-mono">Model Option 1</span>
-            <h3 className="text-xl font-extrabold text-white font-mono uppercase tracking-wide">Lotto Plus Analytics</h3>
-            <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-              Explore Delta spacing models, Powerball frequency charts, Hot/Cold listings, and generate optimized combinations based on past draws.
-            </p>
-          </div>
-          <div className="pt-4 flex items-center justify-between text-xs font-mono font-bold text-white group-hover:text-primary transition-colors">
-            <span>ENTER LOTTO ANALYTICS →</span>
-          </div>
+          <span className="flex items-center gap-3">
+            <Layers className="w-4 h-4 text-primary animate-pulse" />
+            CHOOSE A GAME OR UTILITY...
+          </span>
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? "transform rotate-180" : ""}`} />
         </button>
 
-        {/* Play Whe Card */}
-        <button
-          onClick={() => onNavigate("playwhe")}
-          className="glass-panel p-6 rounded-2xl border-secondary/15 bg-secondary/[0.01] hover:border-secondary/45 hover:bg-secondary/[0.03] transition-all text-left group space-y-4 relative overflow-hidden flex flex-col justify-between cursor-pointer"
-        >
-          <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-full blur-2xl group-hover:bg-secondary/10 transition-colors" />
-          <div className="space-y-3">
-            <span className="text-[10px] font-bold tracking-widest text-secondary uppercase font-mono">Model Option 2</span>
-            <h3 className="text-xl font-extrabold text-white font-mono uppercase tracking-wide">Play Whe Analytics</h3>
-            <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-              Analyze Saturday Evening playbacks, traditional Chinapoo groupings, co-occurring daily companions, and successors maps.
-            </p>
+        {isOpen && (
+          <div className="absolute left-0 right-0 mt-2 rounded-xl border border-white/10 bg-slate-950/95 backdrop-blur-md overflow-hidden z-[100] shadow-[0_10px_40px_rgba(0,0,0,0.9)]">
+            <div className="p-1.5 flex flex-col gap-1">
+              {options.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    onNavigate(opt.id);
+                    setIsOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-lg text-left hover:bg-white/5 transition-colors cursor-pointer group"
+                >
+                  <img src={opt.icon} alt={opt.label} className="w-6 h-6 object-contain shrink-0 group-hover:scale-105 transition-transform" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-white group-hover:text-primary transition-colors">
+                      {opt.label}
+                    </span>
+                    <span className="text-[9px] text-gray-500 uppercase mt-0.5">
+                      {opt.desc}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="pt-4 flex items-center justify-between text-xs font-mono font-bold text-white group-hover:text-secondary transition-colors">
-            <span>ENTER PLAY WHE ANALYTICS →</span>
-          </div>
-        </button>
-
+        )}
       </div>
 
       {/* Warning Disclaimer Panel */}
