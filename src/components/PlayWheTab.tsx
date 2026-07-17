@@ -27,7 +27,8 @@ import {
   ChevronLeft, 
   ChevronRight, 
   TrendingUp, 
-  Database
+  Database,
+  Sparkles
 } from "lucide-react";
 
 const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -104,6 +105,10 @@ export default function PlayWheTab({
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsLimit, setStatsLimit] = useState(999999);
+  
+  // Predictor States
+  const [predictorData, setPredictorData] = useState<any[]>([]);
+  const [predictorLoading, setPredictorLoading] = useState(false);
   
   // Chinapoo Dictionary States
   const [manualSearchQuery, setManualSearchQuery] = useState("");
@@ -189,6 +194,75 @@ export default function PlayWheTab({
   useEffect(() => {
     fetchStats();
   }, [statsLimit]);
+
+  // Predictor Calculations Engine using custom rules
+  useEffect(() => {
+    if (!stats?.latestDraw) return;
+    const lastNum = stats.latestDraw.winning_number;
+    
+    const loadPredictions = async () => {
+      try {
+        setPredictorLoading(true);
+        // Get successor correlations
+        const res = await fetch(`/api/playwhe/correlation?number=${lastNum}&limit=1000`);
+        const data = await res.json();
+        
+        if (data.success && data.successors) {
+          const upcomingSlot = getNextPlayWheDraw().name.split(" ")[0]; // "Morning" | "Midday" | "Afternoon" | "Evening"
+          const slotHotList = stats.slotStats[upcomingSlot]?.hot || [];
+          const slotColdList = stats.slotStats[upcomingSlot]?.cold || [];
+          
+          const predictions = Array.from({ length: 36 }).map((_, idx) => {
+             const num = idx + 1;
+             
+             // 1. Successor correlation score
+             const succEntry = data.successors.find((s: any) => s.number === num);
+             const succHits = succEntry ? succEntry.count : 0;
+             const maxSuccHits = Math.max(...data.successors.map((s: any) => s.count), 1);
+             const successorWeight = (succHits / maxSuccHits) * 40;
+             
+             // 2. Slot-specific hot frequency
+             const slotEntry = slotHotList.find((s: any) => s.number === num);
+             const slotHits = slotEntry ? slotEntry.count : 0;
+             const maxSlotHits = Math.max(...slotHotList.map((s: any) => s.count), 1);
+             const slotWeight = (slotHits / maxSlotHits) * 30;
+             
+             // 3. Sleep/Gap due-factor
+             const coldEntry = slotColdList.find((s: any) => s.number === num);
+             const gapFactor = coldEntry ? Math.min(1.5, coldEntry.gap / (coldEntry.count || 1)) : 0.5;
+             const gapWeight = gapFactor * 20;
+             
+             const compositeScore = Math.min(100, Math.max(0, Math.round(successorWeight + slotWeight + gapWeight + (Math.random() * 5))));
+             
+             let reason = "Baseline Probability";
+             if (successorWeight > slotWeight && successorWeight > gapWeight) {
+               reason = `Successor to #${lastNum}`;
+             } else if (slotWeight > successorWeight && slotWeight > gapWeight) {
+               reason = `${upcomingSlot} Slot Hotspot`;
+             } else if (gapWeight > successorWeight && gapWeight > slotWeight) {
+               reason = "Extreme Draw Overdue";
+             }
+             
+             return {
+               number: num,
+               mark: CHINAPOO_CHART[num].mark,
+               score: compositeScore,
+               reason
+             };
+          });
+          
+          const top5 = predictions.sort((a, b) => b.score - a.score).slice(0, 5);
+          setPredictorData(top5);
+        }
+      } catch (err) {
+        console.error("Error loading predictions:", err);
+      } finally {
+        setPredictorLoading(false);
+      }
+    };
+    
+    loadPredictions();
+  }, [stats]);
 
   useEffect(() => {
     fetchHistory();
@@ -679,6 +753,64 @@ export default function PlayWheTab({
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Predictor Panel */}
+          <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-4">
+            <div className="flex justify-between items-center border-b border-white/5 pb-3">
+              <div className="space-y-1">
+                <span className="text-[10px] text-primary uppercase tracking-widest font-bold">Predictive analytics</span>
+                <h3 className="text-sm font-bold text-white uppercase flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                  Google Antigravity Draw Predictor
+                </h3>
+              </div>
+              <span className="text-[9px] text-gray-500 font-mono">
+                UPCOMING SLOT: {getNextPlayWheDraw().name.toUpperCase()}
+              </span>
+            </div>
+
+            {predictorLoading ? (
+              <div className="py-8 flex flex-col items-center justify-center space-y-2">
+                <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+                <span className="text-[10px] font-mono text-gray-500">Calculating transition vectors...</span>
+              </div>
+            ) : predictorData.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+                {predictorData.map((pred, i) => (
+                  <div 
+                    key={pred.number} 
+                    className="p-4 bg-slate-950/60 border border-white/5 hover:border-primary/40 rounded-xl flex flex-col items-center justify-between text-center transition-all duration-300 relative overflow-hidden font-mono group"
+                  >
+                    {/* Rank Badge */}
+                    <div className="absolute top-2 left-2 text-[8px] font-bold text-gray-500">
+                      #{i + 1}
+                    </div>
+                    {/* Score Ring */}
+                    <div className="absolute top-2 right-2 text-[8px] font-bold text-primary">
+                      {pred.score}%
+                    </div>
+
+                    <div className="w-12 h-12 my-3 rounded-full bg-primary/10 border border-primary/30 text-primary flex items-center justify-center font-bold text-lg shadow-[0_0_15px_rgba(56,189,248,0.15)] group-hover:scale-105 transition-transform duration-300">
+                      {pred.number}
+                    </div>
+
+                    <div className="space-y-1 w-full">
+                      <span className="text-[10px] font-extrabold text-white uppercase truncate block">
+                        {pred.mark.split(" ")[0]}
+                      </span>
+                      <span className="text-[8px] text-gray-500 uppercase block font-semibold">
+                        {pred.reason}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-xs text-gray-500 font-mono">
+                Awaiting stats ingestion...
+              </div>
+            )}
           </div>
 
           {/* Top Analytical Cards */}
