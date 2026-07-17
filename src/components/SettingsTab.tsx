@@ -232,17 +232,24 @@ export default function SettingsTab() {
       {/* Interactive Explainer Card */}
       <div className="glass-panel border border-white/5 p-4 rounded-xl bg-slate-950/20 flex gap-3.5">
         <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <h4 className="text-xs font-bold text-white uppercase font-mono tracking-wider">
-            Synchronization Architecture
+        <div className="space-y-2 font-mono">
+          <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+            Synchronization Guide & Control Actions
           </h4>
           <p className="text-[11px] text-gray-400 leading-relaxed">
-            Due to hosting firewall rules, cloud-based automatic sync runners (e.g. GitHub Actions or Vercel Serverless) 
-            cannot scrape the NLCB results website directly because they block hosting provider IP ranges. 
-            To bypass this, you can trigger updates directly from your unblocked local computer by running 
-            <code className="text-primary mx-1 px-1 bg-slate-950 rounded font-mono font-semibold">npm run sync-cloud</code> in your terminal. 
-            Alternatively, use the controls below to trigger a backend database refresh.
+            Due to hosting firewall limits, automated servers (like Vercel) are blocked by NLCB. To pull latest numbers, trigger a direct update below or run <code className="text-primary mx-1 px-1 bg-slate-950 rounded font-semibold">npm run sync-cloud</code> in your terminal.
           </p>
+          <div className="border-t border-white/5 pt-2 mt-1 space-y-1.5 text-[10px] text-gray-400">
+            <div>
+              <strong className="text-primary uppercase font-bold">● SYNC RECENT:</strong> Connects to NLCB, scrapes the latest draw results, and saves them to your database. **Use this to get today's drawings.**
+            </div>
+            <div>
+              <strong className="text-amber-400 uppercase font-bold">● SYNC FULL:</strong> Wipes and completely reconstructs the historical archive from 2001 to Present (takes 1–2 mins).
+            </div>
+            <div>
+              <strong className="text-white uppercase font-bold">● REFRESH (top right):</strong> Updates the display statistics and latest draw details on this screen from the database (does not scrape NLCB).
+            </div>
+          </div>
         </div>
       </div>
 
