@@ -270,17 +270,25 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
     
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const currentYear = new Date().getFullYear();
-    const startYear = targetYear ? targetYear : (full ? 2001 : currentYear);
-    const endYear = targetYear ? targetYear : currentYear;
     const currentMonthIdx = new Date().getMonth();
+    
+    // If it's January (index 0), allow startYear to go back to previous year to check December
+    const startYear = targetYear ? targetYear : (full ? 2001 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
+    const endYear = targetYear ? targetYear : currentYear;
     
     const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
     for (let y = endYear; y >= startYear; y--) {
       for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
-        // If not full sync, only check current and previous month of the current year
-        if (!full && !targetYear && y === currentYear) {
-          if (mIdx > currentMonthIdx || mIdx < currentMonthIdx - 1) {
+        // If not full sync, limit to current month and previous month (handling January/December crossover)
+        if (!full && !targetYear) {
+          if (y === currentYear) {
+            if (mIdx > currentMonthIdx || (mIdx < currentMonthIdx - 1 && currentMonthIdx > 0)) {
+              continue;
+            }
+          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11) {
+            // Allow December of previous year when we are in January
+          } else {
             continue;
           }
         }
@@ -454,17 +462,25 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
     
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const currentYear = new Date().getFullYear();
-    const startYear = targetYear ? targetYear : (full ? 2001 : currentYear);
-    const endYear = targetYear ? targetYear : currentYear;
     const currentMonthIdx = new Date().getMonth();
+    
+    // If it's January (index 0), allow startYear to go back to previous year to check December
+    const startYear = targetYear ? targetYear : (full ? 2001 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
+    const endYear = targetYear ? targetYear : currentYear;
     
     const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     
     for (let y = endYear; y >= startYear; y--) {
       for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
-        // If not full sync, only check current and previous month of the current year
-        if (!full && !targetYear && y === currentYear) {
-          if (mIdx > currentMonthIdx || mIdx < currentMonthIdx - 1) {
+        // If not full sync, limit to current month and previous month (handling January/December crossover)
+        if (!full && !targetYear) {
+          if (y === currentYear) {
+            if (mIdx > currentMonthIdx || (mIdx < currentMonthIdx - 1 && currentMonthIdx > 0)) {
+              continue;
+            }
+          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11) {
+            // Allow December of previous year when we are in January
+          } else {
             continue;
           }
         }
