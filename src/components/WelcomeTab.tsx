@@ -11,34 +11,86 @@ export default function WelcomeTab({ onNavigate }: WelcomeTabProps) {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-10">
       
+      {/* Inject Custom Ball Bouncing Keyframes */}
+      <style>{`
+        @keyframes bounce-ball-1 {
+          0%, 100% { transform: translate(10px, 20px); }
+          25% { transform: translate(65px, 15px); }
+          50% { transform: translate(45px, 75px); }
+          75% { transform: translate(12px, 50px); }
+        }
+        @keyframes bounce-ball-2 {
+          0%, 100% { transform: translate(75px, 40px); }
+          20% { transform: translate(25px, 70px); }
+          45% { transform: translate(15px, 15px); }
+          70% { transform: translate(60px, 10px); }
+        }
+        @keyframes bounce-ball-3 {
+          0%, 100% { transform: translate(40px, 60px); }
+          30% { transform: translate(15px, 15px); }
+          60% { transform: translate(70px, 30px); }
+          80% { transform: translate(20px, 75px); }
+        }
+        @keyframes bounce-ball-4 {
+          0%, 100% { transform: translate(15px, 55px); }
+          15% { transform: translate(60px, 70px); }
+          55% { transform: translate(45px, 12px); }
+          75% { transform: translate(75px, 35px); }
+        }
+        @keyframes bounce-ball-5 {
+          0%, 100% { transform: translate(50px, 12px); }
+          25% { transform: translate(12px, 65px); }
+          50% { transform: translate(75px, 55px); }
+          75% { transform: translate(30px, 20px); }
+        }
+        
+        .animate-bounce-ball-1 { animation: bounce-ball-1 4.5s infinite ease-in-out; }
+        .animate-bounce-ball-2 { animation: bounce-ball-2 5s infinite ease-in-out; }
+        .animate-bounce-ball-3 { animation: bounce-ball-3 4s infinite ease-in-out; }
+        .animate-bounce-ball-4 { animation: bounce-ball-4 5.5s infinite ease-in-out; }
+        .animate-bounce-ball-5 { animation: bounce-ball-5 3.8s infinite ease-in-out; }
+        .animate-spin-slow { animation: spin 25s infinite linear; }
+      `}</style>
+
       {/* Visual Header Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
         
-        {/* Floating Animated Graphic (Col Span 5) */}
-        <div className="md:col-span-5 flex justify-center relative select-none">
+        {/* Floating Animated Graphic (Col Span 5) - Bingo Tumbler */}
+        <div className="md:col-span-5 flex justify-center relative select-none h-56 items-center">
           {/* Glowing Background Radial */}
           <div className="absolute w-48 h-48 bg-primary/20 rounded-full blur-[60px] animate-pulse" />
           
-          {/* Interactive CSS Floating Token */}
-          <div className="relative w-40 h-40 flex items-center justify-center animate-bounce duration-[6000ms] ease-in-out">
-            <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-[0_0_20px_rgba(56,189,248,0.4)] animate-spin-slow">
-              <defs>
-                <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#38bdf8" />
-                  <stop offset="50%" stopColor="#818cf8" />
-                  <stop offset="100%" stopColor="#c084fc" />
-                </linearGradient>
-              </defs>
-              {/* Outer Glowing Rings */}
-              <circle cx="100" cy="100" r="85" fill="none" stroke="url(#glowGrad)" strokeWidth="3" strokeDasharray="10 15" className="opacity-80" />
-              <circle cx="100" cy="100" r="70" fill="none" stroke="url(#glowGrad)" strokeWidth="1.5" strokeDasharray="30 8" className="opacity-60" />
-              
-              {/* Floating inner geometric core */}
-              <polygon points="100,45 145,130 55,130" fill="none" stroke="url(#glowGrad)" strokeWidth="4" />
-              <circle cx="100" cy="85" r="15" fill="url(#glowGrad)" />
-            </svg>
-            <div className="absolute text-white font-mono font-black text-lg tracking-wider animate-pulse">
-              LUCK
+          {/* Tumbler Stand (SVG Background) */}
+          <svg viewBox="0 0 100 100" className="absolute w-52 h-52 text-slate-700/60 stroke-current fill-none stroke-[2.5] z-0">
+            <path d="M20,85 L35,40 L65,40 L80,85" strokeLinecap="round" />
+            <path d="M15,85 L85,85" strokeLinecap="round" strokeWidth="4" />
+            <circle cx="50" cy="40" r="5" fill="#020617" stroke="white" strokeWidth="2" />
+          </svg>
+
+          {/* Outer Spin Tumbler Cage (Front layer) */}
+          <div className="absolute w-44 h-44 border border-dashed border-white/10 rounded-full animate-spin-slow z-10 pointer-events-none" />
+          
+          {/* Bouncing Balls Glass Capsule Container */}
+          <div className="relative w-32 h-32 rounded-full bg-slate-950/60 border border-white/15 overflow-hidden backdrop-blur-md shadow-[inset_0_0_25px_rgba(255,255,255,0.08)] z-20 flex items-center justify-center">
+            {/* Ball 1 (Cyan) */}
+            <div className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white font-mono font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(56,189,248,0.5)] animate-bounce-ball-1 select-none">
+              14
+            </div>
+            {/* Ball 2 (Purple) */}
+            <div className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-mono font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(168,85,247,0.5)] animate-bounce-ball-2 select-none">
+              30
+            </div>
+            {/* Ball 3 (Emerald) */}
+            <div className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 text-white font-mono font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(52,211,153,0.5)] animate-bounce-ball-3 select-none">
+              9
+            </div>
+            {/* Ball 4 (Amber) */}
+            <div className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-white font-mono font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.5)] animate-bounce-ball-4 select-none">
+              35
+            </div>
+            {/* Ball 5 (Rose) */}
+            <div className="absolute w-7 h-7 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 text-white font-mono font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(244,63,94,0.5)] animate-bounce-ball-5 select-none">
+              1
             </div>
           </div>
         </div>
@@ -46,8 +98,8 @@ export default function WelcomeTab({ onNavigate }: WelcomeTabProps) {
         {/* Welcome Text block (Col Span 7) */}
         <div className="md:col-span-7 space-y-4">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold font-mono tracking-wider uppercase">
-            <Sparkles className="w-3 h-3" />
-            Probability Optimizer
+            <Sparkles className="w-3 h-3 animate-spin" />
+            STATISTICAL TREND ENGINE
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-white font-mono uppercase bg-gradient-to-r from-white via-slate-100 to-primary bg-clip-text text-transparent">
             THE WIN CONCEPT
