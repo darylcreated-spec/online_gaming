@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,11 +12,24 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#0B0C0E",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: "the Win Concept | Lotto Plus Analytics & Wheeling Engine",
   description: "Advanced analytics dashboard, Number Line (Delta) analyzer, and combinatorial Wheeling System for Trinidad & Tobago NLCB Lotto Plus.",
   keywords: ["NLCB", "Lotto Plus", "Trinidad and Tobago", "the Win Concept", "Lottery Analytics", "Lottery Wheeling", "Deltas Analysis", "Winning Numbers"],
   authors: [{ name: "the Win Concept Team" }],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "WinConcept",
+  },
 };
 
 export default function RootLayout({

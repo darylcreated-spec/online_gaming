@@ -168,11 +168,18 @@ export default function Home() {
     fetchHistoryDraws(pagination.page);
   }, [pagination.page, historySearch, historyNumberFilter]);
 
-  // Load initial data on mount
+  // Load initial data on mount & register PWA Service Worker
   useEffect(() => {
     fetchStats();
     fetchHistoryDraws(1);
     fetchAllDraws();
+
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => console.log("PWA Service Worker registered:", reg.scope))
+        .catch((err) => console.error("PWA Service Worker registration failed:", err));
+    }
   }, []);
 
   // Poll for updates every 60 seconds
