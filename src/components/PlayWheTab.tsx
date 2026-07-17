@@ -360,70 +360,66 @@ export default function PlayWheTab({
     <div className="space-y-6">
       
       {/* Tab Sub-Navigation Menu */}
-      <div className="flex flex-col md:flex-row gap-4 border-b border-white/5 pb-4 items-center">
-        <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto">
-          <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 overflow-x-auto w-full md:w-auto flex-nowrap scrollbar-none">
-            <button
-              onClick={() => setSubTab("dashboard")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-                subTab === "dashboard"
-                  ? "bg-primary text-slate-950 font-bold"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <BarChart2 className="w-3.5 h-3.5" />
-              DASHBOARD
-            </button>
-            
-            <button
-              onClick={() => setSubTab("relationship")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-                subTab === "relationship"
-                  ? "bg-primary text-slate-950 font-bold"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <TrendingUp className="w-3.5 h-3.5" />
-              RELATIONSHIP MAP
-            </button>
+      <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none">
+        <button
+          onClick={() => setSubTab("dashboard")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            subTab === "dashboard"
+              ? "bg-primary text-slate-950 font-bold"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <BarChart2 className="w-3.5 h-3.5" />
+          DASHBOARD
+        </button>
+        
+        <button
+          onClick={() => setSubTab("relationship")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            subTab === "relationship"
+              ? "bg-primary text-slate-950 font-bold"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <TrendingUp className="w-3.5 h-3.5" />
+          RELATIONSHIP MAP
+        </button>
 
-            <button
-              onClick={() => setSubTab("translator")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-                subTab === "translator"
-                  ? "bg-primary text-slate-950 font-bold"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              CHINAPOO DICTIONARY
-            </button>
-            
-            <button
-              onClick={() => setSubTab("history")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-                subTab === "history"
-                  ? "bg-primary text-slate-950 font-bold"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              DRAW LOG
-            </button>
+        <button
+          onClick={() => setSubTab("translator")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            subTab === "translator"
+              ? "bg-primary text-slate-950 font-bold"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          CHINAPOO DICTIONARY
+        </button>
+        
+        <button
+          onClick={() => setSubTab("history")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            subTab === "history"
+              ? "bg-primary text-slate-950 font-bold"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          DRAW LOG
+        </button>
 
-            <button
-              onClick={() => setSubTab("explain")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-                subTab === "explain"
-                  ? "bg-primary text-slate-950 font-bold"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              HOW IT WORKS
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={() => setSubTab("explain")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            subTab === "explain"
+              ? "bg-primary text-slate-950 font-bold"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <HelpCircle className="w-3.5 h-3.5" />
+          HOW IT WORKS
+        </button>
       </div>
 
       {/* Toggleable Explainer Section */}
