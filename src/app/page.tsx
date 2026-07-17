@@ -10,7 +10,7 @@ import SettingsTab from "@/components/SettingsTab";
 import WelcomeTab from "@/components/WelcomeTab";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, Sparkles, HelpCircle, Menu, X, ChevronDown, Layers } from "lucide-react";
 
-const SlotMachine = (props: React.SVGProps<SVGSVGElement>) => (
+const TumblerIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -21,21 +21,20 @@ const SlotMachine = (props: React.SVGProps<SVGSVGElement>) => (
     strokeLinejoin="round"
     {...props}
   >
-    {/* Slot Machine Main Cabinet */}
-    <rect x="4" y="3" width="14" height="18" rx="2" />
+    {/* Axis/Stand */}
+    <path d="M6 21h12" />
+    <path d="M12 18v3" />
+    <path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+    <path d="M5.5 16h13" />
     
-    {/* Lever Handle */}
-    <path d="M18 12h2.5a1.5 1.5 0 0 0 1.5-1.5V6" />
-    <circle cx="22" cy="4" r="1.5" fill="currentColor" />
+    {/* Tumbler Drum */}
+    <circle cx="12" cy="11" r="7" />
+    <circle cx="12" cy="11" r="5" strokeDasharray="2 2" />
     
-    {/* Reel Display Window */}
-    <rect x="7" y="6" width="8" height="5" rx="0.5" />
-    <line x1="10" y1="6" x2="10" y2="11" />
-    <line x1="12" y1="6" x2="12" y2="11" />
-    
-    {/* Coin Payout Tray */}
-    <rect x="7" y="14" width="8" height="3" rx="0.5" />
-    <path d="M11 14v3" />
+    {/* Balls inside */}
+    <circle cx="10" cy="10" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="14" cy="9" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="11" cy="13" r="1.2" fill="currentColor" stroke="none" />
   </svg>
 );
 
@@ -261,7 +260,7 @@ export default function Home() {
       <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-4 px-6 md:px-12 flex justify-between items-center bg-slate-950/70 backdrop-blur-md w-full">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 border border-primary/20 text-primary rounded-lg shadow-[0_0_15px_rgba(56,189,248,0.25)]">
-            <SlotMachine className="w-6 h-6 animate-pulse" />
+            <TumblerIcon className="w-6 h-6 animate-pulse" />
           </div>
           <div>
             <h1 className="text-xl font-black tracking-widest text-white uppercase font-mono">
