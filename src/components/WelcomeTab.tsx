@@ -97,10 +97,6 @@ export default function WelcomeTab({ onNavigate }: WelcomeTabProps) {
 
         {/* Welcome Text block (Col Span 7) */}
         <div className="md:col-span-7 space-y-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold font-mono tracking-wider uppercase">
-            <Sparkles className="w-3 h-3 animate-spin" />
-            STATISTICAL TREND ENGINE
-          </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-white font-mono uppercase bg-gradient-to-r from-white via-slate-100 to-primary bg-clip-text text-transparent">
             THE WIN CONCEPT
           </h1>
