@@ -525,6 +525,26 @@ export default function Home() {
                   When you select a pool in the wheeling engine workspace, the dashboard dynamically scans the historical database to identify and recommend "Companion Numbers" that have high historical co-occurrence with your selected pool.
                 </p>
               </div>
+
+              {/* Card 5: Slip Validation & Quality Grading */}
+              <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3 md:col-span-2">
+                <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
+                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                  5. Slip Validation & Quality Grading
+                </div>
+                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
+                  To filter out weak combinations, the system runs a real-time validation scan on every compiled betting slip, assigning an instant quality score and grade (**A+**, **B**, **C**, **D**).
+                </p>
+                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
+                  This evaluation checks:
+                </p>
+                <ul className="list-disc pl-5 text-[11px] text-gray-400 font-mono space-y-1">
+                  <li><strong>Odd/Even Ratios:</strong> Verifies the balance of odd and even numbers (e.g. 3:2, 2:3, or 4:1).</li>
+                  <li><strong>High/Low Ratios:</strong> Verifies the balance of high numbers vs. low numbers (split at 17/18).</li>
+                  <li><strong>Mathematical Spread:</strong> Ensures the difference between the highest and lowest numbers in the ticket falls within the optimal 15 to 33 range.</li>
+                  <li><strong>Adjacent Runs:</strong> Restricts tickets containing low-probability runs of more than 1 consecutive pair.</li>
+                </ul>
+              </div>
             </div>
           </div>
         )}

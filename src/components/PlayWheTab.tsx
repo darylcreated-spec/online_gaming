@@ -432,7 +432,7 @@ export default function PlayWheTab({
           <h3 className="text-xs font-bold text-white uppercase font-mono tracking-widest border-b border-white/5 pb-2">
             Play Whe Dashboard Explainer Guide
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
             <div className="space-y-1.5">
               <h4 className="text-primary font-bold">1. JAMES BOND FIGURES</h4>
               <p>
@@ -468,6 +468,17 @@ export default function PlayWheTab({
               <ul className="list-disc pl-3.5 space-y-1">
                 <li><strong>Successors:</strong> Numbers drawn immediately after.</li>
                 <li><strong>Companions:</strong> Numbers drawn on the same day.</li>
+              </ul>
+            </div>
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold">5. DRAW PREDICTOR</h4>
+              <p>
+                Computes a composite probability score (0-100%) for all 36 marks using three key indicators:
+              </p>
+              <ul className="list-disc pl-3.5 space-y-1">
+                <li><strong>Successor Gaps (40%):</strong> Transition vector correlations from the latest draw.</li>
+                <li><strong>Slot Match (30%):</strong> Historical hotspot frequencies matching the upcoming slot.</li>
+                <li><strong>Sleep Overdue (30%):</strong> Current active sleep cycles exceeding the average historical gap.</li>
               </ul>
             </div>
           </div>
