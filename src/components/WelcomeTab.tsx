@@ -62,6 +62,16 @@ export default function WelcomeTab() {
         
         {/* Floating Animated Graphic (Col Span 5) - Bingo Tumbler */}
         <div className="md:col-span-5 flex justify-center relative select-none h-72 items-center">
+          {/* Glowing Background Radial */}
+          <div className="absolute w-64 h-64 bg-primary/10 rounded-full blur-[70px] animate-pulse" />
+          
+          {/* Tumbler Stand */}
+          <svg viewBox="0 0 100 100" className="absolute w-72 h-72 text-slate-700/60 stroke-current fill-none stroke-[2.5] z-0">
+            <path d="M20,85 L35,40 L65,40 L80,85" strokeLinecap="round" />
+            <path d="M15,85 L85,85" strokeLinecap="round" strokeWidth="4" />
+            <circle cx="50" cy="40" r="5" fill="#020617" stroke="white" strokeWidth="2" />
+          </svg>
+
           <div className="relative w-60 h-60 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center p-4">
             {/* Outer Spinner Ring */}
             <div className="absolute inset-0 rounded-full border-2 border-dotted border-primary/20 animate-spin-slow" />
