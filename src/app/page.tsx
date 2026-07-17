@@ -7,6 +7,7 @@ import BuilderTab from "@/components/BuilderTab";
 import CheckerTab from "@/components/CheckerTab";
 import PlayWheTab from "@/components/PlayWheTab";
 import SettingsTab from "@/components/SettingsTab";
+import WelcomeTab from "@/components/WelcomeTab";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, Sparkles, HelpCircle } from "lucide-react";
 
 const SlotMachine = (props: React.SVGProps<SVGSVGElement>) => (
@@ -82,7 +83,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"lotto-plus" | "scanner" | "play-whe" | "settings">("lotto-plus");
+  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "settings">("welcome");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder">("dashboard");
   
   // Scraper Sync States
@@ -265,6 +266,22 @@ export default function Home() {
         {/* Global Navigation Tabs */}
         <nav className="flex bg-slate-900/60 p-1 rounded-lg border border-white/5 w-full md:w-auto overflow-x-auto">
           <button
+            onClick={() => setActiveTab("welcome")}
+            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+              activeTab === "welcome"
+                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
+                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+            }`}
+          >
+            <img 
+              src="/images/welcome_icon.png" 
+              alt="Welcome" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
+            />
+            HOME
+          </button>
+          
+          <button
             onClick={() => setActiveTab("lotto-plus")}
             className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
               activeTab === "lotto-plus"
@@ -373,6 +390,15 @@ export default function Home() {
         )}
 
         {/* Render Active View Tab */}
+        {activeTab === "welcome" && (
+          <WelcomeTab
+            onNavigate={(tab) => {
+              setActiveTab(tab === "lotto" ? "lotto-plus" : "play-whe");
+              if (tab === "lotto") setLottoSubTab("dashboard");
+            }}
+          />
+        )}
+
         {activeTab === "lotto-plus" && lottoSubTab === "dashboard" && (
           <DashboardTab
             stats={stats}
