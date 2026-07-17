@@ -84,8 +84,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "settings">("welcome");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder" | "explain">("dashboard");
-  const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "history" | "translator" | "relationship">("dashboard");
-  const [playWheExplain, setPlayWheExplain] = useState(false);
+  const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "history" | "translator" | "relationship" | "explain">("dashboard");
   const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Scraper Sync States
@@ -369,7 +368,7 @@ export default function Home() {
         
         {/* Lotto Plus Sub-navigation menu */}
         {activeTab === "lotto-plus" && (
-          <div className="flex bg-slate-950/40 p-1 rounded-lg border border-white/5 w-fit mb-6 overflow-x-auto">
+          <div className="flex bg-slate-950/40 p-1 rounded-lg border border-white/5 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none">
             <button
               onClick={() => setLottoSubTab("dashboard")}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
@@ -412,7 +411,7 @@ export default function Home() {
               }`}
             >
               <HelpCircle className="w-3.5 h-3.5" />
-              HOW IT WORKS
+              HOE IT WORKS
             </button>
           </div>
         )}
@@ -548,10 +547,7 @@ export default function Home() {
             activeSubTab={playWheSubTab}
             onSubTabChange={(tab) => {
               setPlayWheSubTab(tab);
-              if (tab !== "dashboard") setPlayWheExplain(false);
             }}
-            showExplainer={playWheExplain}
-            onShowExplainerChange={setPlayWheExplain}
           />
         )}
 
@@ -642,7 +638,7 @@ export default function Home() {
 
               {/* Play Whe */}
               <button
-                onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("dashboard"); setPlayWheExplain(false); setDrawerOpen(false); }}
+                onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("dashboard"); setDrawerOpen(false); }}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[10px] font-bold font-mono tracking-wider transition-all cursor-pointer ${
                   activeTab === "play-whe"
                     ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"

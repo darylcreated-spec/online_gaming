@@ -87,12 +87,12 @@ export default function PlayWheTab({
   showExplainer,
   onShowExplainerChange
 }: {
-  activeSubTab?: "translator" | "dashboard" | "relationship" | "history";
-  onSubTabChange?: (tab: "translator" | "dashboard" | "relationship" | "history") => void;
+  activeSubTab?: "translator" | "dashboard" | "relationship" | "history" | "explain";
+  onSubTabChange?: (tab: "translator" | "dashboard" | "relationship" | "history" | "explain") => void;
   showExplainer?: boolean;
   onShowExplainerChange?: (show: boolean) => void;
 } = {}) {
-  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "relationship" | "history">("dashboard");
+  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "relationship" | "history" | "explain">("dashboard");
   const [localShowHelp, setLocalShowHelp] = useState(false);
 
   const subTab = activeSubTab !== undefined ? activeSubTab : localSubTab;
@@ -362,7 +362,7 @@ export default function PlayWheTab({
       {/* Tab Sub-Navigation Menu */}
       <div className="flex flex-col md:flex-row gap-4 border-b border-white/5 pb-4 items-center">
         <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto">
-          <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 overflow-x-auto w-full md:w-auto">
+          <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 overflow-x-auto w-full md:w-auto flex-nowrap scrollbar-none">
             <button
               onClick={() => setSubTab("dashboard")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
@@ -410,24 +410,24 @@ export default function PlayWheTab({
               <Calendar className="w-3.5 h-3.5" />
               DRAW LOG
             </button>
+
+            <button
+              onClick={() => setSubTab("explain")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+                subTab === "explain"
+                  ? "bg-primary text-slate-950 font-bold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              HOE IT WORKS
+            </button>
           </div>
-          
-          <button
-            onClick={() => setShowHelp(!showHelp)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-[11px] font-bold font-mono tracking-wider transition shrink-0 ${
-              showHelp
-                ? "bg-primary/20 border-primary text-primary"
-                : "bg-slate-950 border-white/10 text-gray-300 hover:bg-slate-900"
-            }`}
-          >
-            <HelpCircle className="w-3.5 h-3.5" />
-            {showHelp ? "HIDE GUIDE" : "HOW IT WORKS"}
-          </button>
         </div>
       </div>
 
       {/* Toggleable Explainer Section */}
-      {showHelp && (
+      {subTab === "explain" && (
         <div className="glass-panel border border-white/5 p-5 rounded-xl bg-slate-950/20 space-y-4">
           <h3 className="text-xs font-bold text-white uppercase font-mono tracking-widest border-b border-white/5 pb-2">
             Play Whe Dashboard Explainer Guide
