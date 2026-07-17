@@ -88,7 +88,6 @@ export default function Home() {
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "history" | "translator" | "relationship">("dashboard");
   const [playWheExplain, setPlayWheExplain] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [portalDrawerDropdownOpen, setPortalDrawerDropdownOpen] = useState(false);
   
   // Scraper Sync States
   const [syncing, setSyncing] = useState(false);
@@ -421,16 +420,7 @@ export default function Home() {
 
         {/* Render Active View Tab */}
         {activeTab === "welcome" && (
-          <WelcomeTab
-            onNavigate={(tab) => {
-              setActiveTab(tab);
-              if (tab === "lotto-plus") setLottoSubTab("dashboard");
-              if (tab === "play-whe") {
-                setPlayWheSubTab("dashboard");
-                setPlayWheExplain(false);
-              }
-            }}
-          />
+          <WelcomeTab />
         )}
 
         {activeTab === "lotto-plus" && lottoSubTab === "dashboard" && (
@@ -623,60 +613,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Select Analytical Portal Dropdown */}
-            <div className="relative font-mono px-1">
-              <label className="text-[8px] font-bold tracking-widest text-primary uppercase block mb-1.5 pl-1">
-                Select Analytical Portal
-              </label>
-              <button
-                onClick={() => setPortalDrawerDropdownOpen(!portalDrawerDropdownOpen)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-white/10 bg-slate-900/40 hover:bg-slate-900/60 hover:border-primary/45 transition-all text-[10px] font-bold text-white cursor-pointer"
-              >
-                <span className="flex items-center gap-2">
-                  <Layers className="w-3.5 h-3.5 text-primary" />
-                  CHOOSE PORTAL...
-                </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${portalDrawerDropdownOpen ? "transform rotate-180" : ""}`} />
-              </button>
-
-              {portalDrawerDropdownOpen && (
-                <div className="absolute left-0 right-0 mt-1 rounded-lg border border-white/10 bg-slate-950/95 backdrop-blur-md overflow-hidden z-[102] shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
-                  <div className="p-1.5 flex flex-col gap-1">
-                    {[
-                      { id: "lotto-plus", label: "Lotto Plus", desc: "Odds reduction, draw logs & guides", icon: "/images/lotto_plus_icon.png" },
-                      { id: "play-whe", label: "Play Whe", desc: "Relationship map, dictionary & logs", icon: "/images/play_whe_icon.png" },
-                      { id: "scanner", label: "Ticket Scanner", desc: "Scan physical tickets", icon: "/images/scanner_icon.png" },
-                      { id: "settings", label: "System Settings", desc: "Database diagnostics", icon: "/images/settings_icon.png" }
-                    ].map((opt) => (
-                      <button
-                        key={opt.id}
-                        onClick={() => {
-                          setActiveTab(opt.id as any);
-                          if (opt.id === "lotto-plus") setLottoSubTab("dashboard");
-                          if (opt.id === "play-whe") {
-                            setPlayWheSubTab("dashboard");
-                            setPlayWheExplain(false);
-                          }
-                          setPortalDrawerDropdownOpen(false);
-                          setDrawerOpen(false);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer text-left group"
-                      >
-                        <img src={opt.icon} alt={opt.label} className="w-5 h-5 object-contain shrink-0 group-hover:scale-105 transition-transform" />
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-white group-hover:text-primary transition-colors">
-                            {opt.label}
-                          </span>
-                          <span className="text-[7.5px] text-gray-500 uppercase mt-0.5">
-                            {opt.desc}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
                       {/* Nav Stack */}
             <nav className="flex flex-col gap-4 overflow-y-auto pr-1">
               {/* Home */}
