@@ -83,7 +83,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "settings">("welcome");
+  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "settings">("lotto-plus");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "history" | "translator" | "relationship">("dashboard");
   const [playWheExplain, setPlayWheExplain] = useState(false);
@@ -275,22 +275,7 @@ export default function Home() {
 
         {/* Global Navigation Tabs (Desktop Only) */}
         <nav className="hidden md:flex bg-slate-900/60 p-1 rounded-lg border border-white/5 gap-1">
-          <button
-            onClick={() => setActiveTab("welcome")}
-            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
-              activeTab === "welcome"
-                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
-                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
-            }`}
-          >
-            <img 
-              src="/images/welcome_icon.png" 
-              alt="Welcome" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
-            />
-            HOME
-          </button>
-          
+
           <button
             onClick={() => setActiveTab("lotto-plus")}
             className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
@@ -616,167 +601,57 @@ export default function Home() {
                       {/* Nav Stack */}
             <nav className="flex flex-col gap-4 overflow-y-auto pr-1">
               {/* Home */}
+              {/* Lotto Plus */}
               <button
-                onClick={() => { setActiveTab("welcome"); setDrawerOpen(false); }}
+                onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("dashboard"); setDrawerOpen(false); }}
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[10px] font-bold font-mono tracking-wider transition-all cursor-pointer ${
-                  activeTab === "welcome"
+                  activeTab === "lotto-plus"
                     ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
                     : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
                 }`}
               >
-                <img src="/images/welcome_icon.png" alt="Home" className="w-4 h-4 object-contain" />
-                HOME
+                <img src="/images/lotto_plus_icon.png" alt="Lotto Plus" className="w-4 h-4 object-contain" />
+                LOTTO PLUS
               </button>
-              
-              {/* Lotto Plus Section */}
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 px-4 py-1 text-[9px] font-mono tracking-widest text-gray-500 font-bold uppercase">
-                  <img src="/images/lotto_plus_icon.png" alt="Lotto Plus" className="w-3.5 h-3.5 object-contain" />
-                  LOTTO PLUS
-                </div>
-                <div className="pl-4 border-l border-white/5 ml-6 space-y-1">
-                  <button
-                    onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("dashboard"); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "lotto-plus" && lottoSubTab === "dashboard"
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <BarChart2 className="w-3 h-3" />
-                    DASHBOARD
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("history"); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "lotto-plus" && lottoSubTab === "history"
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <Calendar className="w-3 h-3" />
-                    DRAW LOG
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("builder"); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "lotto-plus" && lottoSubTab === "builder"
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <ClipboardList className="w-3 h-3" />
-                    ODDS REDUCTION
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("explain"); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "lotto-plus" && lottoSubTab === "explain"
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <HelpCircle className="w-3 h-3" />
-                    HOW IT WORKS
-                  </button>
-                </div>
-              </div>
 
-              {/* Play Whe Section */}
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 px-4 py-1 text-[9px] font-mono tracking-widest text-gray-500 font-bold uppercase">
-                  <img src="/images/play_whe_icon.png" alt="Play Whe" className="w-3.5 h-3.5 object-contain" />
-                  PLAY WHE
-                </div>
-                <div className="pl-4 border-l border-white/5 ml-6 space-y-1">
-                  <button
-                    onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("dashboard"); setPlayWheExplain(false); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "play-whe" && playWheSubTab === "dashboard" && !playWheExplain
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <BarChart2 className="w-3 h-3" />
-                    DASHBOARD
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("history"); setPlayWheExplain(false); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "play-whe" && playWheSubTab === "history"
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <Calendar className="w-3 h-3" />
-                    DRAW LOG
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("translator"); setPlayWheExplain(false); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "play-whe" && playWheSubTab === "translator"
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    CHINAPOO DICTIONARY
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("relationship"); setPlayWheExplain(false); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "play-whe" && playWheSubTab === "relationship"
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <Activity className="w-3 h-3" />
-                    RELATIONSHIP MAP
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("dashboard"); setPlayWheExplain(true); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "play-whe" && playWheExplain
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <HelpCircle className="w-3 h-3" />
-                    HOW IT WORKS
-                  </button>
-                </div>
-              </div>
+              {/* Play Whe */}
+              <button
+                onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("dashboard"); setPlayWheExplain(false); setDrawerOpen(false); }}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[10px] font-bold font-mono tracking-wider transition-all cursor-pointer ${
+                  activeTab === "play-whe"
+                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <img src="/images/play_whe_icon.png" alt="Play Whe" className="w-4 h-4 object-contain" />
+                PLAY WHE
+              </button>
 
-              {/* Other Utilities */}
-              <div className="space-y-1">
-                <div className="px-4 py-1 text-[9px] font-mono tracking-widest text-gray-500 font-bold uppercase">
-                  UTILITIES
-                </div>
-                <div className="pl-4 border-l border-white/5 ml-6 space-y-1">
-                  <button
-                    onClick={() => { setActiveTab("scanner"); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "scanner"
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <Camera className="w-3 h-3" />
-                    TICKET SCANNER
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab("settings"); setDrawerOpen(false); }}
-                    className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
-                      activeTab === "settings"
-                        ? "text-primary font-bold"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    <img src="/images/settings_icon.png" alt="Settings" className="w-3 h-3 object-contain inline-block mr-1" />
-                    SETTINGS
-                  </button>
-                </div>
-              </div>
+              {/* Ticket Scanner */}
+              <button
+                onClick={() => { setActiveTab("scanner"); setDrawerOpen(false); }}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[10px] font-bold font-mono tracking-wider transition-all cursor-pointer ${
+                  activeTab === "scanner"
+                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <img src="/images/scanner_icon.png" alt="Scanner" className="w-4 h-4 object-contain" />
+                TICKET SCANNER
+              </button>
+
+              {/* Settings */}
+              <button
+                onClick={() => { setActiveTab("settings"); setDrawerOpen(false); }}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[10px] font-bold font-mono tracking-wider transition-all cursor-pointer ${
+                  activeTab === "settings"
+                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <img src="/images/settings_icon.png" alt="Settings" className="w-4 h-4 object-contain" />
+                SETTINGS
+              </button>
             </nav>
 
             {/* Footer inside drawer */}
