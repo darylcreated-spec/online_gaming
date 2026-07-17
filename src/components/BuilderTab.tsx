@@ -9,6 +9,59 @@ interface BuilderTabProps {
   historicalDraws: any[];
 }
 
+const validateTicket = (ticket: number[]) => {
+  const oddCount = ticket.filter(n => n % 2 !== 0).length;
+  const evenCount = ticket.length - oddCount;
+  const oddEvenRatio = `${oddCount}:${evenCount}`;
+  
+  const lowCount = ticket.filter(n => n <= 17).length;
+  const highCount = ticket.length - lowCount;
+  const highLowRatio = `${lowCount}:${highCount}`;
+  
+  const sorted = [...ticket].sort((a, b) => a - b);
+  const spread = sorted[sorted.length - 1] - sorted[0];
+  
+  let consecutiveCount = 0;
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (sorted[i + 1] - sorted[i] === 1) {
+      consecutiveCount++;
+    }
+  }
+  
+  const hotCount = ticket.filter(n => [17, 10, 28, 31, 18].includes(n)).length;
+  const coldCount = ticket.filter(n => [15, 12, 30, 32, 1].includes(n)).length;
+  
+  let score = 0;
+  const checks = {
+    oddEven: ["3:2", "2:3", "4:1"].includes(oddEvenRatio),
+    highLow: ["3:2", "2:3", "4:1"].includes(highLowRatio),
+    spread: spread >= 15 && spread <= 33,
+    consecutive: consecutiveCount <= 1,
+  };
+  
+  if (checks.oddEven) score += 25;
+  if (checks.highLow) score += 25;
+  if (checks.spread) score += 25;
+  if (checks.consecutive) score += 25;
+  
+  let grade = "D";
+  if (score >= 100) grade = "A+";
+  else if (score >= 75) grade = "B";
+  else if (score >= 50) grade = "C";
+  
+  return {
+    grade,
+    score,
+    oddEvenRatio,
+    highLowRatio,
+    spread,
+    consecutiveCount,
+    hotCount,
+    coldCount,
+    checks
+  };
+};
+
 export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
   const [selectedNums, setSelectedNums] = useState<number[]>([]);
   const [selectedPb, setSelectedPb] = useState<number | null>(null);
@@ -565,37 +618,56 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                   ))}
                 </div>
 
-                <div className="flex justify-between items-center mt-1 pb-3 border-b border-[#1F232B]">
-                  <span className="text-[10px] text-slate-500 font-bold">SLIP #{String(idx + 1).padStart(3, "0")}</span>
-                  <span className="text-[9px] text-slate-600 tracking-wider">OFFICIAL SLIP</span>
-                </div>
-
-                {/* Main Numbers */}
-                <div className="flex justify-between items-center pt-4">
-                  <div className="flex gap-1.5">
-                    {ticket.map((num, i) => (
-                      <div
-                        key={i}
-                        className="w-7 h-7 bg-[#121418] border border-[#1F232B] text-white flex items-center justify-center font-bold text-xs"
-                      >
-                        {String(num).padStart(2, "0")}
+                {(() => {
+                  const evalResult = validateTicket(ticket);
+                  return (
+                    <>
+                      <div className="flex justify-between items-center mt-1 pb-3 border-b border-[#1F232B]">
+                        <span className="text-[10px] text-slate-500 font-bold">SLIP #{String(idx + 1).padStart(3, "0")}</span>
+                        <span className={`text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-sm ${
+                          evalResult.grade === "A+"
+                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            : evalResult.grade === "B"
+                            ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                            : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                        }`}>
+                          SCORE: {evalResult.grade}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                  
-                  {/* Powerball */}
-                  {selectedPb && (
-                    <div className="w-7 h-7 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs ml-2">
-                      {selectedPb}
-                    </div>
-                  )}
-                </div>
 
-                {/* Staggered dashed divider & footer */}
-                <div className="border-t border-dashed border-[#1F232B] mt-4 pt-2.5 flex justify-between items-center">
-                  <span className="text-[8px] text-slate-600">THE WIN CONCEPT SYSTEM</span>
-                  <span className="text-[9px] text-emerald-500 font-bold">HIT CONFIRMED</span>
-                </div>
+                      {/* Main Numbers */}
+                      <div className="flex justify-between items-center pt-4">
+                        <div className="flex gap-1.5">
+                          {ticket.map((num, i) => (
+                            <div
+                              key={i}
+                              className="w-7 h-7 bg-[#121418] border border-[#1F232B] text-white flex items-center justify-center font-bold text-xs"
+                            >
+                              {String(num).padStart(2, "0")}
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Powerball */}
+                        {selectedPb && (
+                          <div className="w-7 h-7 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs ml-2">
+                            {selectedPb}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Staggered dashed divider & footer */}
+                      <div className="border-t border-dashed border-[#1F232B] mt-4 pt-2.5 flex justify-between items-center text-[8px] text-slate-500 font-mono">
+                        <div className="flex gap-2">
+                          <span>O/E: {evalResult.oddEvenRatio}</span>
+                          <span>H/L: {evalResult.highLowRatio}</span>
+                          <span>SPREAD: {evalResult.spread}</span>
+                        </div>
+                        <span className="text-emerald-500 font-bold">ACTIVE FILTERED</span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             ))}
           </div>

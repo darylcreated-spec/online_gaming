@@ -1,0 +1,43 @@
+{
+  "lotto_5_35": {
+    "game_rules": {
+      "min_number": 1,
+      "max_number": 35,
+      "draw_size": 5,
+      "powerball_min": 1,
+      "powerball_max": 10
+    },
+    "filters": {
+      "preferred_odd_even_ratios": ["3:2", "2:3", "4:1"],
+      "preferred_high_low_ratios": ["3:2", "2:3", "4:1"],
+      "low_number_max_threshold": 17,
+      "max_consecutive_adjacent_pairs": 1,
+      "preferred_spreads": {
+        "min": 15,
+        "max": 33
+      },
+      "hot_numbers_all_time": [17, 10, 28, 31, 18],
+      "cold_numbers_all_time": [15, 12, 30, 32, 1],
+      "hot_powerballs_all_time": [2, 1, 4],
+      "overdue_threshold_factor": 1.2
+    }
+  },
+  "playwhe_1_36": {
+    "game_rules": {
+      "min_number": 1,
+      "max_number": 36,
+      "draw_size": 1
+    },
+    "filters": {
+      "hot_numbers_all_time": [18, 31, 5, 21, 29],
+      "cold_numbers_all_time": [24, 25, 19, 7, 10],
+      "low_number_max_threshold": 18,
+      "slot_hot_numbers": {
+        "Midday": [5, 28, 29],
+        "Evening": [4, 36, 8],
+        "Morning": [18, 16, 30],
+        "Afternoon": [14, 31, 8]
+      }
+    }
+  }
+}
