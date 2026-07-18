@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#0B0C0E",
+  themeColor: "#02326e",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -27,8 +27,13 @@ export const metadata: Metadata = {
   authors: [{ name: "the Win Concept Team" }],
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "WinConcept",
+  },
+  icons: {
+    icon: "/images/pwa-icon-192.png",
+    shortcut: "/images/pwa-icon-192.png",
+    apple: "/images/pwa-icon-512.png",
   },
 };
 
