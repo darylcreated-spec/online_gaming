@@ -518,7 +518,7 @@ export default function PlayWheTab({
           <h3 className="text-xs font-bold text-white uppercase font-mono tracking-widest border-b border-white/5 pb-2">
             Play Whe Dashboard Explainer Guide
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
             <div className="space-y-1.5">
               <h4 className="text-primary font-bold">1. JAMES BOND FIGURES</h4>
               <p>
@@ -566,6 +566,15 @@ export default function PlayWheTab({
                 <li><strong>Slot Match (30%):</strong> Historical hotspot frequencies matching the upcoming slot.</li>
                 <li><strong>Sleep Overdue (30%):</strong> Current active sleep cycles exceeding the average historical gap.</li>
               </ul>
+            </div>
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold">6. PREDICTION HITS</h4>
+              <p>
+                Tracks and verifies the accuracy of the app's daily 3-number mathematical selections.
+              </p>
+              <p>
+                Calculates a historical hit rate. A date is evaluated as a <strong>HIT</strong> if at least one predicted mark lands in any of the four daily drawings.
+              </p>
             </div>
           </div>
         </div>
