@@ -8,7 +8,7 @@ import CheckerTab from "@/components/CheckerTab";
 import PlayWheTab from "@/components/PlayWheTab";
 import SettingsTab from "@/components/SettingsTab";
 import WelcomeTab from "@/components/WelcomeTab";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, Sparkles, HelpCircle, Menu, X, ChevronDown, Layers } from "lucide-react";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, Sparkles, HelpCircle, ChevronDown, Layers } from "lucide-react";
 
 const TumblerIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -85,7 +85,6 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "settings">("welcome");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "history" | "translator" | "relationship" | "explain">("dashboard");
-  const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Scraper Sync States
   const [syncing, setSyncing] = useState(false);
@@ -400,17 +399,11 @@ export default function Home() {
           </button>
         </nav>
 
-        {/* Mobile Hamburger Trigger (Mobile Only) */}
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="md:hidden p-2 rounded-lg bg-slate-900 border border-white/5 text-gray-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
+        {/* Desktop nav bar occupies this space; mobile nav bar is pinned to the screen bottom */}
       </header>
 
       {/* Main Viewport Container */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 py-8">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 py-8 pb-24 md:pb-8">
         
         {/* Lotto Plus Sub-navigation menu */}
         {activeTab === "lotto-plus" && (
@@ -619,116 +612,54 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Mobile Drawer (Side Draw) Menu */}
-      {drawerOpen && (
-        <>
-          {/* Custom CSS Animation Keyframes for Drawer */}
-          <style>{`
-            @keyframes drawerSlideIn {
-              from { transform: translateX(100%); }
-              to { transform: translateX(0); }
-            }
-            .animate-drawer-slide-in {
-              animation: drawerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-          `}</style>
-
-          {/* Backdrop Overlay */}
-          <div 
-            onClick={() => setDrawerOpen(false)} 
-            className="fixed inset-0 bg-black/60 z-[100] backdrop-blur-sm transition-opacity duration-300 md:hidden"
-          />
-          
-          {/* Drawer Sidebar Panel */}
-          <div 
-            className="fixed top-0 right-0 h-full w-64 bg-slate-950 border-l border-white/10 z-[101] p-6 flex flex-col gap-6 md:hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] animate-drawer-slide-in"
-          >
-            {/* Header */}
-            <div className="flex justify-between items-center border-b border-white/5 pb-4">
-              <span className="font-mono font-bold text-xs uppercase tracking-wider text-gray-400">NAVIGATION</span>
-              <button 
-                onClick={() => setDrawerOpen(false)} 
-                className="text-gray-400 hover:text-white p-1 rounded hover:bg-white/5 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-                      {/* Nav Stack */}
-            <nav className="flex flex-col gap-4 overflow-y-auto pr-1">
-              {/* Home */}
-              <button
-                onClick={() => { setActiveTab("welcome"); setDrawerOpen(false); }}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[10px] font-bold font-mono tracking-wider transition-all cursor-pointer ${
-                  activeTab === "welcome"
-                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
-                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
-                }`}
-              >
-                <img src="/images/welcome_icon.png" alt="Home" className="w-4 h-4 object-contain" />
-                HOME
-              </button>
-              
-              {/* Lotto Plus */}
-              <button
-                onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("dashboard"); setDrawerOpen(false); }}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[10px] font-bold font-mono tracking-wider transition-all cursor-pointer ${
-                  activeTab === "lotto-plus"
-                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
-                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
-                }`}
-              >
-                <img src="/images/lotto_plus_icon.png" alt="Lotto Plus" className="w-4 h-4 object-contain" />
-                LOTTO PLUS
-              </button>
-
-              {/* Play Whe */}
-              <button
-                onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("dashboard"); setDrawerOpen(false); }}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[10px] font-bold font-mono tracking-wider transition-all cursor-pointer ${
-                  activeTab === "play-whe"
-                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
-                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
-                }`}
-              >
-                <img src="/images/play_whe_icon.png" alt="Play Whe" className="w-4 h-4 object-contain" />
-                PLAY WHE
-              </button>
-
-              {/* Ticket Scanner */}
-              <button
-                onClick={() => { setActiveTab("scanner"); setDrawerOpen(false); }}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[10px] font-bold font-mono tracking-wider transition-all cursor-pointer ${
-                  activeTab === "scanner"
-                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
-                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
-                }`}
-              >
-                <img src="/images/scanner_icon.png" alt="Scanner" className="w-4 h-4 object-contain" />
-                TICKET SCANNER
-              </button>
-
-              {/* Settings */}
-              <button
-                onClick={() => { setActiveTab("settings"); setDrawerOpen(false); }}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[10px] font-bold font-mono tracking-wider transition-all cursor-pointer ${
-                  activeTab === "settings"
-                    ? "bg-primary/10 border border-primary/25 text-primary font-bold shadow-[0_0_15px_rgba(56,189,248,0.15)]"
-                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
-                }`}
-              >
-                <img src="/images/settings_icon.png" alt="Settings" className="w-4 h-4 object-contain" />
-                SETTINGS
-              </button>
-            </nav>
-
-            {/* Footer inside drawer */}
-            <div className="mt-auto border-t border-white/5 pt-4 text-center">
-              <span className="text-[9px] font-mono text-gray-500 block uppercase">The Win Concept</span>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Mobile Sticky Bottom Tab Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070b19]/90 backdrop-blur-lg border-t border-white/10 px-4 py-2 flex justify-around items-center shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+        <button
+          onClick={() => setActiveTab("welcome")}
+          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+            activeTab === "welcome" ? "text-primary font-bold" : "text-gray-400"
+          }`}
+        >
+          <img src="/images/welcome_icon.png" alt="Home" className="w-5 h-5 object-contain" />
+          <span className="text-[9px] font-mono tracking-wider">HOME</span>
+        </button>
+        <button
+          onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("dashboard"); }}
+          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+            activeTab === "lotto-plus" ? "text-primary font-bold" : "text-gray-400"
+          }`}
+        >
+          <img src="/images/lotto_plus_icon.png" alt="Lotto" className="w-5 h-5 object-contain" />
+          <span className="text-[9px] font-mono tracking-wider">LOTTO</span>
+        </button>
+        <button
+          onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("dashboard"); }}
+          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+            activeTab === "play-whe" ? "text-primary font-bold" : "text-gray-400"
+          }`}
+        >
+          <img src="/images/play_whe_icon.png" alt="Play Whe" className="w-5 h-5 object-contain" />
+          <span className="text-[9px] font-mono tracking-wider">PLAY WHE</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("scanner")}
+          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+            activeTab === "scanner" ? "text-primary font-bold" : "text-gray-400"
+          }`}
+        >
+          <img src="/images/scanner_icon.png" alt="Scanner" className="w-5 h-5 object-contain" />
+          <span className="text-[9px] font-mono tracking-wider">SCANNER</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("settings")}
+          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+            activeTab === "settings" ? "text-primary font-bold" : "text-gray-400"
+          }`}
+        >
+          <img src="/images/settings_icon.png" alt="Settings" className="w-5 h-5 object-contain" />
+          <span className="text-[9px] font-mono tracking-wider">SETTINGS</span>
+        </button>
+      </div>
 
     </div>
   );
