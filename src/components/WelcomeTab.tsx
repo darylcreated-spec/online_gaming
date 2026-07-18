@@ -41,11 +41,6 @@ export default function WelcomeTab() {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
-        @keyframes shake {
-          0%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(-5deg) scale(1.02); }
-          75% { transform: rotate(5deg) scale(1.02); }
-        }
         @keyframes bounce-ball-1 {
           0%, 100% { transform: translate(15px, 15px); }
           25% { transform: translate(125px, 25px); }
@@ -81,6 +76,23 @@ export default function WelcomeTab() {
           45% { transform: translate(20px, 65px); }
           70% { transform: translate(110px, 110px); }
         }
+        @keyframes ballDrop {
+          0% {
+            transform: translateY(-80px) scale(0.3);
+            opacity: 0;
+          }
+          60% {
+            transform: translateY(12px) scale(1.1);
+            opacity: 0.9;
+          }
+          90% {
+            transform: translateY(-4px) scale(0.98);
+          }
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+        }
         .animate-bounce-ball-1 { animation: bounce-ball-1 4.5s infinite ease-in-out; }
         .animate-bounce-ball-2 { animation: bounce-ball-2 5s infinite ease-in-out; }
         .animate-bounce-ball-3 { animation: bounce-ball-3 4s infinite ease-in-out; }
@@ -88,7 +100,7 @@ export default function WelcomeTab() {
         .animate-bounce-ball-5 { animation: bounce-ball-5 3.8s infinite ease-in-out; }
         .animate-bounce-ball-6 { animation: bounce-ball-6 5.2s infinite ease-in-out; }
         .animate-spin-slow { animation: spin 25s infinite linear; }
-        .animate-shake { animation: shake 0.15s ease-in-out infinite; }
+        .animate-ball-drop { animation: ballDrop 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
       `}</style>
 
       {/* Visual Header Grid */}
@@ -107,9 +119,7 @@ export default function WelcomeTab() {
               <circle cx="50" cy="40" r="5" fill="#020617" stroke="white" strokeWidth="2" />
             </svg>
 
-            <div className={`relative w-60 h-60 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center p-4 transition-all duration-300 ${
-              isSpinning ? "animate-shake" : ""
-            }`}>
+            <div className="relative w-60 h-60 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center p-4">
               {/* Outer Spinner Ring */}
               <div className="absolute inset-0 rounded-full border-2 border-dotted border-primary/20 animate-spin-slow" />
               {/* Inner Concentric Glow / Ball Container (Clipped Circle) */}
@@ -151,9 +161,8 @@ export default function WelcomeTab() {
           <button
             onClick={generateLuckyNumbers}
             disabled={isSpinning}
-            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 disabled:from-amber-500/50 disabled:to-amber-500/50 disabled:cursor-not-allowed text-slate-950 text-xs font-black font-mono tracking-widest uppercase transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] rounded-lg cursor-pointer"
+            className="px-6 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 disabled:from-amber-500/50 disabled:to-amber-500/50 disabled:cursor-not-allowed text-slate-950 text-xs font-black font-mono tracking-widest uppercase transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] rounded-lg cursor-pointer"
           >
-            <Sparkles className={`w-3.5 h-3.5 ${isSpinning ? "animate-spin" : ""}`} />
             {isSpinning ? "SPINNING..." : "GENERATE LUCKY NUMBERS"}
           </button>
 
@@ -180,16 +189,18 @@ export default function WelcomeTab() {
                     {luckyNumbers.map((num, idx) => (
                       <div
                         key={idx}
-                        className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-extrabold text-xs flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.4)] select-none"
+                        className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-extrabold text-xs flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.4)] select-none animate-ball-drop opacity-0"
+                        style={{ animationDelay: `${idx * 150}ms` }}
                       >
                         {String(num).padStart(2, "0")}
                       </div>
                     ))}
                     {/* Plus Sign */}
-                    <span className="text-gray-500 font-bold text-xs shrink-0 mx-0.5">+</span>
+                    <span className="text-gray-500 font-bold text-xs shrink-0 mx-0.5 animate-ball-drop opacity-0" style={{ animationDelay: "750ms" }}>+</span>
                     {/* Powerball */}
                     <div
-                      className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-slate-950 font-extrabold text-xs flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.4)] select-none"
+                      className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-slate-950 font-extrabold text-xs flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.4)] select-none animate-ball-drop opacity-0"
+                      style={{ animationDelay: "900ms" }}
                     >
                       {luckyPowerball}
                     </div>
