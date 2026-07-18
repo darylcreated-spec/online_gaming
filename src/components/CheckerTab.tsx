@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import Tesseract from "tesseract.js";
 import { parseTicketText, checkTicket, CheckResult, parsePlayWheTicketText, checkPlayWheTicket } from "@/lib/checker";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
-import { Upload, Camera, CheckCircle2, AlertTriangle, RefreshCw, HelpCircle, Sparkles } from "lucide-react";
+import { Upload, Camera, CheckCircle2, AlertTriangle, RefreshCw, HelpCircle } from "lucide-react";
 
 export default function CheckerTab() {
   // File upload / capture states

@@ -27,8 +27,7 @@ import {
   ChevronLeft, 
   ChevronRight, 
   TrendingUp, 
-  Database,
-  Sparkles
+  Database
 } from "lucide-react";
 
 const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -495,7 +494,7 @@ export default function PlayWheTab({
               : "text-gray-400 hover:text-white"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <Activity className="w-3.5 h-3.5" />
           PREDICTION HITS
         </button>
 
@@ -867,7 +866,7 @@ export default function PlayWheTab({
               <div className="space-y-1">
                 <span className="text-[10px] text-primary uppercase tracking-widest font-bold">Predictive analytics</span>
                 <h3 className="text-sm font-bold text-white uppercase flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                  <TrendingUp className="w-4 h-4 text-primary animate-pulse" />
                   Draw Predictor
                 </h3>
               </div>

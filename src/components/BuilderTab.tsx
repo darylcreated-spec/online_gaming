@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { analyzeDeltas, DeltaAnalysis } from "@/lib/deltas";
 import { generateWheel } from "@/lib/wheeling";
-import { Sliders, Download, Sparkles, Trash2, Cpu, Eye, Compass, Info } from "lucide-react";
+import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info } from "lucide-react";
 
 interface BuilderTabProps {
   historicalDraws: any[];
@@ -338,14 +338,14 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
             onClick={() => handleQuickPick(5)}
             className="flex items-center gap-1.5 bg-[#121418] border border-[#1F232B] hover:border-amber-400 hover:text-amber-400 text-slate-300 px-4 py-2 rounded-none text-xs font-semibold tracking-wider transition-all duration-200 cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sliders className="w-3.5 h-3.5" />
             QP 5
           </button>
           <button
             onClick={() => handleQuickPick(8)}
             className="flex items-center gap-1.5 bg-[#121418] border border-[#1F232B] hover:border-amber-400 hover:text-amber-400 text-slate-300 px-4 py-2 rounded-none text-xs font-semibold tracking-wider transition-all duration-200 cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sliders className="w-3.5 h-3.5" />
             QP 8
           </button>
           <button
@@ -732,7 +732,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
             <div className="text-xl font-bold text-emerald-400 tracking-tight">98.24%</div>
             <p className="text-[9px] text-slate-500 uppercase">Successor Dispersion Ratio</p>
           </div>
-          <Sparkles className="w-5 h-5 text-emerald-500/50" />
+          <Compass className="w-5 h-5 text-emerald-500/50" />
         </div>
 
         {/* Metric 3 */}

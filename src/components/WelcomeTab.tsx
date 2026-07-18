@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Info, Heart, Sparkles } from "lucide-react";
+import { Info, Heart } from "lucide-react";
 
 export default function WelcomeTab() {
   const [luckyNumbers, setLuckyNumbers] = useState<number[]>([]);
