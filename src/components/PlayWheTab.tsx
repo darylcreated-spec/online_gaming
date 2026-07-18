@@ -87,12 +87,12 @@ export default function PlayWheTab({
   showExplainer,
   onShowExplainerChange
 }: {
-  activeSubTab?: "translator" | "dashboard" | "relationship" | "history" | "explain";
-  onSubTabChange?: (tab: "translator" | "dashboard" | "relationship" | "history" | "explain") => void;
+  activeSubTab?: "translator" | "dashboard" | "relationship" | "history" | "hits" | "explain";
+  onSubTabChange?: (tab: "translator" | "dashboard" | "relationship" | "history" | "hits" | "explain") => void;
   showExplainer?: boolean;
   onShowExplainerChange?: (show: boolean) => void;
 } = {}) {
-  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "relationship" | "history" | "explain">("dashboard");
+  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "relationship" | "history" | "hits" | "explain">("dashboard");
   const [localShowHelp, setLocalShowHelp] = useState(false);
 
   const subTab = activeSubTab !== undefined ? activeSubTab : localSubTab;
@@ -130,6 +130,33 @@ export default function PlayWheTab({
   const [focusedNumber, setFocusedNumber] = useState<number>(1);
   const [correlationData, setCorrelationData] = useState<any>(null);
   const [correlationLoading, setCorrelationLoading] = useState<boolean>(true);
+
+  // Prediction Hits States
+  const [predictionsList, setPredictionsList] = useState<any[]>([]);
+  const [predictionsStats, setPredictionsStats] = useState<any>(null);
+  const [predictionsLoading, setPredictionsLoading] = useState(true);
+
+  const fetchPredictions = async () => {
+    try {
+      setPredictionsLoading(true);
+      const res = await fetch("/api/playwhe/predictions");
+      const data = await res.json();
+      if (data.success) {
+        setPredictionsList(data.predictions);
+        setPredictionsStats(data.stats);
+      }
+    } catch (err) {
+      console.error("Error fetching Play Whe prediction hits:", err);
+    } finally {
+      setPredictionsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (subTab === "hits") {
+      fetchPredictions();
+    }
+  }, [subTab]);
 
   const fetchCorrelation = async (num: number) => {
     const cacheKey = `playwhe_correlation_${num}`;
@@ -458,6 +485,18 @@ export default function PlayWheTab({
         >
           <Calendar className="w-3.5 h-3.5" />
           DRAW LOG
+        </button>
+
+        <button
+          onClick={() => setSubTab("hits")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            subTab === "hits"
+              ? "bg-primary text-slate-950 font-bold"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          PREDICTION HITS
         </button>
 
         <button
@@ -1402,6 +1441,143 @@ export default function PlayWheTab({
             </div>
           )}
 
+        </div>
+      )}
+
+      {subTab === "hits" && (
+        <div className="space-y-6">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-900/30 flex flex-col justify-between font-mono">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Prediction Accuracy</span>
+              {predictionsLoading ? (
+                <div className="h-8 w-24 bg-white/5 animate-pulse rounded mt-2" />
+              ) : (
+                <div className="text-3xl font-black text-primary mt-1 shadow-[0_0_15px_rgba(56,189,248,0.25)]">
+                  {predictionsStats?.hitRate || 0}%
+                </div>
+              )}
+            </div>
+            <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-900/30 flex flex-col justify-between font-mono">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Total Evaluated</span>
+              {predictionsLoading ? (
+                <div className="h-8 w-24 bg-white/5 animate-pulse rounded mt-2" />
+              ) : (
+                <div className="text-2xl font-bold text-white mt-1">
+                  {predictionsStats?.total || 0} <span className="text-xs text-gray-500 font-semibold">Days</span>
+                </div>
+              )}
+            </div>
+            <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-900/30 flex flex-col justify-between font-mono">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Successful Hits</span>
+              {predictionsLoading ? (
+                <div className="h-8 w-24 bg-white/5 animate-pulse rounded mt-2" />
+              ) : (
+                <div className="text-2xl font-bold text-emerald-400 mt-1">
+                  {predictionsStats?.hits || 0}
+                </div>
+              )}
+            </div>
+            <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-900/30 flex flex-col justify-between font-mono">
+              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Missed Predictions</span>
+              {predictionsLoading ? (
+                <div className="h-8 w-24 bg-white/5 animate-pulse rounded mt-2" />
+              ) : (
+                <div className="text-2xl font-bold text-rose-400 mt-1">
+                  {predictionsStats?.misses || 0}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-950/40 space-y-4">
+            <div className="border-b border-white/5 pb-3">
+              <h3 className="text-sm font-bold text-white uppercase font-mono tracking-widest">Prediction Outcome Logs</h3>
+              <p className="text-xs text-gray-400 font-mono mt-1">
+                Historical record of daily 3-number app predictions matched against NLCB draws.
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left font-mono text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-white/5 text-gray-500 uppercase text-[10px]">
+                    <th className="pb-3 px-4">Target Date</th>
+                    <th className="pb-3 px-4">Predicted Numbers</th>
+                    <th className="pb-3 px-4">Result Status</th>
+                    <th className="pb-3 px-4">Drawn Match Info</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {predictionsLoading ? (
+                    Array.from({ length: 5 }).map((_, idx) => (
+                      <tr key={idx} className="animate-pulse">
+                        <td className="py-4 px-4"><div className="h-4 w-24 bg-white/5 rounded" /></td>
+                        <td className="py-4 px-4"><div className="h-4 w-32 bg-white/5 rounded" /></td>
+                        <td className="py-4 px-4"><div className="h-4 w-16 bg-white/5 rounded" /></td>
+                        <td className="py-4 px-4"><div className="h-4 w-48 bg-white/5 rounded" /></td>
+                      </tr>
+                    ))
+                  ) : predictionsList.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-6 text-center text-gray-500 italic">
+                        No prediction data logged. Enable database sync.
+                      </td>
+                    </tr>
+                  ) : (
+                    predictionsList.map((item) => (
+                      <tr key={item.id} className="hover:bg-white/[0.01] transition-all">
+                        <td className="py-3.5 px-4 text-white font-bold">{formatDateString(item.prediction_date)}</td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex gap-1.5">
+                            {item.predicted_numbers.split(",").map((n: string) => (
+                              <span 
+                                key={n} 
+                                className={`px-2 py-0.5 rounded border text-[10px] font-bold ${
+                                  item.status === "HIT" && Number(n) === item.winning_number
+                                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]"
+                                    : "bg-slate-950/40 border-white/5 text-gray-400"
+                                }`}
+                              >
+                                {n}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          {item.status === "HIT" ? (
+                            <span className="px-2 py-0.5 border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 rounded-md text-[9px] font-bold tracking-wider uppercase">
+                              HIT
+                            </span>
+                          ) : item.status === "MISS" ? (
+                            <span className="px-2 py-0.5 border border-rose-500/20 bg-rose-500/10 text-rose-400 rounded-md text-[9px] font-bold tracking-wider uppercase">
+                              MISS
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 border border-amber-500/20 bg-amber-500/10 text-amber-400 rounded-md text-[9px] font-bold tracking-wider uppercase animate-pulse">
+                              PENDING
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-gray-400">
+                          {item.status === "HIT" ? (
+                            <span className="text-gray-300">
+                              Matched <strong className="text-white">#{item.winning_number}</strong> on Draw <strong className="text-white">#{item.winning_draw_number}</strong> ({item.winning_time_slot})
+                            </span>
+                          ) : item.status === "MISS" ? (
+                            <span className="text-gray-500">No matching draws found</span>
+                          ) : (
+                            <span className="text-amber-500 font-medium">Waiting for drawings...</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

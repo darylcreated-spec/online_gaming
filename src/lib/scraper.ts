@@ -454,6 +454,18 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
         winning_number INTEGER NOT NULL
       )
     `);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS playwhe_predictions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        prediction_date TEXT NOT NULL UNIQUE,
+        predicted_numbers TEXT NOT NULL,
+        status TEXT DEFAULT 'PENDING',
+        winning_number INTEGER,
+        winning_time_slot TEXT,
+        winning_draw_number INTEGER,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
     const sid = await scrapePlayWheSid();
     if (!sid) {
