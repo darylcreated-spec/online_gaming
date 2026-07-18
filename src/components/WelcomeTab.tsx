@@ -128,7 +128,7 @@ export default function WelcomeTab() {
           <Info className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
           <div className="space-y-1.5 font-mono">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">Disclaimer & Fair Play Notice</h4>
-            <p className="text-[10px] leading-relaxed text-gray-400">
+            <p className="text-xs leading-relaxed text-gray-400">
               This application is designed as a statistical tool that attempts to reduce the mathematical odds of NLCB online games by tracking historical frequencies and delta gaps. It is <strong>NOT affiliated with, authorized, or endorsed by the National Lotteries Control Board (NLCB)</strong> of Trinidad and Tobago in any form or fashion. Using this app <strong>does NOT guarantee any winnings</strong>. Please play responsibly.
             </p>
           </div>
@@ -144,11 +144,11 @@ export default function WelcomeTab() {
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">
               Support the Creator
             </h4>
-            <p className="text-[10px] leading-relaxed text-gray-400">
+            <p className="text-xs leading-relaxed text-gray-400">
               Creating and maintaining these complex analytical scraping systems requires time, hosting, and dedication. If this mathematical tool helps you hit a lucky streak, win big, or become wealthy, please show some love and support the creator!
             </p>
             <div className="p-2.5 bg-slate-950/60 border border-white/5 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <span className="text-[10px] text-gray-400">Send Tips / Support (PayPal):</span>
+              <span className="text-xs text-gray-400">Send Tips / Support (PayPal):</span>
               <a 
                 href="mailto:daryl.created@gmail.com"
                 className="text-xs font-extrabold text-amber-400 hover:text-amber-300 transition tracking-wider underline underline-offset-4"

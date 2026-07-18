@@ -224,7 +224,7 @@ export default function SettingsTab() {
           <button
             onClick={fetchDBStatus}
             disabled={loadingStats || syncingGame !== null}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-slate-900/50 hover:bg-slate-900 text-[11px] font-bold font-mono tracking-wider text-gray-300 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-slate-900/50 hover:bg-slate-900 text-xs font-bold font-mono tracking-wider text-gray-300 transition"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loadingStats ? "animate-spin" : ""}`} />
             REFRESH
@@ -236,7 +236,7 @@ export default function SettingsTab() {
       <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none">
         <button
           onClick={() => setSettingsTab("sync")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
             settingsTab === "sync"
               ? "bg-primary text-slate-950 font-bold"
               : "text-gray-400 hover:text-white"
@@ -247,7 +247,7 @@ export default function SettingsTab() {
         </button>
         <button
           onClick={() => setSettingsTab("install")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
             settingsTab === "install"
               ? "bg-primary text-slate-950 font-bold"
               : "text-gray-400 hover:text-white"
@@ -267,10 +267,10 @@ export default function SettingsTab() {
               <h4 className="text-xs font-bold text-white uppercase tracking-wider">
                 Synchronization Guide & Control Actions
               </h4>
-              <p className="text-[11px] text-gray-400 leading-relaxed">
+              <p className="text-xs text-gray-400 leading-relaxed">
                 Due to hosting firewall limits, automated servers (like Vercel) are blocked by NLCB. To pull latest numbers, trigger a direct update below or run <code className="text-primary mx-1 px-1 bg-slate-950 rounded font-semibold">npm run sync-cloud</code> in your terminal.
               </p>
-              <div className="border-t border-white/5 pt-2 mt-1 space-y-1.5 text-[10px] text-gray-400">
+              <div className="border-t border-white/5 pt-2 mt-1 space-y-1.5 text-xs text-gray-400">
                 <div>
                   <strong className="text-primary uppercase font-bold">● SYNC RECENT:</strong> Connects to NLCB, scrapes the latest draw results, and saves them to your database. **Use this to get today's drawings.**
                 </div>
@@ -291,7 +291,7 @@ export default function SettingsTab() {
             <div className="glass-panel border border-white/5 p-5 rounded-xl bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[11px] font-bold font-mono tracking-widest text-primary uppercase">
+                  <span className="text-xs font-bold font-mono tracking-widest text-primary uppercase">
                     LOTTO PLUS DATA
                   </span>
                   <Database className="w-4 h-4 text-primary/50" />
@@ -308,7 +308,7 @@ export default function SettingsTab() {
                       {lottoStats?.count.toLocaleString() || "0"} <span className="text-xs font-bold text-gray-500">Draws</span>
                     </div>
                     {lottoStats?.latest && (
-                      <div className="text-[11px] text-gray-400 space-y-1">
+                      <div className="text-xs text-gray-400 space-y-1">
                         <div>Latest Draw: <span className="text-white font-bold">#{lottoStats.latest.draw_number}</span></div>
                         <div>Winning: <span className="text-primary font-bold">
                           {[lottoStats.latest.num1, lottoStats.latest.num2, lottoStats.latest.num3, lottoStats.latest.num4, lottoStats.latest.num5].join("-")}
@@ -352,7 +352,7 @@ export default function SettingsTab() {
             <div className="glass-panel border border-white/5 p-5 rounded-xl bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[11px] font-bold font-mono tracking-widest text-primary uppercase">
+                  <span className="text-xs font-bold font-mono tracking-widest text-primary uppercase">
                     PLAY WHE DATA
                   </span>
                   <Database className="w-4 h-4 text-primary/50" />
@@ -369,7 +369,7 @@ export default function SettingsTab() {
                       {playWheStats?.count.toLocaleString() || "0"} <span className="text-xs font-bold text-gray-500">Draws</span>
                     </div>
                     {playWheStats?.latest && (
-                      <div className="text-[11px] text-gray-400 space-y-1">
+                      <div className="text-xs text-gray-400 space-y-1">
                         <div>Latest Draw: <span className="text-white font-bold">#{playWheStats.latest.draw_number}</span></div>
                         <div>Winning: <span className="text-primary font-bold">
                           {playWheStats.latest.winning_number}
@@ -418,30 +418,30 @@ export default function SettingsTab() {
             <div className="bg-slate-900/80 px-4 py-2 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Terminal className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[10px] font-bold font-mono tracking-wider text-gray-300 uppercase">
+                <span className="text-xs font-bold font-mono tracking-wider text-gray-300 uppercase">
                   LIVE SYNC LOG CONSOLE
                 </span>
               </div>
               
               {syncingGame !== null ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-mono text-primary animate-pulse font-semibold uppercase">
+                  <span className="text-[10px] font-mono text-primary animate-pulse font-semibold uppercase">
                     {activeStep}
                   </span>
                   <div className="w-2.5 h-2.5 border border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : syncSuccess === true ? (
-                <div className="flex items-center gap-1.5 text-green-400 text-[9px] font-bold font-mono">
+                <div className="flex items-center gap-1.5 text-green-400 text-[10px] font-bold font-mono">
                   <CheckCircle2 className="w-3 h-3" />
                   SYNC COMPLETE
                 </div>
               ) : syncSuccess === false ? (
-                <div className="flex items-center gap-1.5 text-rose-400 text-[9px] font-bold font-mono">
+                <div className="flex items-center gap-1.5 text-rose-400 text-[10px] font-bold font-mono">
                   <AlertTriangle className="w-3 h-3" />
                   SYNC ERROR
                 </div>
               ) : (
-                <div className="text-[9px] font-mono text-gray-500">IDLE</div>
+                <div className="text-[10px] font-mono text-gray-500">IDLE</div>
               )}
             </div>
 
@@ -477,7 +477,7 @@ export default function SettingsTab() {
             <h3 className="text-sm font-bold font-mono tracking-widest text-white uppercase border-b border-white/5 pb-2">
               Progressive Web App (PWA) Installation Guide
             </h3>
-            <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
+            <p className="text-xs text-gray-400 font-mono leading-relaxed">
               Installing this application on your mobile device places a standalone, borderless launcher icon directly on your home screen. This provides instant access, saves storage, and removes browser interface bars for a full-screen, native experience.
             </p>
           </div>
@@ -485,16 +485,16 @@ export default function SettingsTab() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Apple iOS Guide */}
             <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-4 font-mono">
-              <div className="flex items-center gap-2 text-amber-400 font-bold text-[11px] uppercase">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase">
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                   <path d="M18.71,19.5C17.88,20.74,17,21.95,15.66,22c-1.34,.05-1.77-.77-3.31-.77s-2,.75-3.31,.8c-1.31,.05-2.3-1.32-3.14-2.53C4.25,17,2.94,12.45,4.7,9.39c.87-1.52,2.43-2.48,4.12-2.51,1.28-.02,2.5,.87,3.29,.87s1.78-.85,3.06-.72c.54,.02,2.05,.22,3.02,1.64-1.04,.63-2.15,1.86-2.13,3.46,0,1.92,1.57,2.83,1.6,2.85-.02,.07-.26,.88-.85,1.96M15.97,4.17c.56-.7,1.01-1.66,.81-2.61-.83,.03-1.89,.57-2.48,1.28-.5,.58-.94,1.56-.74,2.49,.92,.07,1.9-.45,2.41-1.16Z"/>
                 </svg>
                 Apple iOS (iPhone / iPad)
               </div>
-              <p className="text-[11px] text-gray-400 leading-relaxed">
+              <p className="text-xs text-gray-400 leading-relaxed">
                 iOS requires PWA installation through Safari. Google Chrome or other browsers on iOS do not support home screen installations.
               </p>
-              <ol className="list-decimal pl-4 text-[10px] text-gray-300 space-y-2 pt-2">
+              <ol className="list-decimal pl-4 text-xs text-gray-300 space-y-2 pt-2">
                 <li>
                   Open <strong className="text-white">Safari</strong> and navigate to the application URL.
                 </li>
@@ -515,16 +515,16 @@ export default function SettingsTab() {
 
             {/* Google Android Guide */}
             <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-4 font-mono">
-              <div className="flex items-center gap-2 text-emerald-400 font-bold text-[11px] uppercase">
+              <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase">
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                   <path d="M16.61,15.15C16.14,15.15,15.77,14.78,15.77,14.31C15.77,13.84,16.14,13.47,16.61,13.47C17.08,13.47,17.45,13.84,17.45,14.31C17.45,14.78,17.08,15.15,16.61,15.15M7.39,15.15C6.92,15.15,6.55,14.78,6.55,14.31C6.55,13.84,6.92,13.47,7.39,13.47C7.86,13.47,8.23,13.84,8.23,14.31C8.23,14.78,7.86,15.15,7.39,15.15M19.12,11.53L21,8.27C21.1,8.1,21.05,7.87,20.88,7.77C20.71,7.67,20.48,7.72,20.38,7.89L18.47,11.19C16.8,10.42,14.93,10,13,10C11.07,10,9.2,10.42,7.53,11.19L5.62,7.89C5.52,7.72,5.29,7.67,5.12,7.77C4.95,7.87,4.9,8.1,5,8.27L6.88,11.53C3.06,13.62,0.5,17.65,0.5,22.31H23.5C23.5,17.65,20.94,13.62,19.12,11.53Z"/>
                 </svg>
                 Google Android (Chrome / Brave / Firefox)
               </div>
-              <p className="text-[11px] text-gray-400 leading-relaxed">
+              <p className="text-xs text-gray-400 leading-relaxed">
                 Android supports app installations through Chrome, Brave, Edge, Opera, or Firefox.
               </p>
-              <ol className="list-decimal pl-4 text-[10px] text-gray-300 space-y-2 pt-2">
+              <ol className="list-decimal pl-4 text-xs text-gray-300 space-y-2 pt-2">
                 <li>
                   Open <strong className="text-white">Google Chrome</strong> and navigate to the application URL.
                 </li>

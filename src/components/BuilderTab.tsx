@@ -376,7 +376,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
             {/* Headline */}
             <div className="flex items-center justify-between border-b border-[#1F232B] pb-4">
               <div className="space-y-1">
-                <span className="text-[10px] text-amber-500 uppercase tracking-widest font-bold">Workspace Core</span>
+                <span className="text-xs text-amber-500 uppercase tracking-widest font-bold">Workspace Core</span>
                 <h3 className="text-md font-bold text-white uppercase"> Bet Matrix Generator</h3>
               </div>
               <Compass className="w-5 h-5 text-slate-600" />
@@ -452,7 +452,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                 {selectedNums.length >= 5 ? (
                   <div className="space-y-4 bg-[#0B0C0E] p-4 border border-[#1F232B]">
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-widest">Select Strategy</span>
+                      <span className="text-xs text-slate-500 uppercase tracking-widest">Select Strategy</span>
                       <select
                         value={wheelStrategy}
                         onChange={(e) => setWheelStrategy(e.target.value as any)}
@@ -506,11 +506,11 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
           {/* Heatmap Grid Card */}
           <div className="bg-[#121418] border border-[#1F232B] p-6 rounded-none space-y-4">
             <div className="border-b border-[#1F232B] pb-3">
-              <span className="text-[10px] text-amber-500 uppercase tracking-widest font-bold">Statistical Density</span>
+              <span className="text-xs text-amber-500 uppercase tracking-widest font-bold">Statistical Density</span>
               <h3 className="text-md font-bold text-white uppercase">Number Grid Heatmap</h3>
             </div>
             
-            <p className="text-[10px] text-slate-400 leading-relaxed uppercase">
+            <p className="text-xs text-slate-400 leading-relaxed uppercase">
               Shading indicates draw frequency. Amber cells denote hot ranges; charcoal represents cold numbers.
             </p>
 
@@ -536,11 +536,11 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
           {/* Dream Chart Co-occurrence Card */}
           <div className="bg-[#121418] border border-[#1F232B] p-6 rounded-none space-y-4">
             <div className="border-b border-[#1F232B] pb-3">
-              <span className="text-[10px] text-emerald-400 uppercase tracking-widest font-bold">Dynamic Companions</span>
+              <span className="text-xs text-emerald-400 uppercase tracking-widest font-bold">Dynamic Companions</span>
               <h3 className="text-md font-bold text-white uppercase">Dream Chart Mapping</h3>
             </div>
             
-            <p className="text-[10px] text-slate-400 leading-relaxed uppercase">
+            <p className="text-xs text-slate-400 leading-relaxed uppercase">
               Identifies co-occurring pairings drawn alongside your selected pool.
             </p>
 
@@ -553,9 +553,9 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                       <span className="w-5 h-5 bg-amber-400/10 text-amber-400 flex items-center justify-center font-bold text-[10px]">
                         {String(item.num).padStart(2, "0")}
                       </span>
-                      <span className="text-slate-400 uppercase text-[10px]">Statistical Companion</span>
+                      <span className="text-slate-400 uppercase text-xs">Statistical Companion</span>
                     </div>
-                    <span className="text-slate-500 text-[10px]">Score: {item.count}</span>
+                    <span className="text-slate-500 text-xs">Score: {item.count}</span>
                   </div>
                 ))}
               </div>
@@ -575,11 +575,11 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         <div className="bg-[#121418] border border-[#1F232B] p-6 rounded-none space-y-4">
           <div className="border-b border-[#1F232B] pb-3 flex justify-between items-center">
             <div>
-              <span className="text-[10px] text-amber-500 uppercase tracking-widest font-bold">Delta Spacing</span>
+              <span className="text-xs text-amber-500 uppercase tracking-widest font-bold">Delta Spacing</span>
               <h3 className="text-md font-bold text-white uppercase">Draw Variance Analysis</h3>
             </div>
             <div className="text-right font-mono">
-              <span className="text-[10px] text-slate-500 uppercase block">Distribution score</span>
+              <span className="text-xs text-slate-500 uppercase block">Distribution score</span>
               <span className={`text-sm font-bold ${deltaAnalysis.score >= 70 ? "text-emerald-400" : "text-amber-500"}`}>
                 {deltaAnalysis.score}/100
               </span>
@@ -588,7 +588,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
             <div className="md:col-span-4 space-y-2">
-              <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Consecutive Gaps</span>
+              <span className="text-xs text-slate-500 uppercase tracking-widest block">Consecutive Gaps</span>
               <div className="flex gap-2">
                 {deltaAnalysis.deltas.map((g, idx) => (
                   <div key={idx} className="w-8 h-8 bg-[#0B0C0E] border border-[#1F232B] text-amber-400 flex items-center justify-center font-bold text-xs">
@@ -611,7 +611,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
           <Cpu className="w-8 h-8 text-amber-400 animate-spin" />
           <div className="text-center font-mono space-y-1">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">Compiling Wheeling Matrix...</h4>
-            <p className="text-[10px] text-slate-500">Generating and optimizing matching tickets on a background thread.</p>
+            <p className="text-xs text-slate-500">Generating and optimizing matching tickets on a background thread.</p>
           </div>
         </div>
       )}
@@ -622,7 +622,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
           {/* Section Header */}
           <div className="flex justify-between items-center border-b border-[#1F232B] pb-4">
             <div className="space-y-1">
-              <span className="text-[10px] text-amber-500 uppercase tracking-widest font-bold">Betting slips</span>
+              <span className="text-xs text-amber-500 uppercase tracking-widest font-bold">Betting slips</span>
               <h3 className="text-md font-bold text-white uppercase flex items-center gap-2">
                 <Eye className="w-4 h-4 text-amber-400" />
                 Compiled Combos ({generatedTickets.length})
@@ -660,7 +660,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                   return (
                     <>
                       <div className="flex justify-between items-center mt-1 pb-3 border-b border-[#1F232B]">
-                        <span className="text-[10px] text-slate-500 font-bold">SLIP #{String(idx + 1).padStart(3, "0")}</span>
+                        <span className="text-xs text-slate-500 font-bold">SLIP #{String(idx + 1).padStart(3, "0")}</span>
                         <span className={`text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-sm ${
                           evalResult.grade === "A+"
                             ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
