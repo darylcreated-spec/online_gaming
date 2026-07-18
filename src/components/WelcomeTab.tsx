@@ -149,9 +149,12 @@ export default function WelcomeTab() {
             </p>
             <div className="p-2.5 bg-slate-950/60 border border-white/5 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <span className="text-[10px] text-gray-400">Send Tips / Support (PayPal):</span>
-              <span className="text-xs font-extrabold text-amber-400 select-all tracking-wider">
+              <a 
+                href="mailto:daryl.created@gmail.com"
+                className="text-xs font-extrabold text-amber-400 hover:text-amber-300 transition tracking-wider underline underline-offset-4"
+              >
                 daryl.created@gmail.com
-              </span>
+              </a>
             </div>
           </div>
         </div>
