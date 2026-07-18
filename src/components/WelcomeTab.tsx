@@ -1,9 +1,37 @@
 "use client";
 
-import React from "react";
-import { Info, Heart } from "lucide-react";
+import React, { useState } from "react";
+import { Info, Heart, Sparkles } from "lucide-react";
 
 export default function WelcomeTab() {
+  const [luckyNumbers, setLuckyNumbers] = useState<number[]>([]);
+  const [luckyPowerball, setLuckyPowerball] = useState<number | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  const generateLuckyNumbers = () => {
+    setIsSpinning(true);
+    setLuckyNumbers([]);
+    setLuckyPowerball(null);
+    
+    setTimeout(() => {
+      // Generate 5 random unique numbers from 1 to 35
+      const pool: number[] = [];
+      while (pool.length < 5) {
+        const rand = Math.floor(Math.random() * 35) + 1;
+        if (!pool.includes(rand)) {
+          pool.push(rand);
+        }
+      }
+      pool.sort((a, b) => a - b);
+      
+      const pb = Math.floor(Math.random() * 10) + 1;
+      
+      setLuckyNumbers(pool);
+      setLuckyPowerball(pb);
+      setIsSpinning(false);
+    }, 1500);
+  };
+
   return (
     <div className="space-y-6">
       
@@ -12,6 +40,11 @@ export default function WelcomeTab() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-5deg) scale(1.02); }
+          75% { transform: rotate(5deg) scale(1.02); }
         }
         @keyframes bounce-ball-1 {
           0%, 100% { transform: translate(15px, 15px); }
@@ -55,59 +88,116 @@ export default function WelcomeTab() {
         .animate-bounce-ball-5 { animation: bounce-ball-5 3.8s infinite ease-in-out; }
         .animate-bounce-ball-6 { animation: bounce-ball-6 5.2s infinite ease-in-out; }
         .animate-spin-slow { animation: spin 25s infinite linear; }
+        .animate-shake { animation: shake 0.15s ease-in-out infinite; }
       `}</style>
 
       {/* Visual Header Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
         
         {/* Floating Animated Graphic (Col Span 5) - Bingo Tumbler */}
-        <div className="md:col-span-5 flex justify-center relative select-none h-72 items-center">
+        <div className="md:col-span-5 flex flex-col items-center justify-center relative select-none gap-6 py-4 min-h-[420px]">
           {/* Glowing Background Radial */}
-          <div className="absolute w-64 h-64 bg-primary/10 rounded-full blur-[70px] animate-pulse" />
+          <div className="absolute w-64 h-64 bg-primary/10 rounded-full blur-[70px] animate-pulse pointer-events-none" />
           
-          {/* Tumbler Stand */}
-          <svg viewBox="0 0 100 100" className="absolute w-72 h-72 text-slate-700/60 stroke-current fill-none stroke-[2.5] z-0">
-            <path d="M20,85 L35,40 L65,40 L80,85" strokeLinecap="round" />
-            <path d="M15,85 L85,85" strokeLinecap="round" strokeWidth="4" />
-            <circle cx="50" cy="40" r="5" fill="#020617" stroke="white" strokeWidth="2" />
-          </svg>
+          {/* Tumbler Stand & Wrapper */}
+          <div className="relative w-72 h-72 flex items-center justify-center">
+            <svg viewBox="0 0 100 100" className="absolute inset-0 text-slate-700/60 stroke-current fill-none stroke-[2.5] z-0">
+              <path d="M20,85 L35,40 L65,40 L80,85" strokeLinecap="round" />
+              <path d="M15,85 L85,85" strokeLinecap="round" strokeWidth="4" />
+              <circle cx="50" cy="40" r="5" fill="#020617" stroke="white" strokeWidth="2" />
+            </svg>
 
-          <div className="relative w-60 h-60 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center p-4">
-            {/* Outer Spinner Ring */}
-            <div className="absolute inset-0 rounded-full border-2 border-dotted border-primary/20 animate-spin-slow" />
-            {/* Inner Concentric Glow / Ball Container (Clipped Circle) */}
-            <div className="w-48 h-48 rounded-full bg-gradient-to-tr from-slate-900 via-[#0B0C0E] to-slate-950 border border-white/5 flex items-center justify-center relative overflow-hidden shadow-[inset_0_0_20px_rgba(255,255,255,0.05),0_0_30px_rgba(0,0,0,0.5)]">
-              <span className="font-mono text-[11px] text-gray-500 font-extrabold tracking-widest text-center uppercase leading-tight select-none z-10">
-                THE WIN<br />CONCEPT
-              </span>
-              
-              {/* Bouncing Colored Balls Inside Spinner Container */}
-              {/* Ball 1 */}
-              <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.6)] animate-bounce-ball-1 select-none z-0">
-                17
-              </div>
-              {/* Ball 2 */}
-              <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(167,139,250,0.6)] animate-bounce-ball-2 select-none z-0">
-                28
-              </div>
-              {/* Ball 3 */}
-              <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-emerald-600 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(52,211,153,0.6)] animate-bounce-ball-3 select-none z-0">
-                9
-              </div>
-              {/* Ball 4 */}
-              <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.6)] animate-bounce-ball-4 select-none z-0">
-                35
-              </div>
-              {/* Ball 5 */}
-              <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(244,63,94,0.6)] animate-bounce-ball-5 select-none z-0">
-                1
-              </div>
-              {/* Ball 6 */}
-              <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-teal-500 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(34,211,238,0.6)] animate-bounce-ball-6 select-none z-0">
-                21
+            <div className={`relative w-60 h-60 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center p-4 transition-all duration-300 ${
+              isSpinning ? "animate-shake" : ""
+            }`}>
+              {/* Outer Spinner Ring */}
+              <div className="absolute inset-0 rounded-full border-2 border-dotted border-primary/20 animate-spin-slow" />
+              {/* Inner Concentric Glow / Ball Container (Clipped Circle) */}
+              <div className="w-48 h-48 rounded-full bg-gradient-to-tr from-slate-900 via-[#0B0C0E] to-slate-950 border border-white/5 flex items-center justify-center relative overflow-hidden shadow-[inset_0_0_20px_rgba(255,255,255,0.05),0_0_30px_rgba(0,0,0,0.5)]">
+                <span className="font-mono text-[11px] text-gray-500 font-extrabold tracking-widest text-center uppercase leading-tight select-none z-10">
+                  THE WIN<br />CONCEPT
+                </span>
+                
+                {/* Bouncing Colored Balls Inside Spinner Container */}
+                {/* Ball 1 */}
+                <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-primary to-blue-600 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.6)] animate-bounce-ball-1 select-none z-0">
+                  17
+                </div>
+                {/* Ball 2 */}
+                <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(167,139,250,0.6)] animate-bounce-ball-2 select-none z-0">
+                  28
+                </div>
+                {/* Ball 3 */}
+                <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-emerald-600 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(52,211,153,0.6)] animate-bounce-ball-3 select-none z-0">
+                  9
+                </div>
+                {/* Ball 4 */}
+                <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.6)] animate-bounce-ball-4 select-none z-0">
+                  35
+                </div>
+                {/* Ball 5 */}
+                <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(244,63,94,0.6)] animate-bounce-ball-5 select-none z-0">
+                  1
+                </div>
+                {/* Ball 6 */}
+                <div className="absolute w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-teal-500 text-white font-mono font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(34,211,238,0.6)] animate-bounce-ball-6 select-none z-0">
+                  21
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Action Trigger Button */}
+          <button
+            onClick={generateLuckyNumbers}
+            disabled={isSpinning}
+            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 disabled:from-amber-500/50 disabled:to-amber-500/50 disabled:cursor-not-allowed text-slate-950 text-xs font-black font-mono tracking-widest uppercase transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] rounded-lg cursor-pointer"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${isSpinning ? "animate-spin" : ""}`} />
+            {isSpinning ? "SPINNING..." : "GENERATE LUCKY NUMBERS"}
+          </button>
+
+          {/* Ball Drop Prediction Display */}
+          {(luckyNumbers.length > 0 || isSpinning) && (
+            <div className="flex flex-col items-center justify-center space-y-3 py-3 border-t border-b border-white/5 w-full max-w-sm font-mono">
+              <span className="text-[10px] text-primary uppercase font-bold tracking-widest">
+                {isSpinning ? "Drawing balls..." : "Your Lucky Numbers"}
+              </span>
+              <div className="flex justify-center items-center gap-2">
+                {isSpinning ? (
+                  // Loading slots
+                  Array.from({ length: 6 }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="w-9 h-9 rounded-full bg-slate-950 border border-white/10 flex items-center justify-center"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-ping" style={{ animationDelay: `${idx * 150}ms` }} />
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    {/* 5 Main Numbers */}
+                    {luckyNumbers.map((num, idx) => (
+                      <div
+                        key={idx}
+                        className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-extrabold text-xs flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.4)] select-none"
+                      >
+                        {String(num).padStart(2, "0")}
+                      </div>
+                    ))}
+                    {/* Plus Sign */}
+                    <span className="text-gray-500 font-bold text-xs shrink-0 mx-0.5">+</span>
+                    {/* Powerball */}
+                    <div
+                      className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-slate-950 font-extrabold text-xs flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.4)] select-none"
+                    >
+                      {luckyPowerball}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Welcome Text block */}
