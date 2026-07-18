@@ -186,20 +186,30 @@ export default function WelcomeTab() {
                 ) : (
                   <>
                     {/* 5 Main Numbers */}
-                    {luckyNumbers.map((num, idx) => (
-                      <div
-                        key={idx}
-                        className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-extrabold text-xs flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.4)] select-none animate-ball-drop opacity-0"
-                        style={{ animationDelay: `${idx * 150}ms` }}
-                      >
-                        {String(num).padStart(2, "0")}
-                      </div>
-                    ))}
+                    {luckyNumbers.map((num, idx) => {
+                      const ballGradients = [
+                        "from-primary to-blue-600 text-white shadow-[0_0_12px_rgba(56,189,248,0.4)]",
+                        "from-purple-500 to-indigo-600 text-white shadow-[0_0_12px_rgba(167,139,250,0.4)]",
+                        "from-teal-400 to-emerald-600 text-white shadow-[0_0_12px_rgba(52,211,153,0.4)]",
+                        "from-amber-400 to-orange-600 text-slate-950 shadow-[0_0_12px_rgba(251,191,36,0.4)]",
+                        "from-rose-500 to-pink-600 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]"
+                      ];
+                      const gradientClass = ballGradients[idx % ballGradients.length];
+                      return (
+                        <div
+                          key={idx}
+                          className={`w-9 h-9 rounded-full bg-gradient-to-br ${gradientClass} font-extrabold text-xs flex items-center justify-center select-none animate-ball-drop opacity-0`}
+                          style={{ animationDelay: `${idx * 150}ms` }}
+                        >
+                          {String(num).padStart(2, "0")}
+                        </div>
+                      );
+                    })}
                     {/* Plus Sign */}
                     <span className="text-gray-500 font-bold text-xs shrink-0 mx-0.5 animate-ball-drop opacity-0" style={{ animationDelay: "750ms" }}>+</span>
                     {/* Powerball */}
                     <div
-                      className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-slate-950 font-extrabold text-xs flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.4)] select-none animate-ball-drop opacity-0"
+                      className="w-9 h-9 rounded-full bg-gradient-to-br from-white to-gray-200 text-slate-950 font-extrabold text-xs flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.4)] border border-white/20 select-none animate-ball-drop opacity-0"
                       style={{ animationDelay: "900ms" }}
                     >
                       {luckyPowerball}
