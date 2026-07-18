@@ -7,12 +7,20 @@ const dbPath = path.join(process.cwd(), "data/lotto.db");
 const url = process.env.TURSO_DATABASE_URL || `file:${dbPath}`;
 const authToken = process.env.TURSO_AUTH_TOKEN;
 
-console.log(`[Database] Connecting to: ${url.startsWith("file:") ? "local SQLite file (" + dbPath + ")" : "Turso Cloud DB"}`);
+// Prevent recreating database client in dev mode to avoid exhaustion of connection pools.
+const globalForDb = globalThis as unknown as {
+  libsqlDb: ReturnType<typeof createClient> | undefined;
+};
 
-export const db = createClient({
-  url,
-  authToken,
-});
+if (!globalForDb.libsqlDb) {
+  console.log(`[Database] Connecting to: ${url.startsWith("file:") ? "local SQLite file (" + dbPath + ")" : "Turso Cloud DB"}`);
+  globalForDb.libsqlDb = createClient({
+    url,
+    authToken,
+  });
+}
+
+export const db = globalForDb.libsqlDb;
 
 // Helper to run raw SQL statements
 export async function query<T = any>(sql: string, args: any[] = []): Promise<T[]> {

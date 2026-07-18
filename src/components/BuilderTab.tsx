@@ -71,6 +71,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
   const [generatedTickets, setGeneratedTickets] = useState<number[][]>([]);
   const [matrixLoading, setMatrixLoading] = useState(false);
   const [hoveredTicket, setHoveredTicket] = useState<number[] | null>(null);
+  const [wheelingLoading, setWheelingLoading] = useState(false);
 
   // --- Real-time Statistics Computations ---
   const [frequencies, setFrequencies] = useState<number[]>(Array(36).fill(0));
@@ -188,12 +189,30 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
       alert("Please select at least 5 numbers to generate tickets.");
       return;
     }
-    try {
-      const tickets = generateWheel(selectedNums, wheelStrategy);
-      setGeneratedTickets(tickets);
-    } catch (err: any) {
-      alert(err.message || "Failed to generate wheel");
-    }
+    setWheelingLoading(true);
+    setGeneratedTickets([]);
+    
+    // Spawn Web Worker for background nCr wheeling calculations
+    const worker = new Worker(new URL("../lib/wheeling.worker.ts", import.meta.url));
+    worker.postMessage({ pool: selectedNums, strategy: wheelStrategy });
+    
+    worker.onmessage = (e) => {
+      const { success, result, error } = e.data;
+      setWheelingLoading(false);
+      if (success) {
+        setGeneratedTickets(result);
+      } else {
+        alert(error || "Failed to generate wheel");
+      }
+      worker.terminate();
+    };
+    
+    worker.onerror = (err) => {
+      console.error("Web Worker error:", err);
+      setWheelingLoading(false);
+      alert("An unexpected background processing error occurred.");
+      worker.terminate();
+    };
   };
 
   // Export tickets to TXT file
@@ -456,9 +475,17 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
 
                     <button
                       onClick={handleGenerateWheel}
-                      className="w-full py-2.5 bg-amber-400 text-[#0B0C0E] font-bold text-xs tracking-widest uppercase hover:bg-amber-300 transition-all duration-200 cursor-pointer shadow-[0_0_12px_rgba(212,175,55,0.25)]"
+                      disabled={wheelingLoading}
+                      className="w-full py-2.5 bg-amber-400 disabled:bg-amber-400/50 disabled:cursor-not-allowed text-[#0B0C0E] font-bold text-xs tracking-widest uppercase hover:bg-amber-300 transition-all duration-200 cursor-pointer shadow-[0_0_12px_rgba(212,175,55,0.25)] flex items-center justify-center gap-2"
                     >
-                      Compile Betting Slips
+                      {wheelingLoading ? (
+                        <>
+                          <Cpu className="w-3.5 h-3.5 animate-spin" />
+                          COMPILING IN BACKGROUND...
+                        </>
+                      ) : (
+                        "Compile Betting Slips"
+                      )}
                     </button>
                   </div>
                 ) : (
@@ -579,7 +606,17 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
       )}
 
       {/* BOTTOM ROW: Combinatorial Coverage Slips Workspace */}
-      {generatedTickets.length > 0 && (
+      {wheelingLoading && (
+        <div className="bg-[#121418] border border-[#1F232B] p-12 rounded-none flex flex-col items-center justify-center space-y-4">
+          <Cpu className="w-8 h-8 text-amber-400 animate-spin" />
+          <div className="text-center font-mono space-y-1">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Compiling Wheeling Matrix...</h4>
+            <p className="text-[10px] text-slate-500">Generating and optimizing matching tickets on a background thread.</p>
+          </div>
+        </div>
+      )}
+
+      {generatedTickets.length > 0 && !wheelingLoading && (
         <div className="bg-[#121418] border border-[#1F232B] p-6 rounded-none space-y-6">
           
           {/* Section Header */}

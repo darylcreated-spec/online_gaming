@@ -132,15 +132,30 @@ export default function PlayWheTab({
   const [correlationLoading, setCorrelationLoading] = useState<boolean>(true);
 
   const fetchCorrelation = async (num: number) => {
+    const cacheKey = `playwhe_correlation_${num}`;
     try {
       setCorrelationLoading(true);
       const res = await fetch(`/api/playwhe/correlation?number=${num}&limit=1000`);
       const data = await res.json();
       if (data.success) {
         setCorrelationData(data);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(cacheKey, JSON.stringify(data));
+        }
       }
     } catch (err) {
       console.error("Error fetching Play Whe correlations:", err);
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            setCorrelationData(JSON.parse(cached));
+            console.log(`[Offline Cache] Loaded Play Whe correlation for number ${num}`);
+          } catch (e) {
+            console.error("Error parsing cached correlations:", e);
+          }
+        }
+      }
     } finally {
       setCorrelationLoading(false);
     }
@@ -154,15 +169,30 @@ export default function PlayWheTab({
 
   // Fetch Stats data
   const fetchStats = async () => {
+    const cacheKey = `playwhe_stats_${statsLimit}`;
     try {
       setStatsLoading(true);
       const res = await fetch(`/api/playwhe/stats?limit=${statsLimit}`);
       const data = await res.json();
       if (data.success) {
         setStats(data);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(cacheKey, JSON.stringify(data));
+        }
       }
     } catch (err) {
       console.error("Error fetching Play Whe stats:", err);
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            setStats(JSON.parse(cached));
+            console.log(`[Offline Cache] Loaded Play Whe stats for limit: ${statsLimit}`);
+          } catch (e) {
+            console.error("Error parsing cached Play Whe stats:", e);
+          }
+        }
+      }
     } finally {
       setStatsLoading(false);
     }
@@ -170,6 +200,7 @@ export default function PlayWheTab({
 
   // Fetch paginated history draws
   const fetchHistory = async () => {
+    const cacheKey = `playwhe_history_p${pagination.page}_l${pagination.limit}_s${historySearch}_n${historyNumberFilter}`;
     try {
       setHistoryLoading(true);
       const res = await fetch(
@@ -183,9 +214,29 @@ export default function PlayWheTab({
           total: data.pagination.total,
           pages: data.pagination.pages
         }));
+        if (typeof window !== "undefined") {
+          localStorage.setItem(cacheKey, JSON.stringify(data));
+        }
       }
     } catch (err) {
       console.error("Error fetching Play Whe draws:", err);
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            setDraws(parsed.draws);
+            setPagination(prev => ({
+              ...prev,
+              total: parsed.pagination.total,
+              pages: parsed.pagination.pages
+            }));
+            console.log(`[Offline Cache] Loaded Play Whe history page ${pagination.page}`);
+          } catch (e) {
+            console.error("Error parsing cached Play Whe draws:", e);
+          }
+        }
+      }
     } finally {
       setHistoryLoading(false);
     }

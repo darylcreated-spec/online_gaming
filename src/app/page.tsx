@@ -114,9 +114,23 @@ export default function Home() {
       const data = await res.json();
       if (data.success) {
         setStats(data);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(`win_concept_stats_${timeframe}`, JSON.stringify(data));
+        }
       }
     } catch (err) {
       console.error("Error fetching stats:", err);
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem(`win_concept_stats_${timeframe}`);
+        if (cached) {
+          try {
+            setStats(JSON.parse(cached));
+            console.log(`[Offline Cache] Loaded stats for timeframe: ${timeframe}`);
+          } catch (e) {
+            console.error("Error parsing cached stats:", e);
+          }
+        }
+      }
     } finally {
       setStatsLoading(false);
     }
@@ -125,21 +139,38 @@ export default function Home() {
   // 2. Fetch history draws
   const fetchHistoryDraws = async (page: number = 1) => {
     setHistoryLoading(true);
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: pagination.limit.toString(),
+      search: historySearch,
+      number: historyNumberFilter
+    });
+    const cacheKey = `win_concept_draws_${queryParams.toString()}`;
     try {
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: pagination.limit.toString(),
-        search: historySearch,
-        number: historyNumberFilter
-      });
       const res = await fetch(`/api/draws?${queryParams.toString()}`);
       const data = await res.json();
       if (data.success) {
         setDraws(data.draws);
         setPagination(data.pagination);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(cacheKey, JSON.stringify(data));
+        }
       }
     } catch (err) {
       console.error("Error fetching history draws:", err);
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            setDraws(parsed.draws);
+            setPagination(parsed.pagination);
+            console.log(`[Offline Cache] Loaded history page ${page}`);
+          } catch (e) {
+            console.error("Error parsing cached draws:", e);
+          }
+        }
+      }
     } finally {
       setHistoryLoading(false);
     }
@@ -147,14 +178,29 @@ export default function Home() {
 
   // 3. Fetch all draws for client-side delta analysis
   const fetchAllDraws = async () => {
+    const cacheKey = "win_concept_all_draws";
     try {
       const res = await fetch(`/api/draws?limit=5000`);
       const data = await res.json();
       if (data.success) {
         setAllDraws(data.draws);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(cacheKey, JSON.stringify(data.draws));
+        }
       }
     } catch (err) {
       console.error("Error fetching all draws:", err);
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            setAllDraws(JSON.parse(cached));
+            console.log("[Offline Cache] Loaded all draws for wheeling analysis");
+          } catch (e) {
+            console.error("Error parsing cached all draws:", e);
+          }
+        }
+      }
     }
   };
 
