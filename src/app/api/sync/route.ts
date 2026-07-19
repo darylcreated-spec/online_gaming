@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-async function runSync(full: boolean, year?: number, authHeader?: string | null) {
+async function runSync(full: boolean, year?: number, authHeader?: string | null, secretParam?: string | null) {
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}` && secretParam !== cronSecret) {
     return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
   }
 
@@ -20,7 +20,8 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const full = !!body.full;
     const year = body.year ? parseInt(body.year) : undefined;
-    return await runSync(full, year, authHeader);
+    const secretParam = body.secret || new URL(request.url).searchParams.get("secret");
+    return await runSync(full, year, authHeader, secretParam);
   } catch (error: any) {
     console.error("[API /api/sync] Error:", error);
     return NextResponse.json(
@@ -36,7 +37,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const full = searchParams.get("full") === "true";
     const year = searchParams.get("year") ? parseInt(searchParams.get("year")!) : undefined;
-    return await runSync(full, year, authHeader);
+    const secretParam = searchParams.get("secret");
+    return await runSync(full, year, authHeader, secretParam);
   } catch (error: any) {
     console.error("[API /api/sync] Error:", error);
     return NextResponse.json(
