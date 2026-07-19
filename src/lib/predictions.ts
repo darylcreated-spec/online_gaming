@@ -12,15 +12,23 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
   try {
     // 1. Check if a prediction already exists for this date and slot combination
     const existing = await db.execute({
-      sql: "SELECT predicted_numbers FROM playwhe_predictions WHERE prediction_date = ? AND UPPER(draw_time_slot) = UPPER(?)",
+      sql: "SELECT status, predicted_numbers FROM playwhe_predictions WHERE prediction_date = ? AND UPPER(draw_time_slot) = UPPER(?)",
       args: [dateStr, slotStr]
     });
     
     if (existing.rows.length > 0) {
-      return {
-        predicted_numbers: String(existing.rows[0][0]),
-        success: true
-      };
+      const record = existing.rows[0];
+      const status = String(record[0]);
+      const predicted = String(record[1]);
+      
+      // If the prediction status is locked (HIT or MISS), return it directly.
+      // If it is PENDING, we let the predictor recalculate it using the latest drawing results.
+      if (status !== 'PENDING') {
+        return {
+          predicted_numbers: predicted,
+          success: true
+        };
+      }
     }
 
     // 2. Fetch the last 150 draws for this specific slot to analyze slot-specific behavior
@@ -105,9 +113,9 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
     const top5 = candidates.slice(0, 5).map(c => String(c.num).padStart(2, "0"));
     const predictionString = top5.join(",");
 
-    // Save to database
+    // Save or update to database (using INSERT OR REPLACE to overwrite PENDING values)
     await db.execute({
-      sql: "INSERT OR IGNORE INTO playwhe_predictions (prediction_date, draw_time_slot, predicted_numbers, status) VALUES (?, ?, ?, 'PENDING')",
+      sql: "INSERT OR REPLACE INTO playwhe_predictions (prediction_date, draw_time_slot, predicted_numbers, status) VALUES (?, ?, ?, 'PENDING')",
       args: [dateStr, slotStr, predictionString]
     });
 

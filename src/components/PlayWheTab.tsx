@@ -542,10 +542,10 @@ export default function PlayWheTab({
             <div className="space-y-1.5">
               <h4 className="text-primary font-bold">6. PREDICTION HITS</h4>
               <p>
-                Tracks and verifies the accuracy of the app's daily 3-number mathematical selections.
+                Tracks and verifies the accuracy of the app's 5-number predictions for each specific draw slot (Morning, Midday, Afternoon, Evening).
               </p>
               <p>
-                Calculates a historical hit rate. A date is evaluated as a <strong>HIT</strong> if at least one predicted mark lands in any of the four daily drawings.
+                A slot prediction is marked as a <strong>HIT</strong> if its specific drawing's winning number matches one of the predicted numbers. While pending, predictions dynamically update to factor in same-day draw results, freezing only once their slot result is drawn.
               </p>
             </div>
           </div>
