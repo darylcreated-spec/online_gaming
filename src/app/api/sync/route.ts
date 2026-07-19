@@ -9,8 +9,8 @@ async function runSync(full: boolean, year?: number, authHeader?: string | null,
     return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
   }
 
-  // Enforce secondary password protection on full historical database syncs
-  if (full) {
+  // Enforce secondary password protection on full historical database syncs (when full is true or a specific year is requested)
+  if (full || year !== undefined) {
     const fullSyncSecret = process.env.FULL_SYNC_SECRET || "daryl.created@gmail.com";
     if (fullSecretParam !== fullSyncSecret) {
       return NextResponse.json({ success: false, error: "Unauthorized: Full sync password required" }, { status: 401 });

@@ -56,6 +56,17 @@ export default function SettingsTab() {
 
   const handleLottoSync = async (full: boolean = false) => {
     if (syncingGame) return;
+    
+    let pwd = "";
+    if (full) {
+      const input = prompt("Please enter the Full Sync password to continue:");
+      if (!input) {
+        addLog("Sync cancelled by user.");
+        return;
+      }
+      pwd = input;
+    }
+
     setSyncingGame("lotto");
     setSyncType(full ? "full" : "recent");
     setSyncSuccess(null);
@@ -76,7 +87,7 @@ export default function SettingsTab() {
           const res = await fetch("/api/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ year: y })
+            body: JSON.stringify({ year: y, fullSecret: pwd })
           });
           const data = await res.json();
           if (data.success) {
@@ -133,6 +144,17 @@ export default function SettingsTab() {
 
   const handlePlayWheSync = async (full: boolean = false) => {
     if (syncingGame) return;
+
+    let pwd = "";
+    if (full) {
+      const input = prompt("Please enter the Full Sync password to continue:");
+      if (!input) {
+        addLog("Sync cancelled by user.");
+        return;
+      }
+      pwd = input;
+    }
+
     setSyncingGame("playwhe");
     setSyncType(full ? "full" : "recent");
     setSyncSuccess(null);
@@ -153,7 +175,7 @@ export default function SettingsTab() {
           const res = await fetch("/api/playwhe/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ year: y })
+            body: JSON.stringify({ year: y, fullSecret: pwd })
           });
           const data = await res.json();
           if (data.success) {
