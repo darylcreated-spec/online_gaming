@@ -368,8 +368,8 @@ export default function DashboardTab({
                 <div className="absolute inset-0 rounded-full border-2 border-dotted border-primary/20 animate-spin-slow" />
                 {/* Inner Container */}
                 <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-slate-900 via-[#0B0C0E] to-slate-950 border border-white/5 flex items-center justify-center relative overflow-hidden shadow-[inset_0_0_15px_rgba(255,255,255,0.05),0_0_20px_rgba(0,0,0,0.5)]">
-                  <span className="font-mono text-[9px] text-gray-500 font-extrabold tracking-widest text-center uppercase leading-tight select-none z-10">
-                    QP5<br />TUMBLER
+                  <span className="font-mono text-[8px] text-gray-500 font-extrabold tracking-widest text-center uppercase leading-tight select-none z-10">
+                    THE WIN<br />CONCEPT
                   </span>
                   
                   {/* Bouncing Colored Balls Inside Spinner Container */}
