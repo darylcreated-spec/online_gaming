@@ -1476,7 +1476,7 @@ export default function PlayWheTab({
             <div className="border-b border-white/5 pb-3">
               <h3 className="text-sm font-bold text-white uppercase font-mono tracking-widest">Prediction Outcome Logs</h3>
               <p className="text-xs text-gray-400 font-mono mt-1">
-                Historical record of daily 3-number app predictions matched against NLCB draws.
+                Historical record of daily 5-number app predictions matched against NLCB draws.
               </p>
             </div>
 
