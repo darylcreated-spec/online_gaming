@@ -138,7 +138,7 @@ export default function PlayWheTab({
   const fetchPredictions = async () => {
     try {
       setPredictionsLoading(true);
-      const res = await fetch("/api/playwhe/predictions");
+      const res = await fetch(`/api/playwhe/predictions?t=${Date.now()}`);
       const data = await res.json();
       if (data.success) {
         setPredictionsList(data.predictions);
