@@ -7,13 +7,13 @@ export function getLocalDateString(date = new Date()): string {
   return adjustedDate.toISOString().split("T")[0];
 }
 
-// Generate Play Whe predictions (3 numbers) for a given date string (YYYY-MM-DD)
-export async function generatePlayWhePredictions(dateStr: string): Promise<{ predicted_numbers: string; success: boolean }> {
+// Generate Play Whe predictions (3 numbers) for a given date (YYYY-MM-DD) and draw time slot
+export async function generatePlayWhePredictions(dateStr: string, slotStr: string): Promise<{ predicted_numbers: string; success: boolean }> {
   try {
-    // 1. Check if a prediction already exists for this date
+    // 1. Check if a prediction already exists for this date and slot combination
     const existing = await db.execute({
-      sql: "SELECT predicted_numbers FROM playwhe_predictions WHERE prediction_date = ?",
-      args: [dateStr]
+      sql: "SELECT predicted_numbers FROM playwhe_predictions WHERE prediction_date = ? AND draw_time_slot = ?",
+      args: [dateStr, slotStr]
     });
     
     if (existing.rows.length > 0) {
@@ -23,27 +23,36 @@ export async function generatePlayWhePredictions(dateStr: string): Promise<{ pre
       };
     }
 
-    // 2. Fetch the last 200 draws to run statistical analysis
-    const drawsRes = await db.execute({
-      sql: "SELECT winning_number, draw_time_slot FROM playwhe_draws ORDER BY id DESC LIMIT 200"
+    // 2. Fetch the last 150 draws for this specific slot to analyze slot-specific behavior
+    const slotDrawsRes = await db.execute({
+      sql: "SELECT winning_number FROM playwhe_draws WHERE draw_time_slot = ? ORDER BY id DESC LIMIT 150",
+      args: [slotStr]
     });
     
-    const draws = drawsRes.rows.map(row => ({
-      winning_number: Number(row[0]),
-      draw_time_slot: String(row[1])
-    }));
+    const slotDraws = slotDrawsRes.rows.map(row => Number(row[0]));
 
-    if (draws.length < 5) {
+    // Fetch the last 150 draws overall for successor/companion co-occurrences
+    const generalDrawsRes = await db.execute({
+      sql: "SELECT winning_number FROM playwhe_draws ORDER BY id DESC LIMIT 150"
+    });
+    
+    const generalDraws = generalDrawsRes.rows.map(row => Number(row[0]));
+
+    if (generalDraws.length < 5) {
       // Fallback if db is empty or has too few records
-      const fallback = ["1", "12", "29"].join(",");
+      const fallbackList = [["01", "12", "29"], ["02", "13", "30"], ["03", "14", "31"], ["04", "15", "32"]];
+      const slots = ["MORNING", "MIDDAY", "AFTERNOON", "EVENING"];
+      const slotIdx = Math.max(0, slots.indexOf(slotStr));
+      const fallback = fallbackList[slotIdx].join(",");
+
       await db.execute({
-        sql: "INSERT OR IGNORE INTO playwhe_predictions (prediction_date, predicted_numbers, status) VALUES (?, ?, 'PENDING')",
-        args: [dateStr, fallback]
+        sql: "INSERT OR IGNORE INTO playwhe_predictions (prediction_date, draw_time_slot, predicted_numbers, status) VALUES (?, ?, ?, 'PENDING')",
+        args: [dateStr, slotStr, fallback]
       });
       return { predicted_numbers: fallback, success: true };
     }
 
-    // 3. Compute simple probability weights for all 36 numbers
+    // 3. Compute probability weights for all 36 numbers
     const freqs: Record<number, number> = {};
     const gaps: Record<number, number> = {};
     const successors: Record<number, number> = {};
@@ -51,37 +60,36 @@ export async function generatePlayWhePredictions(dateStr: string): Promise<{ pre
     // Initialize metrics
     for (let i = 1; i <= 36; i++) {
       freqs[i] = 0;
-      gaps[i] = 200; // default large gap
+      gaps[i] = 150; // default large gap
       successors[i] = 0;
     }
 
-    // A. Frequencies over last 200 draws
-    draws.forEach(d => {
-      freqs[d.winning_number]++;
+    // A. Slot Frequencies over slot-specific history
+    slotDraws.forEach(val => {
+      if (freqs[val] !== undefined) freqs[val]++;
     });
 
-    // B. Calculate Gaps (draws since last seen)
+    // B. Calculate Gaps (draws since last seen in this slot)
     for (let i = 1; i <= 36; i++) {
-      const idx = draws.findIndex(d => d.winning_number === i);
+      const idx = slotDraws.indexOf(i);
       if (idx !== -1) {
         gaps[i] = idx;
       }
     }
 
-    // C. Successors of the last drawn number
-    const lastDrawn = draws[0].winning_number;
-    for (let i = 0; i < draws.length - 1; i++) {
-      if (draws[i + 1].winning_number === lastDrawn) {
-        // draws is DESC sorted, so draws[i] followed draws[i+1] chronologically
-        successors[draws[i].winning_number]++;
+    // C. Successors of the last drawn number overall
+    const lastDrawn = generalDraws[0];
+    for (let i = 0; i < generalDraws.length - 1; i++) {
+      if (generalDraws[i + 1] === lastDrawn) {
+        successors[generalDraws[i]]++;
       }
     }
 
     // 4. Calculate total score for each of the 36 numbers
     const candidates = [];
     for (let i = 1; i <= 36; i++) {
-      // Weighting formula: Overdue gap + Frequency + Successor tendency
-      const score = (gaps[i] * 1.8) + (freqs[i] * 1.2) + (successors[i] * 2.5);
+      // Weighting formula: Overdue gap in slot (2.0) + Slot frequency (1.5) + Successors (1.8)
+      const score = (gaps[i] * 2.0) + (freqs[i] * 1.5) + (successors[i] * 1.8);
       candidates.push({ num: i, score });
     }
 
@@ -94,14 +102,14 @@ export async function generatePlayWhePredictions(dateStr: string): Promise<{ pre
 
     // Save to database
     await db.execute({
-      sql: "INSERT OR IGNORE INTO playwhe_predictions (prediction_date, predicted_numbers, status) VALUES (?, ?, 'PENDING')",
-      args: [dateStr, predictionString]
+      sql: "INSERT OR IGNORE INTO playwhe_predictions (prediction_date, draw_time_slot, predicted_numbers, status) VALUES (?, ?, ?, 'PENDING')",
+      args: [dateStr, slotStr, predictionString]
     });
 
-    console.log(`[Predictor] Generated predictions for ${dateStr}: ${predictionString}`);
+    console.log(`[Predictor] Generated predictions for ${dateStr} [${slotStr}]: ${predictionString}`);
     return { predicted_numbers: predictionString, success: true };
   } catch (err) {
-    console.error("[Predictor] Error generating predictions:", err);
+    console.error(`[Predictor] Error generating predictions for ${dateStr} [${slotStr}]:`, err);
     return { predicted_numbers: "", success: false };
   }
 }
@@ -113,68 +121,92 @@ export async function verifyPlayWhePredictions(): Promise<{ verifiedCount: numbe
   try {
     // 1. Get all pending predictions
     const pendingRes = await db.execute({
-      sql: "SELECT id, prediction_date, predicted_numbers FROM playwhe_predictions WHERE status = 'PENDING'"
+      sql: "SELECT id, prediction_date, draw_time_slot, predicted_numbers FROM playwhe_predictions WHERE status = 'PENDING'"
     });
 
     const pending = pendingRes.rows.map(row => ({
       id: Number(row[0]),
       prediction_date: String(row[1]),
-      predicted_numbers: String(row[2])
+      draw_time_slot: String(row[2]),
+      predicted_numbers: String(row[3])
     }));
 
     const todayStr = getLocalDateString();
+    const slotOrder = ["MORNING", "MIDDAY", "AFTERNOON", "EVENING"];
 
     for (const p of pending) {
-      // Fetch draws for this prediction date
-      const drawsRes = await db.execute({
-        sql: "SELECT draw_number, winning_number, draw_time_slot FROM playwhe_draws WHERE draw_date = ?",
-        args: [p.prediction_date]
+      // Fetch draw for this specific date and time slot
+      const drawRes = await db.execute({
+        sql: "SELECT draw_number, winning_number FROM playwhe_draws WHERE draw_date = ? AND draw_time_slot = ?",
+        args: [p.prediction_date, p.draw_time_slot]
       });
 
-      const draws = drawsRes.rows.map(row => ({
-        draw_number: Number(row[0]),
-        winning_number: Number(row[1]),
-        draw_time_slot: String(row[2])
-      }));
+      if (drawRes.rows.length > 0) {
+        // Draw exists! Evaluate hit/miss
+        const drawNumber = Number(drawRes.rows[0][0]);
+        const winningNumber = Number(drawRes.rows[0][1]);
+        const predictedList = p.predicted_numbers.split(",").map(Number);
 
-      const predictedList = p.predicted_numbers.split(",").map(Number);
-      
-      // Look for a hit
-      let hitDraw = null;
-      for (const draw of draws) {
-        if (predictedList.includes(draw.winning_number)) {
-          hitDraw = draw;
-          break;
-        }
-      }
-
-      if (hitDraw) {
-        // It's a HIT!
-        await db.execute({
-          sql: `UPDATE playwhe_predictions 
-                SET status = 'HIT', 
-                    winning_number = ?, 
-                    winning_time_slot = ?, 
-                    winning_draw_number = ? 
-                WHERE id = ?`,
-          args: [hitDraw.winning_number, hitDraw.draw_time_slot, hitDraw.draw_number, p.id]
-        });
-        verifiedCount++;
-        hitsAdded++;
-        console.log(`[Verifier] HIT: Prediction on ${p.prediction_date} (${p.predicted_numbers}) matched drawn number ${hitDraw.winning_number} at ${hitDraw.draw_time_slot}`);
-      } else {
-        // Check if we should mark it as a MISS
-        // We mark it as MISS if:
-        // A. There are 4 draws registered for that date (all daily slots done)
-        // B. The date is older than today (in local AST time)
-        const isPastDate = p.prediction_date < todayStr;
-        if (draws.length >= 4 || isPastDate) {
+        if (predictedList.includes(winningNumber)) {
+          // It's a HIT!
+          await db.execute({
+            sql: `UPDATE playwhe_predictions 
+                  SET status = 'HIT', 
+                      winning_number = ?, 
+                      winning_draw_number = ? 
+                  WHERE id = ?`,
+            args: [winningNumber, drawNumber, p.id]
+          });
+          hitsAdded++;
+          verifiedCount++;
+          console.log(`[Verifier] HIT: Prediction on ${p.prediction_date} [${p.draw_time_slot}] (${p.predicted_numbers}) matched winning number ${winningNumber} on draw #${drawNumber}`);
+        } else {
+          // It's a MISS!
           await db.execute({
             sql: "UPDATE playwhe_predictions SET status = 'MISS' WHERE id = ?",
             args: [p.id]
           });
           verifiedCount++;
-          console.log(`[Verifier] MISS: Prediction on ${p.prediction_date} (${p.predicted_numbers}) was a miss.`);
+          console.log(`[Verifier] MISS: Prediction on ${p.prediction_date} [${p.draw_time_slot}] (${p.predicted_numbers}) missed against drawn number ${winningNumber}`);
+        }
+      } else {
+        // Draw does not exist in the database. Should we grade it as MISS?
+        const isPastDate = p.prediction_date < todayStr;
+        
+        if (isPastDate) {
+          // Date is in the past, so if no draw is found, it's a miss
+          await db.execute({
+            sql: "UPDATE playwhe_predictions SET status = 'MISS' WHERE id = ?",
+            args: [p.id]
+          });
+          verifiedCount++;
+        } else if (p.prediction_date === todayStr) {
+          // Date is today. Check if a later slot of today has already been drawn
+          const currentSlotIndex = slotOrder.indexOf(p.draw_time_slot);
+          const subsequentSlots = slotOrder.slice(currentSlotIndex + 1);
+          
+          let subsequentDrawn = false;
+          if (subsequentSlots.length > 0) {
+            const placeholders = subsequentSlots.map(() => "?").join(",");
+            const checkSubRes = await db.execute({
+              sql: `SELECT COUNT(*) FROM playwhe_draws 
+                    WHERE draw_date = ? AND draw_time_slot IN (${placeholders})`,
+              args: [p.prediction_date, ...subsequentSlots]
+            });
+            if (Number(checkSubRes.rows[0][0]) > 0) {
+              subsequentDrawn = true;
+            }
+          }
+
+          if (subsequentDrawn) {
+            // A later slot has already been drawn today, so this missing slot is graded as a miss
+            await db.execute({
+              sql: "UPDATE playwhe_predictions SET status = 'MISS' WHERE id = ?",
+              args: [p.id]
+            });
+            verifiedCount++;
+            console.log(`[Verifier] Same-day MISS: Prediction on ${p.prediction_date} [${p.draw_time_slot}] missed because a later draw has already occurred.`);
+          }
         }
       }
     }

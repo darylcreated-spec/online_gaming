@@ -274,15 +274,19 @@ async function main() {
     )
   `);
   await db.execute(`
+    DROP TABLE IF EXISTS playwhe_predictions
+  `);
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS playwhe_predictions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      prediction_date TEXT NOT NULL UNIQUE,
+      prediction_date TEXT NOT NULL,
+      draw_time_slot TEXT NOT NULL,
       predicted_numbers TEXT NOT NULL,
       status TEXT DEFAULT 'PENDING',
       winning_number INTEGER,
-      winning_time_slot TEXT,
       winning_draw_number INTEGER,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(prediction_date, draw_time_slot)
     )
   `);
   

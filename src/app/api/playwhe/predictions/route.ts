@@ -13,25 +13,33 @@ export async function GET() {
     // 1. Run validation checks on PENDING entries
     await verifyPlayWhePredictions();
 
-    // 2. Ensure today's prediction exists
+    // 2. Ensure today's predictions exist for all 4 slots
     const todayStr = getLocalDateString();
-    await generatePlayWhePredictions(todayStr);
+    for (const slot of ["MORNING", "MIDDAY", "AFTERNOON", "EVENING"]) {
+      await generatePlayWhePredictions(todayStr, slot);
+    }
 
-    // 3. Query predictions log (latest 100 entries)
+    // 3. Query predictions log (latest 100 entries sorted newest first)
     const predictionsRes = await db.execute({
-      sql: `SELECT id, prediction_date, predicted_numbers, status, winning_number, winning_time_slot, winning_draw_number, created_at 
+      sql: `SELECT id, prediction_date, draw_time_slot, predicted_numbers, status, winning_number, winning_draw_number, created_at 
             FROM playwhe_predictions 
-            ORDER BY prediction_date DESC 
+            ORDER BY prediction_date DESC, 
+                     CASE draw_time_slot 
+                       WHEN 'EVENING' THEN 1 
+                       WHEN 'AFTERNOON' THEN 2 
+                       WHEN 'MIDDAY' THEN 3 
+                       WHEN 'MORNING' THEN 4 
+                     END ASC
             LIMIT 100`
     });
 
     const predictions = predictionsRes.rows.map(row => ({
       id: Number(row[0]),
       prediction_date: String(row[1]),
-      predicted_numbers: String(row[2]),
-      status: String(row[3]),
-      winning_number: row[4] !== null ? Number(row[4]) : null,
-      winning_time_slot: row[5] !== null ? String(row[5]) : null,
+      draw_time_slot: String(row[2]),
+      predicted_numbers: String(row[3]),
+      status: String(row[4]),
+      winning_number: row[5] !== null ? Number(row[5]) : null,
       winning_draw_number: row[6] !== null ? Number(row[6]) : null,
       created_at: String(row[7])
     }));

@@ -1512,6 +1512,7 @@ export default function PlayWheTab({
                 <thead>
                   <tr className="border-b border-white/5 text-gray-500 uppercase text-[10px]">
                     <th className="pb-3 px-4">Target Date</th>
+                    <th className="pb-3 px-4">Draw Slot</th>
                     <th className="pb-3 px-4">Predicted Numbers</th>
                     <th className="pb-3 px-4">Result Status</th>
                     <th className="pb-3 px-4">Drawn Match Info</th>
@@ -1522,6 +1523,7 @@ export default function PlayWheTab({
                     Array.from({ length: 5 }).map((_, idx) => (
                       <tr key={idx} className="animate-pulse">
                         <td className="py-4 px-4"><div className="h-4 w-24 bg-white/5 rounded" /></td>
+                        <td className="py-4 px-4"><div className="h-4 w-16 bg-white/5 rounded" /></td>
                         <td className="py-4 px-4"><div className="h-4 w-32 bg-white/5 rounded" /></td>
                         <td className="py-4 px-4"><div className="h-4 w-16 bg-white/5 rounded" /></td>
                         <td className="py-4 px-4"><div className="h-4 w-48 bg-white/5 rounded" /></td>
@@ -1529,7 +1531,7 @@ export default function PlayWheTab({
                     ))
                   ) : predictionsList.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-6 text-center text-gray-500 italic">
+                      <td colSpan={5} className="py-6 text-center text-gray-500 italic">
                         No prediction data logged. Enable database sync.
                       </td>
                     </tr>
@@ -1537,6 +1539,11 @@ export default function PlayWheTab({
                     predictionsList.map((item) => (
                       <tr key={item.id} className="hover:bg-white/[0.01] transition-all">
                         <td className="py-3.5 px-4 text-white font-bold">{formatDateString(item.prediction_date)}</td>
+                        <td className="py-3.5 px-4">
+                          <span className="px-2 py-0.5 border border-white/5 bg-slate-950/40 rounded text-[10px] text-gray-300 font-bold">
+                            {item.draw_time_slot}
+                          </span>
+                        </td>
                         <td className="py-3.5 px-4">
                           <div className="flex gap-1.5">
                             {item.predicted_numbers.split(",").map((n: string) => (
@@ -1571,12 +1578,12 @@ export default function PlayWheTab({
                         <td className="py-3.5 px-4 text-gray-400">
                           {item.status === "HIT" ? (
                             <span className="text-gray-300">
-                              Matched <strong className="text-white">#{item.winning_number}</strong> on Draw <strong className="text-white">#{item.winning_draw_number}</strong> ({item.winning_time_slot})
+                              Matched <strong className="text-white">#{item.winning_number}</strong> on Draw <strong className="text-white">#{item.winning_draw_number}</strong>
                             </span>
                           ) : item.status === "MISS" ? (
-                            <span className="text-gray-500">No matching draws found</span>
+                            <span className="text-gray-500">No matching draw found</span>
                           ) : (
-                            <span className="text-amber-500 font-medium">Waiting for drawings...</span>
+                            <span className="text-amber-500 font-medium">Waiting for drawing...</span>
                           )}
                         </td>
                       </tr>
