@@ -8,7 +8,7 @@ import CheckerTab from "@/components/CheckerTab";
 import PlayWheTab from "@/components/PlayWheTab";
 import SettingsTab from "@/components/SettingsTab";
 import WelcomeTab from "@/components/WelcomeTab";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass } from "lucide-react";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw } from "lucide-react";
 
 const TumblerIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -555,9 +555,9 @@ export default function Home() {
               </div>
 
               {/* Card 5: Slip Validation & Quality Grading */}
-              <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3 md:col-span-2">
+              <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3">
                 <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
-                  <Layers className="w-4 h-4 text-primary animate-pulse" />
+                  <Layers className="w-4 h-4 text-primary" />
                   5. Slip Validation & Quality Grading
                 </div>
                 <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
@@ -572,6 +572,20 @@ export default function Home() {
                   <li><strong>Mathematical Spread:</strong> Ensures the difference between the highest and lowest numbers in the ticket falls within the optimal 15 to 33 range.</li>
                   <li><strong>Adjacent Runs:</strong> Restricts tickets containing low-probability runs of more than 1 consecutive pair.</li>
                 </ul>
+              </div>
+
+              {/* Card 6: QP5 Lucky Tumbler */}
+              <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3">
+                <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
+                  <RefreshCw className="w-4 h-4 text-primary" />
+                  6. QP5 Lucky Tumbler
+                </div>
+                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
+                  Draws a Quick Pick 5 ticket (5 unique numbers from 1-35 + 1 Powerball from 1-10) using a physics-based lottery tumbler animation.
+                </p>
+                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
+                  The drawn main numbers are color-matched to the corresponding tumbler balls, while the Powerball is highlighted in solid white, mimicking standard physical drawing environments.
+                </p>
               </div>
             </div>
           </div>
