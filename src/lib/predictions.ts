@@ -40,7 +40,12 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
 
     if (generalDraws.length < 5) {
       // Fallback if db is empty or has too few records
-      const fallbackList = [["01", "12", "29"], ["02", "13", "30"], ["03", "14", "31"], ["04", "15", "32"]];
+      const fallbackList = [
+        ["01", "12", "29", "08", "22"],
+        ["02", "13", "30", "09", "23"],
+        ["03", "14", "31", "10", "24"],
+        ["04", "15", "32", "11", "25"]
+      ];
       const slots = ["MORNING", "MIDDAY", "AFTERNOON", "EVENING"];
       const slotIdx = Math.max(0, slots.indexOf(slotStr));
       const fallback = fallbackList[slotIdx].join(",");
@@ -96,9 +101,9 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
     // Sort descending by score
     candidates.sort((a, b) => b.score - a.score);
 
-    // Pick top 3 unique numbers
-    const top3 = candidates.slice(0, 3).map(c => String(c.num).padStart(2, "0"));
-    const predictionString = top3.join(",");
+    // Pick top 5 unique numbers
+    const top5 = candidates.slice(0, 5).map(c => String(c.num).padStart(2, "0"));
+    const predictionString = top5.join(",");
 
     // Save to database
     await db.execute({
