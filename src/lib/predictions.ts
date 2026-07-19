@@ -12,7 +12,7 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
   try {
     // 1. Check if a prediction already exists for this date and slot combination
     const existing = await db.execute({
-      sql: "SELECT predicted_numbers FROM playwhe_predictions WHERE prediction_date = ? AND draw_time_slot = ?",
+      sql: "SELECT predicted_numbers FROM playwhe_predictions WHERE prediction_date = ? AND UPPER(draw_time_slot) = UPPER(?)",
       args: [dateStr, slotStr]
     });
     
@@ -25,7 +25,7 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
 
     // 2. Fetch the last 150 draws for this specific slot to analyze slot-specific behavior
     const slotDrawsRes = await db.execute({
-      sql: "SELECT winning_number FROM playwhe_draws WHERE draw_time_slot = ? ORDER BY id DESC LIMIT 150",
+      sql: "SELECT winning_number FROM playwhe_draws WHERE UPPER(draw_time_slot) = UPPER(?) ORDER BY id DESC LIMIT 150",
       args: [slotStr]
     });
     
@@ -142,7 +142,7 @@ export async function verifyPlayWhePredictions(): Promise<{ verifiedCount: numbe
     for (const p of pending) {
       // Fetch draw for this specific date and time slot
       const drawRes = await db.execute({
-        sql: "SELECT draw_number, winning_number FROM playwhe_draws WHERE draw_date = ? AND draw_time_slot = ?",
+        sql: "SELECT draw_number, winning_number FROM playwhe_draws WHERE draw_date = ? AND UPPER(draw_time_slot) = UPPER(?)",
         args: [p.prediction_date, p.draw_time_slot]
       });
 
@@ -195,7 +195,7 @@ export async function verifyPlayWhePredictions(): Promise<{ verifiedCount: numbe
             const placeholders = subsequentSlots.map(() => "?").join(",");
             const checkSubRes = await db.execute({
               sql: `SELECT COUNT(*) FROM playwhe_draws 
-                    WHERE draw_date = ? AND draw_time_slot IN (${placeholders})`,
+                    WHERE draw_date = ? AND UPPER(draw_time_slot) IN (${placeholders})`,
               args: [p.prediction_date, ...subsequentSlots]
             });
             if (Number(checkSubRes.rows[0][0]) > 0) {
