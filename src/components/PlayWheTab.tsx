@@ -108,6 +108,9 @@ export default function PlayWheTab({
   // Predictor States
   const [predictorData, setPredictorData] = useState<any[]>([]);
   
+  // Relationship Map Search State
+  const [relationshipSearch, setRelationshipSearch] = useState("");
+  
   // Chinapoo Dictionary States
   const [manualSearchQuery, setManualSearchQuery] = useState("");
   const [manualSearchResults, setManualSearchResults] = useState<any[]>([]);
@@ -566,21 +569,40 @@ export default function PlayWheTab({
               <p className="text-xs text-gray-400 leading-relaxed">
                 Select any Chinapoo mark below to examine its mathematical successors, co-occurring same-day companion numbers, and traditional folkloric partnerships.
               </p>
+
+              {/* Search bar inside relationship map */}
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-500" />
+                <input
+                  type="text"
+                  value={relationshipSearch}
+                  onChange={(e) => setRelationshipSearch(e.target.value)}
+                  placeholder="Search symbol (e.g. 'snake', 'cow', '35')..."
+                  className="w-full bg-slate-950/70 border border-white/5 rounded-lg pl-9 pr-4 py-2 text-xs text-foreground focus:outline-none focus:border-primary transition-all font-mono"
+                />
+              </div>
               
               <div className="grid grid-cols-6 gap-2">
                 {Array.from({ length: 36 }).map((_, idx) => {
                   const num = idx + 1;
                   const isSelected = focusedNumber === num;
                   const entry = CHINAPOO_CHART[num];
+                  
+                  // Filter by search query
+                  const isMatch = !relationshipSearch.trim() || 
+                    String(num) === relationshipSearch.trim() ||
+                    entry.mark.toLowerCase().includes(relationshipSearch.toLowerCase()) ||
+                    entry.keywords.some((kw: string) => kw.toLowerCase().includes(relationshipSearch.toLowerCase()));
+
                   return (
                     <div
                       key={num}
                       onClick={() => setFocusedNumber(num)}
                       className={`aspect-square rounded-lg border flex flex-col justify-center items-center cursor-pointer transition-all ${
                         isSelected
-                          ? "bg-primary text-slate-950 border-primary shadow-[0_0_15px_rgba(56, 189, 248,0.3)] font-bold scale-105"
+                          ? "bg-primary text-slate-950 border-primary shadow-[0_0_15px_rgba(56,189,248,0.3)] font-bold scale-105"
                           : "bg-slate-950/40 border-white/5 text-gray-400 hover:border-primary/30 hover:text-white"
-                      }`}
+                      } ${isMatch ? "opacity-100" : "opacity-20 hover:opacity-40"}`}
                     >
                       <span className={`text-xs font-mono font-bold ${isSelected ? "text-slate-950" : "text-white"}`}>
                         {num}

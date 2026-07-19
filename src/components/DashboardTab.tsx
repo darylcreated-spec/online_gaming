@@ -11,7 +11,7 @@ import {
   CartesianGrid
 } from "recharts";
 import { RefreshCw, TrendingUp, Calendar, Award, DollarSign, Database, HelpCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface DashboardTabProps {
   stats: any;
@@ -45,6 +45,45 @@ export default function DashboardTab({
   const [luckyNumbers, setLuckyNumbers] = useState<number[]>([]);
   const [luckyPowerball, setLuckyPowerball] = useState<number | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
+
+  // Saved Slips States
+  const [savedSlips, setSavedSlips] = useState<any[]>([]);
+  const [loadingSlips, setLoadingSlips] = useState(false);
+
+  // Fetch saved slips
+  const fetchSlips = async () => {
+    try {
+      setLoadingSlips(true);
+      const res = await fetch("/api/slips");
+      const data = await res.json();
+      if (data.success) {
+        setSavedSlips(data.slips || []);
+      }
+    } catch (err) {
+      console.error("Error fetching saved slips:", err);
+    } finally {
+      setLoadingSlips(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSlips();
+  }, []);
+
+  const handleDeleteSlip = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this saved ticket?")) return;
+    try {
+      const res = await fetch(`/api/slips?id=${id}`, {
+        method: "DELETE"
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchSlips();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Quick Pick 5 (QP5) function
   const qp5 = () => {
@@ -619,7 +658,145 @@ export default function DashboardTab({
             </ResponsiveContainer>
           )}
         </div>
+      {/* Saved Slips Workspace Tracker */}
+      <div className="glass-panel p-6 rounded-xl space-y-4">
+        <div className="flex justify-between items-center border-b border-white/5 pb-3">
+          <div>
+            <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+              <Database className="w-5 h-5 text-primary" />
+              Lotto Plus Slips Workspace Tracker
+            </h3>
+            <p className="text-xs text-gray-400">Track and auto-grade your saved combinations against NLCB drawings</p>
+          </div>
+          <button
+            onClick={fetchSlips}
+            className="p-1.5 hover:bg-white/5 rounded transition text-gray-400 hover:text-white"
+          >
+            <RefreshCw className={`w-4 h-4 ${loadingSlips ? "animate-spin" : ""}`} />
+          </button>
+        </div>
+
+        {savedSlips.length === 0 ? (
+          <div className="text-center py-10 text-xs text-gray-500 font-mono">
+            No saved slips found in your workspace. Build slips in the builder tab and click 'Save to Workspace' to track them.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs font-mono">
+              <thead>
+                <tr className="border-b border-white/5 text-gray-400">
+                  <th className="py-2">Label</th>
+                  <th className="py-2">Numbers</th>
+                  <th className="py-2">Powerball</th>
+                  <th className="py-2">Saved Date</th>
+                  <th className="py-2 text-right">Latest Match Result</th>
+                  <th className="py-2 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {savedSlips.map((slip) => {
+                  const slipNums = slip.numbers.split(",").map(Number);
+                  
+                  // Calculate match grade against latest draw
+                  let matchCount = 0;
+                  let pbMatch = false;
+                  
+                  if (stats?.latestDraw) {
+                    const winningNums = [
+                      stats.latestDraw.num1,
+                      stats.latestDraw.num2,
+                      stats.latestDraw.num3,
+                      stats.latestDraw.num4,
+                      stats.latestDraw.num5
+                    ].map(Number);
+                    
+                    matchCount = slipNums.filter((n: number) => winningNums.includes(n)).length;
+                    pbMatch = stats.latestDraw.powerball === Number(slip.powerball);
+                  }
+
+                  const dateStr = new Date(slip.created_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  });
+
+                  return (
+                    <tr key={slip.id} className="border-b border-white/5 hover:bg-white/[0.01]">
+                      <td className="py-3 font-semibold text-white">{slip.name}</td>
+                      <td className="py-3">
+                        <div className="flex gap-1">
+                          {slipNums.map((n: number, idx: number) => {
+                            // Check if this number matched the winning numbers
+                            const isWin = stats?.latestDraw && [
+                              stats.latestDraw.num1,
+                              stats.latestDraw.num2,
+                              stats.latestDraw.num3,
+                              stats.latestDraw.num4,
+                              stats.latestDraw.num5
+                            ].map(Number).includes(n);
+
+                            return (
+                              <span 
+                                key={idx} 
+                                className={`px-1.5 py-0.5 rounded font-bold ${
+                                  isWin 
+                                    ? "bg-primary/20 text-primary border border-primary/30" 
+                                    : "bg-slate-900 border border-white/5 text-gray-400"
+                                }`}
+                              >
+                                {String(n).padStart(2, "0")}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        {slip.powerball ? (
+                          <span 
+                            className={`px-1.5 py-0.5 rounded-full font-bold ${
+                              pbMatch 
+                                ? "bg-secondary/20 text-secondary border border-secondary/30" 
+                                : "bg-slate-900 border border-white/5 text-gray-500"
+                            }`}
+                          >
+                            {slip.powerball}
+                          </span>
+                        ) : "N/A"}
+                      </td>
+                      <td className="py-3 text-gray-500">{dateStr}</td>
+                      <td className="py-3 text-right">
+                        {stats?.latestDraw ? (
+                          <span className={`font-extrabold ${
+                            matchCount >= 3 
+                              ? "text-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.1)]" 
+                              : matchCount > 0 
+                              ? "text-primary" 
+                              : "text-gray-500"
+                          }`}>
+                            {matchCount} Match{matchCount === 1 ? "" : "es"}
+                            {pbMatch && " + Powerball"}
+                          </span>
+                        ) : (
+                          <span className="text-gray-500">N/A</span>
+                        )}
+                      </td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => handleDeleteSlip(slip.id)}
+                          className="text-red-500 hover:text-red-400 font-extrabold underline tracking-widest uppercase text-[10px] ml-4 cursor-pointer"
+                        >
+                          DELETE
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
+  </div>
   );
 }

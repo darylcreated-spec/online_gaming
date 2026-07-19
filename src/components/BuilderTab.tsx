@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { analyzeDeltas, DeltaAnalysis } from "@/lib/deltas";
 import { generateWheel } from "@/lib/wheeling";
-import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info } from "lucide-react";
+import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save } from "lucide-react";
 
 interface BuilderTabProps {
   historicalDraws: any[];
@@ -246,6 +246,36 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
     link.download = `win_concept_slips_${Date.now()}.txt`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Save generated slips to SQLite database workspace
+  const handleSaveSlips = async () => {
+    if (generatedTickets.length === 0) return;
+    
+    const name = prompt("Enter a label for this saved ticket group (e.g. 'My Saturday Play'):");
+    if (!name) return;
+
+    try {
+      let savedCount = 0;
+      for (const ticket of generatedTickets) {
+        const res = await fetch("/api/slips", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            game_type: "lotto",
+            numbers: ticket.join(","),
+            powerball: selectedPb || null
+          })
+        });
+        const data = await res.json();
+        if (data.success) savedCount++;
+      }
+      alert(`Successfully saved ${savedCount} slips to your workspace!`);
+    } catch (err: any) {
+      console.error(err);
+      alert(`Error saving slips: ${err.message}`);
+    }
   };
 
   // Shading logic for standard heatmap
@@ -629,13 +659,22 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
               </h3>
             </div>
             
-            <button
-              onClick={handleExportTxt}
-              className="flex items-center gap-1.5 border border-[#1F232B] hover:border-amber-400 hover:text-amber-400 text-slate-400 px-4 py-2 rounded-none text-xs font-semibold font-mono tracking-wider transition-all duration-200 cursor-pointer bg-[#0B0C0E]"
-            >
-              <Download className="w-3.5 h-3.5" />
-              EXPORT SLIPS (.TXT)
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveSlips}
+                className="flex items-center gap-1.5 border border-[#1F232B] hover:border-amber-400 hover:text-amber-400 text-slate-400 px-4 py-2 rounded-none text-xs font-semibold font-mono tracking-wider transition-all duration-200 cursor-pointer bg-[#0B0C0E]"
+              >
+                <Save className="w-3.5 h-3.5 text-amber-400" />
+                SAVE TO WORKSPACE
+              </button>
+              <button
+                onClick={handleExportTxt}
+                className="flex items-center gap-1.5 border border-[#1F232B] hover:border-amber-400 hover:text-amber-400 text-slate-400 px-4 py-2 rounded-none text-xs font-semibold font-mono tracking-wider transition-all duration-200 cursor-pointer bg-[#0B0C0E]"
+              >
+                <Download className="w-3.5 h-3.5" />
+                EXPORT SLIPS (.TXT)
+              </button>
+            </div>
           </div>
 
           {/* Staggered Stacked Ticket Slips */}
