@@ -161,7 +161,7 @@ export default function WinForLifeTab() {
   const fetchStats = async () => {
     try {
       setStatsLoading(true);
-      const res = await fetch("/api/winforlife/stats?limit=1000");
+      const res = await fetch("/api/winforlife/stats");
       const data = await res.json();
       if (data.success) {
         setStats(data);

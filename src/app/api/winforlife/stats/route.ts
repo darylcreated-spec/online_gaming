@@ -6,12 +6,20 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = Math.max(1, parseInt(searchParams.get("limit") || "1000"));
+    const limitParam = searchParams.get("limit");
     
-    const draws = await query<any>(
-      "SELECT * FROM winforlife_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT ?",
-      [limit]
-    );
+    let draws;
+    if (limitParam === "all" || !limitParam) {
+      draws = await query<any>(
+        "SELECT * FROM winforlife_draws ORDER BY CAST(draw_number AS INTEGER) DESC"
+      );
+    } else {
+      const limit = Math.max(1, parseInt(limitParam));
+      draws = await query<any>(
+        "SELECT * FROM winforlife_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT ?",
+        [limit]
+      );
+    }
     
     if (draws.length === 0) {
       return NextResponse.json({
