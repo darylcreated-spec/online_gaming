@@ -21,10 +21,19 @@ export async function GET() {
 
     // 3. Query predictions log (latest 100 entries sorted newest first)
     const predictionsRes = await db.execute({
-      sql: `SELECT id, prediction_date, draw_time_slot, predicted_numbers, status, winning_number, winning_draw_number, created_at 
-            FROM playwhe_predictions 
-            ORDER BY prediction_date DESC, 
-                     CASE draw_time_slot 
+      sql: `SELECT 
+              p.id, 
+              p.prediction_date, 
+              p.draw_time_slot, 
+              p.predicted_numbers, 
+              p.status, 
+              COALESCE(p.winning_number, d.winning_number) as winning_number, 
+              COALESCE(p.winning_draw_number, d.draw_number) as winning_draw_number, 
+              p.created_at 
+            FROM playwhe_predictions p
+            LEFT JOIN playwhe_draws d ON p.prediction_date = d.draw_date AND UPPER(p.draw_time_slot) = UPPER(d.draw_time_slot)
+            ORDER BY p.prediction_date DESC, 
+                     CASE p.draw_time_slot 
                        WHEN 'EVENING' THEN 1 
                        WHEN 'AFTERNOON' THEN 2 
                        WHEN 'MIDDAY' THEN 3 

@@ -173,11 +173,14 @@ export async function verifyPlayWhePredictions(): Promise<{ verifiedCount: numbe
           hitsAdded++;
           verifiedCount++;
           console.log(`[Verifier] HIT: Prediction on ${p.prediction_date} [${p.draw_time_slot}] (${p.predicted_numbers}) matched winning number ${winningNumber} on draw #${drawNumber}`);
-        } else {
           // It's a MISS!
           await db.execute({
-            sql: "UPDATE playwhe_predictions SET status = 'MISS' WHERE id = ?",
-            args: [p.id]
+            sql: `UPDATE playwhe_predictions 
+                  SET status = 'MISS', 
+                      winning_number = ?, 
+                      winning_draw_number = ? 
+                  WHERE id = ?`,
+            args: [winningNumber, drawNumber, p.id]
           });
           verifiedCount++;
           console.log(`[Verifier] MISS: Prediction on ${p.prediction_date} [${p.draw_time_slot}] (${p.predicted_numbers}) missed against drawn number ${winningNumber}`);
