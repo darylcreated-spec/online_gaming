@@ -1577,13 +1577,13 @@ export default function PlayWheTab({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-4">
               {/* Graphic Node Circle SVG (7 cols on large screens) */}
               <div className="lg:col-span-7 flex justify-center">
-                <svg viewBox="0 0 520 520" className="w-full max-w-[460px] overflow-visible select-none">
+                <svg viewBox="0 0 780 780" className="w-full max-w-[620px] overflow-visible select-none">
                   {/* Arrow Marker Definitions */}
                   <defs>
-                    <marker id="arrow" viewBox="0 0 10 10" refX="24" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <marker id="arrow" viewBox="0 0 10 10" refX="30" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                       <path d="M0,0 L10,5 L0,10 z" fill="#38bdf8" />
                     </marker>
-                    <marker id="arrow-glow" viewBox="0 0 10 10" refX="24" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                    <marker id="arrow-glow" viewBox="0 0 10 10" refX="30" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
                       <path d="M0,0 L10,5 L0,10 z" fill="#10b981" />
                     </marker>
                   </defs>
@@ -1604,8 +1604,8 @@ export default function PlayWheTab({
                     const getCoordinates = (n: number) => {
                       const angle = ((n - 1) * 2 * Math.PI) / 36 - Math.PI / 2;
                       return {
-                        x: 260 + 195 * Math.cos(angle),
-                        y: 260 + 195 * Math.sin(angle)
+                        x: 390 + 292.5 * Math.cos(angle),
+                        y: 390 + 292.5 * Math.sin(angle)
                       };
                     };
 
@@ -1658,7 +1658,7 @@ export default function PlayWheTab({
 
                   {/* Central Node Stats Dashboard display */}
                   <g className="transition-all duration-300">
-                    <circle cx="260" cy="260" r="75" fill="#020617" stroke="#1e293b" strokeWidth="2.5" className="shadow-2xl" />
+                    <circle cx="390" cy="390" r="110" fill="#020617" stroke="#1e293b" strokeWidth="2.5" className="shadow-2xl" />
                     
                     {hoveredNode !== null ? (
                       (() => {
@@ -1667,16 +1667,16 @@ export default function PlayWheTab({
                         const totalDraws = stats?.totalDraws || 1;
                         return (
                           <>
-                            <text x="260" y="225" textAnchor="middle" className="text-[10px] font-bold fill-primary font-mono uppercase tracking-widest">
+                            <text x="390" y="338" textAnchor="middle" className="text-[10px] font-bold fill-primary font-mono uppercase tracking-widest">
                               SELECTED
                             </text>
-                            <text x="260" y="252" textAnchor="middle" className="text-2xl font-black fill-white font-mono">
+                            <text x="390" y="378" textAnchor="middle" className="text-3xl font-black fill-white font-mono">
                               #{hoveredNode}
                             </text>
-                            <text x="260" y="272" textAnchor="middle" className="text-[10px] font-extrabold fill-emerald-400 font-mono uppercase tracking-wider">
+                            <text x="390" y="408" textAnchor="middle" className="text-sm font-extrabold fill-emerald-400 font-mono uppercase tracking-wider">
                               {name.split(" ")[0]}
                             </text>
-                            <text x="260" y="295" textAnchor="middle" className="text-[8px] fill-gray-400 font-mono">
+                            <text x="390" y="443" textAnchor="middle" className="text-[10px] fill-gray-400 font-mono">
                               FREQ: {freq}x ({((freq / totalDraws) * 100).toFixed(1)}%)
                             </text>
                           </>
@@ -1684,13 +1684,13 @@ export default function PlayWheTab({
                       })()
                     ) : (
                       <>
-                        <text x="260" y="235" textAnchor="middle" className="text-[9px] font-extrabold fill-slate-500 font-mono uppercase tracking-wider animate-pulse">
+                        <text x="390" y="353" textAnchor="middle" className="text-xs font-extrabold fill-slate-500 font-mono uppercase tracking-wider animate-pulse">
                           HOVER NODE
                         </text>
-                        <text x="260" y="260" textAnchor="middle" className="text-[10px] font-bold fill-white font-mono">
+                        <text x="390" y="390" textAnchor="middle" className="text-xs font-bold fill-white font-mono">
                           SUCCESSOR FLOW
                         </text>
-                        <text x="260" y="280" textAnchor="middle" className="text-[8px] fill-slate-500 font-mono">
+                        <text x="390" y="420" textAnchor="middle" className="text-[10px] fill-slate-500 font-mono">
                           Select to analyze
                         </text>
                       </>
@@ -1702,8 +1702,8 @@ export default function PlayWheTab({
                     const num = idx + 1;
                     const angle = ((num - 1) * 2 * Math.PI) / 36 - Math.PI / 2;
                     const coords = {
-                      x: 260 + 195 * Math.cos(angle),
-                      y: 260 + 195 * Math.sin(angle)
+                      x: 390 + 292.5 * Math.cos(angle),
+                      y: 390 + 292.5 * Math.sin(angle)
                     };
                     const isHovered = hoveredNode === num;
                     
@@ -1742,7 +1742,7 @@ export default function PlayWheTab({
                         <circle 
                           cx={coords.x} 
                           cy={coords.y} 
-                          r={isHovered ? "18" : isSuccessorOfHovered ? "16" : "13"} 
+                          r={isHovered ? "23" : isSuccessorOfHovered ? "20" : "17"} 
                           fill={isHovered ? "#38bdf8" : isTopSuccessor ? "#10b981" : isSuccessorOfHovered ? "#059669" : "#0f172a"}
                           stroke={isHovered ? "#ffffff" : isSuccessorOfHovered ? "#34d399" : "#334155"}
                           strokeWidth={isHovered || isSuccessorOfHovered ? "2.5" : "1.5"}
@@ -1750,7 +1750,7 @@ export default function PlayWheTab({
                         />
                         <text 
                           x={coords.x} 
-                          y={coords.y + 3.5} 
+                          y={coords.y + 4.5} 
                           textAnchor="middle"
                           className={`text-[9px] font-bold font-mono ${isHovered || isSuccessorOfHovered ? "fill-slate-950" : "fill-white"}`}
                         >
