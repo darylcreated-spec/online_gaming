@@ -80,7 +80,7 @@ export default function WelcomeTab() {
         </p>
       </div>
 
-      {/* 2. Interactive Ticket Shading Animation (Centered & Stacked - equal spacing) */}
+      {/* 2. Interactive Ticket Shading Animation (Centered & Stacked) */}
       <div className="flex justify-center">
         <div className="bg-[#f4efe0] text-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.35)] border border-slate-300/30 p-6 font-mono w-full max-w-md relative overflow-hidden h-[460px] flex flex-col justify-between select-none">
 
@@ -134,21 +134,29 @@ export default function WelcomeTab() {
               style={{
                 left: `${pencilPos.x}%`,
                 top: `${pencilPos.y}%`,
-                transform: `translate(-5%, -95%) rotate(${pencilPos.rotate}deg)`,
+                transform: `translate(-2%, -98%) rotate(${pencilPos.rotate}deg)`,
                 transition: pencilPos.shake ? "none" : "left 0.75s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.75s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.75s cubic-bezier(0.25, 0.8, 0.25, 1)",
               }}
             >
               {/* Yellow Drawing Pencil SVG */}
               <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible drop-shadow-[4px_10px_6px_rgba(0,0,0,0.35)]">
-                {/* Yellow Pencil body */}
-                <polygon points="10,90 90,10 95,15 15,95" fill="#f59e0b" />
-                <polygon points="12,92 88,16 91,19 15,95" fill="#d97706" />
-                {/* Wood/Lead Tip (larger lead triangle pointing to 0,100) */}
-                <polygon points="15,85 5,95 18,82" fill="#fde047" />
-                <polygon points="5,95 0,100 8,92" fill="#000000" />
-                {/* Eraser End */}
-                <polygon points="85,15 90,10 95,15 90,20" fill="#f43f5e" />
-                <polygon points="82,18 85,15 90,20 87,23" fill="#94a3b8" />
+                {/* Pencil Lead Tip (Jet Black) */}
+                <polygon points="4,94 6,96 0,100" fill="#000000" />
+                
+                {/* Wooden Taper Cone */}
+                <polygon points="12,82 18,88 6,96 4,94" fill="#fed7aa" />
+
+                {/* Yellow Pencil body (Left side - shadow yellow) */}
+                <polygon points="12,82 15,85 80,20 77,17" fill="#d97706" />
+
+                {/* Yellow Pencil body (Right side - light yellow) */}
+                <polygon points="15,85 18,88 83,23 80,20" fill="#fbbf24" />
+
+                {/* Eraser Ferrule (Metal Ring) */}
+                <polygon points="77,17 83,23 89,17 83,11" fill="#94a3b8" />
+
+                {/* Pink Eraser tip */}
+                <polygon points="83,11 89,17 95,11 89,5" fill="#f43f5e" />
               </svg>
             </div>
 
@@ -225,10 +233,10 @@ export default function WelcomeTab() {
         }
         
         @keyframes pencil-wiggle {
-          0%, 100% { transform: translate(-5%, -95%) rotate(-10deg) translate(0, 0); }
-          25% { transform: translate(-5%, -95%) rotate(-10deg) translate(-2px, 2px); }
-          50% { transform: translate(-5%, -95%) rotate(-10deg) translate(2px, -2px); }
-          75% { transform: translate(-5%, -95%) rotate(-10deg) translate(-1px, -1px); }
+          0%, 100% { transform: translate(-2%, -98%) rotate(-10deg) translate(0, 0); }
+          25% { transform: translate(-2%, -98%) rotate(-10deg) translate(-2px, 2px); }
+          50% { transform: translate(-2%, -98%) rotate(-10deg) translate(2px, -2px); }
+          75% { transform: translate(-2%, -98%) rotate(-10deg) translate(-1px, -1px); }
         }
         .animate-pencil-wiggle {
           animation: pencil-wiggle 0.08s infinite;
