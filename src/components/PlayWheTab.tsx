@@ -1323,9 +1323,8 @@ export default function PlayWheTab({
           <div className="glass-panel p-6 rounded-xl space-y-4">
             <div className="flex justify-between items-center border-b border-white/5 pb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary animate-pulse" />
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Dream Journal AI Interpreter</h3>
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Dream Journal</h3>
                   <p className="text-[10px] text-gray-400 font-mono mt-0.5">Type or speak your dream to extract matching Chinapoo numbers</p>
                 </div>
               </div>
@@ -1347,7 +1346,7 @@ export default function PlayWheTab({
                 ) : (
                   <>
                     <Mic className="w-3.5 h-3.5" />
-                    SPEAK dream
+                    TRANSCRIBE
                   </>
                 )}
               </button>
