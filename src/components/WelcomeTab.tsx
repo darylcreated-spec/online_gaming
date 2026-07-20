@@ -5,20 +5,17 @@ import { Info, Heart } from "lucide-react";
 
 export default function WelcomeTab() {
   const [shadedNums, setShadedNums] = useState<number[]>([]);
-  const [pencilPos, setPencilPos] = useState({ x: 50, y: -20, rotate: 0, shake: false });
-  const [showStamp, setShowStamp] = useState(false);
+  const [pencilPos, setPencilPos] = useState({ x: 50, y: -25, rotate: 0, shake: false });
 
   useEffect(() => {
     let active = true;
-    // Numbers to shade (Mix of Lotto & Play Whe targets)
     const targetNums = [4, 12, 19, 26, 33];
 
     const runSequence = async () => {
       while (active) {
         // Reset state
         setShadedNums([]);
-        setShowStamp(false);
-        setPencilPos({ x: 50, y: -25, rotate: 0, shake: false });
+        setPencilPos({ x: 50, y: -30, rotate: 0, shake: false });
         
         // Idle at start
         await new Promise((r) => setTimeout(r, 2000));
@@ -28,7 +25,6 @@ export default function WelcomeTab() {
         for (const num of targetNums) {
           const col = (num - 1) % 6;
           const row = Math.floor((num - 1) / 6);
-          // Calculate grid alignment coordinates in percentage
           const targetX = 12 + col * 15.5;
           const targetY = 15 + row * 13.5;
 
@@ -51,13 +47,8 @@ export default function WelcomeTab() {
 
         if (!active) break;
 
-        // Move pencil off-screen
-        setPencilPos({ x: 50, y: 130, rotate: 0, shake: false });
-        await new Promise((r) => setTimeout(r, 700));
-        if (!active) break;
-
-        // Show verification stamp
-        setShowStamp(true);
+        // Move pencil off-screen and rest on the completed shaded slip for 3 seconds
+        setPencilPos({ x: 50, y: -35, rotate: 0, shake: false });
         await new Promise((r) => setTimeout(r, 3500));
       }
     };
@@ -126,21 +117,10 @@ export default function WelcomeTab() {
 
       {/* RIGHT COLUMN: Interactive Ticket Shading Animation (5 cols) */}
       <div className="lg:col-span-5 flex justify-center">
-        <div className="bg-[#f4efe0] text-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-amber-800/10 p-6 font-mono w-full max-w-sm relative overflow-hidden h-[460px] flex flex-col justify-between select-none">
-          
-          {/* Red Serrated Border Bar Header */}
-          <div className="absolute top-0 inset-x-0 h-2 bg-[#d93838] flex justify-between px-2 overflow-hidden">
-            {Array.from({ length: 25 }).map((_, i) => (
-              <div key={i} className="w-2 h-2 rounded-full bg-[#f4efe0] -translate-y-1/2" />
-            ))}
-          </div>
+        <div className="bg-[#f4efe0] text-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-300/30 p-6 font-mono w-full max-w-sm relative overflow-hidden h-[460px] flex flex-col justify-between select-none">
 
           {/* Ticket Header Details */}
           <div className="mt-2 space-y-1 border-b border-dashed border-slate-400 pb-3">
-            <div className="flex justify-between items-center text-[10px] text-slate-500 font-extrabold tracking-widest">
-              <span>PLAY SLIP SYSTEM</span>
-              <span>EST: 2026</span>
-            </div>
             <h2 className="text-md font-black text-slate-800 uppercase tracking-widest text-center">
               THE WIN CONCEPT
             </h2>
@@ -181,20 +161,20 @@ export default function WelcomeTab() {
               })}
             </div>
 
-            {/* Absolute Pencil SVG Icon */}
+            {/* Absolute Pencil SVG Icon (Quadrupled in size: w-48 h-48) */}
             <div
-              className={`absolute z-30 w-12 h-12 pointer-events-none ${
+              className={`absolute z-30 w-48 h-48 pointer-events-none ${
                 pencilPos.shake ? "animate-pencil-wiggle animate-lead-scribble" : ""
               }`}
               style={{
                 left: `${pencilPos.x}%`,
                 top: `${pencilPos.y}%`,
-                transform: `translate(-12%, -88%) rotate(${pencilPos.rotate}deg)`,
+                transform: `translate(-5%, -95%) rotate(${pencilPos.rotate}deg)`,
                 transition: pencilPos.shake ? "none" : "left 0.75s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.75s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.75s cubic-bezier(0.25, 0.8, 0.25, 1)",
               }}
             >
               {/* Yellow Drawing Pencil SVG */}
-              <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[2px_5px_4px_rgba(0,0,0,0.3)]">
+              <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[4px_10px_6px_rgba(0,0,0,0.35)]">
                 {/* Yellow Pencil body */}
                 <polygon points="10,90 90,10 95,15 15,95" fill="#f59e0b" />
                 <polygon points="12,92 88,16 91,19 15,95" fill="#d97706" />
@@ -206,28 +186,10 @@ export default function WelcomeTab() {
                 <polygon points="82,18 85,15 90,20 87,23" fill="#94a3b8" />
               </svg>
             </div>
-
-            {/* Red Verified/Scanned Stamp */}
-            {showStamp && (
-              <div className="absolute inset-0 bg-[#f4efe0]/80 z-40 flex items-center justify-center animate-stamp-scale">
-                <div className="border-4 border-[#d93838] text-[#d93838] font-black rounded-lg px-4 py-2 text-md tracking-widest rotate-[-12deg] uppercase flex flex-col items-center justify-center shadow-[0_0_15px_rgba(217,56,56,0.15)]">
-                  <span>SLIP SCANNED</span>
-                  <span className="text-[10px] tracking-wide mt-0.5">COMPILING STRATEGY...</span>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Ticket Footer Red Serrated border */}
-          <div className="border-t border-dashed border-slate-400 pt-3 flex justify-between items-center text-[9px] text-slate-500 font-extrabold uppercase tracking-wider">
-            <span>Draw Predictor Ready</span>
-            <span>NLCB Trinidad & Tobago</span>
-          </div>
-
-          <div className="absolute bottom-0 inset-x-0 h-2 bg-[#d93838] flex justify-between px-2 overflow-hidden">
-            {Array.from({ length: 25 }).map((_, i) => (
-              <div key={i} className="w-2 h-2 rounded-full bg-[#f4efe0] translate-y-1/2" />
-            ))}
+          <div className="border-t border-slate-300 pt-3 text-center text-[8px] text-slate-500 font-extrabold tracking-widest uppercase">
+            MODEL COMPILING SYSTEM
           </div>
 
         </div>
@@ -250,22 +212,13 @@ export default function WelcomeTab() {
         }
         
         @keyframes pencil-wiggle {
-          0%, 100% { transform: translate(-12%, -88%) rotate(-10deg) translate(0, 0); }
-          25% { transform: translate(-12%, -88%) rotate(-10deg) translate(-2px, 2px); }
-          50% { transform: translate(-12%, -88%) rotate(-10deg) translate(2px, -2px); }
-          75% { transform: translate(-12%, -88%) rotate(-10deg) translate(-1px, -1px); }
+          0%, 100% { transform: translate(-5%, -95%) rotate(-10deg) translate(0, 0); }
+          25% { transform: translate(-5%, -95%) rotate(-10deg) translate(-2px, 2px); }
+          50% { transform: translate(-5%, -95%) rotate(-10deg) translate(2px, -2px); }
+          75% { transform: translate(-5%, -95%) rotate(-10deg) translate(-1px, -1px); }
         }
         .animate-pencil-wiggle {
           animation: pencil-wiggle 0.08s infinite;
-        }
-
-        @keyframes stamp-scale {
-          0% { transform: scale(3) rotate(0deg); opacity: 0; }
-          40% { transform: scale(1) rotate(-12deg); opacity: 1; }
-          100% { transform: scale(1) rotate(-12deg); opacity: 1; }
-        }
-        .animate-stamp-scale {
-          animation: stamp-scale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
       `}} />
 
