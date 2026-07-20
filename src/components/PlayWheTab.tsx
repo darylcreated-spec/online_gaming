@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   tokenizeAndMatch, 
   CHINAPOO_CHART 
@@ -183,6 +183,8 @@ export default function PlayWheTab({
     setMatchedDreamMarks(matches);
   };
 
+  const recognitionRef = useRef<any>(null);
+
   const startSpeechRecognition = () => {
     if (typeof window === "undefined") return;
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -191,7 +193,27 @@ export default function PlayWheTab({
       return;
     }
 
+    if (isListening) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (err) {
+          console.error("Error stopping recognition:", err);
+        }
+      }
+      setIsListening(false);
+      return;
+    }
+
+    // Reset previous instance
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (err) {}
+    }
+
     const rec = new SpeechRecognition();
+    recognitionRef.current = rec;
     rec.continuous = false;
     rec.interimResults = false;
     rec.lang = "en-US";
@@ -206,7 +228,14 @@ export default function PlayWheTab({
     };
 
     rec.onerror = (e: any) => {
-      console.error(e);
+      console.error("Speech Recognition Error:", e);
+      if (e.error === "not-allowed") {
+        alert("Microphone access denied. Please click the microphone icon in your browser's address bar to allow mic permissions for this site.");
+      } else if (e.error === "network") {
+        alert("Network error: Speech transcription requires an active internet connection.");
+      } else if (e.error !== "aborted") {
+        alert(`Transcription Error: ${e.error || "Unknown error occurred"}`);
+      }
       setIsListening(false);
     };
 
@@ -214,7 +243,13 @@ export default function PlayWheTab({
       setIsListening(false);
     };
 
-    rec.start();
+    try {
+      rec.start();
+    } catch (err: any) {
+      console.error("Failed to start speech recognition:", err);
+      alert("Failed to activate microphone: " + err.message);
+      setIsListening(false);
+    }
   };
 
   const fetchPredictions = async () => {
