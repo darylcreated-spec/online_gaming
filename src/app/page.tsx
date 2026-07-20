@@ -6,6 +6,7 @@ import HistoryTab from "@/components/HistoryTab";
 import BuilderTab from "@/components/BuilderTab";
 import CheckerTab from "@/components/CheckerTab";
 import PlayWheTab from "@/components/PlayWheTab";
+import WinForLifeTab from "@/components/WinForLifeTab";
 import SettingsTab from "@/components/SettingsTab";
 import WelcomeTab from "@/components/WelcomeTab";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw } from "lucide-react";
@@ -82,7 +83,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "settings">("welcome");
+  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "settings">("welcome");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
@@ -367,6 +368,22 @@ export default function Home() {
           </button>
           
           <button
+            onClick={() => setActiveTab("win-for-life")}
+            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+              activeTab === "win-for-life"
+                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
+                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+            }`}
+          >
+            <img 
+              src="/images/win_for_life_icon.png" 
+              alt="Win for Life" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
+            />
+            WIN FOR LIFE
+          </button>
+          
+          <button
             onClick={() => setActiveTab("scanner")}
             className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
               activeTab === "scanner"
@@ -604,6 +621,10 @@ export default function Home() {
           />
         )}
 
+        {activeTab === "win-for-life" && (
+          <WinForLifeTab />
+        )}
+
         {activeTab === "settings" && (
           <SettingsTab />
         )}
@@ -654,6 +675,15 @@ export default function Home() {
         >
           <img src="/images/play_whe_icon.png" alt="Play Whe" className="w-5 h-5 object-contain" />
           <span className="text-[9px] font-mono tracking-wider">PLAY WHE</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("win-for-life")}
+          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+            activeTab === "win-for-life" ? "text-primary font-bold" : "text-gray-400"
+          }`}
+        >
+          <img src="/images/win_for_life_icon.png" alt="Win for Life" className="w-5 h-5 object-contain" />
+          <span className="text-[9px] font-mono tracking-wider">WFL</span>
         </button>
         <button
           onClick={() => setActiveTab("scanner")}

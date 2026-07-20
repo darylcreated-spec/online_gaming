@@ -524,3 +524,193 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
     return { success: false, drawsAdded, details: error.message };
   }
 }
+
+// === WIN FOR LIFE SCRAPING ENGINE ===
+
+const WINFORLIFE_URL = "https://www.nlcbplaywhelotto.com/nlcb-win-for-life-results/";
+
+export async function scrapeWinForLifeSid(): Promise<string | null> {
+  try {
+    const res = await fetch(getScrapeUrl(WINFORLIFE_URL), { 
+      headers: HEADERS,
+      signal: AbortSignal.timeout(30000)
+    });
+    if (!res.ok) throw new Error(`Failed to load page: ${res.statusText}`);
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    return $('input[name="sid"]').val() as string || null;
+  } catch (error) {
+    console.error("Error fetching Win for Life sid:", error);
+    return null;
+  }
+}
+
+export async function scrapeWinForLifeMonth(monthStr: string, yearVal: number, sid: string | null): Promise<any[]> {
+  try {
+    const formData = new URLSearchParams();
+    formData.append("search_month", monthStr);
+    formData.append("search_year", yearVal.toString());
+    formData.append("date_btn", "SEARCH");
+    if (sid) {
+      formData.append("sid", sid);
+    }
+    
+    const res = await fetch(getScrapeUrl(WINFORLIFE_URL), {
+      method: "POST",
+      headers: {
+        ...HEADERS,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData.toString(),
+      signal: AbortSignal.timeout(30000)
+    });
+    
+    if (!res.ok) throw new Error(`POST failed for Win for Life ${monthStr} ${yearVal}: ${res.statusText}`);
+    
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    
+    const table = $("#monthResults");
+    if (!table.length) return [];
+    
+    const tbody = table.find("tbody").length ? table.find("tbody") : table;
+    const rows = tbody.find("tr");
+    
+    const draws: any[] = [];
+    let currentDate = "";
+    
+    rows.each((_, row) => {
+      const $row = $(row);
+      if ($row.hasClass("lotto-date-tr")) {
+        const dateText = $row.find("strong").text().trim();
+        currentDate = parseDate(dateText);
+      } else if ($row.hasClass("lotto-tr")) {
+        const tds = $row.find("td");
+        if (tds.length >= 3 && currentDate) {
+          try {
+            const drawNum = parseInt($(tds[0]).text().trim());
+            const numsStr = $(tds[1]).text().trim();
+            const nums = numsStr.split(/\s+/).map(n => parseInt(n.trim())).sort((a, b) => a - b);
+            const cb = parseInt($(tds[2]).text().trim());
+            
+            const jackpot = tds.length >= 4 ? $(tds[3]).text().trim() : "X";
+            
+            if (isNaN(drawNum) || nums.length < 6 || isNaN(cb)) return;
+
+            draws.push({
+              draw_number: drawNum,
+              draw_date: currentDate,
+              num1: nums[0],
+              num2: nums[1],
+              num3: nums[2],
+              num4: nums[3],
+              num5: nums[4],
+              num6: nums[5],
+              cash_ball: cb,
+              jackpot: jackpot || "X"
+            });
+          } catch (e) {
+            console.error("Error parsing Win for Life row in JS:", e);
+          }
+        }
+      }
+    });
+    
+    return draws;
+  } catch (error) {
+    console.error(`Error scraping monthly Win for Life draws for ${monthStr} ${yearVal} in JS:`, error);
+    return [];
+  }
+}
+
+export async function saveWinForLifeDraw(draw: any): Promise<void> {
+  const sql = `
+    INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  const args = [
+    draw.draw_number,
+    draw.draw_date,
+    draw.num1,
+    draw.num2,
+    draw.num3,
+    draw.num4,
+    draw.num5,
+    draw.num6,
+    draw.cash_ball,
+    draw.jackpot
+  ];
+  await db.execute({ sql, args });
+}
+
+export async function syncWinForLife(full: boolean = false, targetYear?: number): Promise<{ success: boolean; drawsAdded: number; details: string }> {
+  let drawsAdded = 0;
+  try {
+    // Initialize winforlife_draws table if not exists
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS winforlife_draws (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        draw_number INTEGER UNIQUE,
+        draw_date TEXT NOT NULL,
+        num1 INTEGER NOT NULL,
+        num2 INTEGER NOT NULL,
+        num3 INTEGER NOT NULL,
+        num4 INTEGER NOT NULL,
+        num5 INTEGER NOT NULL,
+        num6 INTEGER NOT NULL,
+        cash_ball INTEGER NOT NULL,
+        jackpot TEXT
+      )
+    `);
+
+    const sid = await scrapeWinForLifeSid();
+    if (!sid) {
+      console.warn("WARNING: Could not retrieve CSRF sid token for Win for Life. Sync proceeding...");
+    }
+    
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentYear = new Date().getFullYear();
+    const currentMonthIdx = new Date().getMonth();
+    
+    const startYear = targetYear ? targetYear : (full ? 2022 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
+    const endYear = targetYear ? targetYear : currentYear;
+    
+    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    
+    for (let y = endYear; y >= startYear; y--) {
+      for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+        if (!full && !targetYear) {
+          if (y === currentYear) {
+            if (mIdx > currentMonthIdx || (mIdx < currentMonthIdx - 1 && currentMonthIdx > 0)) {
+              continue;
+            }
+          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11) {
+            // crossover Jan/Dec
+          } else {
+            continue;
+          }
+        }
+        const month = months[mIdx];
+        const monthDraws = await scrapeWinForLifeMonth(month, y, sid);
+        
+        for (const draw of monthDraws) {
+          const check = await db.execute({
+            sql: "SELECT 1 FROM winforlife_draws WHERE draw_number = ?",
+            args: [draw.draw_number]
+          });
+          if (check.rows.length === 0) {
+            await saveWinForLifeDraw(draw);
+            drawsAdded++;
+          }
+        }
+        
+        await sleep(400); // Be polite
+      }
+    }
+    
+    return { success: true, drawsAdded, details: `Win for Life sync complete. ${drawsAdded} draws added.` };
+  } catch (error: any) {
+    console.error("Win for Life sync error in JS:", error);
+    return { success: false, drawsAdded, details: error.message };
+  }
+}
