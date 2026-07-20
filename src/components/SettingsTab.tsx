@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { RefreshCw, Database, Terminal, CheckCircle2, AlertTriangle, Play, HelpCircle } from "lucide-react";
+import { RefreshCw, Database, Terminal, CheckCircle2, AlertTriangle, Play, HelpCircle, Bell } from "lucide-react";
 
 export default function SettingsTab() {
   const [lottoStats, setLottoStats] = useState<any>(null);
@@ -13,7 +13,27 @@ export default function SettingsTab() {
   const [logs, setLogs] = useState<string[]>([]);
   const [syncSuccess, setSyncSuccess] = useState<boolean | null>(null);
   const [activeStep, setActiveStep] = useState<string>("");
-  const [settingsTab, setSettingsTab] = useState<"sync" | "install">("sync");
+  const [settingsTab, setSettingsTab] = useState<"sync" | "install" | "notifications">("sync");
+  const [notificationPermission, setNotificationPermission] = useState<string>("default");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestNotificationPermission = async () => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      const perm = await Notification.requestPermission();
+      setNotificationPermission(perm);
+      if (perm === "granted") {
+        new Notification("The Win Concept", {
+          body: "Local PWA notifications enabled! You will now receive draw alerts.",
+          icon: "/pwa-192x192.png"
+        });
+      }
+    }
+  };
 
   const fetchDBStatus = async () => {
     setLoadingStats(true);
@@ -93,6 +113,12 @@ export default function SettingsTab() {
           if (data.success) {
             totalAdded += data.drawsAdded || 0;
             addLog(`Year ${y} complete: Added ${data.drawsAdded || 0} draws.`);
+            if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+              new Notification("Lotto Plus Synced!", {
+                body: `Year ${y} complete: Added ${data.drawsAdded} historical draws!`,
+                icon: "/pwa-192x192.png"
+              });
+            }
           } else {
             addLog(`Year ${y} failed: ${data.error || data.details}`);
           }
@@ -126,6 +152,12 @@ export default function SettingsTab() {
           setSyncSuccess(true);
           setActiveStep("Sync Completed!");
           fetchDBStatus();
+          if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+            new Notification("Lotto Plus Synced!", {
+              body: `Added/Updated ${data.drawsAdded} draws successfully!`,
+              icon: "/pwa-192x192.png"
+            });
+          }
         } else {
           addLog(`Sync Failed: ${data.error || data.details}`);
           setSyncSuccess(false);
@@ -178,9 +210,15 @@ export default function SettingsTab() {
             body: JSON.stringify({ year: y, fullSecret: pwd })
           });
           const data = await res.json();
-          if (data.success) {
+           if (data.success) {
             totalAdded += data.drawsAdded || 0;
             addLog(`Year ${y} complete: Added ${data.drawsAdded || 0} draws.`);
+            if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+              new Notification("Play Whe Synced!", {
+                body: `Year ${y} complete: Added ${data.drawsAdded} historical draws!`,
+                icon: "/pwa-192x192.png"
+              });
+            }
           } else {
             addLog(`Year ${y} failed: ${data.error || data.details}`);
           }
@@ -214,6 +252,12 @@ export default function SettingsTab() {
           setSyncSuccess(true);
           setActiveStep("Sync Completed!");
           fetchDBStatus();
+          if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+            new Notification("Play Whe Synced!", {
+              body: `Added/Updated ${data.drawsAdded} draws successfully!`,
+              icon: "/pwa-192x192.png"
+            });
+          }
         } else {
           addLog(`Sync Failed: ${data.error || data.details}`);
           setSyncSuccess(false);
@@ -277,6 +321,17 @@ export default function SettingsTab() {
         >
           <HelpCircle className="w-3.5 h-3.5" />
           MOBILE INSTALLATION GUIDE
+        </button>
+        <button
+          onClick={() => setSettingsTab("notifications")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            settingsTab === "notifications"
+              ? "bg-primary text-slate-950 font-bold"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <Bell className="w-3.5 h-3.5" />
+          PWA NOTIFICATIONS
         </button>
       </div>
 
@@ -564,6 +619,42 @@ export default function SettingsTab() {
                 </li>
               </ol>
             </div>
+          </div>
+        </div>
+      )}
+
+      {settingsTab === "notifications" && (
+        <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-4 font-mono">
+          <div className="flex items-center gap-2">
+            <Bell className="w-5 h-5 text-primary" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white">PWA Notification Center</h3>
+          </div>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            Enable HTML5 web notifications to receive real-time updates when lottery numbers are synchronized or when a new win is detected.
+          </p>
+
+          <div className="bg-slate-950/50 p-4 border border-white/5 rounded-lg flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="space-y-1">
+              <div className="text-xs font-bold text-white uppercase">Notification Status</div>
+              <div className="text-[10px] text-gray-400 font-bold">
+                {notificationPermission === "granted" ? (
+                  <span className="text-emerald-400 font-extrabold uppercase">● Active & Authorized</span>
+                ) : notificationPermission === "denied" ? (
+                  <span className="text-red-400 font-extrabold uppercase">● Blocked by Browser Settings</span>
+                ) : (
+                  <span className="text-amber-400 font-extrabold uppercase">● Pending User Permission</span>
+                )}
+              </div>
+            </div>
+
+            {notificationPermission !== "granted" && (
+              <button
+                onClick={requestNotificationPermission}
+                className="bg-primary hover:bg-primary/95 text-slate-950 font-black px-4 py-2 rounded-lg text-xs tracking-wider transition cursor-pointer"
+              >
+                ENABLE ALERTS
+              </button>
+            )}
           </div>
         </div>
       )}

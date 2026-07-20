@@ -34,6 +34,65 @@ export default function CheckerTab() {
   const [manualWinningPlayWheNumber, setManualWinningPlayWheNumber] = useState<string>("");
   const [selectedGame, setSelectedGame] = useState<"lotto-plus" | "play-whe">("lotto-plus");
 
+  // In-App Video Scanner States
+  const [showScannerModal, setShowScannerModal] = useState(false);
+  const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const startCamera = async () => {
+    try {
+      setShowScannerModal(true);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      setActiveStream(stream);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 100);
+    } catch (err: any) {
+      console.error("Camera access failed:", err);
+      alert("Could not access camera: " + err.message);
+      setShowScannerModal(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (activeStream) {
+      activeStream.getTracks().forEach(track => track.stop());
+      setActiveStream(null);
+    }
+    setShowScannerModal(false);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    
+    const canvas = document.createElement("canvas");
+    canvas.width = videoRef.current.videoWidth || 640;
+    canvas.height = videoRef.current.videoHeight || 480;
+    
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      // Draw frame flipped back (since video is mirror preview for user convenience)
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], "ticket.jpg", { type: "image/jpeg" });
+          setImageSrc(URL.createObjectURL(blob));
+          runOcr(file);
+        }
+      }, "image/jpeg");
+    }
+    
+    stopCamera();
+  };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -361,10 +420,10 @@ export default function CheckerTab() {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
                 <button
-                  onClick={handleCameraClick}
+                  onClick={startCamera}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold font-mono tracking-wider transition-all ${
                     selectedGame === "play-whe"
-                      ? "bg-primary text-slate-950 hover:bg-primary/90 shadow-[0_0_10px_rgba(56, 189, 248,0.2)]"
+                      ? "bg-primary text-slate-950 hover:bg-primary/90 shadow-[0_0_10px_rgba(56,189,248,0.2)]"
                       : "bg-primary text-slate-950 hover:bg-primary/90 shadow-[0_0_10px_rgba(56,189,248,0.2)]"
                   }`}
                 >
@@ -852,6 +911,55 @@ export default function CheckerTab() {
         </div>
       )}
         </>
+
+      {/* CAMERA SCANNER MODAL */}
+      {showScannerModal && (
+        <div className="fixed inset-0 bg-slate-950/95 z-[999] flex flex-col justify-between p-6 font-mono">
+          <div className="flex justify-between items-center border-b border-white/5 pb-3">
+            <div className="space-y-0.5">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Ticket Scanner Camera</h3>
+              <p className="text-[10px] text-gray-500">Align ticket inside the frame box</p>
+            </div>
+            <button
+              onClick={stopCamera}
+              className="text-gray-400 hover:text-white text-xs font-extrabold border border-white/10 px-2.5 py-1 rounded cursor-pointer"
+            >
+              CLOSE
+            </button>
+          </div>
+
+          {/* Video Preview with Corner framing guide */}
+          <div className="relative flex-1 my-6 rounded-xl overflow-hidden border border-white/5 bg-black flex items-center justify-center">
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              className="w-full h-full object-cover transform scale-x-[-1]" 
+            />
+            {/* Visual Guide Box */}
+            <div className="absolute w-[80%] aspect-[3/4] max-w-xs border-2 border-dashed border-primary/40 rounded-lg flex items-center justify-center pointer-events-none shadow-[0_0_40px_rgba(56,189,248,0.05)]">
+              {/* Top-Left Corner */}
+              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary -translate-x-1.5 -translate-y-1.5" />
+              {/* Top-Right Corner */}
+              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary translate-x-1.5 -translate-y-1.5" />
+              {/* Bottom-Left Corner */}
+              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary -translate-x-1.5 translate-y-1.5" />
+              {/* Bottom-Right Corner */}
+              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary translate-x-1.5 translate-y-1.5" />
+            </div>
+          </div>
+
+          {/* Shutter Button Controls */}
+          <div className="flex flex-col items-center justify-center pb-6">
+            <button
+              onClick={capturePhoto}
+              className="w-16 h-16 rounded-full border-4 border-white bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center cursor-pointer transition shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+            >
+              <div className="w-10 h-10 rounded-full bg-white" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1271,49 +1271,103 @@ export default function PlayWheTab({
                   const freqEntry = stats?.frequencies?.find((f: any) => f.number === res.number);
                   const drawsList = stats?.totalDraws || 1;
                   const appearances = freqEntry ? freqEntry.count : 0;
-                  
-                  return (
+                      return (
                     <div 
                       key={res.number} 
-                      className="glass-panel p-4 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden group hover:border-primary/30 hover:bg-primary/[0.01] transition-all flex flex-col justify-between shrink-0 w-[245px] snap-start"
+                      className="flip-card shrink-0 w-[245px] h-[190px] snap-start select-none cursor-pointer group"
                     >
-                      <div className="absolute top-0 right-0 p-2 text-right">
-                        <span className="text-2xl font-black text-primary/5 group-hover:text-primary/15 font-mono transition-all">
-                          {res.number.toString().padStart(2, "0")}
-                        </span>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs font-mono shadow-[0_0_8px_rgba(56,189,248,0.1)] group-hover:shadow-[0_0_12px_rgba(56,189,248,0.25)] transition-all">
-                            {res.number}
+                      <div className="flip-card-inner w-full h-full relative duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
+                        
+                        {/* FRONT FACE */}
+                        <div className="flip-card-front absolute inset-0 w-full h-full [backface-visibility:hidden] glass-panel p-4 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden flex flex-col justify-between">
+                          <div className="absolute top-0 right-0 p-2 text-right">
+                            <span className="text-2xl font-black text-primary/5 font-mono">
+                              {res.number.toString().padStart(2, "0")}
+                            </span>
                           </div>
-                          <span className="text-[8px] border border-white/5 bg-white/5 text-gray-500 px-1.5 py-0.5 rounded font-mono group-hover:text-gray-400">
-                            LINE {Math.ceil(res.number / 6)}
-                          </span>
-                        </div>
 
-                        <div>
-                          <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider group-hover:text-primary transition-all">
-                            {res.mark}
-                          </h4>
-                          <div className="flex flex-wrap gap-1 mt-1.5 max-h-[80px] overflow-y-auto">
-                            {res.keywords.map((kw: string) => (
-                              <span key={kw} className="text-[8px] bg-white/5 text-gray-400 border border-white/5 px-1 py-0.5 rounded font-mono">
-                                {kw}
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-start">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs font-mono shadow-[0_0_8px_rgba(56,189,248,0.1)]">
+                                {res.number}
+                              </div>
+                              <span className="text-[8px] border border-white/5 bg-white/5 text-gray-500 px-1.5 py-0.5 rounded font-mono">
+                                LINE {Math.ceil(res.number / 6)}
                               </span>
-                            ))}
+                            </div>
+
+                            <div>
+                              <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider">
+                                {res.mark}
+                              </h4>
+                              <div className="flex flex-wrap gap-1 mt-1.5 max-h-[80px] overflow-y-auto">
+                                {res.keywords.map((kw: string) => (
+                                  <span key={kw} className="text-[8px] bg-white/5 text-gray-400 border border-white/5 px-1 py-0.5 rounded font-mono">
+                                    {kw}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 pt-3 border-t border-white/5 text-[9px] font-mono text-gray-500 flex justify-between items-center">
+                            <span>APPEARS: <b className="text-white">{appearances}x</b></span>
+                            <span>({((appearances / drawsList) * 100).toFixed(1)}%)</span>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="mt-4 pt-3 border-t border-white/5 text-[9px] font-mono text-gray-500 flex justify-between items-center">
-                        <span>APPEARS: <b className="text-white">{appearances}x</b></span>
-                        <span>({((appearances / drawsList) * 100).toFixed(1)}%)</span>
+                        {/* BACK FACE */}
+                        <div className="flip-card-back absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] glass-panel p-4 rounded-xl border border-primary/25 bg-slate-900/90 flex flex-col justify-between">
+                          <div className="space-y-3 font-mono">
+                            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                              <span className="text-[10px] font-bold text-primary uppercase font-mono">Chinapoo Stats</span>
+                              <span className="text-[10px] text-gray-500 font-mono">#{res.number}</span>
+                            </div>
+                            
+                            <div className="space-y-1.5 text-[9px] font-mono">
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Chinapoo Group:</span>
+                                <span className="text-white font-bold">
+                                  {res.number <= 18 ? `Partner: ${res.number + 18}` : `Partner: ${res.number - 18}`}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Frequency Rate:</span>
+                                <span className="text-white font-bold">{((appearances / drawsList) * 100).toFixed(2)}%</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Total Synced Hits:</span>
+                                <span className="text-primary font-bold">{appearances} times</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-400">Grid Position:</span>
+                                <span className="text-white font-bold">Slot #{res.number}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-[8px] text-gray-500 font-mono italic text-center">
+                            Hover/Touch to flip back
+                          </div>
+                        </div>
+
                       </div>
                     </div>
                   );
                 })}
+                <style dangerouslySetInnerHTML={{__html: `
+                  .flip-card {
+                    perspective: 1000px;
+                  }
+                  .flip-card-inner {
+                    transition: transform 0.5s;
+                    transform-style: preserve-3d;
+                  }
+                  .flip-card-front, .flip-card-back {
+                    backface-visibility: hidden;
+                    -webkit-backface-visibility: hidden;
+                  }
+                `}} />
               </div>
             )}
           </div>

@@ -8,7 +8,10 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid
+  CartesianGrid,
+  ScatterChart,
+  Scatter,
+  ZAxis
 } from "recharts";
 import { RefreshCw, TrendingUp, Calendar, Award, DollarSign, Database, HelpCircle } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -579,7 +582,7 @@ export default function DashboardTab({
                 <span className="text-xs font-semibold tracking-wider text-green-400 uppercase font-mono">Top Hot Numbers</span>
                 <div className="flex flex-wrap gap-2">
                   {hotNums.map((n: any) => (
-                    <div key={n.number} className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/25 px-2.5 py-1 rounded-lg text-sm text-green-400 font-mono font-bold">
+                    <div key={n.number} className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/25 px-2.5 py-1 rounded-lg text-sm text-green-400 font-mono font-bold shadow-[0_0_12px_rgba(74,222,128,0.15)] animate-pulse">
                       <span>{n.number}</span>
                       <span className="text-xs text-green-500 font-normal">({n.count})</span>
                     </div>
@@ -592,7 +595,7 @@ export default function DashboardTab({
                 <span className="text-xs font-semibold tracking-wider text-rose-400 uppercase font-mono">Top Cold Numbers</span>
                 <div className="flex flex-wrap gap-2">
                   {coldNums.map((n: any) => (
-                    <div key={n.number} className="flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/25 px-2.5 py-1 rounded-lg text-sm text-rose-400 font-mono font-bold">
+                    <div key={n.number} className="flex items-center gap-1.5 bg-rose-500/10 border border-rose-500/25 px-2.5 py-1 rounded-lg text-sm text-rose-400 font-mono font-bold shadow-[0_0_12px_rgba(244,63,94,0.15)]">
                       <span>{n.number}</span>
                       <span className="text-xs text-rose-500 font-normal">({n.count})</span>
                     </div>
@@ -605,7 +608,7 @@ export default function DashboardTab({
                 <span className="text-xs font-semibold tracking-wider text-secondary uppercase font-mono">Hot Powerballs</span>
                 <div className="flex flex-wrap gap-2">
                   {hotPbs.map((n: any) => (
-                    <div key={n.number} className="flex items-center gap-1.5 bg-secondary/10 border border-secondary/25 px-2.5 py-1 rounded-lg text-sm text-secondary font-mono font-bold">
+                    <div key={n.number} className="flex items-center gap-1.5 bg-secondary/10 border border-secondary/25 px-2.5 py-1 rounded-lg text-sm text-secondary font-mono font-bold shadow-[0_0_12px_rgba(192,132,252,0.15)]">
                       <span>{n.number}</span>
                       <span className="text-xs text-secondary-container/80 font-normal">({n.count})</span>
                     </div>
@@ -658,6 +661,76 @@ export default function DashboardTab({
             </ResponsiveContainer>
           )}
         </div>
+      </div>
+
+      {/* Delta Dispersion Scatter Plot */}
+      <div className="glass-panel p-6 rounded-xl space-y-4">
+        <div>
+          <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            Delta Gap Dispersion Scatter Plot
+          </h3>
+          <p className="text-xs text-gray-400 font-mono">Mathematical spread frequency of consecutive number differences</p>
+        </div>
+        
+        <div className="h-64 w-full">
+          {statsLoading ? (
+            <div className="h-full flex items-center justify-center text-sm text-gray-500 font-mono">
+              Computing delta dispersion...
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={true} />
+                <XAxis
+                  type="number"
+                  dataKey="gap"
+                  name="Delta Gap"
+                  stroke="#475569"
+                  fontSize={10}
+                  fontFamily="Geist"
+                  tickLine={false}
+                  domain={[1, 'auto']}
+                />
+                <YAxis
+                  type="number"
+                  dataKey="count"
+                  name="Frequency"
+                  stroke="#475569"
+                  fontSize={10}
+                  fontFamily="Geist"
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <ZAxis type="number" range={[50, 400]} />
+                <Tooltip 
+                  cursor={{ strokeDasharray: '3 3' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-slate-950/90 border border-white/10 p-2.5 rounded-lg shadow-xl font-mono text-[10px]">
+                          <div className="text-primary font-bold">Delta Gap: {data.gap}</div>
+                          <div className="text-white">Occurrences: {data.count} times</div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Scatter 
+                  name="Deltas" 
+                  data={stats?.gapFrequencies || []} 
+                  fill="#38bdf8" 
+                  line={{ stroke: '#38bdf8', strokeWidth: 1.5, strokeDasharray: '3 3' }} 
+                  lineType="joint"
+                />
+              </ScatterChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
       {/* Saved Slips Workspace Tracker */}
       <div className="glass-panel p-6 rounded-xl space-y-4">
         <div className="flex justify-between items-center border-b border-white/5 pb-3">
@@ -797,6 +870,5 @@ export default function DashboardTab({
         )}
       </div>
     </div>
-  </div>
   );
 }
