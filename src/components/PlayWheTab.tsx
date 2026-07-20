@@ -27,7 +27,11 @@ import {
   ChevronLeft, 
   ChevronRight, 
   TrendingUp, 
-  Database
+  Database,
+  Network,
+  Mic,
+  MicOff,
+  Sparkles
 } from "lucide-react";
 
 const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -86,12 +90,12 @@ export default function PlayWheTab({
   showExplainer,
   onShowExplainerChange
 }: {
-  activeSubTab?: "translator" | "dashboard" | "relationship" | "history" | "hits" | "explain";
-  onSubTabChange?: (tab: "translator" | "dashboard" | "relationship" | "history" | "hits" | "explain") => void;
+  activeSubTab?: "translator" | "dashboard" | "relationship" | "history" | "hits" | "explain" | "network";
+  onSubTabChange?: (tab: "translator" | "dashboard" | "relationship" | "history" | "hits" | "explain" | "network") => void;
   showExplainer?: boolean;
   onShowExplainerChange?: (show: boolean) => void;
 } = {}) {
-  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "relationship" | "history" | "hits" | "explain">("dashboard");
+  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "relationship" | "history" | "hits" | "explain" | "network">("dashboard");
   const [localShowHelp, setLocalShowHelp] = useState(false);
 
   const subTab = activeSubTab !== undefined ? activeSubTab : localSubTab;
@@ -137,6 +141,81 @@ export default function PlayWheTab({
   const [predictionsStats, setPredictionsStats] = useState<any>(null);
   const [predictionsLoading, setPredictionsLoading] = useState(true);
   const predictorLoading = predictionsLoading;
+
+  // Dream Journal & Speech-to-Text States
+  const [isListening, setIsListening] = useState(false);
+  const [dreamText, setDreamText] = useState("");
+  const [matchedDreamMarks, setMatchedDreamMarks] = useState<any[]>([]);
+
+  // Network Graph States
+  const [hoveredNode, setHoveredNode] = useState<number | null>(null);
+
+  const handleDreamInterpret = (text: string) => {
+    setDreamText(text);
+    if (!text.trim()) {
+      setMatchedDreamMarks([]);
+      return;
+    }
+    const words = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").split(/\s+/);
+    const matches: any[] = [];
+    
+    Object.keys(CHINAPOO_CHART).forEach((numStr) => {
+      const num = Number(numStr);
+      const entry = CHINAPOO_CHART[num as keyof typeof CHINAPOO_CHART];
+      if (!entry) return;
+
+      const markLower = entry.mark.toLowerCase();
+      if (text.toLowerCase().includes(markLower)) {
+        matches.push({ number: num, mark: entry.mark, reason: `Matched mark name: "${entry.mark}"` });
+        return;
+      }
+
+      entry.keywords.forEach((keyword: string) => {
+        const kwLower = keyword.toLowerCase();
+        if (words.includes(kwLower) || text.toLowerCase().includes(kwLower)) {
+          if (!matches.some(m => m.number === num)) {
+            matches.push({ number: num, mark: entry.mark, reason: `Keyword match: "${keyword}"` });
+          }
+        }
+      });
+    });
+
+    setMatchedDreamMarks(matches);
+  };
+
+  const startSpeechRecognition = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in your browser. Please try Google Chrome or Safari.");
+      return;
+    }
+
+    const rec = new SpeechRecognition();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = "en-US";
+
+    rec.onstart = () => {
+      setIsListening(true);
+    };
+
+    rec.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      handleDreamInterpret(transcript);
+    };
+
+    rec.onerror = (e: any) => {
+      console.error(e);
+      setIsListening(false);
+    };
+
+    rec.onend = () => {
+      setIsListening(false);
+    };
+
+    rec.start();
+  };
 
   const fetchPredictions = async () => {
     try {
@@ -448,6 +527,18 @@ export default function PlayWheTab({
         >
           <BookOpen className="w-3.5 h-3.5" />
           CHINAPOO DICTIONARY
+        </button>
+        
+        <button
+          onClick={() => setSubTab("network")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            subTab === "network"
+              ? "bg-primary text-slate-950 font-bold"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <Network className="w-3.5 h-3.5" />
+          SUCCESSOR NETWORK
         </button>
         
         <button
@@ -1228,6 +1319,103 @@ export default function PlayWheTab({
       {/* TAB 2: CHINAPOO DICTIONARY */}
       {subTab === "translator" && (
         <div className="space-y-6">
+          {/* Dream Journal Interpreter Card */}
+          <div className="glass-panel p-6 rounded-xl space-y-4">
+            <div className="flex justify-between items-center border-b border-white/5 pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+                <div>
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Dream Journal AI Interpreter</h3>
+                  <p className="text-[10px] text-gray-400 font-mono mt-0.5">Type or speak your dream to extract matching Chinapoo numbers</p>
+                </div>
+              </div>
+              
+              {/* Mic Speech Button */}
+              <button
+                onClick={startSpeechRecognition}
+                className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-bold font-mono tracking-wider transition cursor-pointer select-none ${
+                  isListening
+                    ? "bg-red-500/10 border-red-500/30 text-red-400 animate-pulse"
+                    : "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
+                }`}
+              >
+                {isListening ? (
+                  <>
+                    <Mic className="w-3.5 h-3.5 animate-bounce" />
+                    LISTENING...
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-3.5 h-3.5" />
+                    SPEAK dream
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              {/* Text Input Panel */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-gray-400 uppercase font-mono">Dream Diary Entry:</span>
+                <textarea
+                  value={dreamText}
+                  onChange={(e) => handleDreamInterpret(e.target.value)}
+                  placeholder="Describe your dream here (e.g. 'I dreamt a snake was crawling next to a fire in the forest near a fresh stream')..."
+                  className="w-full h-32 bg-slate-950/70 border border-white/10 rounded-lg p-3 text-xs text-foreground focus:outline-none focus:border-primary transition-all font-mono resize-none"
+                />
+                <button
+                  onClick={() => handleDreamInterpret("")}
+                  className="text-[9px] text-red-400 hover:text-red-300 font-bold underline font-mono tracking-wider uppercase"
+                >
+                  Clear Entry
+                </button>
+              </div>
+
+              {/* Matches Result Panel */}
+              <div className="space-y-2 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase font-mono">Matched Chinapoo Marks:</span>
+                  
+                  {matchedDreamMarks.length === 0 ? (
+                    <div className="bg-slate-950/40 border border-white/5 rounded-lg p-6 text-center text-xs text-gray-500 italic font-mono mt-2">
+                      {dreamText.trim() ? "No keyword matches found. Try describing specific objects or animals!" : "Describe your dream above to extract numbers."}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 max-h-36 overflow-y-auto pr-1">
+                      {matchedDreamMarks.map((match) => (
+                        <div
+                          key={match.number}
+                          onClick={() => {
+                            setFocusedNumber(match.number);
+                            fetchCorrelation(match.number);
+                            setSubTab("relationship");
+                          }}
+                          className="flex items-center gap-2.5 p-2 bg-slate-950/60 border border-white/5 hover:border-primary/40 rounded-lg text-xs font-mono cursor-pointer transition-all hover:scale-[1.02]"
+                          title="Click to view statistical analysis in Relationship Map"
+                        >
+                          <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                            {match.number}
+                          </div>
+                          <div>
+                            <div className="text-white font-bold uppercase">{match.mark}</div>
+                            <div className="text-[8px] text-gray-500 truncate max-w-[120px]">{match.reason}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {matchedDreamMarks.length > 0 && (
+                  <div className="text-[9px] text-primary/70 font-mono italic mt-2">
+                    💡 Tip: Click any matched mark above to load its successors & companion statistics in the Relationship Map!
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Chinapoo Search Lookup Panel */}
           <div className="glass-panel p-6 rounded-xl space-y-4">
             <div className="flex items-center gap-2">
               <Search className="w-5 h-5 text-primary" />
@@ -1370,6 +1558,269 @@ export default function PlayWheTab({
                 `}} />
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* TAB 2: CHINAPOO DICTIONARY END */}
+
+      {/* TAB: SUCCESSOR NETWORK GRAPH */}
+      {subTab === "network" && (
+        <div className="space-y-6 animate-ticket-slide">
+          <div className="glass-panel p-6 rounded-xl space-y-4">
+            <div className="flex items-center gap-2">
+              <Network className="w-5 h-5 text-primary" />
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Successor Transition Network</h3>
+                <p className="text-[10px] text-gray-400 font-mono mt-0.5">Interactive flow mapping next-draw successor probabilities based on history</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-4">
+              {/* Graphic Node Circle SVG (7 cols on large screens) */}
+              <div className="lg:col-span-7 flex justify-center">
+                <svg viewBox="0 0 520 520" className="w-full max-w-[460px] overflow-visible select-none">
+                  {/* Arrow Marker Definitions */}
+                  <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="24" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="#38bdf8" />
+                    </marker>
+                    <marker id="arrow-glow" viewBox="0 0 10 10" refX="24" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="#10b981" />
+                    </marker>
+                  </defs>
+
+                  {/* Transition Connection Lines */}
+                  {(() => {
+                    if (hoveredNode === null) return null;
+                    
+                    const transitionsMatrix = stats?.transitions || {};
+                    const targetsMap = transitionsMatrix[hoveredNode] || {};
+                    const targets = Object.keys(targetsMap)
+                      .map(Number)
+                      .map(target => ({ target, count: targetsMap[target] }))
+                      .filter(t => t.count > 0)
+                      .sort((a, b) => b.count - a.count)
+                      .slice(0, 5);
+
+                    const getCoordinates = (n: number) => {
+                      const angle = ((n - 1) * 2 * Math.PI) / 36 - Math.PI / 2;
+                      return {
+                        x: 260 + 195 * Math.cos(angle),
+                        y: 260 + 195 * Math.sin(angle)
+                      };
+                    };
+
+                    const startCoords = getCoordinates(hoveredNode);
+                    
+                    return targets.map((t, idx) => {
+                      const endCoords = getCoordinates(t.target);
+                      const isTop1 = idx === 0;
+                      const midX = (startCoords.x + endCoords.x) / 2;
+                      const midY = (startCoords.y + endCoords.y) / 2;
+                      return (
+                        <g key={t.target} className="transition-all duration-300">
+                          {/* Connection line */}
+                          <line
+                            x1={startCoords.x}
+                            y1={startCoords.y}
+                            x2={endCoords.x}
+                            y2={endCoords.y}
+                            stroke={isTop1 ? "#10b981" : "#38bdf8"}
+                            strokeWidth={isTop1 ? "3.5" : "2"}
+                            strokeOpacity={isTop1 ? "0.9" : "0.5"}
+                            strokeDasharray={isTop1 ? "none" : "4 2"}
+                            markerEnd={`url(#${isTop1 ? "arrow-glow" : "arrow"})`}
+                          />
+                          {/* Label Bubble for count */}
+                          <g>
+                            <rect 
+                              x={midX - 10} 
+                              y={midY - 7} 
+                              width="20" 
+                              height="12" 
+                              rx="3" 
+                              fill="#020617" 
+                              stroke={isTop1 ? "#10b981" : "#38bdf8"} 
+                              strokeWidth="0.5" 
+                            />
+                            <text 
+                              x={midX} 
+                              y={midY + 2} 
+                              textAnchor="middle"
+                              className={`text-[8px] font-bold font-mono ${isTop1 ? "fill-emerald-400" : "fill-sky-400"}`}
+                            >
+                              {t.count}x
+                            </text>
+                          </g>
+                        </g>
+                      );
+                    });
+                  })()}
+
+                  {/* Central Node Stats Dashboard display */}
+                  <g className="transition-all duration-300">
+                    <circle cx="260" cy="260" r="75" fill="#020617" stroke="#1e293b" strokeWidth="2.5" className="shadow-2xl" />
+                    
+                    {hoveredNode !== null ? (
+                      (() => {
+                        const name = CHINAPOO_CHART[hoveredNode]?.mark || "";
+                        const freq = stats?.frequencies?.find((f: any) => f.number === hoveredNode)?.count || 0;
+                        const totalDraws = stats?.totalDraws || 1;
+                        return (
+                          <>
+                            <text x="260" y="225" textAnchor="middle" className="text-[10px] font-bold fill-primary font-mono uppercase tracking-widest">
+                              SELECTED
+                            </text>
+                            <text x="260" y="252" textAnchor="middle" className="text-2xl font-black fill-white font-mono">
+                              #{hoveredNode}
+                            </text>
+                            <text x="260" y="272" textAnchor="middle" className="text-[10px] font-extrabold fill-emerald-400 font-mono uppercase tracking-wider">
+                              {name.split(" ")[0]}
+                            </text>
+                            <text x="260" y="295" textAnchor="middle" className="text-[8px] fill-gray-400 font-mono">
+                              FREQ: {freq}x ({((freq / totalDraws) * 100).toFixed(1)}%)
+                            </text>
+                          </>
+                        );
+                      })()
+                    ) : (
+                      <>
+                        <text x="260" y="235" textAnchor="middle" className="text-[9px] font-extrabold fill-slate-500 font-mono uppercase tracking-wider animate-pulse">
+                          HOVER NODE
+                        </text>
+                        <text x="260" y="260" textAnchor="middle" className="text-[10px] font-bold fill-white font-mono">
+                          SUCCESSOR FLOW
+                        </text>
+                        <text x="260" y="280" textAnchor="middle" className="text-[8px] fill-slate-500 font-mono">
+                          Select to analyze
+                        </text>
+                      </>
+                    )}
+                  </g>
+
+                  {/* Circular Node Loop */}
+                  {Array.from({ length: 36 }).map((_, idx) => {
+                    const num = idx + 1;
+                    const angle = ((num - 1) * 2 * Math.PI) / 36 - Math.PI / 2;
+                    const coords = {
+                      x: 260 + 195 * Math.cos(angle),
+                      y: 260 + 195 * Math.sin(angle)
+                    };
+                    const isHovered = hoveredNode === num;
+                    
+                    // Check if this node is in the successor list of the hovered node
+                    let isSuccessorOfHovered = false;
+                    let isTopSuccessor = false;
+                    if (hoveredNode !== null) {
+                      const transitionsMatrix = stats?.transitions || {};
+                      const targetsMap = transitionsMatrix[hoveredNode] || {};
+                      const sortedTargets = Object.keys(targetsMap)
+                        .map(Number)
+                        .map(target => ({ target, count: targetsMap[target] }))
+                        .filter(t => t.count > 0)
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 5);
+                      
+                      const foundIdx = sortedTargets.findIndex(t => t.target === num);
+                      if (foundIdx !== -1) {
+                        isSuccessorOfHovered = true;
+                        isTopSuccessor = foundIdx === 0;
+                      }
+                    }
+
+                    return (
+                      <g 
+                        key={num} 
+                        className="cursor-pointer transition-all duration-300"
+                        onMouseEnter={() => setHoveredNode(num)}
+                        onMouseLeave={() => setHoveredNode(null)}
+                        onClick={() => {
+                          setFocusedNumber(num);
+                          fetchCorrelation(num);
+                          setSubTab("relationship");
+                        }}
+                      >
+                        <circle 
+                          cx={coords.x} 
+                          cy={coords.y} 
+                          r={isHovered ? "18" : isSuccessorOfHovered ? "16" : "13"} 
+                          fill={isHovered ? "#38bdf8" : isTopSuccessor ? "#10b981" : isSuccessorOfHovered ? "#059669" : "#0f172a"}
+                          stroke={isHovered ? "#ffffff" : isSuccessorOfHovered ? "#34d399" : "#334155"}
+                          strokeWidth={isHovered || isSuccessorOfHovered ? "2.5" : "1.5"}
+                          className="transition-all duration-300 hover:scale-110"
+                        />
+                        <text 
+                          x={coords.x} 
+                          y={coords.y + 3.5} 
+                          textAnchor="middle"
+                          className={`text-[9px] font-bold font-mono ${isHovered || isSuccessorOfHovered ? "fill-slate-950" : "fill-white"}`}
+                        >
+                          {num}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+
+              {/* Side Stats Card Listing (5 cols on large screens) */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="glass-panel p-5 rounded-xl space-y-3 font-mono">
+                  <h4 className="text-xs font-bold uppercase text-gray-300 tracking-wider border-b border-white/5 pb-2">
+                    {hoveredNode !== null ? `Transitions for Node #${hoveredNode}` : "Hover Matrix Summary"}
+                  </h4>
+                  
+                  {hoveredNode !== null ? (
+                    (() => {
+                      const transitionsMatrix = stats?.transitions || {};
+                      const targetsMap = transitionsMatrix[hoveredNode] || {};
+                      const targets = Object.keys(targetsMap)
+                        .map(Number)
+                        .map(target => ({ target, count: targetsMap[target] }))
+                        .filter(t => t.count > 0)
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 8);
+
+                      return (
+                        <div className="space-y-2">
+                          <p className="text-[10px] text-gray-400 leading-relaxed uppercase pb-1">
+                            These are the most frequent successor numbers drawn on the next consecutive drawing after mark <strong>#{hoveredNode}</strong>:
+                          </p>
+                          {targets.length === 0 ? (
+                            <div className="text-xs text-gray-500 italic uppercase">No transitions logged.</div>
+                          ) : (
+                            targets.map((t, idx) => (
+                              <div key={t.target} className="flex justify-between items-center p-2 bg-slate-950/40 border border-white/5 rounded-lg text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] text-gray-500">#{idx + 1}</span>
+                                  <span className={`w-5.5 h-5.5 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                                    idx === 0 ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-primary/10 border border-primary/20 text-primary"
+                                  }`}>
+                                    {t.target}
+                                  </span>
+                                  <span className="text-white font-bold uppercase">{CHINAPOO_CHART[t.target].mark}</span>
+                                </div>
+                                <span className="text-white font-bold">{t.count}x hits</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className="space-y-3 text-xs text-gray-400">
+                      <p className="leading-relaxed">
+                        To study the transition flows, simply hover over any of the outer numbers in the circular diagram. 
+                      </p>
+                      <p className="leading-relaxed">
+                        The glowing paths illustrate the most likely numbers drawn in the immediately following draw. Clicking a node will jump you to its detailed relationship analyzer focus.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

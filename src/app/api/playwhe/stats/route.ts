@@ -100,6 +100,22 @@ export async function GET(request: Request) {
     const saturdayPlayback = checkSaturdayPlayback(draws);
     const doublesAndZeroes = checkDoublesAndZeroes(draws);
     const partners = analyzePartners(draws);
+
+    // 5. Compute global transitions matrix (successors map)
+    const transitions: Record<number, Record<number, number>> = {};
+    for (let n = 1; n <= 36; n++) {
+      transitions[n] = {};
+      for (let m = 1; m <= 36; m++) {
+        transitions[n][m] = 0;
+      }
+    }
+    for (let i = draws.length - 1; i > 0; i--) {
+      const prev = draws[i].winning_number;
+      const next = draws[i-1].winning_number;
+      if (prev >= 1 && prev <= 36 && next >= 1 && next <= 36) {
+        transitions[prev][next]++;
+      }
+    }
     
     return NextResponse.json({
       success: true,
@@ -112,7 +128,8 @@ export async function GET(request: Request) {
       suits,
       saturdayPlayback,
       doublesAndZeroes,
-      partners
+      partners,
+      transitions
     });
   } catch (error: any) {
     console.error("[API /api/playwhe/stats] Error:", error);

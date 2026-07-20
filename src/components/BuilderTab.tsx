@@ -72,6 +72,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
   const [matrixLoading, setMatrixLoading] = useState(false);
   const [hoveredTicket, setHoveredTicket] = useState<number[] | null>(null);
   const [wheelingLoading, setWheelingLoading] = useState(false);
+  const [showHeatmapOverlay, setShowHeatmapOverlay] = useState(true);
 
   // --- Real-time Statistics Computations ---
   const [frequencies, setFrequencies] = useState<number[]>(Array(36).fill(0));
@@ -418,8 +419,20 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
               {/* Step 1: Main Number Pool */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-white uppercase tracking-wider">Step 1: Pick Main Pool (1 to 35)</span>
-                  <span className="text-slate-500 uppercase">Selected: {selectedNums.length}/12</span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-white uppercase tracking-wider">Step 1: Pick Main Pool (1 to 35)</span>
+                    <button
+                      onClick={() => setShowHeatmapOverlay(!showHeatmapOverlay)}
+                      className={`px-2 py-0.5 border text-[9px] font-bold uppercase transition cursor-pointer select-none ${
+                        showHeatmapOverlay 
+                          ? "bg-amber-400/10 border-amber-400/30 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)]" 
+                          : "bg-slate-950/40 border-white/5 text-gray-500 hover:text-gray-400"
+                      }`}
+                    >
+                      Heatmap {showHeatmapOverlay ? "ON" : "OFF"}
+                    </button>
+                  </div>
+                  <span className="text-slate-500 uppercase font-mono">Selected: {selectedNums.length}/12</span>
                 </div>
                 
                 {/* Number selection grid */}
@@ -427,15 +440,34 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                   {Array.from({ length: 35 }).map((_, idx) => {
                     const num = idx + 1;
                     const isSelected = selectedNums.includes(num);
+                    
+                    const freq = frequencies[num] || 0;
+                    const ratio = (freq - minFreq) / (maxFreq - minFreq || 1);
+                    const ratioVal = Math.max(0, Math.min(1, ratio));
+                    // Base colors: Cold is Charcoal (18, 26, 32) -> Hot is Gold (212, 175, 55)
+                    const r = Math.round(24 + (212 - 24) * ratioVal);
+                    const g = Math.round(26 + (175 - 26) * ratioVal);
+                    const b = Math.round(32 + (55 - 32) * ratioVal);
+                    
+                    const bgStyle = (showHeatmapOverlay && !isSelected)
+                      ? { 
+                          backgroundColor: `rgba(${r}, ${g}, ${b}, ${0.15 + ratioVal * 0.85})`,
+                          color: ratioVal > 0.65 ? "#0B0C0E" : "#94A3B8",
+                          borderColor: ratioVal > 0.65 ? "rgba(212,175,55,0.4)" : "rgba(255,255,255,0.05)"
+                        }
+                      : {};
+
                     return (
                       <button
                         key={num}
                         onClick={() => toggleNumber(num)}
+                        style={bgStyle}
                         className={`w-9 h-9 rounded-none flex items-center justify-center font-bold text-xs border tracking-wider transition-all duration-200 cursor-pointer ${
                           isSelected
-                            ? "bg-amber-400 border-amber-400 text-[#0B0C0E] shadow-[0_0_12px_rgba(212,175,55,0.3)]"
+                            ? "bg-amber-400 border-amber-400 text-[#0B0C0E] shadow-[0_0_12px_rgba(212,175,55,0.3)] z-10"
                             : "bg-[#0B0C0E] border-[#1F232B] hover:border-amber-400/50 text-slate-400 hover:text-white"
                         }`}
+                        title={`Number ${num} - Frequency: ${freq} draws`}
                       >
                         {String(num).padStart(2, "0")}
                       </button>
