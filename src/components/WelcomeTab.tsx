@@ -6,6 +6,7 @@ import { Info, Heart } from "lucide-react";
 export default function WelcomeTab() {
   const [shadedNums, setShadedNums] = useState<number[]>([]);
   const [pencilPos, setPencilPos] = useState({ x: 50, y: -25, rotate: 0, shake: false });
+  const [showGoodLuck, setShowGoodLuck] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -15,6 +16,7 @@ export default function WelcomeTab() {
       while (active) {
         // Reset state
         setShadedNums([]);
+        setShowGoodLuck(false);
         setPencilPos({ x: 50, y: -30, rotate: 0, shake: false });
         
         // Idle at start
@@ -47,8 +49,13 @@ export default function WelcomeTab() {
 
         if (!active) break;
 
-        // Move pencil off-screen and rest on the completed shaded slip for 3 seconds
-        setPencilPos({ x: 50, y: -35, rotate: 0, shake: false });
+        // Move pencil off-screen
+        setPencilPos({ x: 50, y: 130, rotate: 0, shake: false });
+        await new Promise((r) => setTimeout(r, 600));
+        if (!active) break;
+
+        // Show Good Luck message
+        setShowGoodLuck(true);
         await new Promise((r) => setTimeout(r, 3500));
       }
     };
@@ -61,63 +68,21 @@ export default function WelcomeTab() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div className="max-w-2xl mx-auto space-y-6">
       
-      {/* LEFT COLUMN: Welcome Info & Disclaimers (7 cols) */}
-      <div className="lg:col-span-7 space-y-6">
-        {/* Welcome Text block */}
-        <div className="glass-panel p-8 rounded-xl border border-white/5 bg-slate-950/20 space-y-4 font-mono">
-          <h1 className="text-4xl font-extrabold tracking-tight uppercase text-white drop-shadow-[0_0_15px_rgba(56,189,248,0.2)]">
-            THE WIN CONCEPT
-          </h1>
-          <p className="text-sm text-gray-400 leading-relaxed font-mono">
-            Welcome to the analytical portal for local lottery prediction models. This application parses historical draw databases, builds mathematical successors/companions correlation models, and isolates statistical hot and cold mark frequencies to help you optimize and reduce your statistical odds.
-          </p>
-        </div>
-
-        {/* Warning Disclaimer Panel */}
-        <div className="glass-panel p-5 rounded-xl border-red-500/10 bg-red-500/[0.01] relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 h-full bg-red-500/50" />
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-            <div className="space-y-1.5 font-mono">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider">Disclaimer & Fair Play Notice</h4>
-              <p className="text-xs leading-relaxed text-gray-400">
-                This application is designed as a statistical tool that attempts to reduce the mathematical odds of NLCB online games by tracking historical frequencies and delta gaps. It is <strong>NOT affiliated with, authorized, or endorsed by the National Lotteries Control Board (NLCB)</strong> of Trinidad and Tobago in any form or fashion. Using this app <strong>does NOT guarantee any winnings</strong>. Please play responsibly.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Tipping Panel */}
-        <div className="glass-panel p-5 rounded-xl border-amber-500/15 bg-amber-500/[0.01] relative overflow-hidden font-mono">
-          <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/50" />
-          <div className="flex items-start gap-3">
-            <Heart className="w-5 h-5 text-amber-400 shrink-0 mt-0.5 animate-pulse" />
-            <div className="space-y-2 w-full">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                Support the Creator
-              </h4>
-              <p className="text-xs leading-relaxed text-gray-400">
-                Creating and maintaining these complex analytical scraping systems requires time, hosting, and dedication. If this mathematical tool helps you hit a lucky streak, win big, or become wealthy, please show some love and support the creator!
-              </p>
-              <div className="p-2.5 bg-slate-950/60 border border-white/5 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <span className="text-xs text-gray-400">Send Tips / Support (PayPal):</span>
-                <a 
-                  href="mailto:daryl.created@gmail.com"
-                  className="text-xs font-extrabold text-amber-400 hover:text-amber-300 transition tracking-wider underline underline-offset-4"
-                >
-                  daryl.created@gmail.com
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* 1. Welcome Text block */}
+      <div className="glass-panel p-8 rounded-xl border border-white/5 bg-slate-950/20 space-y-4 font-mono">
+        <h1 className="text-4xl font-extrabold tracking-tight uppercase text-white drop-shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+          THE WIN CONCEPT
+        </h1>
+        <p className="text-sm text-gray-400 leading-relaxed font-mono">
+          Welcome to the analytical portal for local lottery prediction models. This application parses historical draw databases, builds mathematical successors/companions correlation models, and isolates statistical hot and cold mark frequencies to help you optimize and reduce your statistical odds.
+        </p>
       </div>
 
-      {/* RIGHT COLUMN: Interactive Ticket Shading Animation (5 cols) */}
-      <div className="lg:col-span-5 flex justify-center">
-        <div className="bg-[#f4efe0] text-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-slate-300/30 p-6 font-mono w-full max-w-sm relative overflow-hidden h-[460px] flex flex-col justify-between select-none">
+      {/* 2. Interactive Ticket Shading Animation (Centered & Stacked) */}
+      <div className="flex justify-center my-2">
+        <div className="bg-[#f4efe0] text-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.35)] border border-slate-300/30 p-6 font-mono w-full max-w-md relative overflow-hidden h-[460px] flex flex-col justify-between select-none">
 
           {/* Ticket Header Details */}
           <div className="mt-2 space-y-1 border-b border-dashed border-slate-400 pb-3">
@@ -161,9 +126,9 @@ export default function WelcomeTab() {
               })}
             </div>
 
-            {/* Absolute Pencil SVG Icon (Quadrupled in size: w-48 h-48) */}
+            {/* Absolute Pencil SVG Icon (w-36 h-36) */}
             <div
-              className={`absolute z-30 w-48 h-48 pointer-events-none ${
+              className={`absolute z-30 w-36 h-36 pointer-events-none ${
                 pencilPos.shake ? "animate-pencil-wiggle animate-lead-scribble" : ""
               }`}
               style={{
@@ -186,12 +151,60 @@ export default function WelcomeTab() {
                 <polygon points="82,18 85,15 90,20 87,23" fill="#94a3b8" />
               </svg>
             </div>
+
+            {/* Red Stamp Overlay saying Good Luck */}
+            {showGoodLuck && (
+              <div className="absolute inset-0 bg-[#f4efe0]/90 z-40 flex items-center justify-center animate-stamp-scale">
+                <div className="border-4 border-[#d93838] text-[#d93838] font-black rounded-lg px-6 py-3 text-xl tracking-widest rotate-[-6deg] uppercase flex flex-col items-center justify-center shadow-[0_0_20px_rgba(217,56,56,0.15)]">
+                  <span>GOOD LUCK!</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-slate-300 pt-3 text-center text-[8px] text-slate-500 font-extrabold tracking-widest uppercase">
             MODEL COMPILING SYSTEM
           </div>
 
+        </div>
+      </div>
+
+      {/* 3. Warning Disclaimer Panel */}
+      <div className="glass-panel p-5 rounded-xl border-red-500/10 bg-red-500/[0.01] relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-1 h-full bg-red-500/50" />
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          <div className="space-y-1.5 font-mono">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Disclaimer & Fair Play Notice</h4>
+            <p className="text-xs leading-relaxed text-gray-400">
+              This application is designed as a statistical tool that attempts to reduce the mathematical odds of NLCB online games by tracking historical frequencies and delta gaps. It is <strong>NOT affiliated with, authorized, or endorsed by the National Lotteries Control Board (NLCB)</strong> of Trinidad and Tobago in any form or fashion. Using this app <strong>does NOT guarantee any winnings</strong>. Please play responsibly.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Tipping Panel */}
+      <div className="glass-panel p-5 rounded-xl border-amber-500/15 bg-amber-500/[0.01] relative overflow-hidden font-mono">
+        <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/50" />
+        <div className="flex items-start gap-3">
+          <Heart className="w-5 h-5 text-amber-400 shrink-0 mt-0.5 animate-pulse" />
+          <div className="space-y-2 w-full">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+              Support the Creator
+            </h4>
+            <p className="text-xs leading-relaxed text-gray-400">
+              Creating and maintaining these complex analytical scraping systems requires time, hosting, and dedication. If this mathematical tool helps you hit a lucky streak, win big, or become wealthy, please show some love and support the creator!
+            </p>
+            <div className="p-2.5 bg-slate-950/60 border border-white/5 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <span className="text-xs text-gray-400">Send Tips / Support (PayPal):</span>
+              <a 
+                href="mailto:daryl.created@gmail.com"
+                className="text-xs font-extrabold text-amber-400 hover:text-amber-300 transition tracking-wider underline underline-offset-4"
+              >
+                daryl.created@gmail.com
+              </a>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -219,6 +232,15 @@ export default function WelcomeTab() {
         }
         .animate-pencil-wiggle {
           animation: pencil-wiggle 0.08s infinite;
+        }
+
+        @keyframes stamp-scale {
+          0% { transform: scale(3) rotate(0deg); opacity: 0; }
+          40% { transform: scale(1) rotate(-6deg); opacity: 1; }
+          100% { transform: scale(1) rotate(-6deg); opacity: 1; }
+        }
+        .animate-stamp-scale {
+          animation: stamp-scale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
       `}} />
 
