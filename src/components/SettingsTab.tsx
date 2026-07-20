@@ -6,9 +6,10 @@ import { RefreshCw, Database, Terminal, CheckCircle2, AlertTriangle, Play, HelpC
 export default function SettingsTab() {
   const [lottoStats, setLottoStats] = useState<any>(null);
   const [playWheStats, setPlayWheStats] = useState<any>(null);
+  const [winForLifeStats, setWinForLifeStats] = useState<any>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   
-  const [syncingGame, setSyncingGame] = useState<"lotto" | "playwhe" | null>(null);
+  const [syncingGame, setSyncingGame] = useState<"lotto" | "playwhe" | "winforlife" | null>(null);
   const [syncType, setSyncType] = useState<"recent" | "full" | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [syncSuccess, setSyncSuccess] = useState<boolean | null>(null);
@@ -46,6 +47,10 @@ export default function SettingsTab() {
       const pwRes = await fetch("/api/playwhe/stats?limit=1");
       const pwData = await pwRes.json();
       
+      // 3. Fetch Win for Life stats
+      const wflRes = await fetch("/api/winforlife/stats?limit=1");
+      const wflData = await wflRes.json();
+      
       if (lottoData.success) {
         setLottoStats({
           count: lottoData.totalDraws || 0,
@@ -57,6 +62,13 @@ export default function SettingsTab() {
         setPlayWheStats({
           count: pwData.totalDraws || 0,
           latest: pwData.latestDraw || null
+        });
+      }
+
+      if (wflData.success) {
+        setWinForLifeStats({
+          count: wflData.totalDraws || 0,
+          latest: wflData.latestDraw || null
         });
       }
     } catch (err) {
@@ -274,6 +286,106 @@ export default function SettingsTab() {
     }
   };
 
+  const handleWinForLifeSync = async (full: boolean = false) => {
+    if (syncingGame) return;
+    
+    let pwd = "";
+    if (full) {
+      const input = prompt("Please enter the Full Sync password to continue:");
+      if (!input) {
+        addLog("Sync cancelled by user.");
+        return;
+      }
+      pwd = input;
+    }
+
+    setSyncingGame("winforlife");
+    setSyncType(full ? "full" : "recent");
+    setSyncSuccess(null);
+    setLogs([]);
+    setActiveStep(full ? "Initializing Win for Life Full Sync..." : "Syncing Win for Life Recent Draws...");
+
+    if (full) {
+      addLog("Initializing Win for Life FULL history sync (Year by Year)...");
+      try {
+        const currentYear = new Date().getFullYear();
+        const startYear = 2022;
+        let totalAdded = 0;
+        
+        for (let y = currentYear; y >= startYear; y--) {
+          setActiveStep(`Syncing Win for Life Year ${y} (2022 to Present)...`);
+          addLog(`Syncing Win for Life Year ${y}...`);
+          
+          const res = await fetch("/api/winforlife/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ year: y, fullSecret: pwd })
+          });
+          const data = await res.json();
+          if (data.success) {
+            totalAdded += data.drawsAdded || 0;
+            addLog(`Year ${y} complete: Added ${data.drawsAdded || 0} draws.`);
+            if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+              new Notification("Win for Life Synced!", {
+                body: `Year ${y} complete: Added ${data.drawsAdded} historical draws!`,
+                icon: "/pwa-192x192.png"
+              });
+            }
+          } else {
+            addLog(`Year ${y} failed: ${data.error || data.details}`);
+          }
+          // Polite delay
+          await new Promise(r => setTimeout(r, 600));
+        }
+        addLog(`Full Sync Completed Successfully! Total draws added: ${totalAdded}`);
+        setSyncSuccess(true);
+        setActiveStep("Sync Completed!");
+        fetchDBStatus();
+      } catch (err: any) {
+        addLog(`Full Sync Error: ${err.message}`);
+        setSyncSuccess(false);
+        setActiveStep("Sync Error!");
+      } finally {
+        setSyncingGame(null);
+        setSyncType(null);
+      }
+    } else {
+      addLog("Starting Win for Life sync (Recent)...");
+      try {
+        const res = await fetch("/api/winforlife/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ full: false })
+        });
+        const data = await res.json();
+        if (data.success) {
+          addLog(`Sync Success! Added/Updated ${data.drawsAdded || 0} draws.`);
+          addLog(`Details: ${data.details}`);
+          setSyncSuccess(true);
+          setActiveStep("Sync Completed!");
+          fetchDBStatus();
+          if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+            new Notification("Win for Life Synced!", {
+              body: `Added/Updated ${data.drawsAdded} draws successfully!`,
+              icon: "/pwa-192x192.png"
+            });
+          }
+        } else {
+          addLog(`Sync Failed: ${data.error || data.details}`);
+          setSyncSuccess(false);
+          setActiveStep("Sync Failed!");
+        }
+      } catch (err: any) {
+        addLog(`Sync Error: ${err.message}`);
+        setSyncSuccess(false);
+        setActiveStep("Sync Error!");
+      } finally {
+        setSyncingGame(null);
+        setSyncType(null);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Title Header */}
@@ -362,7 +474,7 @@ export default function SettingsTab() {
           </div>
 
           {/* Database Overview & Sync Panels */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Lotto Plus Card */}
             <div className="glass-panel border border-white/5 p-5 rounded-xl bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
@@ -482,6 +594,67 @@ export default function SettingsTab() {
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${syncingGame === "playwhe" && syncType === "full" ? "animate-spin" : ""}`} />
                   SYNC FULL (2001+)
+                </button>
+              </div>
+            </div>
+
+            {/* Win for Life Card */}
+            <div className="glass-panel border border-white/5 p-5 rounded-xl bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold font-mono tracking-widest text-primary uppercase">
+                    WIN FOR LIFE DATA
+                  </span>
+                  <Database className="w-4 h-4 text-primary/50" />
+                </div>
+                
+                {loadingStats ? (
+                  <div className="space-y-2 animate-pulse py-2">
+                    <div className="h-6 w-32 bg-white/5 rounded" />
+                    <div className="h-4 w-48 bg-white/5 rounded" />
+                  </div>
+                ) : (
+                  <div className="space-y-3 font-mono">
+                    <div className="text-2xl font-black text-white">
+                      {winForLifeStats?.count.toLocaleString() || "0"} <span className="text-xs font-bold text-gray-500">Draws</span>
+                    </div>
+                    {winForLifeStats?.latest && (
+                      <div className="text-xs text-gray-400 space-y-1">
+                        <div>Latest Draw: <span className="text-white font-bold">#{winForLifeStats.latest.draw_number}</span></div>
+                        <div>Winning: <span className="text-primary font-bold">
+                          {[winForLifeStats.latest.num1, winForLifeStats.latest.num2, winForLifeStats.latest.num3, winForLifeStats.latest.num4, winForLifeStats.latest.num5, winForLifeStats.latest.num6].join("-")}
+                        </span> + CB <span className="text-emerald-400 font-bold">{winForLifeStats.latest.cash_ball}</span></div>
+                        <div>Date: <span className="text-white">{winForLifeStats.latest.draw_date}</span></div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => handleWinForLifeSync(false)}
+                  disabled={syncingGame !== null}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border text-xs font-bold font-mono tracking-wider transition ${
+                    syncingGame === "winforlife" && syncType === "recent"
+                      ? "bg-primary/20 border-primary text-primary animate-pulse"
+                      : "bg-slate-950 border-white/5 text-gray-300 hover:bg-slate-900 hover:border-white/10"
+                  }`}
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncingGame === "winforlife" && syncType === "recent" ? "animate-spin" : ""}`} />
+                  SYNC RECENT
+                </button>
+                <button
+                  onClick={() => handleWinForLifeSync(true)}
+                  disabled={syncingGame !== null}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border text-xs font-bold font-mono tracking-wider transition ${
+                    syncingGame === "winforlife" && syncType === "full"
+                      ? "bg-amber-500/20 border-amber-500 text-amber-400 animate-pulse"
+                      : "bg-slate-950 border-white/5 text-gray-400 hover:bg-slate-900 hover:border-white/10"
+                  }`}
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncingGame === "winforlife" && syncType === "full" ? "animate-spin" : ""}`} />
+                  SYNC FULL (2022+)
                 </button>
               </div>
             </div>
