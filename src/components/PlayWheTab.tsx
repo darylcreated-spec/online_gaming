@@ -146,6 +146,7 @@ export default function PlayWheTab({
   const [isListening, setIsListening] = useState(false);
   const [dreamText, setDreamText] = useState("");
   const [matchedDreamMarks, setMatchedDreamMarks] = useState<any[]>([]);
+  const [showMicHelp, setShowMicHelp] = useState(false);
 
   // Network Graph States
   const [hoveredNode, setHoveredNode] = useState<number | null>(null);
@@ -1364,28 +1365,67 @@ export default function PlayWheTab({
                 </div>
               </div>
               
-              {/* Mic Speech Button */}
-              <button
-                onClick={startSpeechRecognition}
-                className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-bold font-mono tracking-wider transition cursor-pointer select-none ${
-                  isListening
-                    ? "bg-red-500/10 border-red-500/30 text-red-400 animate-pulse"
-                    : "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
-                }`}
-              >
-                {isListening ? (
-                  <>
-                    <Mic className="w-3.5 h-3.5 animate-bounce" />
-                    LISTENING...
-                  </>
-                ) : (
-                  <>
-                    <Mic className="w-3.5 h-3.5" />
-                    TRANSCRIBE
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Mic Speech Button */}
+                <button
+                  onClick={startSpeechRecognition}
+                  className={`flex items-center gap-2 px-3 py-1.5 border text-xs font-bold font-mono tracking-wider transition cursor-pointer select-none ${
+                    isListening
+                      ? "bg-red-500/10 border-red-500/30 text-red-400 animate-pulse"
+                      : "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
+                  }`}
+                >
+                  {isListening ? (
+                    <>
+                      <Mic className="w-3.5 h-3.5 animate-bounce" />
+                      LISTENING...
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-3.5 h-3.5" />
+                      TRANSCRIBE
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => setShowMicHelp(!showMicHelp)}
+                  className="text-[10px] font-bold text-gray-500 hover:text-white font-mono border border-white/10 px-2.5 py-1.5 hover:bg-white/5 rounded transition-all cursor-pointer"
+                  title="Troubleshoot microphone issues on mobile/HTTPS"
+                >
+                  ?
+                </button>
+              </div>
             </div>
+
+            {showMicHelp && (
+              <div className="bg-slate-950/80 border border-white/5 rounded-lg p-4 text-[10px] text-gray-400 font-mono space-y-2 animate-ticket-slide">
+                <div className="font-bold text-white uppercase text-[9px] tracking-wider pb-1.5 border-b border-white/5 flex justify-between items-center">
+                  <span>🎤 Microphone Access Troubleshooting Guide</span>
+                  <button 
+                    onClick={() => setShowMicHelp(false)} 
+                    className="text-red-400 hover:text-red-300 font-bold"
+                  >
+                    CLOSE [X]
+                  </button>
+                </div>
+                <p>
+                  If clicking <strong>TRANSCRIBE</strong> does not prompt you for speech input or shows an error, check the following details:
+                </p>
+                <p>
+                  <strong>1. Secure Connection Required (HTTPS):</strong> Mobile browsers block voice features on standard HTTP to protect privacy. Make sure your address bar starts with <code className="text-primary font-bold">https://</code>.
+                </p>
+                <p>
+                  <strong>2. iOS (iPhone/iPad) Settings:</strong> Open the system <strong>Settings App &rarr; Safari &rarr; Microphone</strong>, and verify that it is set to <strong>Ask</strong> or <strong>Allow</strong>.
+                </p>
+                <p>
+                  <strong>3. Android (Chrome) Settings:</strong> Tap the <strong>three dots Menu &rarr; settings (or Info icon in URL bar) &rarr; Site Settings &rarr; Microphone &rarr; Allow</strong>.
+                </p>
+                <p>
+                  <strong>4. Web App (PWA) Standalone Bug:</strong> If you are using the app added directly to your Home Screen, permission dialogs can fail. Try opening the web page directly in <strong>Safari or Chrome Browser</strong> instead.
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
               {/* Text Input Panel */}
