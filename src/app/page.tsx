@@ -526,17 +526,17 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Card 3: Hot/Cold Frequencies */}
+              {/* Card 3: Monochromatic Heatmap */}
               <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3">
                 <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
                   <BarChart2 className="w-4 h-4 text-primary" />
-                  3. Monochromatic Heatmap
+                  3. Monochromatic Heatmap & Overlay
                 </div>
                 <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  The frequency grid is shaded dynamically using monochromatic opacity levels. Numbers that are drawn more frequently in your selected timeframe (e.g. last 100 draws) light up with high opacity.
+                  The frequency grid is shaded dynamically using monochromatic opacity levels. Numbers that are drawn more frequently in history light up with high opacity (amber/gold for hot ranges; charcoal for cold).
                 </p>
                 <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  Hovering over a compiled physical ticket slip automatically highlights those ticket numbers on the heatmap, allowing you to visually verify the hot/cold distribution of your active tickets at a single glance.
+                  In the <strong>Wheeling Workspace</strong>, you can toggle the **Heatmap Overlay ON/OFF** directly over the Step 1 selection buttons to instantly identify hot/cold values as you select your pool!
                 </p>
               </div>
 
