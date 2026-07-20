@@ -347,6 +347,140 @@ export default function WinForLifeTab() {
       {/* SUBTAB: DASHBOARD */}
       {subTab === "dashboard" && (
         <div className="space-y-6">
+          
+          {/* Dashboard Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Card 1: Latest Draw Results */}
+            <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+              <div>
+                <span className="text-[10px] font-bold font-mono tracking-widest text-primary uppercase block mb-2">
+                  LATEST DRAW RESULTS
+                </span>
+                {statsLoading || !stats?.latestDraw ? (
+                  <div className="space-y-2 animate-pulse py-1">
+                    <div className="h-6 w-32 bg-white/5 rounded" />
+                    <div className="h-4 w-48 bg-white/5 rounded" />
+                  </div>
+                ) : (
+                  <div className="space-y-2 font-mono">
+                    <div className="flex justify-between items-center text-xs text-gray-400">
+                      <span>Draw #{stats.latestDraw.draw_number}</span>
+                      <span>{stats.latestDraw.draw_date}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      {[
+                        stats.latestDraw.num1,
+                        stats.latestDraw.num2,
+                        stats.latestDraw.num3,
+                        stats.latestDraw.num4,
+                        stats.latestDraw.num5,
+                        stats.latestDraw.num6
+                      ].map((n, idx) => (
+                        <span key={idx} className="w-7 h-7 rounded-full bg-slate-900 border border-white/5 text-white flex items-center justify-center font-bold text-xs">
+                          {n}
+                        </span>
+                      ))}
+                      <span className="text-gray-600 font-bold mx-0.5">|</span>
+                      <span className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                        {stats.latestDraw.cash_ball}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Card 2: Next Draw Schedule */}
+            <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+              <div>
+                <span className="text-[10px] font-bold font-mono tracking-widest text-primary uppercase block mb-2">
+                  NEXT SCHEDULED DRAW
+                </span>
+                <div className="space-y-1.5 font-mono">
+                  <div className="text-sm font-bold text-white uppercase tracking-wider">
+                    {(() => {
+                      const now = new Date();
+                      const ttTime = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+                      let nextDraw = new Date(ttTime);
+                      nextDraw.setHours(19, 0, 0, 0);
+                      const day = ttTime.getDay();
+                      if (day === 2) {
+                        if (ttTime.getHours() >= 19) nextDraw.setDate(ttTime.getDate() + 3);
+                      } else if (day === 5) {
+                        if (ttTime.getHours() >= 19) nextDraw.setDate(ttTime.getDate() + 4);
+                      } else if (day === 0 || day === 1) {
+                        nextDraw.setDate(ttTime.getDate() + (2 - day));
+                      } else if (day === 3 || day === 4) {
+                        nextDraw.setDate(ttTime.getDate() + (5 - day));
+                      } else if (day === 6) {
+                        nextDraw.setDate(ttTime.getDate() + 3);
+                      }
+                      return nextDraw.toLocaleDateString("en-TT", { weekday: "long", month: "short", day: "numeric" });
+                    })()}
+                  </div>
+                  <div className="text-xs text-amber-400 font-black">
+                    7:00 PM (Trinidad Time)
+                  </div>
+                  <div className="text-[10px] text-gray-500 leading-relaxed pt-1">
+                    Draws occur every Tuesday and Friday evening.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Suggested Picks */}
+            <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+              <div>
+                <span className="text-[10px] font-bold font-mono tracking-widest text-primary uppercase block mb-2">
+                  SUGGESTED ALGO PICKS
+                </span>
+                {statsLoading || !stats?.frequencies ? (
+                  <div className="space-y-2 animate-pulse py-1">
+                    <div className="h-6 w-32 bg-white/5 rounded" />
+                    <div className="h-4 w-48 bg-white/5 rounded" />
+                  </div>
+                ) : (
+                  <div className="space-y-2 font-mono">
+                    <div className="text-[9px] text-slate-500 uppercase tracking-widest">
+                      Based on Hot/Cold Gap Analysis
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      {(() => {
+                        // Extract suggested pick: 4 hot + 2 cold + 1 CB
+                        const frequencies = stats.frequencies || [];
+                        const hot = frequencies.slice(0, 4).map((f: any) => f.number);
+                        const cold = frequencies.slice(-4).map((f: any) => f.number);
+                        // Pick random items for variation
+                        const finalPool = [
+                          ...hot,
+                          cold[Math.floor(Math.random() * cold.length)],
+                          cold[(Math.floor(Math.random() * cold.length) + 1) % cold.length]
+                        ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 6).sort((a, b) => a - b);
+                        
+                        const cb = stats.cashBallFrequencies?.[0]?.number || 1;
+                        return (
+                          <>
+                            {finalPool.map((n, idx) => (
+                              <span key={idx} className="w-7 h-7 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+                                {n}
+                              </span>
+                            ))}
+                            <span className="text-gray-600 font-bold mx-0.5">|</span>
+                            <span className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                              {cb}
+                            </span>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* Number Frequency Chart */}
