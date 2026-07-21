@@ -320,3 +320,310 @@ export function checkPlayWheTicket(
     prizeEstimate: isWinner ? "$26.00 per $1.00 wagered" : "$0.00"
   };
 }
+
+/**
+ * Checks a Win for Life ticket against winning numbers and calculates the prize tier.
+ */
+export function checkWinForLifeTicket(
+  ticketNumbers: number[],
+  ticketCb: number,
+  winningNumbers: number[],
+  winningCb: number
+): CheckResult {
+  const tNums = [...ticketNumbers].sort((a, b) => a - b);
+  const wNums = [...winningNumbers].sort((a, b) => a - b);
+
+  const matchedNumbers = tNums.filter(n => wNums.includes(n));
+  const matchCount = matchedNumbers.length;
+  const pbMatched = ticketCb === winningCb;
+
+  let tierName = "No Match";
+  let prizeEstimate = "$0.00";
+  let isWinner = false;
+
+  if (matchCount === 6) {
+    isWinner = true;
+    if (pbMatched) {
+      tierName = "6 Main + Cash Ball (JACKPOT)";
+      prizeEstimate = "$1,000.00/Month for Life";
+    } else {
+      tierName = "6 Main Numbers";
+      prizeEstimate = "$10,000.00 Est.";
+    }
+  } else if (matchCount === 5) {
+    isWinner = true;
+    if (pbMatched) {
+      tierName = "5 Main + Cash Ball";
+      prizeEstimate = "$1,000.00 Est.";
+    } else {
+      tierName = "5 Main Numbers";
+      prizeEstimate = "$250.00 Est.";
+    }
+  } else if (matchCount === 4) {
+    isWinner = true;
+    if (pbMatched) {
+      tierName = "4 Main + Cash Ball";
+      prizeEstimate = "$100.00 Est.";
+    } else {
+      tierName = "4 Main Numbers";
+      prizeEstimate = "$20.00 Est.";
+    }
+  } else if (matchCount === 3) {
+    isWinner = true;
+    if (pbMatched) {
+      tierName = "3 Main + Cash Ball";
+      prizeEstimate = "$10.00 Est.";
+    } else {
+      tierName = "3 Main Numbers";
+      prizeEstimate = "$2.00 Est.";
+    }
+  } else if (matchCount === 2) {
+    if (pbMatched) {
+      isWinner = true;
+      tierName = "2 Main + Cash Ball";
+      prizeEstimate = "$5.00 Est.";
+    }
+  } else if (matchCount === 1) {
+    if (pbMatched) {
+      isWinner = true;
+      tierName = "1 Main + Cash Ball";
+      prizeEstimate = "Free Quick Pick Ticket";
+    }
+  } else if (matchCount === 0) {
+    if (pbMatched) {
+      isWinner = true;
+      tierName = "Cash Ball Only";
+      prizeEstimate = "Free Quick Pick Ticket";
+    }
+  }
+
+  return {
+    matchedNumbers,
+    pbMatched,
+    tierName,
+    prizeEstimate,
+    isWinner
+  };
+}
+
+/**
+ * Parses OCR extracted text to find potential Win for Life ticket numbers.
+ */
+export function parseWinForLifeTicketText(text: string): {
+  numbers: number[];
+  cashBall: number | null;
+  drawNumber: number | null;
+  dateStr: string | null;
+} {
+  const result: {
+    numbers: number[];
+    cashBall: number | null;
+    drawNumber: number | null;
+    dateStr: string | null;
+  } = {
+    numbers: [],
+    cashBall: null,
+    drawNumber: null,
+    dateStr: null
+  };
+
+  const lines = text.split("\n");
+
+  for (const line of lines) {
+    const drawMatch = line.match(/(?:draw|draw\s*#)\s*(\d{2,4})/i);
+    if (drawMatch) {
+      result.drawNumber = parseInt(drawMatch[1]);
+      break;
+    }
+  }
+
+  for (const line of lines) {
+    const dateMatch = line.match(/(\d{1,2})-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*-\d{2,4}/i);
+    if (dateMatch) {
+      result.dateStr = dateMatch[0];
+      break;
+    }
+    const isoMatch = line.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) {
+      result.dateStr = isoMatch[0];
+      break;
+    }
+  }
+
+  for (const line of lines) {
+    const tokens = line.replace(/[^a-zA-Z0-9\s-]/g, " ").split(/\s+/).filter(t => t.length > 0);
+    const parsedNums: number[] = [];
+    let cbCandidate: number | null = null;
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      const val = parseInt(token);
+
+      if (!isNaN(val)) {
+        const prevToken = tokens[i - 1]?.toLowerCase();
+        if (prevToken === "cb" || prevToken === "cash" || prevToken === "cashball" || prevToken === "ball") {
+          cbCandidate = val;
+        } else if (val >= 1 && val <= 28) {
+          parsedNums.push(val);
+        } else if (val >= 1 && val <= 3 && parsedNums.length >= 6) {
+          cbCandidate = val;
+        }
+      }
+    }
+
+    const uniqueNums = Array.from(new Set(parsedNums)).sort((a, b) => a - b);
+
+    if (uniqueNums.length >= 6) {
+      result.numbers = uniqueNums.slice(0, 6);
+      if (cbCandidate !== null && cbCandidate >= 1 && cbCandidate <= 3) {
+        result.cashBall = cbCandidate;
+      } else {
+        const cbMatch = line.match(/(?:cb|cb\s*#|cb:|\b)\s*([1-3])\b(?!.*\b\d+\b)/i);
+        if (cbMatch) {
+          result.cashBall = parseInt(cbMatch[1]);
+        }
+      }
+      break;
+    }
+  }
+
+  return result;
+}
+
+export interface ExtractedPlay {
+  label: string;
+  numbers: number[];
+  pb?: number;
+}
+
+/**
+ * Parses OCR extracted text to find multiple rows of numbers (multiple plays).
+ */
+export function parseMultiPlays(
+  text: string,
+  gameType: "lotto-plus" | "play-whe" | "win-for-life"
+): ExtractedPlay[] {
+  const lines = text.split("\n");
+  const plays: ExtractedPlay[] = [];
+  let playIndex = 0;
+
+  for (const line of lines) {
+    const cleanLine = line.trim();
+    if (!cleanLine) continue;
+
+    // Detect line labels like "A:", "B:", "Play A", "Panel A", etc.
+    const labelMatch = cleanLine.match(/^(?:panel|play|row)?\s*([a-hA-H])\b/i);
+    let label = labelMatch ? labelMatch[1].toUpperCase() : String.fromCharCode(65 + playIndex);
+
+    if (gameType === "lotto-plus") {
+      const tokens = cleanLine.replace(/[^a-zA-Z0-9\s-]/g, " ").split(/\s+/).filter(t => t.length > 0);
+      const parsedNums: number[] = [];
+      let pbCandidate: number | null = null;
+
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        const val = parseInt(token);
+        if (!isNaN(val)) {
+          const prevToken = tokens[i - 1]?.toLowerCase();
+          if (prevToken === "pb" || prevToken === "powerball" || prevToken === "power" || prevToken === "p/b") {
+            pbCandidate = val;
+          } else if (val >= 1 && val <= 35) {
+            parsedNums.push(val);
+          } else if (val >= 1 && val <= 10 && parsedNums.length >= 5) {
+            pbCandidate = val;
+          }
+        }
+      }
+
+      const uniqueNums = Array.from(new Set(parsedNums)).sort((a, b) => a - b);
+      if (uniqueNums.length >= 5) {
+        if (pbCandidate === null) {
+          const pbMatch = cleanLine.match(/(?:pb|pb\s*#|pb:|\b)\s*([1-9]|10)\b(?!.*\b\d+\b)/i);
+          if (pbMatch) pbCandidate = parseInt(pbMatch[1]);
+        }
+        plays.push({
+          label,
+          numbers: uniqueNums.slice(0, 5),
+          pb: pbCandidate || 1
+        });
+        playIndex++;
+      }
+
+    } else if (gameType === "win-for-life") {
+      const tokens = cleanLine.replace(/[^a-zA-Z0-9\s-]/g, " ").split(/\s+/).filter(t => t.length > 0);
+      const parsedNums: number[] = [];
+      let cbCandidate: number | null = null;
+
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        const val = parseInt(token);
+        if (!isNaN(val)) {
+          const prevToken = tokens[i - 1]?.toLowerCase();
+          if (prevToken === "cb" || prevToken === "cash" || prevToken === "cashball" || prevToken === "ball" || prevToken === "c/b") {
+            cbCandidate = val;
+          } else if (val >= 1 && val <= 28) {
+            parsedNums.push(val);
+          } else if (val >= 1 && val <= 3 && parsedNums.length >= 6) {
+            cbCandidate = val;
+          }
+        }
+      }
+
+      const uniqueNums = Array.from(new Set(parsedNums)).sort((a, b) => a - b);
+      if (uniqueNums.length >= 6) {
+        if (cbCandidate === null) {
+          const cbMatch = cleanLine.match(/(?:cb|cb\s*#|cb:|\b)\s*([1-3])\b(?!.*\b\d+\b)/i);
+          if (cbMatch) cbCandidate = parseInt(cbMatch[1]);
+        }
+        plays.push({
+          label,
+          numbers: uniqueNums.slice(0, 6),
+          pb: cbCandidate || 1
+        });
+        playIndex++;
+      }
+
+    } else if (gameType === "play-whe") {
+      const tokens = cleanLine.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/);
+      let selectedNumber: number | null = null;
+
+      const chinapooMarks = [
+        "centipede", "old lady", "carriage", "dead man", "parson man", "belly",
+        "hog", "tiger", "cattle", "monkey", "corbeau", "king", "crapaud", "money",
+        "sick woman", "jamette", "pigeon", "water boat", "horse", "dog", "mouth",
+        "rat", "house", "queen", "morocoy", "fowl", "little snake", "red fish",
+        "opium man", "house cat", "parson wife", "shrimp", "spider", "blind man",
+        "big snake", "donkey"
+      ];
+
+      for (let i = 0; i < chinapooMarks.length; i++) {
+        if (tokens.includes(chinapooMarks[i])) {
+          selectedNumber = i + 1;
+          break;
+        }
+      }
+
+      if (selectedNumber === null) {
+        for (const token of tokens) {
+          const val = parseInt(token);
+          if (!isNaN(val) && val >= 1 && val <= 36) {
+            selectedNumber = val;
+            break;
+          }
+        }
+      }
+
+      if (selectedNumber !== null) {
+        plays.push({
+          label,
+          numbers: [selectedNumber],
+          pb: undefined
+        });
+        playIndex++;
+      }
+    }
+  }
+
+  return plays;
+}
+

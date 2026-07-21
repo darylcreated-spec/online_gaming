@@ -90,19 +90,36 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       }
     }
 
-    // C. Successors of the last drawn number overall
+    // C. Successors of the last drawn numbers overall (1st and 2nd order Markov Chain)
     const lastDrawn = generalDraws[0];
+    const secondLastDrawn = generalDraws[1]; // generalDraws length is checked >= 5
+    const successors1st: Record<number, number> = {};
+    const successors2nd: Record<number, number> = {};
+
+    for (let i = 1; i <= 36; i++) {
+      successors1st[i] = 0;
+      successors2nd[i] = 0;
+    }
+
+    // 1st-order transitions: lastDrawn -> candidate
     for (let i = 0; i < generalDraws.length - 1; i++) {
       if (generalDraws[i + 1] === lastDrawn) {
-        successors[generalDraws[i]]++;
+        successors1st[generalDraws[i]]++;
+      }
+    }
+
+    // 2nd-order transitions: (secondLastDrawn, lastDrawn) -> candidate
+    for (let i = 0; i < generalDraws.length - 2; i++) {
+      if (generalDraws[i + 2] === secondLastDrawn && generalDraws[i + 1] === lastDrawn) {
+        successors2nd[generalDraws[i]]++;
       }
     }
 
     // 4. Calculate total score for each of the 36 numbers
     const candidates = [];
     for (let i = 1; i <= 36; i++) {
-      // Weighting formula: Overdue gap in slot (2.0) + Slot frequency (1.5) + Successors (1.8)
-      const score = (gaps[i] * 2.0) + (freqs[i] * 1.5) + (successors[i] * 1.8);
+      // Weighting formula: 2nd-order transitions (3.0) + 1st-order transitions (1.5) + Slot frequency (1.0) + Overdue gap in slot (0.5)
+      const score = (successors2nd[i] * 3.0) + (successors1st[i] * 1.5) + (freqs[i] * 1.0) + (gaps[i] * 0.5);
       candidates.push({ num: i, score });
     }
 
@@ -173,6 +190,7 @@ export async function verifyPlayWhePredictions(): Promise<{ verifiedCount: numbe
           hitsAdded++;
           verifiedCount++;
           console.log(`[Verifier] HIT: Prediction on ${p.prediction_date} [${p.draw_time_slot}] (${p.predicted_numbers}) matched winning number ${winningNumber} on draw #${drawNumber}`);
+        } else {
           // It's a MISS!
           await db.execute({
             sql: `UPDATE playwhe_predictions 

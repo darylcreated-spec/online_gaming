@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import Tesseract from "tesseract.js";
-import { parseTicketText, checkTicket, CheckResult, parsePlayWheTicketText, checkPlayWheTicket } from "@/lib/checker";
+import { parseTicketText, checkTicket, CheckResult, parsePlayWheTicketText, checkPlayWheTicket, parseWinForLifeTicketText, checkWinForLifeTicket, parseMultiPlays } from "@/lib/checker";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 import { Upload, Camera, CheckCircle2, AlertTriangle, RefreshCw, HelpCircle } from "lucide-react";
 
@@ -15,12 +15,16 @@ export default function CheckerTab() {
   
   // OCR Editable results
   const [ticketDrawNum, setTicketDrawNum] = useState<string>("");
-  const [ticketNumbers, setTicketNumbers] = useState<string[]>(["", "", "", "", ""]);
+  const [ticketNumbers, setTicketNumbers] = useState<string[]>(["", "", "", "", "", ""]);
   const [ticketPb, setTicketPb] = useState<string>("");
   const [ticketDate, setTicketDate] = useState<string>("");
   const [ticketTimeSlot, setTicketTimeSlot] = useState<string>("Morning");
   const [playWheSelectedNumber, setPlayWheSelectedNumber] = useState<string>("");
   
+  // Multi-play states
+  const [multiPlays, setMultiPlays] = useState<Array<{ label: string; numbers: string[]; pb: string }>>([]);
+  const [checkResults, setCheckResults] = useState<Array<{ label: string; numbers: string[]; pb: string; grade: any }>>([]);
+
   // Checking results
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<any | null>(null);
@@ -29,10 +33,10 @@ export default function CheckerTab() {
   
   // Manual check fallback (if draw not found in DB)
   const [showManualWinningInput, setShowManualWinningInput] = useState(false);
-  const [manualWinningNumbers, setManualWinningNumbers] = useState<string[]>(["", "", "", "", ""]);
+  const [manualWinningNumbers, setManualWinningNumbers] = useState<string[]>(["", "", "", "", "", ""]);
   const [manualWinningPb, setManualWinningPb] = useState<string>("");
   const [manualWinningPlayWheNumber, setManualWinningPlayWheNumber] = useState<string>("");
-  const [selectedGame, setSelectedGame] = useState<"lotto-plus" | "play-whe">("lotto-plus");
+  const [selectedGame, setSelectedGame] = useState<"lotto-plus" | "play-whe" | "win-for-life">("lotto-plus");
 
   // In-App Video Scanner States
   const [showScannerModal, setShowScannerModal] = useState(false);
@@ -129,6 +133,7 @@ export default function CheckerTab() {
     setScanProgress(0);
     setScanStatus("Initializing OCR Engine...");
     setCheckResult(null);
+    setCheckResults([]);
     setWinningDraw(null);
     setCheckError(null);
     setShowManualWinningInput(false);
@@ -148,24 +153,121 @@ export default function CheckerTab() {
       const text = result.data.text;
       console.log("[OCR Text Extracted]:", text);
 
-      if (selectedGame === "play-whe") {
-        const parsed = parsePlayWheTicketText(text);
-        setTicketDrawNum(parsed.drawNumber ? parsed.drawNumber.toString() : "");
-        setTicketDate(parsed.dateStr || "");
-        setTicketTimeSlot(parsed.timeSlot || "Morning");
-        setPlayWheSelectedNumber(parsed.selectedNumber ? parsed.selectedNumber.toString() : "");
-      } else {
-        const parsed = parseTicketText(text);
-        setTicketDrawNum(parsed.drawNumber ? parsed.drawNumber.toString() : "");
-        setTicketPb(parsed.powerball ? parsed.powerball.toString() : "");
-        
-        const newNums = [...ticketNumbers];
-        for (let i = 0; i < 5; i++) {
-          newNums[i] = parsed.numbers[i] ? parsed.numbers[i].toString() : "";
-        }
-        setTicketNumbers(newNums);
+      // Auto-detect game type from slip headers
+      const textLower = text.toLowerCase();
+      let gameType: "lotto-plus" | "play-whe" | "win-for-life" = selectedGame;
+      if (textLower.includes("win for life") || textLower.includes("win-for-life") || (textLower.includes("win") && textLower.includes("life"))) {
+        gameType = "win-for-life";
+      } else if (textLower.includes("play whe") || textLower.includes("play-whe") || (textLower.includes("play") && textLower.includes("whe"))) {
+        gameType = "play-whe";
+      } else if (textLower.includes("lotto plus") || textLower.includes("lotto-plus") || (textLower.includes("lotto") && textLower.includes("plus"))) {
+        gameType = "lotto-plus";
       }
-      
+      setSelectedGame(gameType);
+
+      // Parse Draw Number and Date
+      let drawNumberStr = "";
+      let dateStr = "";
+      let timeSlotStr = "Morning";
+
+      const lines = text.split("\n");
+      for (const line of lines) {
+        const drawMatch = line.match(/(?:draw|draw\s*#)\s*(\d{2,6})/i);
+        if (drawMatch) {
+          drawNumberStr = drawMatch[1];
+          break;
+        }
+      }
+
+      for (const line of lines) {
+        const dateMatch = line.match(/(\d{1,2})-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*-\d{2,4}/i);
+        if (dateMatch) {
+          dateStr = dateMatch[0];
+          break;
+        }
+        const isoMatch = line.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (isoMatch) {
+          dateStr = isoMatch[0];
+          break;
+        }
+      }
+
+      if (gameType === "play-whe") {
+        for (const line of lines) {
+          const cleanLine = line.toLowerCase();
+          if (cleanLine.includes("morning") || cleanLine.includes("morn") || cleanLine.includes("10:30")) {
+            timeSlotStr = "Morning";
+            break;
+          } else if (cleanLine.includes("midday") || cleanLine.includes("mid") || cleanLine.includes("1:00")) {
+            timeSlotStr = "Midday";
+            break;
+          } else if (cleanLine.includes("afternoon") || cleanLine.includes("aft") || cleanLine.includes("4:00")) {
+            timeSlotStr = "Afternoon";
+            break;
+          } else if (cleanLine.includes("evening") || cleanLine.includes("eve") || cleanLine.includes("7:00")) {
+            timeSlotStr = "Evening";
+            break;
+          }
+        }
+      }
+
+      setTicketDrawNum(drawNumberStr);
+      setTicketDate(dateStr);
+      setTicketTimeSlot(timeSlotStr);
+
+      // Parse multiple plays
+      const parsedPlays = parseMultiPlays(text, gameType);
+      if (parsedPlays.length > 0) {
+        const mappedPlays = parsedPlays.map(p => ({
+          label: p.label,
+          numbers: p.numbers.map(n => n.toString()),
+          pb: p.pb ? p.pb.toString() : ""
+        }));
+        setMultiPlays(mappedPlays);
+
+        // Populate primary inputs from Play A
+        const firstPlay = parsedPlays[0];
+        if (gameType === "play-whe") {
+          setPlayWheSelectedNumber(firstPlay.numbers[0] ? firstPlay.numbers[0].toString() : "");
+        } else if (gameType === "win-for-life") {
+          setTicketPb(firstPlay.pb ? firstPlay.pb.toString() : "");
+          const newNums = ["", "", "", "", "", ""];
+          for (let i = 0; i < 6; i++) {
+            newNums[i] = firstPlay.numbers[i] ? firstPlay.numbers[i].toString() : "";
+          }
+          setTicketNumbers(newNums);
+        } else {
+          setTicketPb(firstPlay.pb ? firstPlay.pb.toString() : "");
+          const newNums = ["", "", "", "", "", ""];
+          for (let i = 0; i < 5; i++) {
+            newNums[i] = firstPlay.numbers[i] ? firstPlay.numbers[i].toString() : "";
+          }
+          setTicketNumbers(newNums);
+        }
+      } else {
+        setMultiPlays([]);
+        if (gameType === "play-whe") {
+          const parsed = parsePlayWheTicketText(text);
+          setPlayWheSelectedNumber(parsed.selectedNumber ? parsed.selectedNumber.toString() : "");
+        } else if (gameType === "win-for-life") {
+          const parsed = parseWinForLifeTicketText(text);
+          setTicketPb(parsed.cashBall ? parsed.cashBall.toString() : "");
+          const newNums = ["", "", "", "", "", ""];
+          for (let i = 0; i < 6; i++) {
+            newNums[i] = parsed.numbers[i] ? parsed.numbers[i].toString() : "";
+          }
+          setTicketNumbers(newNums);
+        } else {
+          const parsed = parseTicketText(text);
+          setTicketPb(parsed.powerball ? parsed.powerball.toString() : "");
+          const newNums = ["", "", "", "", "", ""];
+          for (let i = 0; i < 5; i++) {
+            newNums[i] = parsed.numbers[i] ? parsed.numbers[i].toString() : "";
+          }
+          setTicketNumbers(newNums);
+        }
+      }
+
       setScanStatus("Scan complete!");
     } catch (err: any) {
       console.error(err);
@@ -175,95 +277,122 @@ export default function CheckerTab() {
     }
   };
 
-  // Check Ticket against Database
   const handleCheckTicket = async () => {
-    if (selectedGame === "play-whe") {
-      const drawNum = parseInt(ticketDrawNum);
-      const chosenNum = parseInt(playWheSelectedNumber);
-      
-      if (isNaN(chosenNum) || chosenNum < 1 || chosenNum > 36) {
-        alert("Please enter a valid Play Whe number between 1 and 36.");
-        return;
-      }
-
-      setChecking(true);
-      setCheckError(null);
-      setCheckResult(null);
-      setWinningDraw(null);
-
-      try {
-        let url = "";
-        if (!isNaN(drawNum)) {
-          url = `/api/playwhe/draws/by-number?number=${drawNum}`;
-        } else if (ticketDate && ticketTimeSlot) {
-          url = `/api/playwhe/draws/by-number?date=${ticketDate}&timeSlot=${ticketTimeSlot}`;
-        } else {
-          alert("Please enter a Draw Number or both Draw Date and Time Slot.");
-          setChecking(false);
-          return;
-        }
-
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (data.success) {
-          setWinningDraw(data.draw);
-          const isWinner = chosenNum === data.draw.winning_number;
-          setCheckResult({
-            matchedNumbers: isWinner ? [chosenNum] : [],
-            pbMatched: false,
-            tierName: isWinner ? "Play Whe MATCH" : "No Match",
-            prizeEstimate: isWinner ? "$26.00 per $1.00 wagered" : "$0.00",
-            isWinner
-          });
-        } else {
-          setCheckError(data.error || "Draw not found.");
-          setShowManualWinningInput(true);
-        }
-      } catch (error: any) {
-        setCheckError(error.message || "Failed to connect to database.");
-        setShowManualWinningInput(true);
-      } finally {
-        setChecking(false);
-      }
-      return;
-    }
-
-    // Validate inputs
     const drawNum = parseInt(ticketDrawNum);
-    const parsedNums = ticketNumbers.map(n => parseInt(n)).filter(n => !isNaN(n));
-    const pb = parseInt(ticketPb);
-
     if (isNaN(drawNum)) {
       alert("Please enter a valid Draw Number.");
-      return;
-    }
-    if (parsedNums.length < 5 || parsedNums.some(n => n < 1 || n > 35)) {
-      alert("Please enter 5 numbers between 1 and 35.");
-      return;
-    }
-    if (isNaN(pb) || pb < 1 || pb > 10) {
-      alert("Please enter a Powerball number between 1 and 10.");
       return;
     }
 
     setChecking(true);
     setCheckError(null);
     setCheckResult(null);
+    setCheckResults([]);
     setWinningDraw(null);
 
     try {
-      const res = await fetch(`/api/draws/by-number?number=${drawNum}`);
+      let url = "";
+      if (selectedGame === "play-whe") {
+        if (ticketDate && ticketTimeSlot) {
+          url = `/api/playwhe/draws/by-number?date=${ticketDate}&timeSlot=${ticketTimeSlot}`;
+        } else {
+          url = `/api/playwhe/draws/by-number?number=${drawNum}`;
+        }
+      } else if (selectedGame === "win-for-life") {
+        url = `/api/winforlife/draws?page=1&limit=1&search=${drawNum}`;
+      } else {
+        url = `/api/draws/by-number?number=${drawNum}`;
+      }
+
+      const res = await fetch(url);
       const data = await res.json();
 
-      if (data.success) {
-        setWinningDraw(data.draw);
-        const winNums = [data.draw.num1, data.draw.num2, data.draw.num3, data.draw.num4, data.draw.num5];
-        const resGraded = checkTicket(parsedNums, pb, winNums, data.draw.powerball);
-        setCheckResult(resGraded);
+      let draw: any = null;
+      if (selectedGame === "win-for-life") {
+        if (data.success && data.draws && data.draws.length > 0) {
+          draw = data.draws[0];
+        }
       } else {
-        setCheckError(data.error || "Draw not found.");
+        if (data.success) {
+          draw = data.draw;
+        }
+      }
+
+      if (!draw) {
+        setCheckError("Draw not found.");
         setShowManualWinningInput(true);
+        setChecking(false);
+        return;
+      }
+
+      setWinningDraw(draw);
+
+      if (multiPlays.length > 0) {
+        const gradedPlays = multiPlays.map(play => {
+          const nums = play.numbers.map(n => parseInt(n)).filter(n => !isNaN(n));
+          const pb = parseInt(play.pb);
+
+          let grade: any = null;
+          if (selectedGame === "play-whe") {
+            const isWinner = nums[0] === draw.winning_number;
+            grade = {
+              matchedNumbers: isWinner ? [nums[0]] : [],
+              pbMatched: false,
+              tierName: isWinner ? "Play Whe MATCH" : "No Match",
+              prizeEstimate: isWinner ? "$26.00 per $1.00 wagered" : "$0.00",
+              isWinner
+            };
+          } else if (selectedGame === "win-for-life") {
+            grade = checkWinForLifeTicket(nums, pb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5, draw.num6], draw.cash_ball);
+          } else {
+            grade = checkTicket(nums, pb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5], draw.powerball);
+          }
+
+          return {
+            label: play.label,
+            numbers: play.numbers,
+            pb: play.pb,
+            grade
+          };
+        });
+
+        setCheckResults(gradedPlays);
+
+        const winningPlays = gradedPlays.filter(p => p.grade.isWinner);
+        if (winningPlays.length > 0) {
+          setCheckResult(winningPlays[0].grade);
+        } else {
+          setCheckResult(gradedPlays[0].grade);
+        }
+      } else {
+        let resGraded: any = null;
+        if (selectedGame === "play-whe") {
+          const chosenNum = parseInt(playWheSelectedNumber);
+          const isWinner = chosenNum === draw.winning_number;
+          resGraded = {
+            matchedNumbers: isWinner ? [chosenNum] : [],
+            pbMatched: false,
+            tierName: isWinner ? "Play Whe MATCH" : "No Match",
+            prizeEstimate: isWinner ? "$26.00 per $1.00 wagered" : "$0.00",
+            isWinner
+          };
+        } else if (selectedGame === "win-for-life") {
+          const parsedNums = ticketNumbers.slice(0, 6).map(n => parseInt(n)).filter(n => !isNaN(n));
+          const cb = parseInt(ticketPb);
+          resGraded = checkWinForLifeTicket(parsedNums, cb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5, draw.num6], draw.cash_ball);
+        } else {
+          const parsedNums = ticketNumbers.slice(0, 5).map(n => parseInt(n)).filter(n => !isNaN(n));
+          const pb = parseInt(ticketPb);
+          resGraded = checkTicket(parsedNums, pb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5], draw.powerball);
+        }
+
+        setCheckResult(resGraded);
+        setCheckResults([{
+          label: "Play A",
+          numbers: selectedGame === "play-whe" ? [playWheSelectedNumber] : ticketNumbers,
+          pb: ticketPb,
+          grade: resGraded
+        }]);
       }
     } catch (error: any) {
       setCheckError(error.message || "Failed to connect to database.");
@@ -273,70 +402,137 @@ export default function CheckerTab() {
     }
   };
 
-  // Manual fallback check
   const handleManualCheck = () => {
+    let draw: any = null;
     if (selectedGame === "play-whe") {
-      const chosenNum = parseInt(playWheSelectedNumber);
       const winNum = parseInt(manualWinningPlayWheNumber);
-
-      if (isNaN(chosenNum) || chosenNum < 1 || chosenNum > 36) {
-        alert("Please enter a valid Play Whe number between 1 and 36.");
-        return;
-      }
       if (isNaN(winNum) || winNum < 1 || winNum > 36) {
         alert("Please enter a winning Play Whe number between 1 and 36.");
         return;
       }
-
-      setWinningDraw({
+      draw = {
         draw_number: parseInt(ticketDrawNum) || 0,
         draw_date: ticketDate || "Manual Entry",
         draw_time_slot: ticketTimeSlot,
         winning_number: winNum
+      };
+    } else if (selectedGame === "win-for-life") {
+      const winNums = manualWinningNumbers.slice(0, 6).map(n => parseInt(n)).filter(n => !isNaN(n));
+      const winCb = parseInt(manualWinningPb);
+      if (winNums.length < 6 || winNums.some(n => n < 1 || n > 28)) {
+        alert("Please enter 6 winning numbers between 1 and 28.");
+        return;
+      }
+      if (isNaN(winCb) || winCb < 1 || winCb > 3) {
+        alert("Please enter a winning Cash Ball number between 1 and 3.");
+        return;
+      }
+      draw = {
+        draw_number: parseInt(ticketDrawNum) || 0,
+        draw_date: "Manual Entry",
+        num1: winNums[0],
+        num2: winNums[1],
+        num3: winNums[2],
+        num4: winNums[3],
+        num5: winNums[4],
+        num6: winNums[5],
+        cash_ball: winCb,
+        jackpot: "Manual Check"
+      };
+    } else {
+      const winNums = manualWinningNumbers.slice(0, 5).map(n => parseInt(n)).filter(n => !isNaN(n));
+      const winPb = parseInt(manualWinningPb);
+      if (winNums.length < 5 || winNums.some(n => n < 1 || n > 35)) {
+        alert("Please enter 5 winning numbers between 1 and 35.");
+        return;
+      }
+      if (isNaN(winPb) || winPb < 1 || winPb > 10) {
+        alert("Please enter a winning Powerball number between 1 and 10.");
+        return;
+      }
+      draw = {
+        draw_number: parseInt(ticketDrawNum) || 0,
+        draw_date: "Manual Entry",
+        num1: winNums[0],
+        num2: winNums[1],
+        num3: winNums[2],
+        num4: winNums[3],
+        num5: winNums[4],
+        powerball: winPb,
+        multiplier: "X",
+        jackpot: "Manual Check"
+      };
+    }
+
+    setWinningDraw(draw);
+
+    if (multiPlays.length > 0) {
+      const gradedPlays = multiPlays.map(play => {
+        const nums = play.numbers.map(n => parseInt(n)).filter(n => !isNaN(n));
+        const pb = parseInt(play.pb);
+
+        let grade: any = null;
+        if (selectedGame === "play-whe") {
+          const isWinner = nums[0] === draw.winning_number;
+          grade = {
+            matchedNumbers: isWinner ? [nums[0]] : [],
+            pbMatched: false,
+            tierName: isWinner ? "Play Whe MATCH" : "No Match",
+            prizeEstimate: isWinner ? "$26.00 per $1.00 wagered" : "$0.00",
+            isWinner
+          };
+        } else if (selectedGame === "win-for-life") {
+          grade = checkWinForLifeTicket(nums, pb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5, draw.num6], draw.cash_ball);
+        } else {
+          grade = checkTicket(nums, pb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5], draw.powerball);
+        }
+
+        return {
+          label: play.label,
+          numbers: play.numbers,
+          pb: play.pb,
+          grade
+        };
       });
 
-      const isWinner = chosenNum === winNum;
-      setCheckResult({
-        matchedNumbers: isWinner ? [chosenNum] : [],
-        pbMatched: false,
-        tierName: isWinner ? "Play Whe MATCH" : "No Match",
-        prizeEstimate: isWinner ? "$26.00 per $1.00 wagered" : "$0.00",
-        isWinner
-      });
-      setCheckError(null);
-      return;
+      setCheckResults(gradedPlays);
+
+      const winningPlays = gradedPlays.filter(p => p.grade.isWinner);
+      if (winningPlays.length > 0) {
+        setCheckResult(winningPlays[0].grade);
+      } else {
+        setCheckResult(gradedPlays[0].grade);
+      }
+    } else {
+      let resGraded: any = null;
+      if (selectedGame === "play-whe") {
+        const chosenNum = parseInt(playWheSelectedNumber);
+        const isWinner = chosenNum === draw.winning_number;
+        resGraded = {
+          matchedNumbers: isWinner ? [chosenNum] : [],
+          pbMatched: false,
+          tierName: isWinner ? "Play Whe MATCH" : "No Match",
+          prizeEstimate: isWinner ? "$26.00 per $1.00 wagered" : "$0.00",
+          isWinner
+        };
+      } else if (selectedGame === "win-for-life") {
+        const parsedNums = ticketNumbers.slice(0, 6).map(n => parseInt(n)).filter(n => !isNaN(n));
+        const cb = parseInt(ticketPb);
+        resGraded = checkWinForLifeTicket(parsedNums, cb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5, draw.num6], draw.cash_ball);
+      } else {
+        const parsedNums = ticketNumbers.slice(0, 5).map(n => parseInt(n)).filter(n => !isNaN(n));
+        const pb = parseInt(ticketPb);
+        resGraded = checkTicket(parsedNums, pb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5], draw.powerball);
+      }
+
+      setCheckResult(resGraded);
+      setCheckResults([{
+        label: "Play A",
+        numbers: selectedGame === "play-whe" ? [playWheSelectedNumber] : ticketNumbers,
+        pb: ticketPb,
+        grade: resGraded
+      }]);
     }
-
-    const parsedNums = ticketNumbers.map(n => parseInt(n)).filter(n => !isNaN(n));
-    const pb = parseInt(ticketPb);
-    const winNums = manualWinningNumbers.map(n => parseInt(n)).filter(n => !isNaN(n));
-    const winPb = parseInt(manualWinningPb);
-
-    if (winNums.length < 5 || winNums.some(n => n < 1 || n > 35)) {
-      alert("Please enter 5 winning numbers between 1 and 35.");
-      return;
-    }
-    if (isNaN(winPb) || winPb < 1 || winPb > 10) {
-      alert("Please enter a winning Powerball number between 1 and 10.");
-      return;
-    }
-
-    // Mock winning draw structure
-    setWinningDraw({
-      draw_number: parseInt(ticketDrawNum),
-      draw_date: "Manual Entry",
-      num1: winNums[0],
-      num2: winNums[1],
-      num3: winNums[2],
-      num4: winNums[3],
-      num5: winNums[4],
-      powerball: winPb,
-      multiplier: "X",
-      jackpot: "Manual Check"
-    });
-
-    const resGraded = checkTicket(parsedNums, pb, winNums, winPb);
-    setCheckResult(resGraded);
     setCheckError(null);
   };
 
@@ -345,16 +541,18 @@ export default function CheckerTab() {
     setScanProgress(0);
     setScanStatus("");
     setTicketDrawNum("");
-    setTicketNumbers(["", "", "", "", ""]);
+    setTicketNumbers(["", "", "", "", "", ""]);
     setTicketPb("");
     setTicketDate("");
     setTicketTimeSlot("Morning");
     setPlayWheSelectedNumber("");
     setCheckResult(null);
+    setCheckResults([]);
+    setMultiPlays([]);
     setWinningDraw(null);
     setCheckError(null);
     setShowManualWinningInput(false);
-    setManualWinningNumbers(["", "", "", "", ""]);
+    setManualWinningNumbers(["", "", "", "", "", ""]);
     setManualWinningPb("");
     setManualWinningPlayWheNumber("");
   };
@@ -392,6 +590,7 @@ export default function CheckerTab() {
           >
             <option value="lotto-plus">Lotto Plus (Active)</option>
             <option value="play-whe">Play Whe (Active)</option>
+            <option value="win-for-life">Win for Life (Active)</option>
           </select>
         </div>
         <div className="text-[10px] text-gray-500 font-mono">
@@ -533,126 +732,269 @@ export default function CheckerTab() {
 
             {/* Inputs Form */}
             <div className="space-y-4 font-mono">
-              {selectedGame === "play-whe" ? (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Draw number input */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Draw Number</label>
-                      <input
-                        type="number"
-                        value={ticketDrawNum}
-                        onChange={(e) => setTicketDrawNum(e.target.value)}
-                        placeholder="e.g. 27178"
-                        className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground"
-                      />
-                    </div>
-                    {/* Time Slot input */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Time Slot</label>
-                      <select
-                        value={ticketTimeSlot}
-                        onChange={(e) => setTicketTimeSlot(e.target.value)}
-                        className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground text-primary font-bold"
-                      >
-                        <option value="Morning">Morning (10:30 AM)</option>
-                        <option value="Midday">Midday (1:00 PM)</option>
-                        <option value="Afternoon">Afternoon (4:00 PM)</option>
-                        <option value="Evening">Evening (7:00 PM)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Date input */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Draw Date</label>
-                      <input
-                        type="text"
-                        value={ticketDate}
-                        onChange={(e) => setTicketDate(e.target.value)}
-                        placeholder="YYYY-MM-DD"
-                        className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground"
-                      />
-                    </div>
-                    {/* Selected Mark input */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Your Mark Number (1-36)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="36"
-                        value={playWheSelectedNumber}
-                        onChange={(e) => setPlayWheSelectedNumber(e.target.value)}
-                        placeholder="e.g. 29"
-                        className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground font-bold text-primary"
-                      />
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Draw number input */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Draw Number</label>
-                      <input
-                        type="number"
-                        value={ticketDrawNum}
-                        onChange={(e) => setTicketDrawNum(e.target.value)}
-                        placeholder="e.g. 2537"
-                        className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground"
-                      />
-                    </div>
-                    {/* Powerball input */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Powerball (1-10)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={ticketPb}
-                        onChange={(e) => setTicketPb(e.target.value)}
-                        placeholder="e.g. 4"
-                        className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground text-primary"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Main numbers inputs */}
+              {/* Universal Draw Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Draw Number</label>
+                  <input
+                    type="number"
+                    value={ticketDrawNum}
+                    onChange={(e) => setTicketDrawNum(e.target.value)}
+                    placeholder={selectedGame === "win-for-life" ? "e.g. 447" : selectedGame === "play-whe" ? "e.g. 27178" : "e.g. 2537"}
+                    className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground"
+                  />
+                </div>
+                {selectedGame === "play-whe" ? (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-35)</label>
-                    <div className="flex gap-2">
-                      {ticketNumbers.map((num, idx) => (
+                    <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Time Slot</label>
+                    <select
+                      value={ticketTimeSlot}
+                      onChange={(e) => setTicketTimeSlot(e.target.value)}
+                      className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground text-primary font-bold"
+                    >
+                      <option value="Morning">Morning (10:30 AM)</option>
+                      <option value="Midday">Midday (1:00 PM)</option>
+                      <option value="Afternoon">Afternoon (4:00 PM)</option>
+                      <option value="Evening">Evening (7:00 PM)</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Draw Date (Optional)</label>
+                    <input
+                      type="text"
+                      value={ticketDate}
+                      onChange={(e) => setTicketDate(e.target.value)}
+                      placeholder="YYYY-MM-DD"
+                      className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Plays Workspace */}
+              {multiPlays.length > 0 ? (
+                <div className="space-y-4 border-t border-white/5 pt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-extrabold">Multiple Plays Detected ({multiPlays.length})</span>
+                    <button
+                      onClick={() => {
+                        const nextLabel = String.fromCharCode(65 + multiPlays.length);
+                        const defaultCount = selectedGame === "win-for-life" ? 6 : selectedGame === "play-whe" ? 1 : 5;
+                        setMultiPlays([
+                          ...multiPlays,
+                          {
+                            label: nextLabel,
+                            numbers: Array(defaultCount).fill(""),
+                            pb: ""
+                          }
+                        ]);
+                      }}
+                      className="text-xs text-primary hover:text-primary/80 font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      + ADD PLAY
+                    </button>
+                  </div>
+
+                  <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 divide-y divide-white/5">
+                    {multiPlays.map((play, playIdx) => (
+                      <div key={playIdx} className="pt-3 first:pt-0 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-bold text-primary font-sans">Play {play.label}</span>
+                          <button
+                            onClick={() => {
+                              const updated = multiPlays.filter((_, idx) => idx !== playIdx);
+                              setMultiPlays(updated);
+                            }}
+                            className="text-[10px] text-red-400 hover:text-red-300 font-bold"
+                          >
+                            REMOVE
+                          </button>
+                        </div>
+
+                        {selectedGame === "play-whe" ? (
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] text-gray-500 uppercase">Mark Number (1-36)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="36"
+                              value={play.numbers[0] || ""}
+                              onChange={(e) => {
+                                const updated = [...multiPlays];
+                                updated[playIdx].numbers = [e.target.value];
+                                setMultiPlays(updated);
+                              }}
+                              placeholder="e.g. 29"
+                              className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-1.5 text-xs text-foreground font-bold text-primary"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex gap-2 items-end">
+                            <div className="flex-1 space-y-1">
+                              <label className="text-[10px] text-gray-500 uppercase">Numbers</label>
+                              <div className="flex gap-1.5">
+                                {play.numbers.map((num, numIdx) => (
+                                  <input
+                                    key={numIdx}
+                                    type="number"
+                                    min="1"
+                                    max={selectedGame === "win-for-life" ? 28 : 35}
+                                    value={num}
+                                    onChange={(e) => {
+                                      const updated = [...multiPlays];
+                                      updated[playIdx].numbers[numIdx] = e.target.value;
+                                      setMultiPlays(updated);
+                                    }}
+                                    placeholder={`#${numIdx + 1}`}
+                                    className="w-full text-center bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg py-1.5 text-xs text-foreground font-bold"
+                                  />
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="w-16 space-y-1">
+                              <label className="text-[10px] text-gray-500 uppercase">
+                                {selectedGame === "win-for-life" ? "CB" : "PB"}
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                max={selectedGame === "win-for-life" ? 3 : 10}
+                                value={play.pb}
+                                onChange={(e) => {
+                                  const updated = [...multiPlays];
+                                  updated[playIdx].pb = e.target.value;
+                                  setMultiPlays(updated);
+                                }}
+                                placeholder={selectedGame === "win-for-life" ? "CB" : "PB"}
+                                className="w-full text-center bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg py-1.5 text-xs text-foreground font-bold text-primary"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4 border-t border-white/5 pt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-extrabold">Single Play Review</span>
+                    <button
+                      onClick={() => {
+                        const count = selectedGame === "win-for-life" ? 6 : selectedGame === "play-whe" ? 1 : 5;
+                        setMultiPlays([
+                          {
+                            label: "A",
+                            numbers: selectedGame === "play-whe" ? [playWheSelectedNumber] : [...ticketNumbers.slice(0, count)],
+                            pb: ticketPb
+                          }
+                        ]);
+                      }}
+                      className="text-[10px] text-primary hover:text-primary/80 font-bold"
+                    >
+                      SWITCH TO MULTI-PLAY
+                    </button>
+                  </div>
+
+                  {selectedGame === "play-whe" ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5 col-span-2">
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Your Mark Number (1-36)</label>
                         <input
-                          key={idx}
                           type="number"
                           min="1"
-                          max="35"
-                          value={num}
-                          onChange={(e) => {
-                            const newNums = [...ticketNumbers];
-                            newNums[idx] = e.target.value;
-                            setTicketNumbers(newNums);
-                          }}
-                          placeholder={`#${idx + 1}`}
-                          className="w-full text-center bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg py-2 text-sm text-foreground font-bold"
+                          max="36"
+                          value={playWheSelectedNumber}
+                          onChange={(e) => setPlayWheSelectedNumber(e.target.value)}
+                          placeholder="e.g. 29"
+                          className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground font-bold text-primary"
                         />
-                      ))}
+                      </div>
                     </div>
-                  </div>
-                </>
+                  ) : selectedGame === "win-for-life" ? (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Cash Ball (1-3)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="3"
+                          value={ticketPb}
+                          onChange={(e) => setTicketPb(e.target.value)}
+                          placeholder="e.g. 2"
+                          className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground text-primary font-bold"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (6 Balls, 1-28)</label>
+                        <div className="flex gap-2">
+                          {ticketNumbers.slice(0, 6).map((num, idx) => (
+                            <input
+                              key={idx}
+                              type="number"
+                              min="1"
+                              max="28"
+                              value={num}
+                              onChange={(e) => {
+                                const newNums = [...ticketNumbers];
+                                newNums[idx] = e.target.value;
+                                setTicketNumbers(newNums);
+                              }}
+                              placeholder={`#${idx + 1}`}
+                              className="w-full text-center bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg py-2 text-sm text-foreground font-bold"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Powerball (1-10)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={ticketPb}
+                          onChange={(e) => setTicketPb(e.target.value)}
+                          placeholder="e.g. 4"
+                          className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground text-primary font-bold"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-35)</label>
+                        <div className="flex gap-2">
+                          {ticketNumbers.slice(0, 5).map((num, idx) => (
+                            <input
+                              key={idx}
+                              type="number"
+                              min="1"
+                              max="35"
+                              value={num}
+                              onChange={(e) => {
+                                const newNums = [...ticketNumbers];
+                                newNums[idx] = e.target.value;
+                                setTicketNumbers(newNums);
+                              }}
+                              placeholder={`#${idx + 1}`}
+                              className="w-full text-center bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg py-2 text-sm text-foreground font-bold"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
 
-              {/* Action Trigger */}
               <button
                 onClick={handleCheckTicket}
                 disabled={scanning || checking}
-                className={`w-full flex items-center justify-center gap-2 py-3 font-bold rounded-lg text-xs font-mono tracking-widest transition-all disabled:opacity-50 ${
-                  selectedGame === "play-whe"
-                    ? "bg-primary text-slate-950 shadow-[0_0_15px_rgba(56, 189, 248,0.25)] hover:bg-primary/90"
-                    : "bg-primary text-slate-950 shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:bg-primary/90"
-                }`}
+                className="w-full flex items-center justify-center gap-2 py-3 font-bold rounded-lg text-xs font-mono tracking-widest transition-all disabled:opacity-50 bg-primary text-slate-950 shadow-[0_0_15px_rgba(56,189,248,0.25)] hover:bg-primary/90"
               >
                 {checking ? (
                   <>
@@ -676,12 +1018,11 @@ export default function CheckerTab() {
                 <div>
                   <h4 className="text-sm font-bold text-white">Draw #{ticketDrawNum} Not Found</h4>
                   <p className="text-xs text-rose-400/80 leading-relaxed font-sans">
-                    This draw record isn't in our local database yet. You can either trigger a sync on the Dashboard, or type the winning numbers below to perform a manual comparison.
+                    This draw record isn't in our local database yet. You can either trigger a sync on the Settings page, or type the winning numbers below to perform a manual comparison.
                   </p>
                 </div>
               </div>
 
-              {/* Input grid for winning numbers */}
               <div className="space-y-4 font-mono border-t border-white/5 pt-3">
                 {selectedGame === "play-whe" ? (
                   <div className="space-y-1.5">
@@ -696,13 +1037,48 @@ export default function CheckerTab() {
                       className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground text-primary font-bold"
                     />
                   </div>
+                ) : selectedGame === "win-for-life" ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5 col-span-2">
+                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Official Winning Numbers (6 Balls, 1-28)</label>
+                      <div className="flex gap-2">
+                        {manualWinningNumbers.slice(0, 6).map((num, idx) => (
+                          <input
+                            key={idx}
+                            type="number"
+                            min="1"
+                            max="28"
+                            value={num}
+                            onChange={(e) => {
+                              const newNums = [...manualWinningNumbers];
+                              newNums[idx] = e.target.value;
+                              setManualWinningNumbers(newNums);
+                            }}
+                            placeholder={`#${idx + 1}`}
+                            className="w-full text-center bg-slate-950 border border-white/10 focus:border-rose-500 focus:outline-none rounded-lg py-2 text-sm text-foreground font-bold"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Cash Ball (1-3)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="3"
+                        value={manualWinningPb}
+                        onChange={(e) => setManualWinningPb(e.target.value)}
+                        placeholder="e.g. 2"
+                        className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground text-primary font-bold"
+                      />
+                    </div>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
-                    {/* Winning Numbers */}
                     <div className="space-y-1.5 col-span-2">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Official Winning Numbers (1-35)</label>
+                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Official Winning Numbers (5 Balls, 1-35)</label>
                       <div className="flex gap-2">
-                        {manualWinningNumbers.map((num, idx) => (
+                        {manualWinningNumbers.slice(0, 5).map((num, idx) => (
                           <input
                             key={idx}
                             type="number"
@@ -720,7 +1096,6 @@ export default function CheckerTab() {
                         ))}
                       </div>
                     </div>
-                    {/* Winning Powerball */}
                     <div className="space-y-1.5 col-span-2 sm:col-span-1">
                       <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Powerball (1-10)</label>
                       <input
@@ -753,136 +1128,144 @@ export default function CheckerTab() {
         <div className="glass-panel p-6 rounded-xl space-y-6 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-2 h-full bg-green-500" />
           
-          <div className="border-b border-white/5 pb-3">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-400" />
-              Draw Verification Report
-            </h3>
-            <p className="text-xs text-gray-400 font-mono">
-              Compared against Draw #{winningDraw.draw_number} ({winningDraw.draw_date === "Manual Entry" ? "Manual Entry" : new Date(winningDraw.draw_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })})
-            </p>
+          <div className="border-b border-white/5 pb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-400" />
+                Draw Verification Report
+              </h3>
+              <p className="text-xs text-gray-400 font-mono">
+                Compared against Draw #{winningDraw.draw_number} ({winningDraw.draw_date === "Manual Entry" ? "Manual Entry" : new Date(winningDraw.draw_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })})
+              </p>
+            </div>
+
+            {selectedGame !== "play-whe" && (
+              <div className="bg-slate-950/80 px-4 py-2 rounded-lg border border-white/5 font-mono text-left md:text-right shrink-0">
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1">Official Winning Numbers</span>
+                <div className="flex gap-1.5">
+                  {selectedGame === "win-for-life" ? (
+                    <>
+                      {[winningDraw.num1, winningDraw.num2, winningDraw.num3, winningDraw.num4, winningDraw.num5, winningDraw.num6].map((num, i) => (
+                        <div key={i} className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                          {num}
+                        </div>
+                      ))}
+                      <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
+                        {winningDraw.cash_ball}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {[winningDraw.num1, winningDraw.num2, winningDraw.num3, winningDraw.num4, winningDraw.num5].map((num, i) => (
+                        <div key={i} className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                          {num}
+                        </div>
+                      ))}
+                      <div className="w-6 h-6 rounded-full bg-primary/30 border border-primary/50 text-white flex items-center justify-center font-bold text-[10px]">
+                        {winningDraw.powerball}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Balls Comparison Interface */}
-          {selectedGame === "play-whe" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-sm">
-              {/* Scanned ticket mark */}
-              <div className="bg-slate-950/60 p-4 rounded-xl border border-white/5 space-y-3">
-                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Your Ticket Mark</span>
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border transition-all ${
-                    checkResult.isWinner
-                      ? "bg-green-500 border-green-500 text-slate-950 shadow-[0_0_12px_rgba(74,222,128,0.4)]"
-                      : "bg-slate-900 border-white/10 text-gray-500"
-                  }`}>
-                    {playWheSelectedNumber}
+          {/* Results list mapping all plays */}
+          <div className="space-y-4">
+            {checkResults.map((resultItem, idx) => {
+              const grade = resultItem.grade;
+              const isWinner = grade.isWinner;
+              const parsedNums = resultItem.numbers.map(n => parseInt(n)).filter(n => !isNaN(n));
+              
+              return (
+                <div key={idx} className="bg-slate-950/40 p-4 rounded-xl border border-white/5 space-y-3 font-mono">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">Play {resultItem.label}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                      isWinner ? "bg-green-500/20 text-green-400 border border-green-500/30" : "bg-slate-900 text-gray-500 border border-white/5"
+                    }`}>
+                      {grade.tierName}
+                    </span>
                   </div>
-                  <div>
-                    <div className="text-xs font-bold text-white uppercase">{CHINAPOO_CHART[parseInt(playWheSelectedNumber)]?.mark || "Unknown"}</div>
-                    <div className="text-[10px] text-gray-500">PLAYED VALUE</div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Winning Official mark */}
-              <div className="bg-slate-950/60 p-4 rounded-xl border border-white/5 space-y-3">
-                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Official Winning Mark</span>
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border transition-all ${
-                    checkResult.isWinner
-                      ? "bg-green-500 border-green-500 text-slate-950 shadow-[0_0_12px_rgba(74,222,128,0.4)] animate-pulse"
-                      : "bg-primary/15 border-primary/30 text-primary"
-                  }`}>
-                    {winningDraw.winning_number}
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-white uppercase">{CHINAPOO_CHART[winningDraw.winning_number]?.mark || "Unknown"}</div>
-                    <div className="text-[10px] text-gray-500">{winningDraw.draw_time_slot.toUpperCase()} DRAW</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-sm">
-              {/* Scanned ticket balls */}
-              <div className="bg-slate-950/60 p-4 rounded-xl border border-white/5 space-y-3">
-                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Your Ticket Numbers</span>
-                <div className="flex gap-2">
-                  {ticketNumbers.map(n => parseInt(n)).filter(n => !isNaN(n)).map((num, i) => {
-                    const matched = isNumMatched(num);
-                    return (
-                      <div
-                        key={i}
-                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all ${
-                          matched
-                            ? "bg-green-500 border-green-500 text-slate-950 shadow-[0_0_12px_rgba(74,222,128,0.4)]"
-                            : "bg-slate-900 border-white/10 text-gray-500"
-                        }`}
-                      >
-                        {num}
+                  {selectedGame === "play-whe" ? (
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border ${
+                          isWinner ? "bg-green-500 border-green-500 text-slate-950" : "bg-slate-900 border-white/10 text-gray-500"
+                        }`}>
+                          {resultItem.numbers[0]}
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-white uppercase">{CHINAPOO_CHART[parseInt(resultItem.numbers[0])]?.mark || "Unknown"}</span>
+                          <span className="text-[10px] text-gray-500 block">PLAYED VALUE</span>
+                        </div>
                       </div>
-                    );
-                  })}
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all ${
-                      checkResult.pbMatched
-                        ? "bg-primary border-primary text-slate-950 shadow-[0_0_12px_rgba(56, 189, 248,0.4)]"
-                        : "bg-slate-900 border-white/10 text-gray-500"
-                    }`}
-                  >
-                    {ticketPb}
-                  </div>
-                </div>
-              </div>
-
-              {/* Winning Official balls */}
-              <div className="bg-slate-950/60 p-4 rounded-xl border border-white/5 space-y-3">
-                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Official Winning Numbers</span>
-                <div className="flex gap-2">
-                  {[winningDraw.num1, winningDraw.num2, winningDraw.num3, winningDraw.num4, winningDraw.num5].map((num, i) => {
-                    const matched = isNumMatched(num);
-                    return (
-                      <div
-                        key={i}
-                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all ${
-                          matched
-                            ? "bg-green-500 border-green-500 text-slate-950 shadow-[0_0_12px_rgba(74,222,128,0.4)] animate-pulse"
-                            : "bg-primary/10 border-primary/20 text-primary"
-                        }`}
-                      >
-                        {num}
+                      
+                      <div className="text-right">
+                        <span className="text-xs text-gray-400 block">Winning Mark: {winningDraw.winning_number} ({CHINAPOO_CHART[winningDraw.winning_number]?.mark})</span>
+                        <span className={`text-xs font-bold ${isWinner ? "text-green-400" : "text-gray-500"}`}>
+                          Payout: {grade.prizeEstimate}
+                        </span>
                       </div>
-                    );
-                  })}
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border transition-all ${
-                      checkResult.pbMatched
-                        ? "bg-primary border-primary text-slate-950 shadow-[0_0_12px_rgba(56, 189, 248,0.4)]"
-                        : "bg-primary/10 border-primary/20 text-primary"
-                    }`}
-                  >
-                    {winningDraw.powerball}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-3">
+                      <div className="flex gap-1.5 items-center">
+                        {parsedNums.map((num, i) => {
+                          const matched = grade.matchedNumbers.includes(num);
+                          return (
+                            <div
+                              key={i}
+                              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border ${
+                                matched
+                                  ? "bg-green-500 border-green-500 text-slate-950 shadow-[0_0_8px_rgba(74,222,128,0.3)]"
+                                  : "bg-slate-900 border-white/10 text-gray-500"
+                              }`}
+                            >
+                              {num}
+                            </div>
+                          );
+                        })}
+                        <div
+                          className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border ${
+                            grade.pbMatched
+                              ? selectedGame === "win-for-life"
+                                ? "bg-emerald-500 border-emerald-555 text-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                                : "bg-primary border-primary text-slate-950 shadow-[0_0_8px_rgba(56,189,248,0.3)]"
+                              : "bg-slate-900 border-white/10 text-gray-505"
+                          }`}
+                        >
+                          {resultItem.pb}
+                        </div>
+                      </div>
 
-          {/* Winner announcement panel */}
+                      <div className="text-left lg:text-right font-mono text-xs">
+                        {isWinner ? (
+                          <span className="text-green-400 font-extrabold block">Est. Payout: {grade.prizeEstimate}</span>
+                        ) : (
+                          <span className="text-gray-500 block">No Match</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Overall winner announcement banner */}
           {checkResult.isWinner ? (
             <div className="bg-green-500/10 border border-green-500/25 p-5 rounded-xl text-center space-y-2 pulse-glow-green">
               <h4 className="text-lg font-black text-green-400 tracking-wider uppercase font-mono">
                 🎉 WINNING TICKET DETECTED!
               </h4>
-              <p className="text-sm text-white font-semibold">
-                Match Tier: <span className="text-green-300 font-bold">{checkResult.tierName}</span>
-              </p>
-              <div className="text-2xl font-black font-mono text-green-400">
-                EST. VALUE: {checkResult.prizeEstimate}
-              </div>
-              <p className="text-[10px] text-gray-400">
+              <p className="text-[10px] text-gray-400 mt-1">
                 {selectedGame === "play-whe"
                   ? "Play Whe payouts are fixed at 26-to-1 based on official NLCB regulations."
+                  : selectedGame === "win-for-life"
+                  ? "Win for Life payouts include lump sums or ongoing monthly distributions depending on top tier hit."
                   : "Lotto Plus payouts are parimutuel and may vary based on actual draw sales and pool sizes."}
               </p>
               
@@ -904,13 +1287,15 @@ export default function CheckerTab() {
               <p className="text-xs text-gray-500 mt-1">
                 {selectedGame === "play-whe"
                   ? "Your mark did not match the official winning number. Try interpreting companion gaps!"
-                  : `You matched ${checkResult.matchedNumbers.length} numbers. Keep playing and analyze deltas to build better pools!`}
+                  : selectedGame === "win-for-life"
+                  ? `None of your plays matched. Review statistical pools!`
+                  : `None of your plays matched. Keep playing and analyze deltas to build better pools!`}
               </p>
             </div>
           )}
         </div>
       )}
-        </>
+      </>
 
       {/* CAMERA SCANNER MODAL */}
       {showScannerModal && (

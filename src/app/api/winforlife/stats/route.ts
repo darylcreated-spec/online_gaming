@@ -11,12 +11,12 @@ export async function GET(request: Request) {
     let draws;
     if (limitParam === "all" || !limitParam) {
       draws = await query<any>(
-        "SELECT * FROM winforlife_draws ORDER BY CAST(draw_number AS INTEGER) DESC"
+        "SELECT * FROM winforlife_draws ORDER BY draw_number DESC"
       );
     } else {
       const limit = Math.max(1, parseInt(limitParam));
       draws = await query<any>(
-        "SELECT * FROM winforlife_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT ?",
+        "SELECT * FROM winforlife_draws ORDER BY draw_number DESC LIMIT ?",
         [limit]
       );
     }

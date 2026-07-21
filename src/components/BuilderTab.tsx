@@ -31,23 +31,27 @@ const validateTicket = (ticket: number[]) => {
   const hotCount = ticket.filter(n => [17, 10, 28, 31, 18].includes(n)).length;
   const coldCount = ticket.filter(n => [15, 12, 30, 32, 1].includes(n)).length;
   
+  const sum = ticket.reduce((a, b) => a + b, 0);
   let score = 0;
   const checks = {
     oddEven: ["3:2", "2:3", "4:1"].includes(oddEvenRatio),
     highLow: ["3:2", "2:3", "4:1"].includes(highLowRatio),
     spread: spread >= 15 && spread <= 33,
     consecutive: consecutiveCount <= 1,
+    sum: sum >= 75 && sum <= 105,
   };
   
-  if (checks.oddEven) score += 25;
-  if (checks.highLow) score += 25;
-  if (checks.spread) score += 25;
-  if (checks.consecutive) score += 25;
+  if (checks.oddEven) score += 20;
+  if (checks.highLow) score += 20;
+  if (checks.spread) score += 20;
+  if (checks.consecutive) score += 20;
+  if (checks.sum) score += 20;
   
   let grade = "D";
   if (score >= 100) grade = "A+";
-  else if (score >= 75) grade = "B";
-  else if (score >= 50) grade = "C";
+  else if (score >= 80) grade = "A";
+  else if (score >= 60) grade = "B";
+  else if (score >= 40) grade = "C";
   
   return {
     grade,
@@ -769,7 +773,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                         <div className="flex gap-2">
                           <span>O/E: {evalResult.oddEvenRatio}</span>
                           <span>H/L: {evalResult.highLowRatio}</span>
-                          <span>SPREAD: {evalResult.spread}</span>
+                          <span>SUM: {ticket.reduce((a, b) => a + b, 0)} ({evalResult.checks.sum ? "PASS" : "FAIL"})</span>
                         </div>
                         <span className="text-emerald-500 font-bold">ACTIVE FILTERED</span>
                       </div>
