@@ -32,7 +32,7 @@ function createSlotSeed(dateStr: string, slotStr: string): number {
 }
 
 // Generate Play Whe predictions using 5-Model Ensemble + Weighted Random Sampling
-export async function generatePlayWhePredictions(dateStr: string, slotStr: string): Promise<{ predicted_numbers: string; success: boolean }> {
+export async function generatePlayWhePredictions(dateStr: string, slotStr: string): Promise<{ predicted_numbers: string; success: boolean; modelBreakdown?: any[] }> {
   try {
     // 1. Check if a prediction already exists for this date and slot combination
     const existing = await db.execute({
@@ -47,7 +47,7 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       
       // If the prediction status is locked (HIT or MISS), return it directly.
       if (status !== 'PENDING') {
-        return { predicted_numbers: predicted, success: true };
+        return { predicted_numbers: predicted, success: true, modelBreakdown: [] };
       }
     }
 
@@ -83,7 +83,7 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
         sql: "INSERT OR IGNORE INTO playwhe_predictions (prediction_date, draw_time_slot, predicted_numbers, status) VALUES (?, ?, ?, 'PENDING')",
         args: [dateStr, slotStr, fallback]
       });
-      return { predicted_numbers: fallback, success: true };
+      return { predicted_numbers: fallback, success: true, modelBreakdown: [] };
     }
 
     // ============================================================
@@ -309,6 +309,21 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       const r = Math.floor(rng() * 36) + 1;
       if (!selected.includes(r) && !eliminated.has(r)) selected.push(r);
     }
+    
+    const breakdown = selected.map(num => {
+      const votedModels: string[] = [];
+      if (markovTop8.includes(num)) votedModels.push('Markov');
+      if (momentumTop8.includes(num)) votedModels.push('Momentum');
+      if (daySlotTop8.includes(num)) votedModels.push('Day+Slot');
+      if (cycleTop8.includes(num)) votedModels.push('Cycle');
+      if (slotScoreTop8.includes(num)) votedModels.push('SlotFreq');
+      return {
+        number: num,
+        votes: votedModels.length,
+        models: votedModels,
+        confidence: Math.round((votedModels.length / 5) * 100)
+      };
+    });
 
     const top5 = selected.map(c => String(c).padStart(2, "0"));
     const predictionString = top5.join(",");
@@ -323,10 +338,10 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
     console.log(`[Predictor v2] Models: Markov=${markovTop8.join(",")}, Momentum=${momentumTop8.join(",")}, DaySlot=${daySlotTop8.join(",")}, Cycle=${cycleTop8.join(",")}, SlotFreq=${slotScoreTop8.join(",")}`);
     console.log(`[Predictor v2] Eliminated: ${[...eliminated].join(",")}`);
 
-    return { predicted_numbers: predictionString, success: true };
+    return { predicted_numbers: predictionString, success: true, modelBreakdown: breakdown };
   } catch (err) {
     console.error(`[Predictor v2] Error generating predictions for ${dateStr} [${slotStr}]:`, err);
-    return { predicted_numbers: "", success: false };
+    return { predicted_numbers: "", success: false, modelBreakdown: [] };
   }
 }
 

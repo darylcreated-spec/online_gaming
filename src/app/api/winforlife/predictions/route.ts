@@ -67,6 +67,8 @@ export async function GET() {
       }
     }
 
+    let modelBreakdown: any[] = [];
+
     // 3. Generate today's predictions if not existing
     const todayStr = getLocalDateString();
     const checkToday = await query("SELECT 1 FROM winforlife_predictions WHERE prediction_date = ?", [todayStr]);
@@ -329,6 +331,16 @@ export async function GET() {
         }
 
         selected.sort((a, b) => a - b);
+        
+        modelBreakdown = selected.map(num => {
+          const votedModels: string[] = [];
+          if (markovTop10.includes(num)) votedModels.push('Markov');
+          if (momentumTop10.includes(num)) votedModels.push('Momentum');
+          if (dayTop10.includes(num)) votedModels.push('Day');
+          if (cycleTop10.includes(num)) votedModels.push('Cycle');
+          if (freqGapTop10.includes(num)) votedModels.push('FreqGap');
+          return { number: num, votes: votedModels.length, models: votedModels, confidence: Math.round((votedModels.length / 5) * 100) };
+        });
 
         // Cash Ball: use weighted frequency with momentum boost
         const cbFreqs: Record<number, number> = {};
@@ -376,7 +388,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       predictions,
-      stats: { total, hits, hitRate }
+      stats: { total, hits, hitRate },
+      modelBreakdown
     });
   } catch (error: any) {
     console.error("[API /api/winforlife/predictions] Error:", error);

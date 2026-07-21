@@ -87,9 +87,7 @@ export default function Home() {
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
-  // Scraper Sync States
-  const [syncing, setSyncing] = useState(false);
-  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  
   
   // Dashboard Stats States
   const [timeframe, setTimeframe] = useState("alltime");
@@ -216,9 +214,7 @@ export default function Home() {
 
   // Load initial data on mount & register PWA Service Worker
   useEffect(() => {
-    fetchStats();
     fetchHistoryDraws(1);
-    fetchAllDraws();
 
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
@@ -228,75 +224,25 @@ export default function Home() {
     }
   }, []);
 
-  // Poll for updates every 60 seconds
+  // Lazy-load all draws only when Builder tab is active (avoids 500KB+ fetch on every page load)
   useEffect(() => {
+    if (activeTab === "lotto-plus" && lottoSubTab === "builder" && allDraws.length === 0) {
+      fetchAllDraws();
+    }
+  }, [activeTab, lottoSubTab]);
+
+  // Poll for updates every 60 seconds — only on data-active tabs
+  useEffect(() => {
+    const dataTabs = ["lotto-plus", "play-whe", "win-for-life"];
+    if (!dataTabs.includes(activeTab)) return;
     const interval = setInterval(() => {
       fetchStats();
       fetchHistoryDraws(pagination.page);
     }, 60000);
     return () => clearInterval(interval);
-  }, [timeframe, pagination.page, historySearch, historyNumberFilter]);
+  }, [activeTab, timeframe, pagination.page, historySearch, historyNumberFilter]);
 
-  // 4. Sync handler
-  const handleSync = async (full: boolean = false) => {
-    setSyncing(true);
-    if (full) {
-      setSyncMessage("Initializing Full Sync (Year by Year). Please keep this tab open...");
-      try {
-        const currentYear = new Date().getFullYear();
-        const startYear = 2001;
-        let totalAdded = 0;
-        for (let y = currentYear; y >= startYear; y--) {
-          setSyncMessage(`Syncing Lotto Plus Year ${y} (from 2001 to Present)... (${totalAdded} draws added so far)`);
-          const res = await fetch("/api/sync", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ year: y })
-          });
-          const data = await res.json();
-          if (data.success) {
-            totalAdded += data.drawsAdded;
-          } else {
-            console.error(`Failed to sync year ${y}: ${data.error || data.details}`);
-          }
-          // Small polite pause to prevent server load spikes
-          await new Promise(r => setTimeout(r, 600));
-        }
-        setSyncMessage(`Full sync successful! Seeded all years. Added ${totalAdded} draws.`);
-        fetchStats();
-        fetchHistoryDraws(1);
-        fetchAllDraws();
-      } catch (err: any) {
-        setSyncMessage(`Full sync error: ${err.message || "Network error"}`);
-      } finally {
-        setSyncing(false);
-        setTimeout(() => setSyncMessage(null), 8000);
-      }
-    } else {
-      setSyncMessage("Syncing database with latest draws from NLCB... (this may take up to 30 seconds)");
-      try {
-        const res = await fetch("/api/sync", { 
-          method: "POST", 
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full: false }) 
-        });
-        const data = await res.json();
-        if (data.success) {
-          setSyncMessage(`Sync successful! ${data.details}`);
-          fetchStats();
-          fetchHistoryDraws(1);
-          fetchAllDraws();
-        } else {
-          setSyncMessage(`Sync failed: ${data.error || data.details}`);
-        }
-      } catch (err: any) {
-        setSyncMessage(`Sync error: ${err.message || "Network error"}`);
-      } finally {
-        setSyncing(false);
-        setTimeout(() => setSyncMessage(null), 8000);
-      }
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col selection:bg-primary/30 selection:text-white">
@@ -474,37 +420,45 @@ export default function Home() {
 
         {/* Render Active View Tab */}
         {activeTab === "welcome" && (
-          <WelcomeTab />
+          <div className="tab-content-enter">
+            <WelcomeTab />
+          </div>
         )}
 
         {activeTab === "lotto-plus" && lottoSubTab === "dashboard" && (
-          <DashboardTab
-            stats={stats}
-            statsLoading={statsLoading}
-            timeframe={timeframe}
-            setTimeframe={setTimeframe}
-          />
+          <div className="tab-content-enter">
+            <DashboardTab
+              stats={stats}
+              statsLoading={statsLoading}
+              timeframe={timeframe}
+              setTimeframe={setTimeframe}
+            />
+          </div>
         )}
         
         {activeTab === "lotto-plus" && lottoSubTab === "history" && (
-          <HistoryTab
-            draws={draws}
-            pagination={pagination}
-            loading={historyLoading}
-            onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
-            onSearchChange={setHistorySearch}
-            onNumberFilterChange={setHistoryNumberFilter}
-          />
+          <div className="tab-content-enter">
+            <HistoryTab
+              draws={draws}
+              pagination={pagination}
+              loading={historyLoading}
+              onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+              onSearchChange={setHistorySearch}
+              onNumberFilterChange={setHistoryNumberFilter}
+            />
+          </div>
         )}
         
         {activeTab === "lotto-plus" && lottoSubTab === "builder" && (
-          <BuilderTab
-            historicalDraws={allDraws}
-          />
+          <div className="tab-content-enter">
+            <BuilderTab
+              historicalDraws={allDraws}
+            />
+          </div>
         )}
 
         {activeTab === "lotto-plus" && lottoSubTab === "explain" && (
-          <div className="space-y-6">
+          <div className="tab-content-enter space-y-6">
             {/* Explainer Header */}
             <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/40">
               <h2 className="text-sm font-bold font-mono tracking-widest text-white uppercase mb-2">Lotto Plus System Explainer</h2>
@@ -609,24 +563,32 @@ export default function Home() {
         )}
 
         {activeTab === "scanner" && (
-          <CheckerTab />
+          <div className="tab-content-enter">
+            <CheckerTab />
+          </div>
         )}
 
         {activeTab === "play-whe" && (
-          <PlayWheTab
-            activeSubTab={playWheSubTab}
-            onSubTabChange={(tab) => {
-              setPlayWheSubTab(tab);
-            }}
-          />
+          <div className="tab-content-enter">
+            <PlayWheTab
+              activeSubTab={playWheSubTab}
+              onSubTabChange={(tab) => {
+                setPlayWheSubTab(tab);
+              }}
+            />
+          </div>
         )}
 
         {activeTab === "win-for-life" && (
-          <WinForLifeTab />
+          <div className="tab-content-enter">
+            <WinForLifeTab />
+          </div>
         )}
 
         {activeTab === "settings" && (
-          <SettingsTab />
+          <div className="tab-content-enter">
+            <SettingsTab />
+          </div>
         )}
 
       </main>
@@ -657,6 +619,7 @@ export default function Home() {
         >
           <img src="/images/welcome_icon.png" alt="Home" className="w-5 h-5 object-contain" />
           <span className="text-[9px] font-mono tracking-wider">HOME</span>
+          {activeTab === "welcome" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("dashboard"); }}
@@ -666,6 +629,7 @@ export default function Home() {
         >
           <img src="/images/lotto_plus_icon.png" alt="Lotto" className="w-5 h-5 object-contain" />
           <span className="text-[9px] font-mono tracking-wider">LOTTO</span>
+          {activeTab === "lotto-plus" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("dashboard"); }}
@@ -675,6 +639,7 @@ export default function Home() {
         >
           <img src="/images/play_whe_icon.png" alt="Play Whe" className="w-5 h-5 object-contain" />
           <span className="text-[9px] font-mono tracking-wider">PLAY WHE</span>
+          {activeTab === "play-whe" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => setActiveTab("win-for-life")}
@@ -684,6 +649,7 @@ export default function Home() {
         >
           <img src="/images/win_for_life_icon.png" alt="Win for Life" className="w-5 h-5 object-contain" />
           <span className="text-[9px] font-mono tracking-wider">WFL</span>
+          {activeTab === "win-for-life" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => setActiveTab("scanner")}
@@ -693,6 +659,7 @@ export default function Home() {
         >
           <img src="/images/scanner_icon.png" alt="Scanner" className="w-5 h-5 object-contain" />
           <span className="text-[9px] font-mono tracking-wider">SCANNER</span>
+          {activeTab === "scanner" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => setActiveTab("settings")}
@@ -702,6 +669,7 @@ export default function Home() {
         >
           <img src="/images/settings_icon.png" alt="Settings" className="w-5 h-5 object-contain" />
           <span className="text-[9px] font-mono tracking-wider">SETTINGS</span>
+          {activeTab === "settings" && <span className="nav-active-dot" />}
         </button>
       </div>
 

@@ -150,6 +150,7 @@ export default function WinForLifeTab() {
   const [wheelStrategy, setWheelStrategy] = useState<"full" | "abbreviated-5-5" | "abbreviated-4-4">("abbreviated-5-5");
   const [generatedTickets, setGeneratedTickets] = useState<number[][]>([]);
   const [wheelingLoading, setWheelingLoading] = useState(false);
+  const [isSavingSlips, setIsSavingSlips] = useState(false);
   const [showHeatmapOverlay, setShowHeatmapOverlay] = useState(true);
 
   // Network map states
@@ -281,8 +282,30 @@ export default function WinForLifeTab() {
     setGeneratedTickets([]);
   };
 
-  const handleSaveSlips = () => {
-    alert("Saved " + generatedTickets.length + " slips to workspace!");
+  const handleSaveSlips = async () => {
+    if (generatedTickets.length === 0) return;
+    setIsSavingSlips(true);
+    try {
+      const promises = generatedTickets.map(ticket => {
+        return fetch('/api/slips', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            numbers: ticket,
+            powerball: selectedCb || 1,
+            game: 'win-for-life',
+            group_name: 'WFL Generated'
+          })
+        });
+      });
+      await Promise.all(promises);
+      alert(`Successfully saved ${generatedTickets.length} slips!`);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save slips.');
+    } finally {
+      setIsSavingSlips(false);
+    }
   };
 
   const handleExportTxt = () => {
@@ -1164,7 +1187,7 @@ export default function WinForLifeTab() {
               <div className="flex justify-between items-center border-b border-white/5 pb-3">
                 <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider">Compiled Combos ({generatedTickets.length})</h4>
                 <div className="flex gap-2">
-                  <button onClick={handleSaveSlips} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 px-3 py-1.5 text-[10px] font-bold font-mono transition cursor-pointer"><Save className="w-3 h-3" /> SAVE SLIPS</button>
+                  <button onClick={handleSaveSlips} disabled={isSavingSlips} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 disabled:opacity-50 px-3 py-1.5 text-[10px] font-bold font-mono transition cursor-pointer"><Save className="w-3 h-3" /> {isSavingSlips ? "SAVING..." : "SAVE SLIPS"}</button>
                   <button onClick={handleExportTxt} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 px-3 py-1.5 text-[10px] font-bold font-mono transition cursor-pointer"><Download className="w-3 h-3" /> EXPORT (.TXT)</button>
                 </div>
               </div>

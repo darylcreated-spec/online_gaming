@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Tesseract from "tesseract.js";
 import { parseTicketText, checkTicket, CheckResult, parsePlayWheTicketText, checkPlayWheTicket, parseWinForLifeTicketText, checkWinForLifeTicket, parseMultiPlays } from "@/lib/checker";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
-import { Upload, Camera, CheckCircle2, AlertTriangle, RefreshCw, HelpCircle } from "lucide-react";
+import { Upload, Camera, CheckCircle2, AlertTriangle, RefreshCw, HelpCircle, Zap } from "lucide-react";
 
 export default function CheckerTab() {
   // File upload / capture states
@@ -41,7 +41,23 @@ export default function CheckerTab() {
   // In-App Video Scanner States
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
+  const [isFrontCamera, setIsFrontCamera] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const toggleTorch = async () => {
+    if (!activeStream) return;
+    try {
+      const track = activeStream.getVideoTracks()[0];
+      const capabilities = track.getCapabilities?.() as any;
+      if (capabilities?.torch) {
+        await (track as any).applyConstraints({ advanced: [{ torch: !torchOn }] });
+        setTorchOn(!torchOn);
+      }
+    } catch (e) {
+      console.warn('Torch not supported:', e);
+    }
+  };
 
   useEffect(() => {
     if (activeStream && videoRef.current) {
@@ -73,6 +89,18 @@ export default function CheckerTab() {
         });
       }
       setActiveStream(stream);
+      let isFront = false;
+      try {
+        const track = stream.getVideoTracks()[0];
+        const settings = track.getSettings();
+        if (settings.facingMode === 'user') {
+          isFront = true;
+        }
+      } catch (e) {
+        // Default to not front if unable to determine
+      }
+      setIsFrontCamera(isFront);
+      
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -102,11 +130,15 @@ export default function CheckerTab() {
     
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      // Draw frame flipped back (since video is mirror preview for user convenience)
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
+      if (isFrontCamera) {
+        // Draw frame flipped back (since video is mirror preview for user convenience)
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (isFrontCamera) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
 
       canvas.toBlob((blob) => {
         if (blob) {
@@ -1322,7 +1354,7 @@ export default function CheckerTab() {
 
       {/* CAMERA SCANNER MODAL */}
       {showScannerModal && (
-        <div className="fixed inset-0 bg-slate-950/95 z-[999] flex flex-col justify-between p-6 font-mono">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-950/95 z-[999] flex flex-col justify-between p-6 font-mono">
           <div className="flex justify-between items-center border-b border-white/5 pb-3">
             <div className="space-y-0.5">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Ticket Scanner Camera</h3>
@@ -1343,29 +1375,32 @@ export default function CheckerTab() {
               autoPlay 
               playsInline 
               muted
-              className="w-full h-full object-cover transform scale-x-[-1]" 
+              className={`w-full h-full object-cover transform ${isFrontCamera ? 'scale-x-[-1]' : ''}`}
             />
-            {/* Visual Guide Box */}
-            <div className="absolute w-[80%] aspect-[3/4] max-w-xs border-2 border-dashed border-primary/40 rounded-lg flex items-center justify-center pointer-events-none shadow-[0_0_40px_rgba(56,189,248,0.05)]">
-              {/* Top-Left Corner */}
-              <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary -translate-x-1.5 -translate-y-1.5" />
-              {/* Top-Right Corner */}
-              <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary translate-x-1.5 -translate-y-1.5" />
-              {/* Bottom-Left Corner */}
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary -translate-x-1.5 translate-y-1.5" />
-              {/* Bottom-Right Corner */}
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary translate-x-1.5 translate-y-1.5" />
+            {/* Viewfinder overlay */}
+            <div className="viewfinder-overlay">
+              <div className="viewfinder-corner top-left" />
+              <div className="viewfinder-corner top-right" />
+              <div className="viewfinder-corner bottom-left" />
+              <div className="viewfinder-corner bottom-right" />
             </div>
           </div>
 
           {/* Shutter Button Controls */}
-          <div className="flex flex-col items-center justify-center pb-6">
+          <div className="flex flex-row items-center justify-center gap-6 pb-6">
+            <button
+              onClick={toggleTorch}
+              className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all ${torchOn ? 'bg-primary border-primary text-slate-950' : 'bg-slate-800 border-white/10 text-white hover:bg-slate-700'}`}
+            >
+              <Zap className="w-5 h-5" />
+            </button>
             <button
               onClick={capturePhoto}
               className="w-16 h-16 rounded-full border-4 border-white bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center cursor-pointer transition shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               <div className="w-10 h-10 rounded-full bg-white" />
             </button>
+            <div className="w-12" /> {/* Spacer for centering */}
           </div>
         </div>
       )}

@@ -9,7 +9,7 @@ interface BuilderTabProps {
   historicalDraws: any[];
 }
 
-const validateTicket = (ticket: number[]) => {
+const validateTicket = (ticket: number[], freqArray?: number[]) => {
   const oddCount = ticket.filter(n => n % 2 !== 0).length;
   const evenCount = ticket.length - oddCount;
   const oddEvenRatio = `${oddCount}:${evenCount}`;
@@ -28,8 +28,18 @@ const validateTicket = (ticket: number[]) => {
     }
   }
   
-  const hotCount = ticket.filter(n => [17, 10, 28, 31, 18].includes(n)).length;
-  const coldCount = ticket.filter(n => [15, 12, 30, 32, 1].includes(n)).length;
+  // Dynamically compute hot/cold from actual frequency data instead of hardcoded lists
+  let hotNums = [17, 10, 28, 31, 18]; // fallback defaults
+  let coldNums = [15, 12, 30, 32, 1]; // fallback defaults
+  if (freqArray && freqArray.length > 1) {
+    const ranked = Array.from({ length: 35 }, (_, i) => ({ num: i + 1, freq: freqArray[i + 1] || 0 }))
+      .sort((a, b) => b.freq - a.freq);
+    hotNums = ranked.slice(0, 5).map(r => r.num);
+    coldNums = ranked.slice(-5).map(r => r.num);
+  }
+  
+  const hotCount = ticket.filter(n => hotNums.includes(n)).length;
+  const coldCount = ticket.filter(n => coldNums.includes(n)).length;
   
   const sum = ticket.reduce((a, b) => a + b, 0);
   let score = 0;
@@ -742,7 +752,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                 </div>
 
                 {(() => {
-                  const evalResult = validateTicket(ticket);
+                  const evalResult = validateTicket(ticket, frequencies);
                   return (
                     <>
                       <div className="flex justify-between items-center mt-1 pb-3 border-b border-[#1F232B]">

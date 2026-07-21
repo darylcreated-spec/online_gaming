@@ -15,8 +15,12 @@ export async function GET() {
 
     // 2. Ensure today's predictions exist for all 4 slots
     const todayStr = getLocalDateString();
+    const modelBreakdown: Record<string, any[]> = {};
     for (const slot of ["MORNING", "MIDDAY", "AFTERNOON", "EVENING"]) {
-      await generatePlayWhePredictions(todayStr, slot);
+      const res = await generatePlayWhePredictions(todayStr, slot);
+      if (res.modelBreakdown) {
+        modelBreakdown[slot] = res.modelBreakdown;
+      }
     }
 
     // 3. Query predictions log (latest 100 entries sorted newest first)
@@ -76,7 +80,8 @@ export async function GET() {
         hits,
         misses,
         hitRate
-      }
+      },
+      modelBreakdown
     });
   } catch (error: any) {
     console.error("[API /api/playwhe/predictions] Error:", error);
