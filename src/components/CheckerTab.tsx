@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Tesseract from "tesseract.js";
 import { parseTicketText, checkTicket, CheckResult, parsePlayWheTicketText, checkPlayWheTicket, parseWinForLifeTicketText, checkWinForLifeTicket, parseMultiPlays } from "@/lib/checker";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
@@ -42,6 +42,17 @@ export default function CheckerTab() {
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (activeStream && videoRef.current) {
+      videoRef.current.srcObject = activeStream;
+    }
+    return () => {
+      if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [activeStream, showScannerModal]);
 
   const startCamera = async () => {
     if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -1331,6 +1342,7 @@ export default function CheckerTab() {
               ref={videoRef} 
               autoPlay 
               playsInline 
+              muted
               className="w-full h-full object-cover transform scale-x-[-1]" 
             />
             {/* Visual Guide Box */}
