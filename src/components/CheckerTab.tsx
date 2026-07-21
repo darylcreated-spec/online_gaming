@@ -44,11 +44,23 @@ export default function CheckerTab() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const startCamera = async () => {
+    if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Camera access is not supported on this browser or secure context is missing (HTTPS or localhost). Please enter numbers manually.");
+      return;
+    }
     try {
       setShowScannerModal(true);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+      } catch (fallbackErr) {
+        console.warn("Failed to get environment camera, falling back to default webcam:", fallbackErr);
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true
+        });
+      }
       setActiveStream(stream);
       setTimeout(() => {
         if (videoRef.current) {
