@@ -7,7 +7,31 @@ export function getLocalDateString(date = new Date()): string {
   return adjustedDate.toISOString().split("T")[0];
 }
 
-// Generate Play Whe predictions (3 numbers) for a given date (YYYY-MM-DD) and draw time slot
+// ============================================================
+// PLAY WHE ENSEMBLE PREDICTION ENGINE v2.0
+// 5 Independent Models + Ensemble Voting + Weighted Random Sampling
+// ============================================================
+
+// Seeded PRNG for reproducible weighted random sampling per slot
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0xFFFFFFFF;
+    return (s >>> 0) / 0xFFFFFFFF;
+  };
+}
+
+function createSlotSeed(dateStr: string, slotStr: string): number {
+  let hash = 0;
+  const str = dateStr + slotStr + new Date().getMinutes().toString();
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+// Generate Play Whe predictions using 5-Model Ensemble + Weighted Random Sampling
 export async function generatePlayWhePredictions(dateStr: string, slotStr: string): Promise<{ predicted_numbers: string; success: boolean }> {
   try {
     // 1. Check if a prediction already exists for this date and slot combination
@@ -22,32 +46,30 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       const predicted = String(record[1]);
       
       // If the prediction status is locked (HIT or MISS), return it directly.
-      // If it is PENDING, we let the predictor recalculate it using the latest drawing results.
       if (status !== 'PENDING') {
-        return {
-          predicted_numbers: predicted,
-          success: true
-        };
+        return { predicted_numbers: predicted, success: true };
       }
     }
 
-    // 2. Fetch the last 150 draws for this specific slot to analyze slot-specific behavior
+    // 2. Fetch data — include draw_date and draw_time_slot for day-of-week profiling
     const slotDrawsRes = await db.execute({
-      sql: "SELECT winning_number FROM playwhe_draws WHERE UPPER(draw_time_slot) = UPPER(?) ORDER BY id DESC LIMIT 150",
+      sql: "SELECT winning_number FROM playwhe_draws WHERE UPPER(draw_time_slot) = UPPER(?) ORDER BY id DESC LIMIT 200",
       args: [slotStr]
     });
-    
     const slotDraws = slotDrawsRes.rows.map(row => Number(row[0]));
 
-    // Fetch the last 150 draws overall for successor/companion co-occurrences
     const generalDrawsRes = await db.execute({
-      sql: "SELECT winning_number FROM playwhe_draws ORDER BY id DESC LIMIT 150"
+      sql: "SELECT winning_number, draw_date, draw_time_slot FROM playwhe_draws ORDER BY id DESC LIMIT 300"
     });
-    
-    const generalDraws = generalDrawsRes.rows.map(row => Number(row[0]));
+    const generalDraws = generalDrawsRes.rows.map(row => ({
+      num: Number(row[0]),
+      date: String(row[1]),
+      slot: String(row[2])
+    }));
+    const allNums = generalDraws.map(d => d.num);
 
-    if (generalDraws.length < 5) {
-      // Fallback if db is empty or has too few records
+    if (allNums.length < 10) {
+      // Fallback if db has too few records
       const fallbackList = [
         ["01", "12", "29", "08", "22"],
         ["02", "13", "30", "09", "23"],
@@ -57,7 +79,6 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       const slots = ["MORNING", "MIDDAY", "AFTERNOON", "EVENING"];
       const slotIdx = Math.max(0, slots.indexOf(slotStr));
       const fallback = fallbackList[slotIdx].join(",");
-
       await db.execute({
         sql: "INSERT OR IGNORE INTO playwhe_predictions (prediction_date, draw_time_slot, predicted_numbers, status) VALUES (?, ?, ?, 'PENDING')",
         args: [dateStr, slotStr, fallback]
@@ -65,81 +86,246 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       return { predicted_numbers: fallback, success: true };
     }
 
-    // 3. Compute probability weights for all 36 numbers
-    const freqs: Record<number, number> = {};
-    const gaps: Record<number, number> = {};
-    const successors: Record<number, number> = {};
+    // ============================================================
+    // MODEL 1: 2nd-Order Markov Chain
+    // Tracks what numbers historically follow the last two drawn numbers.
+    // ============================================================
+    const lastDrawn = allNums[0];
+    const secondLastDrawn = allNums[1];
+    const markovScores: Record<number, number> = {};
+    for (let i = 1; i <= 36; i++) markovScores[i] = 0;
 
-    // Initialize metrics
-    for (let i = 1; i <= 36; i++) {
-      freqs[i] = 0;
-      gaps[i] = 150; // default large gap
-      successors[i] = 0;
+    for (let i = 0; i < allNums.length - 1; i++) {
+      if (allNums[i + 1] === lastDrawn) {
+        markovScores[allNums[i]] += 1.5;
+      }
+    }
+    for (let i = 0; i < allNums.length - 2; i++) {
+      if (allNums[i + 2] === secondLastDrawn && allNums[i + 1] === lastDrawn) {
+        markovScores[allNums[i]] += 3.0;
+      }
     }
 
-    // A. Slot Frequencies over slot-specific history
-    slotDraws.forEach(val => {
-      if (freqs[val] !== undefined) freqs[val]++;
-    });
+    const markovTop8 = Object.entries(markovScores)
+      .map(([n, s]) => ({ num: Number(n), score: s }))
+      .filter(c => c.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(c => c.num);
 
-    // B. Calculate Gaps (draws since last seen in this slot)
+    // ============================================================
+    // MODEL 2: Momentum Detection (Heating Up / Cooling Down)
+    // Compares a number's frequency in the last 12 draws vs the last 60.
+    // Numbers accelerating above their long-term average are "heating up".
+    // ============================================================
+    const recent12 = allNums.slice(0, Math.min(12, allNums.length));
+    const recent60 = allNums.slice(0, Math.min(60, allNums.length));
+    const momentumScores: Record<number, number> = {};
+    for (let i = 1; i <= 36; i++) {
+      const shortFreq = recent12.filter(n => n === i).length / recent12.length;
+      const longFreq = recent60.filter(n => n === i).length / recent60.length;
+      // Momentum = ratio of short-term rate to long-term rate
+      // Numbers not seen in the long term but seen recently get a boost
+      momentumScores[i] = longFreq > 0 ? (shortFreq / longFreq) : (shortFreq > 0 ? 3.0 : 0);
+    }
+
+    const momentumTop8 = Object.entries(momentumScores)
+      .map(([n, s]) => ({ num: Number(n), score: s }))
+      .filter(c => c.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(c => c.num);
+
+    // ============================================================
+    // MODEL 3: Day-of-Week + Slot Profile
+    // Filters historical draws by the same day of week AND same time slot.
+    // Some numbers historically favour specific day+slot combinations.
+    // ============================================================
+    const targetDate = new Date(dateStr + 'T12:00:00');
+    const targetDayOfWeek = targetDate.getDay();
+
+    const daySlotDraws = generalDraws.filter(d => {
+      try {
+        const drawDate = new Date(d.date + 'T12:00:00');
+        return drawDate.getDay() === targetDayOfWeek &&
+               d.slot.toUpperCase() === slotStr.toUpperCase();
+      } catch { return false; }
+    }).map(d => d.num);
+
+    const daySlotFreqs: Record<number, number> = {};
+    for (let i = 1; i <= 36; i++) daySlotFreqs[i] = 0;
+    daySlotDraws.forEach(n => { if (daySlotFreqs[n] !== undefined) daySlotFreqs[n]++; });
+
+    const daySlotTop8 = Object.entries(daySlotFreqs)
+      .map(([n, s]) => ({ num: Number(n), score: s }))
+      .filter(c => c.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(c => c.num);
+
+    // ============================================================
+    // MODEL 4: Cycle / Periodicity Detection
+    // For each number, computes average gap between consecutive appearances.
+    // Numbers whose current gap is near a multiple of their average cycle
+    // are scored higher — they're entering their expected return window.
+    // ============================================================
+    const cycleScores: Record<number, number> = {};
+    for (let i = 1; i <= 36; i++) {
+      const positions: number[] = [];
+      allNums.forEach((n, idx) => { if (n === i) positions.push(idx); });
+
+      if (positions.length >= 3) {
+        const gapsBetween: number[] = [];
+        for (let j = 0; j < positions.length - 1; j++) {
+          gapsBetween.push(positions[j + 1] - positions[j]);
+        }
+        const avgGap = gapsBetween.reduce((a, b) => a + b, 0) / gapsBetween.length;
+        const currentGap = positions[0]; // draws since last seen
+
+        if (avgGap > 0) {
+          const ratio = currentGap / avgGap;
+          const nearestMultiple = Math.max(1, Math.round(ratio));
+          const deviation = Math.abs(ratio - nearestMultiple);
+          // Score is high when deviation is small (number is due based on its cycle)
+          cycleScores[i] = (1 / (deviation + 0.15)) * Math.min(nearestMultiple, 3);
+        } else {
+          cycleScores[i] = 0;
+        }
+      } else {
+        cycleScores[i] = 0;
+      }
+    }
+
+    const cycleTop8 = Object.entries(cycleScores)
+      .map(([n, s]) => ({ num: Number(n), score: s }))
+      .filter(c => c.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(c => c.num);
+
+    // ============================================================
+    // MODEL 5: Slot-Specific Frequency + Gap Scoring (enhanced)
+    // Uses slot-specific data with a balanced frequency/gap formula.
+    // ============================================================
+    const slotFreqs: Record<number, number> = {};
+    const slotGaps: Record<number, number> = {};
+    for (let i = 1; i <= 36; i++) {
+      slotFreqs[i] = 0;
+      slotGaps[i] = 200;
+    }
+    slotDraws.forEach(val => { if (slotFreqs[val] !== undefined) slotFreqs[val]++; });
     for (let i = 1; i <= 36; i++) {
       const idx = slotDraws.indexOf(i);
-      if (idx !== -1) {
-        gaps[i] = idx;
-      }
+      if (idx !== -1) slotGaps[i] = idx;
     }
 
-    // C. Successors of the last drawn numbers overall (1st and 2nd order Markov Chain)
-    const lastDrawn = generalDraws[0];
-    const secondLastDrawn = generalDraws[1]; // generalDraws length is checked >= 5
-    const successors1st: Record<number, number> = {};
-    const successors2nd: Record<number, number> = {};
+    const slotScoreTop8 = Object.entries(slotFreqs)
+      .map(([n]) => {
+        const num = Number(n);
+        return { num, score: slotFreqs[num] * 1.0 + slotGaps[num] * 0.4 };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(c => c.num);
 
+    // ============================================================
+    // STRATEGY 5: ELIMINATION FILTER
+    // Remove numbers that are statistically unlikely for this draw.
+    // ============================================================
+    const eliminated = new Set<number>();
+    // Remove the last 2 drawn numbers (immediate repeats are rare)
+    eliminated.add(allNums[0]);
+    if (allNums.length > 1) eliminated.add(allNums[1]);
+    // Remove numbers with zero signal across ALL models
     for (let i = 1; i <= 36; i++) {
-      successors1st[i] = 0;
-      successors2nd[i] = 0;
-    }
-
-    // 1st-order transitions: lastDrawn -> candidate
-    for (let i = 0; i < generalDraws.length - 1; i++) {
-      if (generalDraws[i + 1] === lastDrawn) {
-        successors1st[generalDraws[i]]++;
+      if (markovScores[i] === 0 && momentumScores[i] === 0 &&
+          daySlotFreqs[i] === 0 && cycleScores[i] === 0 && slotFreqs[i] === 0) {
+        eliminated.add(i);
       }
     }
 
-    // 2nd-order transitions: (secondLastDrawn, lastDrawn) -> candidate
-    for (let i = 0; i < generalDraws.length - 2; i++) {
-      if (generalDraws[i + 2] === secondLastDrawn && generalDraws[i + 1] === lastDrawn) {
-        successors2nd[generalDraws[i]]++;
-      }
-    }
-
-    // 4. Calculate total score for each of the 36 numbers
-    const candidates = [];
+    // ============================================================
+    // STRATEGY 3: ENSEMBLE VOTING
+    // Each model's top-8 votes; numbers appearing across the most models win.
+    // ============================================================
+    const voteCount: Record<number, number> = {};
+    const rankSum: Record<number, number> = {};
     for (let i = 1; i <= 36; i++) {
-      // Weighting formula: 2nd-order transitions (3.0) + 1st-order transitions (1.5) + Slot frequency (1.0) + Overdue gap in slot (0.5)
-      const score = (successors2nd[i] * 3.0) + (successors1st[i] * 1.5) + (freqs[i] * 1.0) + (gaps[i] * 0.5);
-      candidates.push({ num: i, score });
+      voteCount[i] = 0;
+      rankSum[i] = 0;
     }
 
-    // Sort descending by score
-    candidates.sort((a, b) => b.score - a.score);
+    const models = [markovTop8, momentumTop8, daySlotTop8, cycleTop8, slotScoreTop8];
+    models.forEach(top8 => {
+      top8.forEach((num, rank) => {
+        voteCount[num]++;
+        rankSum[num] += (8 - rank); // Higher rank = higher bonus
+      });
+    });
 
-    // Pick top 5 unique numbers
-    const top5 = candidates.slice(0, 5).map(c => String(c.num).padStart(2, "0"));
+    // Filter out eliminated numbers and build ensemble candidates
+    const ensembleCandidates = Array.from({ length: 36 }, (_, i) => i + 1)
+      .filter(n => !eliminated.has(n))
+      .map(num => ({
+        num,
+        votes: voteCount[num],
+        rankBonus: rankSum[num],
+        totalScore: voteCount[num] * 10 + rankSum[num]
+      }))
+      .sort((a, b) => b.totalScore - a.totalScore)
+      .slice(0, 15);
+
+    // ============================================================
+    // STRATEGY 6: WEIGHTED RANDOM SAMPLING
+    // Use ensemble scores as probability weights instead of deterministic top-5.
+    // This ensures different numbers get picked each draw.
+    // ============================================================
+    const rng = seededRandom(createSlotSeed(dateStr, slotStr));
+    const selected: number[] = [];
+    const remaining = [...ensembleCandidates];
+
+    while (selected.length < 5 && remaining.length > 0) {
+      const totalWeight = remaining.reduce((sum, c) => sum + c.totalScore + 1, 0);
+      const rand = rng() * totalWeight;
+      let cumulative = 0;
+      for (let i = 0; i < remaining.length; i++) {
+        cumulative += remaining[i].totalScore + 1;
+        if (rand <= cumulative) {
+          selected.push(remaining[i].num);
+          remaining.splice(i, 1);
+          break;
+        }
+      }
+    }
+
+    // Fallback: if we couldn't fill 5 numbers, pull from ensemble
+    while (selected.length < 5 && ensembleCandidates.length > 0) {
+      const next = ensembleCandidates.find(c => !selected.includes(c.num));
+      if (next) selected.push(next.num);
+      else break;
+    }
+    // Final fallback: random from 1-36
+    while (selected.length < 5) {
+      const r = Math.floor(rng() * 36) + 1;
+      if (!selected.includes(r) && !eliminated.has(r)) selected.push(r);
+    }
+
+    const top5 = selected.map(c => String(c).padStart(2, "0"));
     const predictionString = top5.join(",");
 
-    // Save or update to database (using INSERT OR REPLACE to overwrite PENDING values)
+    // Save or update to database
     await db.execute({
       sql: "INSERT OR REPLACE INTO playwhe_predictions (prediction_date, draw_time_slot, predicted_numbers, status) VALUES (?, ?, ?, 'PENDING')",
       args: [dateStr, slotStr, predictionString]
     });
 
-    console.log(`[Predictor] Generated predictions for ${dateStr} [${slotStr}]: ${predictionString}`);
+    console.log(`[Predictor v2] Ensemble predictions for ${dateStr} [${slotStr}]: ${predictionString}`);
+    console.log(`[Predictor v2] Models: Markov=${markovTop8.join(",")}, Momentum=${momentumTop8.join(",")}, DaySlot=${daySlotTop8.join(",")}, Cycle=${cycleTop8.join(",")}, SlotFreq=${slotScoreTop8.join(",")}`);
+    console.log(`[Predictor v2] Eliminated: ${[...eliminated].join(",")}`);
+
     return { predicted_numbers: predictionString, success: true };
   } catch (err) {
-    console.error(`[Predictor] Error generating predictions for ${dateStr} [${slotStr}]:`, err);
+    console.error(`[Predictor v2] Error generating predictions for ${dateStr} [${slotStr}]:`, err);
     return { predicted_numbers: "", success: false };
   }
 }

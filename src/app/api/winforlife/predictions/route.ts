@@ -71,112 +71,289 @@ export async function GET() {
     const todayStr = getLocalDateString();
     const checkToday = await query("SELECT 1 FROM winforlife_predictions WHERE prediction_date = ?", [todayStr]);
     if (checkToday.length === 0) {
-      const draws = await query("SELECT * FROM winforlife_draws ORDER BY draw_number DESC LIMIT 150");
+      const draws = await query("SELECT * FROM winforlife_draws ORDER BY draw_number DESC LIMIT 200");
       if (draws.length > 5) {
-        // 1. Initialize stats containers
-        const freqs: Record<number, number> = {};
-        const cbFreqs: Record<number, number> = {};
-        const transitions1st: Record<number, number> = {};
-        const transitions2nd: Record<number, number> = {};
+        // ============================================================
+        // WIN FOR LIFE ENSEMBLE PREDICTION ENGINE v2.0
+        // 5 Models + Ensemble Voting + Elimination + Weighted Random
+        // ============================================================
+
+        // Seeded PRNG for controlled randomness
+        let prngSeed = 0;
+        const seedStr = todayStr + 'winforlife';
+        for (let i = 0; i < seedStr.length; i++) {
+          prngSeed = ((prngSeed << 5) - prngSeed) + seedStr.charCodeAt(i);
+          prngSeed |= 0;
+        }
+        prngSeed = Math.abs(prngSeed) + new Date().getMinutes();
+        const rng = () => {
+          prngSeed = (prngSeed * 1664525 + 1013904223) & 0xFFFFFFFF;
+          return (prngSeed >>> 0) / 0xFFFFFFFF;
+        };
+
+        // Helper: extract all 6 numbers from a draw row
+        const drawNums = (d: any): number[] => [
+          Number(d.num1), Number(d.num2), Number(d.num3),
+          Number(d.num4), Number(d.num5), Number(d.num6)
+        ];
+
+        // ============================================================
+        // MODEL 1: 2nd-Order Markov Chain (adapted for multi-ball)
+        // ============================================================
+        const lastDrawNums = drawNums(draws[0]);
+        const secondLastDrawNums = drawNums(draws[1]);
+        const markovScores: Record<number, number> = {};
+        for (let i = 1; i <= 28; i++) markovScores[i] = 0;
+
+        for (let i = 0; i < draws.length - 2; i++) {
+          const currentNums = drawNums(draws[i]);
+          const prevNums = drawNums(draws[i + 1]);
+          const prevPrevNums = drawNums(draws[i + 2]);
+
+          // 1st-order: if prevDraw shares numbers with lastDraw
+          const match1st = prevNums.filter(n => lastDrawNums.includes(n)).length;
+          if (match1st > 0) {
+            currentNums.forEach(n => {
+              if (markovScores[n] !== undefined) markovScores[n] += match1st * 1.5;
+            });
+          }
+
+          // 2nd-order: both previous draws match the pattern
+          const match2nd = prevNums.filter(n => lastDrawNums.includes(n)).length;
+          const match2ndPrev = prevPrevNums.filter(n => secondLastDrawNums.includes(n)).length;
+          if (match2nd > 0 && match2ndPrev > 0) {
+            currentNums.forEach(n => {
+              if (markovScores[n] !== undefined) markovScores[n] += (match2nd * match2ndPrev) * 0.5;
+            });
+          }
+        }
+
+        const markovTop10 = Object.entries(markovScores)
+          .map(([n, s]) => ({ num: Number(n), score: s }))
+          .filter(c => c.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10)
+          .map(c => c.num);
+
+        // ============================================================
+        // MODEL 2: Momentum Detection
+        // Compare frequency in last 8 draws vs last 40 draws.
+        // ============================================================
+        const recent8Draws = draws.slice(0, Math.min(8, draws.length));
+        const recent40Draws = draws.slice(0, Math.min(40, draws.length));
+        const momentumScores: Record<number, number> = {};
+
+        const countInDraws = (numArr: any[], target: number) => {
+          let count = 0;
+          numArr.forEach(d => { if (drawNums(d).includes(target)) count++; });
+          return count;
+        };
 
         for (let i = 1; i <= 28; i++) {
-          freqs[i] = 0;
-          transitions1st[i] = 0;
-          transitions2nd[i] = 0;
-        }
-        for (let i = 1; i <= 3; i++) {
-          cbFreqs[i] = 0;
+          const shortFreq = countInDraws(recent8Draws, i) / recent8Draws.length;
+          const longFreq = countInDraws(recent40Draws, i) / recent40Draws.length;
+          momentumScores[i] = longFreq > 0 ? (shortFreq / longFreq) : (shortFreq > 0 ? 3.0 : 0);
         }
 
-        // 2. Global frequencies & Cash Ball frequencies
-        draws.forEach(d => {
-          [d.num1, d.num2, d.num3, d.num4, d.num5, d.num6].forEach(n => {
-            if (n >= 1 && n <= 28) freqs[n]++;
-          });
-          if (d.cash_ball >= 1 && d.cash_ball <= 3) cbFreqs[d.cash_ball]++;
+        const momentumTop10 = Object.entries(momentumScores)
+          .map(([n, s]) => ({ num: Number(n), score: s }))
+          .filter(c => c.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10)
+          .map(c => c.num);
+
+        // ============================================================
+        // MODEL 3: Day-of-Week Profile
+        // Filter draws by same day of week.
+        // ============================================================
+        const targetDate = new Date(todayStr + 'T12:00:00');
+        const targetDOW = targetDate.getDay();
+
+        const dayDraws = draws.filter(d => {
+          try {
+            return new Date(d.draw_date + 'T12:00:00').getDay() === targetDOW;
+          } catch { return false; }
         });
 
-        // 3. Compute 1st-order and 2nd-order transitions
-        // draws[0] is the latest draw (draw_number DESC)
-        // draws[1] is the draw before that, etc.
-        const lastDrawNums = [draws[0].num1, draws[0].num2, draws[0].num3, draws[0].num4, draws[0].num5, draws[0].num6];
-        const secondLastDrawNums = [draws[1].num1, draws[1].num2, draws[1].num3, draws[1].num4, draws[1].num5, draws[1].num6];
+        const dayFreqs: Record<number, number> = {};
+        for (let i = 1; i <= 28; i++) dayFreqs[i] = 0;
+        dayDraws.forEach(d => {
+          drawNums(d).forEach(n => { if (dayFreqs[n] !== undefined) dayFreqs[n]++; });
+        });
 
-        // Loop historically to find matches
-        for (let i = 0; i < draws.length - 2; i++) {
-          const currentDraw = draws[i]; // drawn at time N+1
-          const prevDraw = draws[i + 1];    // drawn at time N
-          const prevPrevDraw = draws[i + 2]; // drawn at time N-1
+        const dayTop10 = Object.entries(dayFreqs)
+          .map(([n, s]) => ({ num: Number(n), score: s }))
+          .filter(c => c.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10)
+          .map(c => c.num);
 
-          const currentNums = [currentDraw.num1, currentDraw.num2, currentDraw.num3, currentDraw.num4, currentDraw.num5, currentDraw.num6];
-          const prevNums = [prevDraw.num1, prevDraw.num2, prevDraw.num3, prevDraw.num4, prevDraw.num5, prevDraw.num6];
-          const prevPrevNums = [prevPrevDraw.num1, prevPrevDraw.num2, prevPrevDraw.num3, prevPrevDraw.num4, prevPrevDraw.num5, prevPrevDraw.num6];
-
-          // 1st order transitions: if any number in prevNums was in lastDrawNums
-          let match1stCount = 0;
-          prevNums.forEach(n => {
-            if (lastDrawNums.includes(n)) {
-              match1stCount++;
-            }
-          });
-          if (match1stCount > 0) {
-            currentNums.forEach(n => {
-              if (transitions1st[n] !== undefined) {
-                transitions1st[n] += match1stCount;
-              }
-            });
-          }
-
-          // 2nd order transitions: if numbers match the joint sequence
-          let match2ndCount = 0;
-          prevNums.forEach(y => {
-            if (lastDrawNums.includes(y)) {
-              prevPrevNums.forEach(x => {
-                if (secondLastDrawNums.includes(x)) {
-                  match2ndCount++;
-                }
-              });
-            }
-          });
-          if (match2ndCount > 0) {
-            currentNums.forEach(n => {
-              if (transitions2nd[n] !== undefined) {
-                transitions2nd[n] += match2ndCount;
-              }
-            });
-          }
-        }
-
-        // 4. Score candidates
-        const candidates = [];
+        // ============================================================
+        // MODEL 4: Cycle / Periodicity Detection
+        // Compute average gap between appearances; score numbers near their cycle.
+        // ============================================================
+        const cycleScores: Record<number, number> = {};
         for (let i = 1; i <= 28; i++) {
-          const score = (transitions2nd[i] * 2.0) + (transitions1st[i] * 1.5) + (freqs[i] * 1.0);
-          candidates.push({ num: i, score });
+          const positions: number[] = [];
+          draws.forEach((d, idx) => { if (drawNums(d).includes(i)) positions.push(idx); });
+
+          if (positions.length >= 3) {
+            const gapsArr: number[] = [];
+            for (let j = 0; j < positions.length - 1; j++) {
+              gapsArr.push(positions[j + 1] - positions[j]);
+            }
+            const avgGap = gapsArr.reduce((a, b) => a + b, 0) / gapsArr.length;
+            const currentGap = positions[0];
+
+            if (avgGap > 0) {
+              const ratio = currentGap / avgGap;
+              const nearest = Math.max(1, Math.round(ratio));
+              const deviation = Math.abs(ratio - nearest);
+              cycleScores[i] = (1 / (deviation + 0.15)) * Math.min(nearest, 3);
+            } else {
+              cycleScores[i] = 0;
+            }
+          } else {
+            cycleScores[i] = 0;
+          }
         }
 
-        // Sort descending by score
-        candidates.sort((a, b) => b.score - a.score);
+        const cycleTop10 = Object.entries(cycleScores)
+          .map(([n, s]) => ({ num: Number(n), score: s }))
+          .filter(c => c.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10)
+          .map(c => c.num);
 
-        const sortedNums = candidates.map(c => c.num);
-        const sortedCbs = Object.keys(cbFreqs).map(Number).sort((a, b) => cbFreqs[b] - cbFreqs[a]);
+        // ============================================================
+        // MODEL 5: Global Frequency + Gap Scoring
+        // ============================================================
+        const globalFreqs: Record<number, number> = {};
+        const globalGaps: Record<number, number> = {};
+        for (let i = 1; i <= 28; i++) {
+          globalFreqs[i] = 0;
+          globalGaps[i] = 200;
+        }
+        draws.forEach(d => {
+          drawNums(d).forEach(n => { if (globalFreqs[n] !== undefined) globalFreqs[n]++; });
+        });
+        for (let i = 1; i <= 28; i++) {
+          const idx = draws.findIndex(d => drawNums(d).includes(i));
+          if (idx !== -1) globalGaps[i] = idx;
+        }
 
-        const hotPool = sortedNums.slice(0, 12);
-        const coldPool = sortedNums.slice(12);
+        const freqGapTop10 = Object.entries(globalFreqs)
+          .map(([n]) => {
+            const num = Number(n);
+            return { num, score: globalFreqs[num] * 1.0 + globalGaps[num] * 0.3 };
+          })
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10)
+          .map(c => c.num);
 
+        // ============================================================
+        // ELIMINATION FILTER
+        // ============================================================
+        const eliminated = new Set<number>();
+        // Remove numbers that appeared in ALL of the last 2 draws (overplayed)
+        const last2Sets = draws.slice(0, 2).map(d => drawNums(d));
+        for (let i = 1; i <= 28; i++) {
+          if (last2Sets.every(set => set.includes(i))) {
+            eliminated.add(i);
+          }
+        }
+        // Remove numbers with zero signal across all models
+        for (let i = 1; i <= 28; i++) {
+          if (markovScores[i] === 0 && momentumScores[i] === 0 &&
+              dayFreqs[i] === 0 && cycleScores[i] === 0 && globalFreqs[i] === 0) {
+            eliminated.add(i);
+          }
+        }
+
+        // ============================================================
+        // ENSEMBLE VOTING
+        // ============================================================
+        const voteCount: Record<number, number> = {};
+        const rankSum: Record<number, number> = {};
+        for (let i = 1; i <= 28; i++) {
+          voteCount[i] = 0;
+          rankSum[i] = 0;
+        }
+
+        const models = [markovTop10, momentumTop10, dayTop10, cycleTop10, freqGapTop10];
+        models.forEach(top10 => {
+          top10.forEach((num, rank) => {
+            voteCount[num]++;
+            rankSum[num] += (10 - rank);
+          });
+        });
+
+        const ensembleCandidates = Array.from({ length: 28 }, (_, i) => i + 1)
+          .filter(n => !eliminated.has(n))
+          .map(num => ({
+            num,
+            votes: voteCount[num],
+            totalScore: voteCount[num] * 10 + rankSum[num]
+          }))
+          .sort((a, b) => b.totalScore - a.totalScore)
+          .slice(0, 16);
+
+        // ============================================================
+        // WEIGHTED RANDOM SAMPLING — Pick 6 main numbers
+        // ============================================================
         const selected: number[] = [];
-        hotPool.sort(() => Math.random() - 0.5);
-        coldPool.sort(() => Math.random() - 0.5);
+        const pool = [...ensembleCandidates];
 
-        selected.push(...hotPool.slice(0, 4));
-        selected.push(...coldPool.slice(0, 2));
+        while (selected.length < 6 && pool.length > 0) {
+          const totalWeight = pool.reduce((sum, c) => sum + c.totalScore + 1, 0);
+          const rand = rng() * totalWeight;
+          let cumulative = 0;
+          for (let i = 0; i < pool.length; i++) {
+            cumulative += pool[i].totalScore + 1;
+            if (rand <= cumulative) {
+              selected.push(pool[i].num);
+              pool.splice(i, 1);
+              break;
+            }
+          }
+        }
+
+        // Fallback fills
+        while (selected.length < 6) {
+          const next = ensembleCandidates.find(c => !selected.includes(c.num));
+          if (next) selected.push(next.num);
+          else {
+            const r = Math.floor(rng() * 28) + 1;
+            if (!selected.includes(r)) selected.push(r);
+          }
+        }
+
         selected.sort((a, b) => a - b);
 
-        const predictedCb = sortedCbs[0] || 1;
+        // Cash Ball: use weighted frequency with momentum boost
+        const cbFreqs: Record<number, number> = {};
+        for (let i = 1; i <= 3; i++) cbFreqs[i] = 0;
+        draws.forEach(d => {
+          if (d.cash_ball >= 1 && d.cash_ball <= 3) cbFreqs[d.cash_ball]++;
+        });
+        // Add momentum for cash ball from last 10 draws
+        const cbRecent: Record<number, number> = {};
+        for (let i = 1; i <= 3; i++) cbRecent[i] = 0;
+        draws.slice(0, 10).forEach(d => {
+          if (d.cash_ball >= 1 && d.cash_ball <= 3) cbRecent[d.cash_ball]++;
+        });
+        const predictedCb = [1, 2, 3]
+          .map(i => ({ num: i, score: cbFreqs[i] + cbRecent[i] * 3 }))
+          .sort((a, b) => b.score - a.score)[0]?.num || 1;
 
         await db.execute({
           sql: "INSERT OR IGNORE INTO winforlife_predictions (prediction_date, predicted_numbers, predicted_cash_ball) VALUES (?, ?, ?)",
           args: [todayStr, selected.join(","), predictedCb]
         });
+
+        console.log(`[WFL Predictor v2] Ensemble: ${selected.join(",")} CB:${predictedCb}`);
+        console.log(`[WFL Predictor v2] Models: Markov=${markovTop10.join(",")}, Momentum=${momentumTop10.join(",")}, Day=${dayTop10.join(",")}, Cycle=${cycleTop10.join(",")}, FreqGap=${freqGapTop10.join(",")}`);
+        console.log(`[WFL Predictor v2] Eliminated: ${[...eliminated].join(",")}`);
       }
     }
 
