@@ -1024,6 +1024,17 @@ export default function WinForLifeTab() {
                     </div>
                     <span className="text-slate-500 uppercase font-mono">Selected: {selectedNums.length}/12</span>
                   </div>
+
+                  {showHeatmapOverlay && (
+                    <div className="flex items-center gap-2 text-[9px] font-mono text-gray-500 uppercase pb-1 select-none">
+                      <span>Heatmap Key:</span>
+                      <span className="w-2 h-2 bg-slate-900 border border-white/5 inline-block" />
+                      <span>Cold (Low Freq)</span>
+                      <div className="w-10 h-1.5 bg-gradient-to-r from-slate-900 to-[#10b981] border border-white/5 inline-block" />
+                      <span>Hot (High Freq)</span>
+                      <span className="w-2 h-2 bg-[#10b981] inline-block" />
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-7 sm:grid-cols-10 gap-2">
                     {Array.from({ length: 28 }).map((_, idx) => {
@@ -1402,6 +1413,74 @@ export default function WinForLifeTab() {
           </div>
         </div>
       )}
+
+      {/* Custom CSS Animation Keyframes for Tumbler */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes bounce-ball-1 {
+          0%, 100% { transform: translate(10px, 10px); }
+          25% { transform: translate(80px, 20px); }
+          50% { transform: translate(20px, 80px); }
+          75% { transform: translate(80px, 80px); }
+        }
+        @keyframes bounce-ball-2 {
+          0%, 100% { transform: translate(80px, 80px); }
+          35% { transform: translate(20px, 15px); }
+          65% { transform: translate(85px, 10px); }
+        }
+        @keyframes bounce-ball-3 {
+          0%, 100% { transform: translate(50px, 80px); }
+          30% { transform: translate(15px, 15px); }
+          60% { transform: translate(80px, 30px); }
+          80% { transform: translate(20px, 70px); }
+        }
+        @keyframes bounce-ball-4 {
+          0%, 100% { transform: translate(15px, 50px); }
+          15% { transform: translate(70px, 80px); }
+          55% { transform: translate(50px, 10px); }
+          75% { transform: translate(80px, 40px); }
+        }
+        @keyframes bounce-ball-5 {
+          0%, 100% { transform: translate(65px, 10px); }
+          25% { transform: translate(10px, 70px); }
+          50% { transform: translate(80px, 60px); }
+          75% { transform: translate(30px, 20px); }
+        }
+        @keyframes bounce-ball-6 {
+          0%, 100% { transform: translate(25px, 80px); }
+          20% { transform: translate(80px, 25px); }
+          45% { transform: translate(15px, 40px); }
+          70% { transform: translate(75px, 75px); }
+        }
+        @keyframes ballDrop {
+          0% {
+            transform: translateY(-80px) scale(0.3);
+            opacity: 0;
+          }
+          60% {
+            transform: translateY(12px) scale(1.1);
+            opacity: 0.9;
+          }
+          90% {
+            transform: translateY(-4px) scale(0.98);
+          }
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+        }
+        .animate-bounce-ball-1 { animation: bounce-ball-1 4.5s infinite ease-in-out; }
+        .animate-bounce-ball-2 { animation: bounce-ball-2 5s infinite ease-in-out; }
+        .animate-bounce-ball-3 { animation: bounce-ball-3 4s infinite ease-in-out; }
+        .animate-bounce-ball-4 { animation: bounce-ball-4 5.5s infinite ease-in-out; }
+        .animate-bounce-ball-5 { animation: bounce-ball-5 3.8s infinite ease-in-out; }
+        .animate-bounce-ball-6 { animation: bounce-ball-6 5.2s infinite ease-in-out; }
+        .animate-spin-slow { animation: spin 25s infinite linear; }
+        .animate-ball-drop { animation: ballDrop 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+      `}</style>
 
     </div>
   );

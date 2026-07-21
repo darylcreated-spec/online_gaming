@@ -438,6 +438,17 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                   </div>
                   <span className="text-slate-500 uppercase font-mono">Selected: {selectedNums.length}/12</span>
                 </div>
+
+                {showHeatmapOverlay && (
+                  <div className="flex items-center gap-2 text-[9px] font-mono text-gray-500 uppercase pb-1 select-none">
+                    <span>Heatmap Key:</span>
+                    <span className="w-2 h-2 bg-[#181A20] border border-[#1F232B] inline-block" />
+                    <span>Cold (Low Freq)</span>
+                    <div className="w-10 h-1.5 bg-gradient-to-r from-[#181A20] to-[#D4AF37] border border-[#1F232B] inline-block" />
+                    <span>Hot (High Freq)</span>
+                    <span className="w-2 h-2 bg-[#D4AF37] inline-block" />
+                  </div>
+                )}
                 
                 {/* Number selection grid */}
                 <div className="grid grid-cols-7 sm:grid-cols-10 gap-2">
