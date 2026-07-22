@@ -143,6 +143,7 @@ export default function WinForLifeTab() {
   const [predictions, setPredictions] = useState<any[]>([]);
   const [predictionsStats, setPredictionsStats] = useState<any>(null);
   const [predictionsLoading, setPredictionsLoading] = useState(true);
+  const [modelBreakdown, setModelBreakdown] = useState<any[]>([]);
 
   // Builder states
   const [selectedNums, setSelectedNums] = useState<number[]>([]);
@@ -224,6 +225,7 @@ export default function WinForLifeTab() {
       if (data.success) {
         setPredictions(data.predictions);
         setPredictionsStats(data.stats);
+        if (data.modelBreakdown) setModelBreakdown(data.modelBreakdown);
       }
     } catch (e) {
       console.error(e);
@@ -1294,6 +1296,31 @@ export default function WinForLifeTab() {
                               </span>
                             ))}
                           </div>
+                          
+                          {p.status === "PENDING" && modelBreakdown && modelBreakdown.length > 0 && (
+                            <div className="mt-3 space-y-2 min-w-[240px]">
+                              <div className="text-[9px] font-bold font-mono text-gray-500 uppercase tracking-wider">Model Attribution</div>
+                              {modelBreakdown.map((mbItem: any, idx: number) => (
+                                <div key={idx} className="flex items-center gap-3">
+                                  <span className="text-sm font-bold font-mono text-primary w-6">{String(mbItem.number).padStart(2, '0')}</span>
+                                  <div className="flex-1">
+                                    <div className="confidence-bar">
+                                      <div 
+                                        className={`confidence-bar-fill ${mbItem.confidence >= 60 ? 'confidence-high' : mbItem.confidence >= 40 ? 'confidence-medium' : 'confidence-low'}`}
+                                        style={{ width: `${mbItem.confidence}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] font-mono text-gray-400 w-8 text-right">{mbItem.confidence}%</span>
+                                  <div className="flex gap-1 flex-wrap">
+                                    {mbItem.models.map((m: string, mIdx: number) => (
+                                      <span key={mIdx} className="text-[8px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono font-bold whitespace-nowrap">{m}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </td>
                         <td className="py-3 px-4">
                           <span className={`w-5.5 h-5.5 rounded-sm flex items-center justify-center font-bold text-[9px] ${

@@ -254,6 +254,91 @@ export async function GET() {
           .map(c => c.num);
 
         // ============================================================
+        // MODEL 6: Number Decay
+        // ============================================================
+        const decayScores: Record<number, number> = {};
+        for (let i = 1; i <= 28; i++) {
+          let lastSeenIdx = -1;
+          for (let j = 0; j < draws.length; j++) {
+            if (drawNums(draws[j]).includes(i)) { lastSeenIdx = j; break; }
+          }
+          if (lastSeenIdx === -1) {
+            decayScores[i] = 5.0;
+          } else {
+            let totalAppearances = 0;
+            draws.forEach(d => { if (drawNums(d).includes(i)) totalAppearances++; });
+            const avgGap = totalAppearances > 0 ? draws.length / totalAppearances : 28;
+            decayScores[i] = 1 - Math.exp(-lastSeenIdx / avgGap);
+          }
+        }
+        const decayTop10 = Object.entries(decayScores)
+          .map(([n, s]) => ({ num: Number(n), score: s }))
+          .filter(c => c.score > 0.3)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10)
+          .map(c => c.num);
+
+        // ============================================================
+        // MODEL 7: Positional Pair Chains (skip-gram)
+        // ============================================================
+        const pairScores: Record<number, number> = {};
+        for (let i = 1; i <= 28; i++) pairScores[i] = 0;
+        const pairDistances = [2, 3, 4, 5];
+        const pairWeights = [1.5, 1.2, 0.8, 0.5];
+        for (let dIdx = 0; dIdx < pairDistances.length; dIdx++) {
+          const d = pairDistances[dIdx];
+          const w = pairWeights[dIdx];
+          if (d < draws.length) {
+            for (let j = d; j < Math.min(draws.length, 100); j++) {
+              const pastNums = drawNums(draws[j]);
+              const futureNums = drawNums(draws[j - d]);
+              // Check if past draw matches our last draw pattern
+              const overlap = pastNums.filter(n => lastDrawNums.includes(n)).length;
+              if (overlap >= 2) {
+                futureNums.forEach(n => { if (pairScores[n] !== undefined) pairScores[n] += w * overlap; });
+              }
+            }
+          }
+        }
+        const pairTop10 = Object.entries(pairScores)
+          .map(([n, s]) => ({ num: Number(n), score: s }))
+          .filter(c => c.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10)
+          .map(c => c.num);
+
+        // ============================================================
+        // MODEL 8: Entropy Anomaly
+        // ============================================================
+        const entropyWindow = draws.slice(0, Math.min(30, draws.length));
+        const entWindowFreq: Record<number, number> = {};
+        for (let i = 1; i <= 28; i++) entWindowFreq[i] = 0;
+        entropyWindow.forEach(d => { drawNums(d).forEach(n => { if (entWindowFreq[n] !== undefined) entWindowFreq[n]++; }); });
+        const entTotal = entropyWindow.length * 6;
+        let wflEntropy = 0;
+        for (let i = 1; i <= 28; i++) {
+          const p = entWindowFreq[i] / entTotal;
+          if (p > 0) wflEntropy -= p * Math.log2(p);
+        }
+        const wflMaxEntropy = Math.log2(28);
+        const wflEntropyRatio = wflEntropy / wflMaxEntropy;
+        const entropyScores: Record<number, number> = {};
+        if (wflEntropyRatio < 0.88) {
+          const avgF = entTotal / 28;
+          for (let i = 1; i <= 28; i++) {
+            entropyScores[i] = Math.max(0, avgF - entWindowFreq[i]) * (1 - wflEntropyRatio) * 3;
+          }
+        } else {
+          for (let i = 1; i <= 28; i++) entropyScores[i] = 0;
+        }
+        const entropyTop10 = Object.entries(entropyScores)
+          .map(([n, s]) => ({ num: Number(n), score: s }))
+          .filter(c => c.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10)
+          .map(c => c.num);
+
+        // ============================================================
         // ELIMINATION FILTER
         // ============================================================
         const eliminated = new Set<number>();
@@ -282,7 +367,7 @@ export async function GET() {
           rankSum[i] = 0;
         }
 
-        const models = [markovTop10, momentumTop10, dayTop10, cycleTop10, freqGapTop10];
+        const models = [markovTop10, momentumTop10, dayTop10, cycleTop10, freqGapTop10, decayTop10, pairTop10, entropyTop10];
         models.forEach(top10 => {
           top10.forEach((num, rank) => {
             voteCount[num]++;
@@ -339,7 +424,10 @@ export async function GET() {
           if (dayTop10.includes(num)) votedModels.push('Day');
           if (cycleTop10.includes(num)) votedModels.push('Cycle');
           if (freqGapTop10.includes(num)) votedModels.push('FreqGap');
-          return { number: num, votes: votedModels.length, models: votedModels, confidence: Math.round((votedModels.length / 5) * 100) };
+          if (decayTop10.includes(num)) votedModels.push('Decay');
+          if (pairTop10.includes(num)) votedModels.push('PairChain');
+          if (entropyTop10.includes(num)) votedModels.push('Entropy');
+          return { number: num, votes: votedModels.length, models: votedModels, confidence: Math.round((votedModels.length / 8) * 100) };
         });
 
         // Cash Ball: use weighted frequency with momentum boost
@@ -364,7 +452,7 @@ export async function GET() {
         });
 
         console.log(`[WFL Predictor v2] Ensemble: ${selected.join(",")} CB:${predictedCb}`);
-        console.log(`[WFL Predictor v2] Models: Markov=${markovTop10.join(",")}, Momentum=${momentumTop10.join(",")}, Day=${dayTop10.join(",")}, Cycle=${cycleTop10.join(",")}, FreqGap=${freqGapTop10.join(",")}`);
+        console.log(`[WFL Predictor v2] Models: Markov=${markovTop10.join(",")}, Momentum=${momentumTop10.join(",")}, Day=${dayTop10.join(",")}, Cycle=${cycleTop10.join(",")}, FreqGap=${freqGapTop10.join(",")}, Decay=${decayTop10.join(",")}, PairChain=${pairTop10.join(",")}, Entropy=${entropyTop10.join(",")}`);
         console.log(`[WFL Predictor v2] Eliminated: ${[...eliminated].join(",")}`);
       }
     }

@@ -229,6 +229,86 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       .map(c => c.num);
 
     // ============================================================
+    // MODEL 6: Number Decay — exponential pressure build-up
+    // ============================================================
+    const decayScores: Record<number, number> = {};
+    for (let i = 1; i <= 36; i++) {
+      const lastSeenIdx = allNums.indexOf(i);
+      if (lastSeenIdx === -1) {
+        decayScores[i] = 5.0; // never seen = maximum pressure
+      } else {
+        const avgGapForNum = allNums.filter(n => n === i).length > 0
+          ? allNums.length / allNums.filter(n => n === i).length
+          : 36;
+        decayScores[i] = 1 - Math.exp(-lastSeenIdx / avgGapForNum);
+      }
+    }
+    const decayTop8 = Object.entries(decayScores)
+      .map(([n, s]) => ({ num: Number(n), score: s }))
+      .filter(c => c.score > 0.3)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(c => c.num);
+
+    // ============================================================
+    // MODEL 7: Positional Pair Chains (skip-gram at distances 2-5)
+    // ============================================================
+    const pairScores: Record<number, number> = {};
+    for (let i = 1; i <= 36; i++) pairScores[i] = 0;
+    const distances = [2, 3, 4, 5];
+    const distWeights = [1.5, 1.2, 0.8, 0.5];
+    for (let dIdx = 0; dIdx < distances.length; dIdx++) {
+      const d = distances[dIdx];
+      const w = distWeights[dIdx];
+      for (let j = d; j < allNums.length; j++) {
+        if (allNums[j] === lastDrawn) {
+          const target = allNums[j - d];
+          if (target >= 1 && target <= 36) pairScores[target] += w;
+        }
+      }
+    }
+    const pairTop8 = Object.entries(pairScores)
+      .map(([n, s]) => ({ num: Number(n), score: s }))
+      .filter(c => c.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(c => c.num);
+
+    // ============================================================
+    // MODEL 8: Entropy Anomaly — predict underrepresented numbers when distribution is skewed
+    // ============================================================
+    const window40 = allNums.slice(0, Math.min(40, allNums.length));
+    const windowFreq: Record<number, number> = {};
+    for (let i = 1; i <= 36; i++) windowFreq[i] = 0;
+    window40.forEach(n => { if (windowFreq[n] !== undefined) windowFreq[n]++; });
+    const total40 = window40.length;
+    let entropy = 0;
+    for (let i = 1; i <= 36; i++) {
+      const p = windowFreq[i] / total40;
+      if (p > 0) entropy -= p * Math.log2(p);
+    }
+    const maxEntropy = Math.log2(36); // ~5.17
+    const entropyRatio = entropy / maxEntropy;
+
+    const entropyScores: Record<number, number> = {};
+    if (entropyRatio < 0.88) {
+      // Distribution is skewed — favor underrepresented numbers
+      const avgFreq = total40 / 36;
+      for (let i = 1; i <= 36; i++) {
+        entropyScores[i] = Math.max(0, avgFreq - windowFreq[i]) * (1 - entropyRatio) * 3;
+      }
+    } else {
+      // Distribution is uniform — no strong signal from entropy
+      for (let i = 1; i <= 36; i++) entropyScores[i] = 0;
+    }
+    const entropyTop8 = Object.entries(entropyScores)
+      .map(([n, s]) => ({ num: Number(n), score: s }))
+      .filter(c => c.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(c => c.num);
+
+    // ============================================================
     // STRATEGY 5: ELIMINATION FILTER
     // Remove numbers that are statistically unlikely for this draw.
     // ============================================================
@@ -255,7 +335,7 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       rankSum[i] = 0;
     }
 
-    const models = [markovTop8, momentumTop8, daySlotTop8, cycleTop8, slotScoreTop8];
+    const models = [markovTop8, momentumTop8, daySlotTop8, cycleTop8, slotScoreTop8, decayTop8, pairTop8, entropyTop8];
     models.forEach(top8 => {
       top8.forEach((num, rank) => {
         voteCount[num]++;
@@ -317,11 +397,14 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       if (daySlotTop8.includes(num)) votedModels.push('Day+Slot');
       if (cycleTop8.includes(num)) votedModels.push('Cycle');
       if (slotScoreTop8.includes(num)) votedModels.push('SlotFreq');
+      if (decayTop8.includes(num)) votedModels.push('Decay');
+      if (pairTop8.includes(num)) votedModels.push('PairChain');
+      if (entropyTop8.includes(num)) votedModels.push('Entropy');
       return {
         number: num,
         votes: votedModels.length,
         models: votedModels,
-        confidence: Math.round((votedModels.length / 5) * 100)
+        confidence: Math.round((votedModels.length / 8) * 100)
       };
     });
 
@@ -335,7 +418,7 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
     });
 
     console.log(`[Predictor v2] Ensemble predictions for ${dateStr} [${slotStr}]: ${predictionString}`);
-    console.log(`[Predictor v2] Models: Markov=${markovTop8.join(",")}, Momentum=${momentumTop8.join(",")}, DaySlot=${daySlotTop8.join(",")}, Cycle=${cycleTop8.join(",")}, SlotFreq=${slotScoreTop8.join(",")}`);
+    console.log(`[Predictor v2] Models: Markov=${markovTop8.join(",")}, Momentum=${momentumTop8.join(",")}, DaySlot=${daySlotTop8.join(",")}, Cycle=${cycleTop8.join(",")}, SlotFreq=${slotScoreTop8.join(",")}, Decay=${decayTop8.join(",")}, PairChain=${pairTop8.join(",")}, Entropy=${entropyTop8.join(",")}`);
     console.log(`[Predictor v2] Eliminated: ${[...eliminated].join(",")}`);
 
     return { predicted_numbers: predictionString, success: true, modelBreakdown: breakdown };

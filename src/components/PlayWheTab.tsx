@@ -140,6 +140,7 @@ export default function PlayWheTab({
   const [predictionsList, setPredictionsList] = useState<any[]>([]);
   const [predictionsStats, setPredictionsStats] = useState<any>(null);
   const [predictionsLoading, setPredictionsLoading] = useState(true);
+  const [modelBreakdown, setModelBreakdown] = useState<Record<string, any[]>>({});
   const predictorLoading = predictionsLoading;
 
   // Dream Journal & Speech-to-Text States
@@ -261,6 +262,7 @@ export default function PlayWheTab({
       if (data.success) {
         setPredictionsList(data.predictions);
         setPredictionsStats(data.stats);
+        if (data.modelBreakdown) setModelBreakdown(data.modelBreakdown);
       }
     } catch (err) {
       console.error("Error fetching Play Whe prediction hits:", err);
@@ -2142,6 +2144,31 @@ export default function PlayWheTab({
                               );
                             })}
                           </div>
+                          
+                          {item.status === "PENDING" && modelBreakdown && modelBreakdown[item.draw_time_slot] && modelBreakdown[item.draw_time_slot].length > 0 && (
+                            <div className="mt-3 space-y-2 min-w-[240px]">
+                              <div className="text-[9px] font-bold font-mono text-gray-500 uppercase tracking-wider">Model Attribution</div>
+                              {modelBreakdown[item.draw_time_slot].map((mbItem: any, idx: number) => (
+                                <div key={idx} className="flex items-center gap-3">
+                                  <span className="text-sm font-bold font-mono text-primary w-6">{String(mbItem.number).padStart(2, '0')}</span>
+                                  <div className="flex-1">
+                                    <div className="confidence-bar">
+                                      <div 
+                                        className={`confidence-bar-fill ${mbItem.confidence >= 60 ? 'confidence-high' : mbItem.confidence >= 40 ? 'confidence-medium' : 'confidence-low'}`}
+                                        style={{ width: `${mbItem.confidence}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] font-mono text-gray-400 w-8 text-right">{mbItem.confidence}%</span>
+                                  <div className="flex gap-1 flex-wrap">
+                                    {mbItem.models.map((m: string, mIdx: number) => (
+                                      <span key={mIdx} className="text-[8px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono font-bold whitespace-nowrap">{m}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </td>
 
                         {/* VS Divider Column */}
