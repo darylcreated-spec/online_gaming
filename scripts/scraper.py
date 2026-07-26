@@ -143,24 +143,55 @@ def execute_sql(conn, sql, args=[]):
         except (KeyError, IndexError, TypeError):
             return []
 
-# Insert a Lotto Plus draw record into the DB
-def save_draw(conn, draw_data):
+# Execute multiple SQL statements in a single batch request for speed
+def execute_batch_sql(conn, stmts_with_args):
+    if not stmts_with_args:
+        return
+    if not USE_TURSO:
+        cursor = conn.cursor()
+        for sql, args in stmts_with_args:
+            cursor.execute(sql, args)
+        conn.commit()
+    else:
+        url = TURSO_DB_URL
+        if url.startswith("libsql://"):
+            url = url.replace("libsql://", "https://")
+        endpoint = f"{url}/v2/pipeline"
+        headers = {
+            "Authorization": f"Bearer {TURSO_DB_TOKEN}",
+            "Content-Type": "application/json",
+        }
+        # Batch in chunks of 50 statements to prevent payload size limits
+        chunk_size = 50
+        for i in range(0, len(stmts_with_args), chunk_size):
+            chunk = stmts_with_args[i:i + chunk_size]
+            requests_list = []
+            for sql, args in chunk:
+                requests_list.append({
+                    "type": "execute",
+                    "stmt": {
+                        "sql": sql,
+                        "args": [to_libsql_arg(x) for x in args]
+                    }
+                })
+            requests_list.append({"type": "close"})
+            payload = {"requests": requests_list}
+            response = requests.post(endpoint, json=payload, headers=headers, timeout=30)
+            response.raise_for_status()
+
+# Save batch of Lotto Plus draw records into the DB
+def save_draws_batch(conn, draws_list):
+    if not draws_list:
+        return
     sql = """
     INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
-    execute_sql(conn, sql, [
-        draw_data["draw_number"],
-        draw_data["draw_date"],
-        draw_data["num1"],
-        draw_data["num2"],
-        draw_data["num3"],
-        draw_data["num4"],
-        draw_data["num5"],
-        draw_data["powerball"],
-        draw_data["multiplier"],
-        draw_data["jackpot"]
-    ])
+    stmts = [(sql, [
+        d["draw_number"], d["draw_date"], d["num1"], d["num2"], d["num3"], d["num4"], d["num5"],
+        d["powerball"], d["multiplier"], d["jackpot"]
+    ]) for d in draws_list]
+    execute_batch_sql(conn, stmts)
 
 # Parse latest draw from the main landing page
 def scrape_homepage(session):
@@ -310,17 +341,15 @@ def parse_play_whe_date(date_str):
     y = "20" + year if len(year) == 2 else year
     return f"{y}-{m}-{day.zfill(2)}"
 
-def save_play_whe_draw(conn, draw_data):
+def save_play_whe_draws_batch(conn, draws_list):
+    if not draws_list:
+        return
     sql = """
     INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number)
     VALUES (?, ?, ?, ?)
     """
-    execute_sql(conn, sql, [
-        draw_data["draw_number"],
-        draw_data["draw_date"],
-        draw_data["draw_time_slot"],
-        draw_data["winning_number"]
-    ])
+    stmts = [(sql, [d["draw_number"], d["draw_date"], d["draw_time_slot"], d["winning_number"]]) for d in draws_list]
+    execute_batch_sql(conn, stmts)
 
 def scrape_play_whe_sid(session):
     print(f"Scraping Play Whe page for sid: {PLAYWHE_URL}")
@@ -393,6 +422,7 @@ def run_play_whe_scraper(args, conn):
         
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     current_year = datetime.now().year
+    current_month_idx = datetime.now().month - 1
     
     if args.full:
         print("Starting FULL HISTORICAL PLAY WHE SCRAPING (2001 to present)...")
@@ -400,44 +430,43 @@ def run_play_whe_scraper(args, conn):
             for m in reversed(months):
                 try:
                     month_draws = scrape_play_whe_month(session, m, y, sid)
-                    for draw in month_draws:
-                        save_play_whe_draw(conn, draw)
-                    time.sleep(0.5)
-                except Exception as e:
-                    print(f"Error scraping Play Whe {m} {y}: {e}")
-    else:
-        print("Starting LATEST PLAY WHE MONTHS UPDATE (last 4 years)...")
-        for y in [current_year, current_year - 1, current_year - 2, current_year - 3]:
-            for m in reversed(months):
-                try:
-                    month_draws = scrape_play_whe_month(session, m, y, sid)
-                    for draw in month_draws:
-                        save_play_whe_draw(conn, draw)
+                    save_play_whe_draws_batch(conn, month_draws)
                     time.sleep(0.3)
                 except Exception as e:
                     print(f"Error scraping Play Whe {m} {y}: {e}")
+    else:
+        print("Starting LATEST PLAY WHE MONTHS UPDATE...")
+        # For non-full sync, target current month and previous month
+        target_months = [(current_year, months[current_month_idx])]
+        if current_month_idx > 0:
+            target_months.append((current_year, months[current_month_idx - 1]))
+        else:
+            target_months.append((current_year - 1, months[11]))
+            
+        for y, m in target_months:
+            try:
+                month_draws = scrape_play_whe_month(session, m, y, sid)
+                save_play_whe_draws_batch(conn, month_draws)
+                time.sleep(0.3)
+            except Exception as e:
+                print(f"Error scraping Play Whe {m} {y}: {e}")
                     
     print("\nPlay Whe Sync completed successfully.")
 
 # === WIN FOR LIFE SCRAPING ENGINE ===
 
-def save_win_for_life_draw(conn, draw_data):
+def save_win_for_life_draws_batch(conn, draws_list):
+    if not draws_list:
+        return
     sql = """
     INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
-    execute_sql(conn, sql, [
-        draw_data["draw_number"],
-        draw_data["draw_date"],
-        draw_data["num1"],
-        draw_data["num2"],
-        draw_data["num3"],
-        draw_data["num4"],
-        draw_data["num5"],
-        draw_data["num6"],
-        draw_data["cash_ball"],
-        draw_data["jackpot"]
-    ])
+    stmts = [(sql, [
+        d["draw_number"], d["draw_date"], d["num1"], d["num2"], d["num3"], d["num4"], d["num5"], d["num6"],
+        d["cash_ball"], d["jackpot"]
+    ]) for d in draws_list]
+    execute_batch_sql(conn, stmts)
 
 def scrape_win_for_life_sid(session):
     print(f"Scraping Win for Life page for sid: {WINFORLIFE_URL}")
@@ -511,6 +540,7 @@ def run_win_for_life_scraper(args, conn):
         
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     current_year = datetime.now().year
+    current_month_idx = datetime.now().month - 1
     
     if args.full:
         print("Starting FULL HISTORICAL WIN FOR LIFE SCRAPING (2022 to present)...")
@@ -518,22 +548,25 @@ def run_win_for_life_scraper(args, conn):
             for m in reversed(months):
                 try:
                     month_draws = scrape_win_for_life_month(session, m, y, sid)
-                    for draw in month_draws:
-                        save_win_for_life_draw(conn, draw)
-                    time.sleep(0.5)
+                    save_win_for_life_draws_batch(conn, month_draws)
+                    time.sleep(0.3)
                 except Exception as e:
                     print(f"Error scraping Win for Life {m} {y}: {e}")
     else:
         print("Starting LATEST WIN FOR LIFE MONTHS UPDATE...")
-        for y in [current_year, current_year - 1]:
-            for m in reversed(months):
-                try:
-                    month_draws = scrape_win_for_life_month(session, m, y, sid)
-                    for draw in month_draws:
-                        save_win_for_life_draw(conn, draw)
-                    time.sleep(0.3)
-                except Exception as e:
-                    print(f"Error scraping Win for Life {m} {y}: {e}")
+        target_months = [(current_year, months[current_month_idx])]
+        if current_month_idx > 0:
+            target_months.append((current_year, months[current_month_idx - 1]))
+        else:
+            target_months.append((current_year - 1, months[11]))
+            
+        for y, m in target_months:
+            try:
+                month_draws = scrape_win_for_life_month(session, m, y, sid)
+                save_win_for_life_draws_batch(conn, month_draws)
+                time.sleep(0.3)
+            except Exception as e:
+                print(f"Error scraping Win for Life {m} {y}: {e}")
                     
     print("\nWin for Life Sync completed successfully.")
 
@@ -573,13 +606,14 @@ def main():
         return
         
     if latest_draw:
-        save_draw(conn, latest_draw)
+        save_draws_batch(conn, [latest_draw])
         
     if not sid:
         print("WARNING: Could not extract sid CSRF token. POST queries might fail.")
         
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     current_year = datetime.now().year
+    current_month_idx = datetime.now().month - 1
     
     if args.full:
         print("Starting FULL HISTORICAL SCRAPING (2001 to present)...")
@@ -587,22 +621,25 @@ def main():
             for m in reversed(months):
                 try:
                     month_draws = scrape_month(session, m, y, sid)
-                    for draw in month_draws:
-                        save_draw(conn, draw)
-                    time.sleep(0.5)
+                    save_draws_batch(conn, month_draws)
+                    time.sleep(0.3)
                 except Exception as e:
                     print(f"Error scraping {m} {y}: {e}")
     else:
         print("Starting LATEST MONTHS UPDATE...")
-        for y in [current_year, current_year - 1, current_year - 2, current_year - 3]:
-            for m in reversed(months):
-                try:
-                    month_draws = scrape_month(session, m, y, sid)
-                    for draw in month_draws:
-                        save_draw(conn, draw)
-                    time.sleep(0.3)
-                except Exception as e:
-                    print(f"Error scraping {m} {y}: {e}")
+        target_months = [(current_year, months[current_month_idx])]
+        if current_month_idx > 0:
+            target_months.append((current_year, months[current_month_idx - 1]))
+        else:
+            target_months.append((current_year - 1, months[11]))
+            
+        for y, m in target_months:
+            try:
+                month_draws = scrape_month(session, m, y, sid)
+                save_draws_batch(conn, month_draws)
+                time.sleep(0.3)
+            except Exception as e:
+                print(f"Error scraping {m} {y}: {e}")
 
     print("\nSync completed successfully.")
     if conn:
