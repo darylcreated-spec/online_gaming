@@ -50,6 +50,13 @@ jobs:
           SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
         run: python scripts/scraper.py --game play-whe
 
+      - name: Run Win for Life Scraper
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
+        run: python scripts/scraper.py --game win-for-life
+
       - name: Commit and Push DB changes (if local SQLite was updated)
         run: |
           git config --global user.name "github-actions[bot]"

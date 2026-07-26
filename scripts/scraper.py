@@ -7,11 +7,13 @@ import time
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
-
-# Base URL for NLCB Lotto Plus Results
-BASE_URL = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/"
-
 import urllib.parse
+
+# Base URLs for NLCB Results
+BASE_URL = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/"
+PLAYWHE_URL = "https://www.nlcbplaywhelotto.com/nlcb-play-whe-results/"
+WINFORLIFE_URL = "https://www.nlcbplaywhelotto.com/nlcb-win-for-life-results/"
+
 def get_scrape_url(url):
     api_key = os.environ.get("SCRAPER_API_KEY", "")
     if api_key:
@@ -34,15 +36,35 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
+    "Referer": "https://www.nlcbplaywhelotto.com/",
 }
+
+# Helper: HTTP Request with exponential backoff retries
+def make_request(session, method, url, **kwargs):
+    retries = 3
+    last_err = None
+    headers = kwargs.pop("headers", HEADERS)
+    timeout = kwargs.pop("timeout", 30)
+    target_url = get_scrape_url(url)
+    
+    for i in range(retries):
+        try:
+            if method.upper() == "POST":
+                resp = session.post(target_url, headers=headers, timeout=timeout, **kwargs)
+            else:
+                resp = session.get(target_url, headers=headers, timeout=timeout, **kwargs)
+            resp.raise_for_status()
+            return resp
+        except Exception as e:
+            last_err = e
+            time.sleep(1 * (2 ** i))
+    raise last_err
 
 # Standardize date format: "11-Jul-26" -> "2026-07-11"
 def parse_date(date_str):
     date_str = date_str.replace("DATE:", "").strip()
-    # Normalize spacing
     date_str = re.sub(r'\s+', ' ', date_str)
-    # Parse month names
-    for fmt in ("%d-%b-%y", "%d-%b-%Y", "%d-%B-%y", "%d-%B-%Y"):
+    for fmt in ("%d-%b-%y", "%d-%b-%Y", "%d-%B-%y", "%d-%B-%Y", "%d-%m-%Y", "%Y-%m-%d"):
         try:
             dt = datetime.strptime(date_str, fmt)
             return dt.strftime("%Y-%m-%d")
@@ -79,7 +101,6 @@ def execute_sql(conn, sql, args=[]):
         conn.commit()
         return cursor.fetchall()
     else:
-        # Format Turso URL from libsql:// to https://
         url = TURSO_DB_URL
         if url.startswith("libsql://"):
             url = url.replace("libsql://", "https://")
@@ -90,7 +111,6 @@ def execute_sql(conn, sql, args=[]):
             "Content-Type": "application/json",
         }
         
-        # Build libSQL pipeline request
         payload = {
             "requests": [
                 {
@@ -108,11 +128,9 @@ def execute_sql(conn, sql, args=[]):
         response.raise_for_status()
         res_data = response.json()
         
-        # Parse result rows if returned
         try:
             exec_result = res_data["results"][0]["response"]["result"]
             rows = exec_result.get("rows", [])
-            # Map columns and values back to tuple-like structure
             mapped_rows = []
             for row in rows:
                 mapped_rows.append(tuple(
@@ -125,7 +143,7 @@ def execute_sql(conn, sql, args=[]):
         except (KeyError, IndexError, TypeError):
             return []
 
-# Insert a draw record into the DB
+# Insert a Lotto Plus draw record into the DB
 def save_draw(conn, draw_data):
     sql = """
     INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot)
@@ -147,15 +165,12 @@ def save_draw(conn, draw_data):
 # Parse latest draw from the main landing page
 def scrape_homepage(session):
     print("Scraping main landing page...")
-    response = session.get(get_scrape_url(BASE_URL), headers=HEADERS, timeout=30)
-    response.raise_for_status()
+    response = make_request(session, "GET", BASE_URL)
     soup = BeautifulSoup(response.text, "html.parser")
     
-    # 1. Extract sid token
     sid_input = soup.find("input", {"name": "sid"})
     sid = sid_input["value"] if sid_input else None
     
-    # 2. Extract latest draw from #results
     results_div = soup.find("div", {"id": "results"})
     if not results_div:
         print("No results container found on homepage.")
@@ -177,7 +192,6 @@ def scrape_homepage(session):
         return None, sid
     draw_number = int(draw_match.group(1))
     
-    # Extract balls
     balls = results_div.find_all(class_="ball")
     if len(balls) < 6:
         print(f"Expected at least 6 balls, found {len(balls)}")
@@ -190,7 +204,6 @@ def scrape_homepage(session):
     
     powerball = int(balls[5].text.strip())
     
-    # Extract multiplier
     multiplier_el = results_div.find(class_="multiplier")
     multiplier = "1x"
     if multiplier_el:
@@ -198,7 +211,6 @@ def scrape_homepage(session):
         if mult_match:
             multiplier = mult_match.group(1).lower()
             
-    # Extract jackpot
     jackpot_el = results_div.find(id="jackpot")
     jackpot = jackpot_el.text.strip() if jackpot_el else "Unknown"
     
@@ -218,7 +230,6 @@ def scrape_homepage(session):
     print(f"Scraped Homepage Latest: Draw #{draw_number} on {date_str} - Numbers: {numbers} PB: {powerball} Mult: {multiplier} Jackpot: {jackpot}")
     return draw_data, sid
 
-# Scrape results for a specific month and year via POST
 def scrape_month(session, month_str, year_val, sid):
     print(f"Scraping monthly draws for {month_str} {year_val}...")
     payload = {
@@ -229,8 +240,7 @@ def scrape_month(session, month_str, year_val, sid):
     if sid:
         payload["sid"] = sid
         
-    response = session.post(get_scrape_url(BASE_URL), data=payload, headers=HEADERS, timeout=30)
-    response.raise_for_status()
+    response = make_request(session, "POST", BASE_URL, data=payload)
     soup = BeautifulSoup(response.text, "html.parser")
     
     table = soup.find("table", {"id": "monthResults"})
@@ -238,10 +248,7 @@ def scrape_month(session, month_str, year_val, sid):
         print(f"No results table found for {month_str} {year_val}.")
         return []
         
-    tbody = table.find("tbody")
-    if not tbody:
-        tbody = table  # fallback if no tbody
-        
+    tbody = table.find("tbody") or table
     rows = tbody.find_all("tr")
     draws = []
     
@@ -257,11 +264,9 @@ def scrape_month(session, month_str, year_val, sid):
             if len(tds) >= 4 and current_date:
                 try:
                     draw_num = int(tds[0].text.strip())
-                    
                     nums_str = tds[1].text.strip()
                     nums = [int(n.strip()) for n in nums_str.split("-")]
                     nums.sort()
-                    
                     pb = int(tds[2].text.strip())
                     
                     mult = tds[3].text.strip().replace("\n", "").replace("\t", "").strip().lower()
@@ -292,21 +297,17 @@ def scrape_month(session, month_str, year_val, sid):
     return draws
 
 def parse_play_whe_date(date_str):
-    # Example format: "01-Jun-26" or "01-Jun-2026"
     parts = date_str.split("-")
     if len(parts) != 3:
         return date_str
     day, month_abbr, year = parts
     months_map = {
-        "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04",
-        "May": "05", "Jun": "06", "Jul": "07", "Aug": "08",
-        "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12"
+        "jan": "01", "feb": "02", "mar": "03", "apr": "04",
+        "may": "05", "jun": "06", "jul": "07", "aug": "08",
+        "sep": "09", "oct": "10", "nov": "11", "dec": "12"
     }
-    m = months_map.get(month_abbr, "01")
-    if len(year) == 2:
-        y = "20" + year
-    else:
-        y = year
+    m = months_map.get(month_abbr.lower(), "01")
+    y = "20" + year if len(year) == 2 else year
     return f"{y}-{m}-{day.zfill(2)}"
 
 def save_play_whe_draw(conn, draw_data):
@@ -322,17 +323,14 @@ def save_play_whe_draw(conn, draw_data):
     ])
 
 def scrape_play_whe_sid(session):
-    url = "https://www.nlcbplaywhelotto.com/nlcb-play-whe-results/"
-    print(f"Scraping Play Whe page for sid: {url}")
-    response = session.get(get_scrape_url(url), headers=HEADERS, timeout=30)
-    response.raise_for_status()
+    print(f"Scraping Play Whe page for sid: {PLAYWHE_URL}")
+    response = make_request(session, "GET", PLAYWHE_URL)
     soup = BeautifulSoup(response.text, "html.parser")
     sid_input = soup.find("input", {"name": "sid"})
     sid = sid_input["value"] if sid_input else None
     return sid
 
 def scrape_play_whe_month(session, month_str, year_val, sid):
-    url = "https://www.nlcbplaywhelotto.com/nlcb-play-whe-results/"
     print(f"Scraping Play Whe: {month_str} {year_val}...")
     payload = {
         "playwhe_month": month_str,
@@ -340,8 +338,7 @@ def scrape_play_whe_month(session, month_str, year_val, sid):
         "dateBtn": "SEARCH",
         "sid": sid
     }
-    response = session.post(get_scrape_url(url), data=payload, headers=HEADERS, timeout=30)
-    response.raise_for_status()
+    response = make_request(session, "POST", PLAYWHE_URL, data=payload)
     soup = BeautifulSoup(response.text, "html.parser")
     
     table = soup.find("table")
@@ -355,7 +352,6 @@ def scrape_play_whe_month(session, month_str, year_val, sid):
         tds = row.find_all(["td", "th"])
         if len(tds) < 4:
             continue
-        # Skip header
         if "Draw" in tds[0].text or "Draw#" in tds[0].text:
             continue
             
@@ -363,7 +359,7 @@ def scrape_play_whe_month(session, month_str, year_val, sid):
             draw_num = int(tds[0].text.strip())
             raw_date = tds[1].text.strip()
             formatted_date = parse_play_whe_date(raw_date)
-            time_slot = tds[2].text.strip() # Morning, Midday, Afternoon, Evening
+            time_slot = tds[2].text.strip()
             
             raw_mark = tds[3].text.strip()
             mark_parts = raw_mark.split()
@@ -377,7 +373,7 @@ def scrape_play_whe_month(session, month_str, year_val, sid):
                 "draw_time_slot": time_slot,
                 "winning_number": winning_num
             })
-        except Exception as e:
+        except Exception:
             pass
             
     print(f"Found {len(draws)} Play Whe draws for {month_str} {year_val}.")
@@ -394,9 +390,6 @@ def run_play_whe_scraper(args, conn):
     if args.test:
         print(f"\nTEST RUN COMPLETE. Play Whe SID token found: {sid}")
         return
-        
-    if not sid:
-        print("WARNING: Could not extract sid CSRF token. POST queries might fail.")
         
     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     current_year = datetime.now().year
@@ -426,15 +419,132 @@ def run_play_whe_scraper(args, conn):
                     
     print("\nPlay Whe Sync completed successfully.")
 
+# === WIN FOR LIFE SCRAPING ENGINE ===
+
+def save_win_for_life_draw(conn, draw_data):
+    sql = """
+    INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+    execute_sql(conn, sql, [
+        draw_data["draw_number"],
+        draw_data["draw_date"],
+        draw_data["num1"],
+        draw_data["num2"],
+        draw_data["num3"],
+        draw_data["num4"],
+        draw_data["num5"],
+        draw_data["num6"],
+        draw_data["cash_ball"],
+        draw_data["jackpot"]
+    ])
+
+def scrape_win_for_life_sid(session):
+    print(f"Scraping Win for Life page for sid: {WINFORLIFE_URL}")
+    response = make_request(session, "GET", WINFORLIFE_URL)
+    soup = BeautifulSoup(response.text, "html.parser")
+    sid_input = soup.find("input", {"name": "sid"})
+    return sid_input["value"] if sid_input else None
+
+def scrape_win_for_life_month(session, month_str, year_val, sid):
+    print(f"Scraping Win for Life: {month_str} {year_val}...")
+    payload = {
+        "search_month": month_str,
+        "search_year": str(year_val),
+        "date_btn": "SEARCH",
+        "sid": sid
+    }
+    response = make_request(session, "POST", WINFORLIFE_URL, data=payload)
+    soup = BeautifulSoup(response.text, "html.parser")
+    table = soup.find("table", {"id": "monthResults"})
+    if not table:
+        print(f"No table found for Win for Life: {month_str} {year_val}.")
+        return []
+    tbody = table.find("tbody") or table
+    rows = tbody.find_all("tr")
+    draws = []
+    current_date = None
+    for row in rows:
+        cl = row.get("class", [])
+        if "lotto-date-tr" in cl:
+            date_strong = row.find("strong")
+            if date_strong:
+                current_date = parse_date(date_strong.text.strip())
+        elif "lotto-tr" in cl:
+            tds = row.find_all("td")
+            if len(tds) >= 3 and current_date:
+                try:
+                    draw_num = int(tds[0].text.strip())
+                    nums_str = tds[1].text.strip()
+                    nums = [int(n.strip()) for n in re.split(r'\s+', nums_str) if n.strip()]
+                    cb = int(tds[2].text.strip())
+                    jackpot = tds[3].text.strip() if len(tds) >= 4 else "Unknown"
+                    if len(nums) == 6:
+                        draws.append({
+                            "draw_number": draw_num,
+                            "draw_date": current_date,
+                            "num1": nums[0],
+                            "num2": nums[1],
+                            "num3": nums[2],
+                            "num4": nums[3],
+                            "num5": nums[4],
+                            "num6": nums[5],
+                            "cash_ball": cb,
+                            "jackpot": jackpot
+                        })
+                except Exception as e:
+                    pass
+    print(f"Found {len(draws)} Win for Life draws for {month_str} {year_val}.")
+    return draws
+
+def run_win_for_life_scraper(args, conn):
+    session = requests.Session()
+    try:
+        sid = scrape_win_for_life_sid(session)
+    except Exception as e:
+        print(f"WARNING: Could not retrieve CSRF sid token for Win for Life: {e}")
+        sid = None
+    
+    if args.test:
+        print(f"\nTEST RUN COMPLETE. Win for Life SID token found: {sid}")
+        return
+        
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    current_year = datetime.now().year
+    
+    if args.full:
+        print("Starting FULL HISTORICAL WIN FOR LIFE SCRAPING (2022 to present)...")
+        for y in range(current_year, 2021, -1):
+            for m in reversed(months):
+                try:
+                    month_draws = scrape_win_for_life_month(session, m, y, sid)
+                    for draw in month_draws:
+                        save_win_for_life_draw(conn, draw)
+                    time.sleep(0.5)
+                except Exception as e:
+                    print(f"Error scraping Win for Life {m} {y}: {e}")
+    else:
+        print("Starting LATEST WIN FOR LIFE MONTHS UPDATE...")
+        for y in [current_year, current_year - 1]:
+            for m in reversed(months):
+                try:
+                    month_draws = scrape_win_for_life_month(session, m, y, sid)
+                    for draw in month_draws:
+                        save_win_for_life_draw(conn, draw)
+                    time.sleep(0.3)
+                except Exception as e:
+                    print(f"Error scraping Win for Life {m} {y}: {e}")
+                    
+    print("\nWin for Life Sync completed successfully.")
+
 def main():
     parser = argparse.ArgumentParser(description="the Win Concept NLCB Scraper")
     parser.add_argument("--db", default=DB_FILE, help="Path to local SQLite DB file")
-    parser.add_argument("--game", default="lotto-plus", choices=["lotto-plus", "play-whe"], help="Which NLCB game to scrape")
+    parser.add_argument("--game", default="lotto-plus", choices=["lotto-plus", "play-whe", "win-for-life"], help="Which NLCB game to scrape")
     parser.add_argument("--full", action="store_true", help="Perform full scrape from 2001 to present")
     parser.add_argument("--test", action="store_true", help="Dry run test - scrape homepage only and print")
     args = parser.parse_args()
     
-    # Create DB connection
     conn = None
     if not args.test:
         if USE_TURSO:
@@ -448,10 +558,14 @@ def main():
         if conn:
             conn.close()
         return
+    elif args.game == "win-for-life":
+        run_win_for_life_scraper(args, conn)
+        if conn:
+            conn.close()
+        return
 
     session = requests.Session()
     
-    # 1. Scrape latest draw and extract sid token
     latest_draw, sid = scrape_homepage(session)
     
     if args.test:
@@ -469,27 +583,23 @@ def main():
     
     if args.full:
         print("Starting FULL HISTORICAL SCRAPING (2001 to present)...")
-        # Loop backwards from current year down to 2001
         for y in range(current_year, 2000, -1):
             for m in reversed(months):
                 try:
                     month_draws = scrape_month(session, m, y, sid)
                     for draw in month_draws:
                         save_draw(conn, draw)
-                    time.sleep(0.5)  # Be polite, avoid rate limits
+                    time.sleep(0.5)
                 except Exception as e:
                     print(f"Error scraping {m} {y}: {e}")
     else:
         print("Starting LATEST MONTHS UPDATE...")
-        # Scrape current year down to 3 years ago to capture recent history (approx. 350+ draws)
         for y in [current_year, current_year - 1, current_year - 2, current_year - 3]:
             for m in reversed(months):
                 try:
                     month_draws = scrape_month(session, m, y, sid)
                     for draw in month_draws:
                         save_draw(conn, draw)
-                    # Check if we should stop. If we find draws that already exist, we keep going slightly 
-                    # but don't need to loop years back.
                     time.sleep(0.3)
                 except Exception as e:
                     print(f"Error scraping {m} {y}: {e}")

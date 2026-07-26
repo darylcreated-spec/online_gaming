@@ -13,7 +13,32 @@ function getScrapeUrl(url: string): string {
 
 const HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Referer": "https://www.nlcbplaywhelotto.com/",
 };
+
+// Helper: fetch with exponential backoff retries for resilient scraping
+export async function fetchWithRetry(url: string, options: RequestInit = {}, retries: number = 3): Promise<Response> {
+  let lastError: any = null;
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, {
+        ...options,
+        headers: { ...HEADERS, ...(options.headers || {}) },
+        signal: AbortSignal.timeout(30000)
+      });
+      if (res.ok) return res;
+      lastError = new Error(`HTTP ${res.status}: ${res.statusText}`);
+    } catch (err) {
+      lastError = err;
+    }
+    if (i < retries - 1) {
+      await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i))); // 1s, 2s, 4s delay
+    }
+  }
+  throw lastError || new Error(`Fetch failed after ${retries} attempts for ${url}`);
+}
 
 // Standardize date: "11-Jul-26" -> "2026-07-11"
 export function parseDate(dateStr: string): string {
@@ -22,11 +47,19 @@ export function parseDate(dateStr: string): string {
   if (parts.length !== 3) return cleanStr;
 
   const day = parts[0].padStart(2, "0");
-  const monthName = parts[1].toLowerCase();
-  let year = parts[2];
+  const monthRaw = parts[1].trim().toLowerCase();
+  let year = parts[2].trim();
 
   if (year.length === 2) {
     year = "20" + year;
+  }
+
+  // Handle numeric month (e.g. 07 or 7)
+  if (/^\d+$/.test(monthRaw)) {
+    const monthNum = parseInt(monthRaw);
+    if (monthNum >= 1 && monthNum <= 12) {
+      return `${year}-${monthRaw.padStart(2, "0")}-${day}`;
+    }
   }
 
   const months: Record<string, string> = {
@@ -36,17 +69,14 @@ export function parseDate(dateStr: string): string {
     july: "07", august: "08", september: "09", october: "10", november: "11", december: "12"
   };
 
-  const month = months[monthName] || "01";
+  const month = months[monthRaw] || "01";
   return `${year}-${month}-${day}`;
 }
 
 // Scrape Homepage to get latest draw & active CSRF token (sid)
 export async function scrapeHomepage(): Promise<{ latestDraw: any | null, sid: string | null }> {
   try {
-    const res = await fetch(getScrapeUrl(BASE_URL), { 
-      headers: HEADERS,
-      signal: AbortSignal.timeout(30000)
-    });
+    const res = await fetchWithRetry(getScrapeUrl(BASE_URL));
     if (!res.ok) throw new Error(`Failed to load homepage: ${res.statusText}`);
     
     const html = await res.text();
@@ -118,14 +148,12 @@ export async function scrapeMonth(monthStr: string, yearVal: number, sid: string
       formData.append("sid", sid);
     }
     
-    const res = await fetch(getScrapeUrl(BASE_URL), {
+    const res = await fetchWithRetry(getScrapeUrl(BASE_URL), {
       method: "POST",
       headers: {
-        ...HEADERS,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: formData.toString(),
-      signal: AbortSignal.timeout(30000)
     });
     
     if (!res.ok) throw new Error(`POST failed for ${monthStr} ${yearVal}: ${res.statusText}`);
@@ -347,10 +375,7 @@ export function parsePlayWheDate(dateStr: string): string {
 
 export async function scrapePlayWheSid(): Promise<string | null> {
   try {
-    const res = await fetch(getScrapeUrl(PLAYWHE_URL), { 
-      headers: HEADERS,
-      signal: AbortSignal.timeout(30000)
-    });
+    const res = await fetchWithRetry(getScrapeUrl(PLAYWHE_URL));
     if (!res.ok) throw new Error(`Failed to load page: ${res.statusText}`);
     const html = await res.text();
     const $ = cheerio.load(html);
@@ -371,14 +396,12 @@ export async function scrapePlayWheMonth(monthStr: string, yearVal: number, sid:
       formData.append("sid", sid);
     }
     
-    const res = await fetch(getScrapeUrl(PLAYWHE_URL), {
+    const res = await fetchWithRetry(getScrapeUrl(PLAYWHE_URL), {
       method: "POST",
       headers: {
-        ...HEADERS,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: formData.toString(),
-      signal: AbortSignal.timeout(30000)
     });
     
     if (!res.ok) throw new Error(`POST failed for ${monthStr} ${yearVal}`);
@@ -455,9 +478,6 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
       )
     `);
     await db.execute(`
-      DROP TABLE IF EXISTS playwhe_predictions
-    `);
-    await db.execute(`
       CREATE TABLE IF NOT EXISTS playwhe_predictions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         prediction_date TEXT NOT NULL,
@@ -531,10 +551,7 @@ const WINFORLIFE_URL = "https://www.nlcbplaywhelotto.com/nlcb-win-for-life-resul
 
 export async function scrapeWinForLifeSid(): Promise<string | null> {
   try {
-    const res = await fetch(getScrapeUrl(WINFORLIFE_URL), { 
-      headers: HEADERS,
-      signal: AbortSignal.timeout(30000)
-    });
+    const res = await fetchWithRetry(getScrapeUrl(WINFORLIFE_URL));
     if (!res.ok) throw new Error(`Failed to load page: ${res.statusText}`);
     const html = await res.text();
     const $ = cheerio.load(html);
@@ -555,14 +572,12 @@ export async function scrapeWinForLifeMonth(monthStr: string, yearVal: number, s
       formData.append("sid", sid);
     }
     
-    const res = await fetch(getScrapeUrl(WINFORLIFE_URL), {
+    const res = await fetchWithRetry(getScrapeUrl(WINFORLIFE_URL), {
       method: "POST",
       headers: {
-        ...HEADERS,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: formData.toString(),
-      signal: AbortSignal.timeout(30000)
     });
     
     if (!res.ok) throw new Error(`POST failed for Win for Life ${monthStr} ${yearVal}: ${res.statusText}`);
