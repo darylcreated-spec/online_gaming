@@ -514,7 +514,7 @@ export default function WinForLifeTab() {
                     })()}
                   </div>
                   <div className="text-xs text-amber-400 font-black">
-                    7:00 PM (Trinidad Time)
+                    7:00 PM
                   </div>
                   <div className="text-[10px] text-gray-500 leading-relaxed pt-1">
                     Draws occur every Tuesday and Friday evening.
@@ -1374,89 +1374,51 @@ export default function WinForLifeTab() {
         <div className="space-y-6">
           <div className="glass-panel p-6 rounded-xl space-y-5">
             <div className="border-b border-white/5 pb-3">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Win for Life Game Mechanics</h3>
-              <p className="text-[11px] text-gray-400 mt-1">Official NLCB Win for Life draw guidelines, payouts, and analytical strategies.</p>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">How The App Helps You Reduce The Odds</h3>
+              <p className="text-[11px] text-gray-400 mt-1">Mathematical filtering, multi-model consensus, and combinatorial wheeling designed to maximize winning probability.</p>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs text-gray-400 leading-relaxed font-mono">
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-1">1. The Matrix (6/28 + CB 1/3)</h4>
+                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">1. Combinatorial Odds Compression</h4>
                   <p>
-                    Players select six main numbers from a pool of 1 to 28, and a single Cash Ball from a secondary pool of 1 to 3. Drawings take place every Tuesday and Friday evening at 7:00 PM.
+                    Out of 376,740 possible Win for Life combinations (6/28 + Cash Ball 1/3), over 70% of random tickets fall into statistically rare or cold probability zones. The app filters out non-viable combinations (such as 6 consecutive numbers or extreme sum totals), isolating the high-density target band.
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-1">2. Mobile Ticket Scanner Integrated</h4>
+                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">2. 8-Model Ensemble Consensus</h4>
                   <p>
-                    You can now use the central <strong>Ticket Scanner & Checker</strong> tab to verify your ticket receipt! Simply take a photo of your ticket or upload an image. The AI OCR engine extracts the date, draw number, main numbers, and Cash Ball, auto-verifying matches against official Turso cloud database results in real-time.
+                    Rather than relying on single-indicator guesses, predictions combine 8 distinct analytical engines:
+                    Frequency Momentum, Hot/Cold Recency, Number Decay Pressure, Skip-Gram Pair Chains, and Entropy Anomaly Detection to score each number's probability coefficient.
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-1">3. Stat-Guided Wheeling</h4>
+                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">3. Abbreviated Wheeling Systems</h4>
                   <p>
-                    Abbreviated wheeling allows you to play larger pools (e.g. 8 to 10 numbers) by compressing them into key sets. The heatmaps overlay past drawing frequencies directly on the grid so you build slips aligned with historic hot nodes.
+                    Wheeling allows you to select candidate pools of 8 to 12 numbers and mathematically compresses them into guaranteed multi-match ticket combinations, giving you wide coverage at a fraction of full-system ticket costs.
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider border-b border-white/5 pb-1">Prize Payout Structure</h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-[10px]">
-                    <thead>
-                      <tr className="border-b border-white/10 text-gray-500 uppercase tracking-widest">
-                        <th className="py-2 px-1">Match Tier</th>
-                        <th className="py-2 px-1 text-right">Prize Estimate</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5 text-gray-300">
-                      <tr>
-                        <td className="py-1.5 px-1 font-bold text-white">6 + Cash Ball</td>
-                        <td className="py-1.5 px-1 text-right text-emerald-400 font-extrabold">$1,000/Month for Life</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 px-1">6 Numbers</td>
-                        <td className="py-1.5 px-1 text-right">$10,000.00 Est.</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 px-1 font-bold text-white">5 + Cash Ball</td>
-                        <td className="py-1.5 px-1 text-right text-emerald-400">$1,000.00 Est.</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 px-1">5 Numbers</td>
-                        <td className="py-1.5 px-1 text-right">$250.00 Est.</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 px-1 font-bold text-white">4 + Cash Ball</td>
-                        <td className="py-1.5 px-1 text-right text-emerald-400">$100.00 Est.</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 px-1">4 Numbers</td>
-                        <td className="py-1.5 px-1 text-right">$20.00 Est.</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 px-1 font-bold text-white">3 + Cash Ball</td>
-                        <td className="py-1.5 px-1 text-right text-emerald-400">$10.00 Est.</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 px-1">3 Numbers</td>
-                        <td className="py-1.5 px-1 text-right">$2.00 Est.</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 px-1 font-bold text-white">2 + Cash Ball</td>
-                        <td className="py-1.5 px-1 text-right text-emerald-400">$5.00 Est.</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 px-1 font-bold text-white">1 + Cash Ball</td>
-                        <td className="py-1.5 px-1 text-right">Free Quick Pick Ticket</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1.5 px-1 font-bold text-white">0 + Cash Ball</td>
-                        <td className="py-1.5 px-1 text-right">Free Quick Pick Ticket</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">4. Real-Time Ticket OCR Scanner</h4>
+                  <p>
+                    The integrated mobile scanner uses AI computer vision to parse physical ticket slips, instantly cross-referencing your played numbers against official Turso Cloud database draw records to flag winning slips automatically.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">5. Draw-Time Aware Auto Syncing</h4>
+                  <p>
+                    Automated background cron triggers sync official NLCB draw results immediately following draw times (Tuesday & Friday evenings at 7:00 PM), ensuring prediction grades and historical heatmaps stay updated without manual intervention.
+                  </p>
+                </div>
+                <div className="p-3 bg-slate-900/60 rounded-lg border border-white/5">
+                  <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 text-emerald-400">Winning Strategy Tip</div>
+                  <p className="text-[11px] text-gray-300">
+                    Use the <strong>Ensemble Heatmap</strong> to pick 8-10 candidate numbers, then send them directly into the <strong>Wheeling Generator</strong> to generate balanced slips with guaranteed match coverage.
+                  </p>
                 </div>
               </div>
             </div>

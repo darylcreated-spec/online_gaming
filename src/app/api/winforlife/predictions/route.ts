@@ -69,8 +69,26 @@ export async function GET() {
 
     let modelBreakdown: any[] = [];
 
-    // 3. Generate today's predictions if not existing
-    const todayStr = getLocalDateString();
+    // 3. Generate prediction for upcoming draw date (Tuesdays and Fridays) if not existing
+    function getNextWinForLifeDrawDate() {
+      const d = new Date();
+      const localTime = new Date(d.getTime() - 4 * 60 * 60 * 1000); // AST (UTC-4)
+      const day = localTime.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+      
+      let daysToAdd = 0;
+      if (day === 0) daysToAdd = 2;      // Sunday -> Tuesday (+2)
+      else if (day === 1) daysToAdd = 1; // Monday -> Tuesday (+1)
+      else if (day === 2) daysToAdd = 0; // Tuesday -> Today (0)
+      else if (day === 3) daysToAdd = 2; // Wednesday -> Friday (+2)
+      else if (day === 4) daysToAdd = 1; // Thursday -> Friday (+1)
+      else if (day === 5) daysToAdd = 0; // Friday -> Today (0)
+      else if (day === 6) daysToAdd = 3; // Saturday -> Tuesday (+3)
+      
+      const targetDate = new Date(localTime.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+      return targetDate.toISOString().split("T")[0];
+    }
+
+    const todayStr = getNextWinForLifeDrawDate();
     const checkToday = await query("SELECT 1 FROM winforlife_predictions WHERE prediction_date = ?", [todayStr]);
     if (checkToday.length === 0) {
       const draws = await query("SELECT * FROM winforlife_draws ORDER BY draw_number DESC LIMIT 200");
