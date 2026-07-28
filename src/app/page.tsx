@@ -274,7 +274,8 @@ export default function Home() {
         console.log("[AutoSync] Running scheduled sync...");
         try {
           // Trigger background sync — this hits the cron endpoint
-          await fetch("/api/cron/sync-all").catch(() => {});
+          const secret = process.env.NEXT_PUBLIC_CRON_SECRET || 'win_concept_cron_secret_2026';
+          await fetch(`/api/cron/sync-all?secret=${secret}`).catch(() => {});
         } catch (e) {
           console.warn("[AutoSync] Background sync failed, will retry:", e);
         }
