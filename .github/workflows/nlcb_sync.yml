@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_NODE_TYPE: node24
 
     steps:
       - name: Checkout repository
@@ -37,6 +39,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Lotto Plus Scraper
+        continue-on-error: true
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
@@ -44,6 +47,7 @@ jobs:
         run: python scripts/scraper.py --game lotto-plus
 
       - name: Run Play Whe Scraper
+        continue-on-error: true
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
@@ -51,6 +55,7 @@ jobs:
         run: python scripts/scraper.py --game play-whe
 
       - name: Run Win for Life Scraper
+        continue-on-error: true
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}

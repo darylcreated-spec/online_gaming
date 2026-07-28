@@ -58,7 +58,8 @@ def make_request(session, method, url, **kwargs):
         except Exception as e:
             last_err = e
             time.sleep(1 * (2 ** i))
-    raise last_err
+    print(f"WARNING: Request failed after {retries} retries for {url}: {last_err}")
+    return None
 
 # Standardize date format: "11-Jul-26" -> "2026-07-11"
 def parse_date(date_str):
@@ -197,6 +198,9 @@ def save_draws_batch(conn, draws_list):
 def scrape_homepage(session):
     print("Scraping main landing page...")
     response = make_request(session, "GET", BASE_URL)
+    if not response:
+        print("WARNING: Could not reach main landing page.")
+        return None, None
     soup = BeautifulSoup(response.text, "html.parser")
     
     sid_input = soup.find("input", {"name": "sid"})
@@ -354,6 +358,9 @@ def save_play_whe_draws_batch(conn, draws_list):
 def scrape_play_whe_sid(session):
     print(f"Scraping Play Whe page for sid: {PLAYWHE_URL}")
     response = make_request(session, "GET", PLAYWHE_URL)
+    if not response:
+        print("WARNING: Could not retrieve Play Whe sid.")
+        return None
     soup = BeautifulSoup(response.text, "html.parser")
     sid_input = soup.find("input", {"name": "sid"})
     sid = sid_input["value"] if sid_input else None
@@ -368,6 +375,9 @@ def scrape_play_whe_month(session, month_str, year_val, sid):
         "sid": sid
     }
     response = make_request(session, "POST", PLAYWHE_URL, data=payload)
+    if not response:
+        print(f"WARNING: Request failed for Play Whe {month_str} {year_val}.")
+        return []
     soup = BeautifulSoup(response.text, "html.parser")
     
     table = soup.find("table")
@@ -471,6 +481,9 @@ def save_win_for_life_draws_batch(conn, draws_list):
 def scrape_win_for_life_sid(session):
     print(f"Scraping Win for Life page for sid: {WINFORLIFE_URL}")
     response = make_request(session, "GET", WINFORLIFE_URL)
+    if not response:
+        print("WARNING: Could not retrieve Win for Life sid.")
+        return None
     soup = BeautifulSoup(response.text, "html.parser")
     sid_input = soup.find("input", {"name": "sid"})
     return sid_input["value"] if sid_input else None
@@ -484,6 +497,9 @@ def scrape_win_for_life_month(session, month_str, year_val, sid):
         "sid": sid
     }
     response = make_request(session, "POST", WINFORLIFE_URL, data=payload)
+    if not response:
+        print(f"WARNING: Request failed for Win for Life {month_str} {year_val}.")
+        return []
     soup = BeautifulSoup(response.text, "html.parser")
     table = soup.find("table", {"id": "monthResults"})
     if not table:
