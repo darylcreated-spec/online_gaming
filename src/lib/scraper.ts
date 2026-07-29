@@ -323,18 +323,14 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
         const month = months[mIdx];
         const monthDraws = await scrapeMonth(month, y, sid);
         
-        for (const draw of monthDraws) {
-          const check = await db.execute({
-            sql: "SELECT 1 FROM draws WHERE draw_number = ?",
-            args: [draw.draw_number]
-          });
-          if (check.rows.length === 0) {
-            await saveDraw(draw);
-            drawsAdded++;
-          }
+        if (monthDraws.length > 0) {
+          const batchStmts = monthDraws.map(d => ({
+            sql: `INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.powerball, d.multiplier || "", d.jackpot || ""]
+          }));
+          await db.batch(batchStmts);
+          drawsAdded += monthDraws.length;
         }
-        
-        await sleep(400); // Be polite to avoid rate limits
       }
     }
     
@@ -523,18 +519,14 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
         const month = months[mIdx];
         const monthDraws = await scrapePlayWheMonth(month, y, sid);
         
-        for (const draw of monthDraws) {
-          const check = await db.execute({
-            sql: "SELECT 1 FROM playwhe_draws WHERE draw_number = ?",
-            args: [draw.draw_number]
-          });
-          if (check.rows.length === 0) {
-            await savePlayWheDraw(draw);
-            drawsAdded++;
-          }
+        if (monthDraws.length > 0) {
+          const batchStmts = monthDraws.map(d => ({
+            sql: `INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)`,
+            args: [d.draw_number, d.draw_date, d.draw_time_slot, d.winning_number]
+          }));
+          await db.batch(batchStmts);
+          drawsAdded += monthDraws.length;
         }
-        
-        await sleep(400); // Be polite to avoid rate limits
       }
     }
     
@@ -708,18 +700,14 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
         const month = months[mIdx];
         const monthDraws = await scrapeWinForLifeMonth(month, y, sid);
         
-        for (const draw of monthDraws) {
-          const check = await db.execute({
-            sql: "SELECT 1 FROM winforlife_draws WHERE draw_number = ?",
-            args: [draw.draw_number]
-          });
-          if (check.rows.length === 0) {
-            await saveWinForLifeDraw(draw);
-            drawsAdded++;
-          }
+        if (monthDraws.length > 0) {
+          const batchStmts = monthDraws.map(d => ({
+            sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.num6, d.cash_ball, d.jackpot || ""]
+          }));
+          await db.batch(batchStmts);
+          drawsAdded += monthDraws.length;
         }
-        
-        await sleep(400); // Be polite
       }
     }
     
