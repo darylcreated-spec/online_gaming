@@ -209,9 +209,9 @@ export default function DashboardTab({
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">3. 8-MODEL ENSEMBLE CONSENSUS</h4>
+              <h4 className="text-primary font-bold uppercase">3. ADVANCED STATISTICAL ENGINES</h4>
               <p>
-                Combines 8 distinct analytical engines (Frequency Momentum, Hot/Cold Recency, Number Decay, Skip-Gram Pair Chains, and Entropy Anomaly Detection) to grade candidate numbers and Powerballs.
+                Combines 8 advanced mathematical models: <strong>EWMA Exponential Recency</strong> (α=0.08), <strong>RTM Z-Score Rebound</strong> (Z &lt; -1.5), <strong>Chi-Square Goodness-of-Fit</strong> (p-value tests), <strong>Shannon Entropy</strong> (distribution randomness gauge), <strong>Bayesian Posteriors</strong>, <strong>Monte Carlo 10,000-draw coverage</strong>, and <strong>Kelly Criterion</strong> bankroll bet sizing.
               </p>
             </div>
             <div className="space-y-1.5">

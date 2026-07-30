@@ -1486,7 +1486,7 @@ export default function WinForLifeTab() {
           <div className="glass-panel p-6 rounded-xl space-y-5">
             <div className="border-b border-white/5 pb-3">
               <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">How The App Helps You Reduce The Odds</h3>
-              <p className="text-[11px] text-gray-400 mt-1">Mathematical filtering, multi-model consensus, and combinatorial wheeling designed to maximize winning probability.</p>
+              <p className="text-[11px] text-gray-400 mt-1">Mathematical filtering, 10-model consensus voting, advanced statistical engines, and combinatorial wheeling designed to maximize winning probability.</p>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs text-gray-400 leading-relaxed font-mono">
@@ -1498,10 +1498,9 @@ export default function WinForLifeTab() {
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">2. 8-Model Ensemble Consensus</h4>
+                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">2. 10-Model Ensemble Consensus</h4>
                   <p>
-                    Rather than relying on single-indicator guesses, predictions combine 8 distinct analytical engines:
-                    Frequency Momentum, Hot/Cold Recency, Number Decay Pressure, Skip-Gram Pair Chains, and Entropy Anomaly Detection to score each number's probability coefficient.
+                    Predictions combine 10 distinct analytical engines: Markov Chains, Frequency Momentum, Day Bias, Cycle Recency, Freq-Gap Ratios, Exponential Decay, Skip-Gram Pairs, Shannon Entropy, EWMA Recency (α=0.15), and RTM Z-Score Rebound (Z &lt; -1.5) to score each number's probability coefficient.
                   </p>
                 </div>
                 <div>
@@ -1514,15 +1513,15 @@ export default function WinForLifeTab() {
 
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">4. Real-Time Ticket OCR Scanner</h4>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">4. Advanced Statistical Intelligence</h4>
                   <p>
-                    The integrated mobile scanner uses AI computer vision to parse physical ticket slips, instantly cross-referencing your played numbers against official Turso Cloud database draw records to flag winning slips automatically.
+                    Evaluates distribution randomness via Chi-Square Goodness-of-Fit and Shannon Entropy, calculates Bayesian Posterior probabilities, simulates 10,000 Monte Carlo draw outcomes, and recommends optimal Kelly Criterion bet sizing.
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">5. Draw-Time Aware Auto Syncing</h4>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">5. Real-Time Ticket OCR & Auto-Syncing</h4>
                   <p>
-                    Automated background cron triggers sync official NLCB draw results immediately following draw times (Tuesday & Friday evenings at 7:00 PM), ensuring prediction grades and historical heatmaps stay updated without manual intervention.
+                    AI computer vision parses physical ticket slips, while background sync engines instantly record official NLCB draw results following Tuesday & Friday evening draws at 7:00 PM.
                   </p>
                 </div>
                 <div className="p-3 bg-slate-900/60 rounded-lg border border-white/5">

@@ -622,11 +622,11 @@ export default function PlayWheTab({
           <h3 className="text-xs font-bold text-white uppercase font-mono tracking-widest border-b border-white/5 pb-2">
             How The App Helps You Reduce The Odds in Play Whe
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
             <div className="space-y-1.5">
-              <h4 className="text-emerald-400 font-bold uppercase">1. TARGETED MARK COMPRESSION</h4>
+              <h4 className="text-emerald-400 font-bold uppercase">1. 11-MODEL ENSEMBLE CONSENSUS</h4>
               <p>
-                Picking 1 mark at random out of 36 gives a <strong>2.78% win chance</strong>. The app's ensemble engine condenses the 36-mark field down to a high-confidence pool of 5 candidate numbers, boosting single-slot hit probability to <strong>~13.8% – 16.5%</strong>.
+                Picking 1 mark at random gives a <strong>2.78% win chance</strong>. The app's expanded 11-model ensemble (Markov, Momentum, Day+Slot, Cycle, Slot Freq, Decay, Pair Chains, Entropy, EWMA, RTM Rebound, Autocorr Lag-3) votes on candidate marks, boosting top-5 single-slot hit probability to <strong>~13.8% – 16.5%</strong>.
               </p>
             </div>
             <div className="space-y-1.5">
@@ -636,27 +636,39 @@ export default function PlayWheTab({
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-emerald-400 font-bold uppercase">3. TIME-SLOT CALIBRATION</h4>
+              <h4 className="text-emerald-400 font-bold uppercase">3. EWMA & RTM Z-SCORE REBOUND</h4>
               <p>
-                Calibrates separate frequency heatmaps for Morning (10:30 AM), Midday (1:00 PM), Afternoon (4:00 PM), and Evening (7:00 PM) draws to capture slot-specific bias.
+                Exponentially weights recent draws (α=0.12) to detect short-term trends while flagging underrepresented marks with <strong>Z &lt; -1.5</strong> that are statistically due for regression to the mean.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">4. CHINAPOO PARTNER MAPPING</h4>
+              <h4 className="text-emerald-400 font-bold uppercase">4. AUTOCORRELATION LAG SIGNALS</h4>
+              <p>
+                Measures lag-2, lag-3, and lag-4 autocorrelation coefficients to detect marks that exhibit periodic cyclical re-appearances within short draw intervals.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold uppercase">5. CHINAPOO PARTNER MAPPING</h4>
               <p>
                 Correlates traditional companion pairings (e.g. 1 & 16, 2 & 17) and flags long-sleeping partner marks due for co-occurrence.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">5. DECAY & SLEEP OVERDUE</h4>
+              <h4 className="text-primary font-bold uppercase">6. CHI-SQUARE & ENTROPY GAUGE</h4>
               <p>
-                Tracks active sleep cycles against historic mean gaps, highlighting marks under extreme decay pressure.
+                Performs Chi-Square goodness-of-fit testing (detecting non-random bias) and Shannon Entropy measurements to evaluate rolling 40-draw distribution predictability.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">6. LIVE SLOT VERIFICATION</h4>
+              <h4 className="text-primary font-bold uppercase">7. MONTE CARLO & KELLY CRITERION</h4>
               <p>
-                Automatically grades predictions against official Turso Cloud DB draw records immediately following each draw slot (Morning, Midday, Afternoon, Evening).
+                Simulates 10,000 Monte Carlo draw iterations for Bayesian top picks and computes optimal ½-Kelly bankroll bet sizing calibrated to Play Whe's 24× payout structure.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <h4 className="text-primary font-bold uppercase">8. LIVE SLOT VERIFICATION</h4>
+              <p>
+                Automatically grades predictions against official Turso Cloud DB draw records immediately following each draw slot (Morning 10:30 AM, Midday 1:00 PM, Afternoon 4:00 PM, Evening 7:00 PM).
               </p>
             </div>
           </div>
