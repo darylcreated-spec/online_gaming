@@ -707,6 +707,120 @@ export default function DashboardTab({
         </div>
       </div>
 
+      {/* ── Advanced Statistical Intelligence Panel ── */}
+      {!statsLoading && stats?.advancedStats && (
+        <div className="glass-panel p-6 rounded-xl space-y-5 border border-white/5">
+          <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            <div>
+              <h3 className="text-lg font-bold tracking-tight text-white">Advanced Statistical Intelligence</h3>
+              <p className="text-xs text-gray-400">EWMA · RTM Z-Score · Chi-Square · Entropy · Bayesian · Monte Carlo · Kelly</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+            {/* Z-Score Rebound Candidates */}
+            <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-emerald-400">RTM Rebound Candidates</span>
+              </div>
+              <p className="text-[10px] text-gray-500 font-mono leading-snug">Statistically underdrawn main numbers (Z &lt; -1.5). Due for regression toward the mean.</p>
+              <div className="flex flex-wrap gap-1.5">
+                {(stats.advancedStats.zScores?.reboundCandidates || []).map((z: any) => (
+                  <div key={z.number} className="flex flex-col items-center bg-emerald-950/40 border border-emerald-500/20 rounded-lg px-2 py-1.5 min-w-[44px]">
+                    <span className="text-sm font-black font-mono text-emerald-300">{String(z.number).padStart(2, "0")}</span>
+                    <span className="text-[9px] font-mono text-emerald-600">Z={z.zScore}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Chi-Square Verdict */}
+            <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom ? "bg-amber-400" : "bg-slate-500"}`} />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-amber-400">Chi-Square Test</span>
+              </div>
+              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-bold font-mono ${
+                stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom
+                  ? "bg-amber-950/40 border-amber-500/30 text-amber-300"
+                  : "bg-slate-900/40 border-white/5 text-gray-400"
+              }`}>
+                {stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom ? "⚡ Non-Random Pattern" : "✓ Uniform Distribution"}
+              </div>
+              <p className="text-[10px] text-gray-500 font-mono leading-snug">
+                χ²={stats.advancedStats.chiSquare?.mainNumbers?.statistic} &nbsp; p={stats.advancedStats.chiSquare?.mainNumbers?.pValue}
+              </p>
+              <p className="text-[10px] text-gray-500 font-mono leading-snug">
+                {stats.advancedStats.chiSquare?.mainNumbers?.interpretation?.slice(0, 80)}...
+              </p>
+            </div>
+
+            {/* Shannon Entropy Gauge */}
+            <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-sky-400">Entropy Score</span>
+              </div>
+              {(() => {
+                const ratio = stats.advancedStats.entropy?.mainNumbers?.ratio || 0;
+                const pct = Math.round(ratio * 100);
+                const color = pct < 85 ? "#34d399" : pct > 95 ? "#f87171" : "#38bdf8";
+                return (
+                  <>
+                    <div className="relative h-3 rounded-full bg-slate-800 overflow-hidden">
+                      <div className="absolute inset-y-0 left-0 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+                    </div>
+                    <div className="flex justify-between text-[9px] font-mono text-gray-500">
+                      <span>Predictable (0%)</span><span>Random (100%)</span>
+                    </div>
+                    <p className="text-[11px] font-bold font-mono" style={{ color }}>
+                      {pct}% — {stats.advancedStats.entropy?.mainNumbers?.signal?.toUpperCase()}
+                    </p>
+                    <p className="text-[10px] text-gray-500 font-mono">{stats.advancedStats.entropy?.mainNumbers?.interpretation?.slice(0, 60)}...</p>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Monte Carlo + Kelly */}
+            <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo · Kelly</span>
+              </div>
+              <div className="space-y-2">
+                <div className="bg-violet-950/30 border border-violet-500/20 rounded-lg px-3 py-2">
+                  <p className="text-[10px] font-mono text-gray-400">Top-5 Bayesian picks coverage</p>
+                  <p className="text-2xl font-black font-mono text-violet-300">{stats.advancedStats.monteCarlo?.coveragePercent}%</p>
+                  <p className="text-[9px] font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulated draws</p>
+                </div>
+                <div className="bg-amber-950/20 border border-amber-500/15 rounded-lg px-3 py-2">
+                  <p className="text-[10px] font-mono text-gray-400">Kelly optimal bet (of $100)</p>
+                  <p className="text-lg font-black font-mono text-amber-300">${stats.advancedStats.kelly?.halfKelly?.toFixed(2)} <span className="text-[10px] text-amber-600">½-Kelly</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bayesian Top-10 */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Bayesian Posterior Probability — Top 10 Main Numbers</p>
+            <div className="flex flex-wrap gap-2">
+              {(stats.advancedStats.bayesian?.top10 || []).map((b: any, i: number) => (
+                <div key={b.number} className="flex items-center gap-1.5 bg-slate-900 border border-white/5 rounded-lg px-2.5 py-1.5">
+                  <span className="text-[9px] font-mono text-gray-500">#{i+1}</span>
+                  <span className="text-sm font-black font-mono text-white">{String(b.number).padStart(2, "0")}</span>
+                  <span className="text-[9px] font-mono text-primary">{b.posteriorProb}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Saved Slips Workspace Tracker */}
       <div className="glass-panel p-6 rounded-xl space-y-4">
         <div className="flex justify-between items-center border-b border-white/5 pb-3">

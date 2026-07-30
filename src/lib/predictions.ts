@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { ewmaTopN, rtmReboundTopN, autocorrelationTopN } from "./mathStats";
 
 // Helper to format Date objects as YYYY-MM-DD local time
 export function getLocalDateString(date = new Date()): string {
@@ -309,6 +310,27 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       .map(c => c.num);
 
     // ============================================================
+    // MODEL 9: EWMA Frequency Score
+    // Exponential decay weighting — recent draws count exponentially more
+    // than old ones. alpha=0.12 means last ~8 draws dominate the signal.
+    // ============================================================
+    const ewmaTop8 = ewmaTopN(allNums, 36, 8, 0.12);
+
+    // ============================================================
+    // MODEL 10: RTM Z-Score Rebound Candidates
+    // Numbers with Z < -1.5 are statistically underrepresented
+    // relative to the expected 2.78% uniform rate — prime rebound candidates.
+    // ============================================================
+    const rtmTop8 = rtmReboundTopN(allNums, 36, 8, Math.min(300, allNums.length));
+
+    // ============================================================
+    // MODEL 11: Autocorrelation Lag-3 Signal
+    // Numbers with a strong positive lag-3 autocorrelation tend to
+    // re-appear within 3 draws after their last appearance.
+    // ============================================================
+    const acfTop8 = autocorrelationTopN(allNums, 36, 3, 8);
+
+    // ============================================================
     // STRATEGY 5: ELIMINATION FILTER
     // Remove numbers that are statistically unlikely for this draw.
     // ============================================================
@@ -335,7 +357,7 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       rankSum[i] = 0;
     }
 
-    const models = [markovTop8, momentumTop8, daySlotTop8, cycleTop8, slotScoreTop8, decayTop8, pairTop8, entropyTop8];
+    const models = [markovTop8, momentumTop8, daySlotTop8, cycleTop8, slotScoreTop8, decayTop8, pairTop8, entropyTop8, ewmaTop8, rtmTop8, acfTop8];
     models.forEach(top8 => {
       top8.forEach((num, rank) => {
         voteCount[num]++;
@@ -400,11 +422,14 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       if (decayTop8.includes(num)) votedModels.push('Decay');
       if (pairTop8.includes(num)) votedModels.push('PairChain');
       if (entropyTop8.includes(num)) votedModels.push('Entropy');
+      if (ewmaTop8.includes(num)) votedModels.push('EWMA');
+      if (rtmTop8.includes(num)) votedModels.push('RTM-Rebound');
+      if (acfTop8.includes(num)) votedModels.push('Autocorr-Lag3');
       return {
         number: num,
         votes: votedModels.length,
         models: votedModels,
-        confidence: Math.round((votedModels.length / 8) * 100)
+        confidence: Math.round((votedModels.length / 11) * 100)
       };
     });
 

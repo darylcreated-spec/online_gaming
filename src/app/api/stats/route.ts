@@ -1,6 +1,15 @@
 import { query } from "@/lib/db";
 import { calculateDeltas } from "@/lib/deltas";
 import { NextResponse } from "next/server";
+import {
+  computeEWMA,
+  computeRTMZScores,
+  computeChiSquare,
+  computeShannonEntropy,
+  computeBayesianPosterior,
+  computeMonteCarlo,
+  computeKellyCriterion,
+} from "@/lib/mathStats";
 
 export const dynamic = "force-dynamic";
 
@@ -119,6 +128,64 @@ export async function GET(request: Request) {
       console.warn("Could not retrieve next estimated jackpot from settings:", e);
     }
     
+    // ── Advanced Statistical Analysis ──────────────────────────────────────
+    // Flatten all main numbers into a single draw history array (most recent first)
+    const allMainNums: number[] = [];
+    draws.forEach(d => {
+      [d.num1, d.num2, d.num3, d.num4, d.num5].forEach(n => allMainNums.push(Number(n)));
+    });
+    const allPBNums: number[] = draws.map(d => Number(d.powerball));
+
+    // EWMA frequency scores
+    const ewmaMainScores = computeEWMA(allMainNums, 35, 0.08);
+    const ewmaPBScores = computeEWMA(allPBNums, 10, 0.1);
+    const ewmaMainFrequencies = Object.entries(ewmaMainScores)
+      .map(([n, s]) => ({ number: parseInt(n), ewmaScore: Math.round(s * 10000) / 10000 }))
+      .sort((a, b) => a.number - b.number);
+    const ewmaPBFrequencies = Object.entries(ewmaPBScores)
+      .map(([n, s]) => ({ number: parseInt(n), ewmaScore: Math.round(s * 10000) / 10000 }))
+      .sort((a, b) => a.number - b.number);
+
+    // RTM Z-Scores
+    const rtmlZScoreMain = computeRTMZScores(allMainNums, 35);
+    const rtmlZScorePB = computeRTMZScores(allPBNums, 10);
+    const zScoreMainList = Object.entries(rtmlZScoreMain)
+      .map(([n, r]) => ({ number: parseInt(n), ...r }))
+      .sort((a, b) => a.zScore - b.zScore); // most underrepresented first
+    const zScorePBList = Object.entries(rtmlZScorePB)
+      .map(([n, r]) => ({ number: parseInt(n), ...r }))
+      .sort((a, b) => a.zScore - b.zScore);
+
+    // Chi-Square Test
+    const chiSquareMain = computeChiSquare(allMainNums, 35);
+    const chiSquarePB = computeChiSquare(allPBNums, 10);
+
+    // Shannon Entropy
+    const entropyMain = computeShannonEntropy(allMainNums, 35, 50);
+    const entropyPB = computeShannonEntropy(allPBNums, 10, 30);
+
+    // Bayesian Posterior
+    const bayesianMain = computeBayesianPosterior(allMainNums, 35, 1.0, 60);
+    const bayesianMainList = Object.entries(bayesianMain)
+      .map(([n, p]) => ({ number: parseInt(n), posteriorProb: Math.round(p * 10000) / 100 }))
+      .sort((a, b) => b.posteriorProb - a.posteriorProb);
+
+    // Kelly Criterion — Lotto Plus payout structure:
+    // Match 5+PB jackpot (odds ~1 in 3.2M), realistic win = match 2+ numbers
+    // For stats display, use estimated top-5 predicted win probability from entropy ratio
+    const estimatedWinProb = Math.max(0.001, (1 - entropyMain.ratio) * 0.15);
+    const kellyLotto = computeKellyCriterion(estimatedWinProb, 10, 100); // 10x payout for partial match
+
+    // Monte Carlo — use top-5 Bayesian numbers as predicted set
+    const top5Bayesian = bayesianMainList.slice(0, 5).map(b => b.number);
+    const monteCarloMain = computeMonteCarlo(
+      bayesianMain,
+      top5Bayesian,
+      35,
+      10000,
+      5  // 5 main numbers drawn per Lotto Plus draw
+    );
+
     return NextResponse.json({
       success: true,
       timeframe,
@@ -134,6 +201,32 @@ export async function GET(request: Request) {
         coldNumbers,
         hotPowerballs,
         coldPowerballs
+      },
+      // Advanced statistical analysis
+      advancedStats: {
+        ewma: {
+          mainNumbers: ewmaMainFrequencies,
+          powerballs: ewmaPBFrequencies,
+        },
+        zScores: {
+          mainNumbers: zScoreMainList,
+          powerballs: zScorePBList,
+          reboundCandidates: zScoreMainList.filter(z => z.signal === 'rebound').slice(0, 5),
+          suppressCandidates: zScoreMainList.filter(z => z.signal === 'suppress').slice(0, 5),
+        },
+        chiSquare: {
+          mainNumbers: chiSquareMain,
+          powerballs: chiSquarePB,
+        },
+        entropy: {
+          mainNumbers: entropyMain,
+          powerballs: entropyPB,
+        },
+        bayesian: {
+          top10: bayesianMainList.slice(0, 10),
+        },
+        kelly: kellyLotto,
+        monteCarlo: monteCarloMain,
       }
     });
   } catch (error: any) {

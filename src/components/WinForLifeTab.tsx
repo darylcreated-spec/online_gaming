@@ -759,6 +759,117 @@ export default function WinForLifeTab() {
             </div>
           </div>
 
+          {/* ── Advanced Statistical Intelligence Panel ── */}
+          {!statsLoading && stats?.advancedStats && (
+            <div className="glass-panel p-6 rounded-xl space-y-5 border border-white/5 mt-6">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+                <Eye className="w-5 h-5 text-emerald-400" />
+                <div>
+                  <h3 className="text-lg font-bold tracking-tight text-white">Advanced Statistical Intelligence</h3>
+                  <p className="text-xs text-gray-400">EWMA · RTM Z-Score · Chi-Square · Entropy · Bayesian · Monte Carlo · Kelly</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+                {/* EWMA Top Numbers */}
+                <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-sky-400">EWMA Top Numbers</span>
+                  </div>
+                  <p className="text-[10px] text-gray-500 font-mono leading-snug">Recent frequency bias (α=0.15, bi-weekly cadence).</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(stats.advancedStats.ewma?.mainNumbers || []).slice(0, 8).map((e: any) => (
+                      <div key={e.number} className="flex flex-col items-center bg-sky-950/40 border border-sky-500/20 rounded-lg px-2 py-1.5 min-w-[34px]">
+                        <span className="text-sm font-black font-mono text-sky-300">{String(e.number).padStart(2, "0")}</span>
+                        <span className="text-[7px] font-mono text-sky-600">{e.ewmaScore?.toFixed(3)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Z-Score Rebound Candidates */}
+                <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-emerald-400">RTM Rebound</span>
+                  </div>
+                  <p className="text-[10px] text-gray-500 font-mono leading-snug">Numbers statistically underrepresented (Z &lt; -1.5).</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(stats.advancedStats.zScores?.reboundCandidates || []).map((z: any) => (
+                      <div key={z.number} className="flex flex-col items-center bg-emerald-950/40 border border-emerald-500/20 rounded-lg px-2 py-1.5 min-w-[34px]">
+                        <span className="text-sm font-black font-mono text-emerald-300">{String(z.number).padStart(2, "0")}</span>
+                        <span className="text-[7px] font-mono text-emerald-600">Z={z.zScore}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Chi-Square + Entropy */}
+                <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom ? "bg-amber-400" : "bg-slate-500"}`} />
+                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-amber-400">Chi-Square · Entropy</span>
+                  </div>
+                  <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[10px] font-bold font-mono ${
+                    stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom
+                      ? "bg-amber-950/40 border-amber-500/30 text-amber-300"
+                      : "bg-slate-900/40 border-white/5 text-gray-400"
+                  }`}>
+                    {stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom ? "⚡ Non-Random Pattern" : "✓ Uniform Distribution"}
+                  </div>
+                  {(() => {
+                    const ratio = stats.advancedStats.entropy?.mainNumbers?.ratio || 0;
+                    const pct = Math.round(ratio * 100);
+                    const color = pct < 85 ? "#34d399" : pct > 95 ? "#f87171" : "#38bdf8";
+                    return (
+                      <>
+                        <div className="relative h-2.5 rounded-full bg-slate-800 overflow-hidden mt-2">
+                          <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+                        </div>
+                        <p className="text-[11px] font-bold font-mono" style={{ color }}>
+                          Entropy {pct}% — {stats.advancedStats.entropy?.mainNumbers?.signal?.toUpperCase()}
+                        </p>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Monte Carlo + Kelly */}
+                <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo · Kelly</span>
+                  </div>
+                  <div className="bg-violet-950/30 border border-violet-500/20 rounded-lg px-3 py-2">
+                    <p className="text-[10px] font-mono text-gray-400">Bayesian top-6 coverage</p>
+                    <p className="text-2xl font-black font-mono text-violet-300">{stats.advancedStats.monteCarlo?.coveragePercent}%</p>
+                    <p className="text-[9px] font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulations</p>
+                  </div>
+                  <div className="bg-amber-950/20 border border-amber-500/15 rounded-lg px-3 py-2">
+                    <p className="text-[10px] font-mono text-gray-400">½-Kelly optimal bet (of $100)</p>
+                    <p className="text-xl font-black font-mono text-amber-300">${stats.advancedStats.kelly?.halfKelly?.toFixed(2)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bayesian Top-8 */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Bayesian Posterior Probability — Top 8 Main Numbers</p>
+                <div className="flex flex-wrap gap-2">
+                  {(stats.advancedStats.bayesian?.top10 || []).slice(0, 8).map((b: any, i: number) => (
+                    <div key={b.number} className="flex items-center gap-1.5 bg-slate-900 border border-white/5 rounded-lg px-2.5 py-1.5">
+                      <span className="text-[9px] font-mono text-gray-500">#{i+1}</span>
+                      <span className="text-sm font-black font-mono text-white">{String(b.number).padStart(2, "0")}</span>
+                      <span className="text-[9px] font-mono text-emerald-400">{b.posteriorProb}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 

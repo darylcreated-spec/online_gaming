@@ -1,5 +1,14 @@
 import { query, db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import {
+  ewmaTopN,
+  rtmReboundTopN,
+  computeChiSquare,
+  computeShannonEntropy,
+  computeBayesianPosterior,
+  computeKellyCriterion,
+  computeMonteCarlo,
+} from "@/lib/mathStats";
 
 export const dynamic = "force-dynamic";
 
@@ -357,6 +366,22 @@ export async function GET() {
           .map(c => c.num);
 
         // ============================================================
+        // MODEL 9: EWMA Frequency Score
+        // Exponential decay weighting (α=0.15) for bi-weekly draw cadence.
+        // Recent appearances weighted exponentially heavier than older ones.
+        // ============================================================
+        const allWflNums: number[] = [];
+        draws.forEach(d => drawNums(d).forEach(n => allWflNums.push(n)));
+        const ewmaTop10 = ewmaTopN(allWflNums, 28, 10, 0.15);
+
+        // ============================================================
+        // MODEL 10: RTM Z-Score Rebound Candidates
+        // Expected appearance rate per number: 6/28 ≈ 21.4% per draw.
+        // Numbers with Z < -1.5 are statistically underrepresented.
+        // ============================================================
+        const rtmTop10 = rtmReboundTopN(allWflNums, 28, 10);
+
+        // ============================================================
         // ELIMINATION FILTER
         // ============================================================
         const eliminated = new Set<number>();
@@ -385,7 +410,7 @@ export async function GET() {
           rankSum[i] = 0;
         }
 
-        const models = [markovTop10, momentumTop10, dayTop10, cycleTop10, freqGapTop10, decayTop10, pairTop10, entropyTop10];
+        const models = [markovTop10, momentumTop10, dayTop10, cycleTop10, freqGapTop10, decayTop10, pairTop10, entropyTop10, ewmaTop10, rtmTop10];
         models.forEach(top10 => {
           top10.forEach((num, rank) => {
             voteCount[num]++;
@@ -445,7 +470,9 @@ export async function GET() {
           if (decayTop10.includes(num)) votedModels.push('Decay');
           if (pairTop10.includes(num)) votedModels.push('PairChain');
           if (entropyTop10.includes(num)) votedModels.push('Entropy');
-          return { number: num, votes: votedModels.length, models: votedModels, confidence: Math.round((votedModels.length / 8) * 100) };
+          if (ewmaTop10.includes(num)) votedModels.push('EWMA');
+          if (rtmTop10.includes(num)) votedModels.push('RTM-Rebound');
+          return { number: num, votes: votedModels.length, models: votedModels, confidence: Math.round((votedModels.length / 10) * 100) };
         });
 
         // Cash Ball: use weighted frequency with momentum boost
