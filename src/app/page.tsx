@@ -231,79 +231,70 @@ export default function Home() {
     }
   }, [activeTab, lottoSubTab]);
 
-  // Smart Auto-Sync: Schedule syncs aligned to draw times
-  // Play Whe draws: 10:30, 13:00, 16:00, 18:30 AST (UTC-4)
-  // We sync ~15min after each draw to allow results to post
+  // Smart Auto-Sync: Immediate on-launch check + Visibility change + Draw time scheduler
   useEffect(() => {
-    const getNextSyncTime = (): number => {
-      const now = new Date();
-      // Convert to AST (UTC-4)
-      const astMs = now.getTime() - 4 * 60 * 60 * 1000;
-      const ast = new Date(astMs);
-      const h = ast.getHours();
-      const m = ast.getMinutes();
-      const currentMinutes = h * 60 + m;
-
-      // Sync windows: 15min after each Play Whe draw + 9PM for Lotto/WFL
-      const syncTimesAST = [
-        10 * 60 + 45,  // 10:45 AM (after 10:30 draw)
-        13 * 60 + 15,  // 1:15 PM  (after 1:00 draw)
-        16 * 60 + 15,  // 4:15 PM  (after 4:00 draw)
-        18 * 60 + 45,  // 6:45 PM  (after 6:30 draw)
-        21 * 60 + 5,   // 9:05 PM  (after Lotto Plus / WFL evening draws)
-      ];
-
-      for (const syncTime of syncTimesAST) {
-        if (currentMinutes < syncTime) {
-          return (syncTime - currentMinutes) * 60 * 1000; // ms until next sync
-        }
-      }
-      // Past all sync times today — next sync is tomorrow at 10:45 AM
-      return ((24 * 60 - currentMinutes) + syncTimesAST[0]) * 60 * 1000;
-    };
-
-    let syncTimeout: NodeJS.Timeout;
+    let isMounted = true;
     let refreshInterval: NodeJS.Timeout;
 
-    const scheduleNextSync = () => {
-      const delay = getNextSyncTime();
-      const delayMin = Math.round(delay / 60000);
-      console.log(`[AutoSync] Next sync in ${delayMin} minutes`);
+    const triggerBackgroundAutoSync = async (force: boolean = false) => {
+      if (typeof window === "undefined") return;
+      const lastSyncStr = localStorage.getItem("win_concept_last_sync_timestamp");
+      const lastSync = lastSyncStr ? parseInt(lastSyncStr, 10) : 0;
+      const now = Date.now();
+      const tenMinutes = 10 * 60 * 1000;
 
-      syncTimeout = setTimeout(async () => {
-        console.log("[AutoSync] Running scheduled sync...");
-        try {
-          // Trigger background sync — this hits the cron endpoint
-          const secret = process.env.NEXT_PUBLIC_CRON_SECRET || 'win_concept_cron_secret_2026';
-          await fetch(`/api/cron/sync-all?secret=${secret}`).catch(() => {});
-        } catch (e) {
-          console.warn("[AutoSync] Background sync failed, will retry:", e);
+      // Only skip if synced less than 10 minutes ago and not forced
+      if (!force && now - lastSync < tenMinutes) {
+        return;
+      }
+
+      console.log("[AutoSync] Triggering background auto-sync...");
+      try {
+        const secret = process.env.NEXT_PUBLIC_CRON_SECRET || 'win_concept_cron_secret_2026';
+        const res = await fetch(`/api/cron/sync-all?secret=${secret}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await res.json();
+        
+        if (isMounted) {
+          localStorage.setItem("win_concept_last_sync_timestamp", Date.now().toString());
+          console.log("[AutoSync] Background sync result:", data);
+          
+          if (data.totalDrawsAdded > 0 || !lastSyncStr) {
+            console.log(`[AutoSync] ${data.totalDrawsAdded} new draws ingested. Refreshing UI...`);
+            fetchStats();
+            fetchHistoryDraws(pagination.page);
+            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
+          }
         }
-        // Refresh displayed data
-        fetchStats();
-        fetchHistoryDraws(pagination.page);
-        // Schedule the next one
-        scheduleNextSync();
-      }, delay);
+      } catch (err) {
+        console.warn("[AutoSync] Background sync network error (will retry):", err);
+      }
     };
 
-    // Start the draw-time scheduler
-    scheduleNextSync();
+    // 1. Run immediately on app load (ensures data is fresh even if user was away for days)
+    triggerBackgroundAutoSync(false);
 
-    // Also poll every 5 min on data tabs as a safety net
-    const dataTabs = ["lotto-plus", "play-whe", "win-for-life"];
-    if (dataTabs.includes(activeTab)) {
-      refreshInterval = setInterval(() => {
-        fetchStats();
-        fetchHistoryDraws(pagination.page);
-      }, 5 * 60 * 1000); // 5 minutes
-    }
+    // 2. Run whenever user switches back to this browser tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        triggerBackgroundAutoSync(false);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // 3. Periodic safety interval every 5 minutes
+    refreshInterval = setInterval(() => {
+      triggerBackgroundAutoSync(false);
+    }, 5 * 60 * 1000);
 
     return () => {
-      clearTimeout(syncTimeout);
+      isMounted = false;
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (refreshInterval) clearInterval(refreshInterval);
     };
-  }, [activeTab, timeframe, pagination.page, historySearch, historyNumberFilter]);
+  }, [pagination.page]);
 
 
 

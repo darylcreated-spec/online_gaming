@@ -438,13 +438,26 @@ export default function PlayWheTab({
     fetchHistory();
   }, [pagination.page, historySearch, historyNumberFilter]);
 
-  // Poll for updates every 60 seconds
+  // Listen for global background auto-sync events & poll for updates
   useEffect(() => {
+    const handleSyncEvent = () => {
+      console.log("[PlayWheTab] Global sync event received, refreshing data...");
+      fetchStats();
+      fetchHistory();
+      fetchPredictions();
+    };
+
+    window.addEventListener("win_concept_sync_completed", handleSyncEvent);
+
     const interval = setInterval(() => {
       fetchStats();
       fetchHistory();
     }, 60000);
-    return () => clearInterval(interval);
+
+    return () => {
+      window.removeEventListener("win_concept_sync_completed", handleSyncEvent);
+      clearInterval(interval);
+    };
   }, [statsLimit, pagination.page, historySearch, historyNumberFilter]);
 
   // Populate with all 36 marks initially on mount
@@ -660,9 +673,9 @@ export default function PlayWheTab({
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">7. MONTE CARLO & KELLY CRITERION</h4>
+              <h4 className="text-primary font-bold uppercase">7. MONTE CARLO SIMULATION</h4>
               <p>
-                Simulates 10,000 Monte Carlo draw iterations for Bayesian top picks and computes optimal ½-Kelly bankroll bet sizing calibrated to Play Whe's 24× payout structure.
+                Simulates 10,000 Monte Carlo draw iterations for Bayesian top picks to estimate empirical coverage probabilities across simulated draws.
               </p>
             </div>
             <div className="space-y-1.5">
@@ -1387,61 +1400,62 @@ export default function PlayWheTab({
                       </div>
                     ))}
                   </div>
-                  <p className="text-[10px] font-mono text-gray-500 border-t border-white/5 pt-2">ACF Lag-3 signals:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {(stats.advancedStats.autocorrelation?.lag3 || []).slice(0, 5).map((n: number) => (
-                      <span key={n} className="px-1.5 py-0.5 text-[9px] font-bold font-mono text-violet-300 bg-violet-950/30 border border-violet-500/20 rounded">
-                        {String(n).padStart(2, "0")}
-                      </span>
-                    ))}
+                </div>
+
+                {/* Autocorrelation */}
+                <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-cyan-400">Lag Autocorrelation</span>
+                  </div>
+                  <p className="text-[10px] text-gray-500 font-mono leading-snug">
+                    Lag-1: {stats.advancedStats.autocorrelation?.lag1?.toFixed(3)} &nbsp; Lag-4: {stats.advancedStats.autocorrelation?.lag4?.toFixed(3)}
+                  </p>
+                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold font-mono ${
+                    stats.advancedStats.autocorrelation?.hasSerialDependence
+                      ? "bg-cyan-950/50 border-cyan-500/30 text-cyan-300"
+                      : "bg-slate-900/50 border-white/5 text-gray-400"
+                  }`}>
+                    {stats.advancedStats.autocorrelation?.hasSerialDependence ? "⚡ Serial Dependency" : "✓ Independent Draws"}
                   </div>
                 </div>
 
-                {/* Chi-Square + Entropy */}
+                {/* Entropy Score */}
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${stats.advancedStats.chiSquare?.isNonRandom ? "bg-amber-400" : "bg-slate-500"}`} />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-amber-400">Chi-Square · Entropy</span>
-                  </div>
-                  <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[10px] font-bold font-mono ${
-                    stats.advancedStats.chiSquare?.isNonRandom
-                      ? "bg-amber-950/40 border-amber-500/30 text-amber-300"
-                      : "bg-slate-900/40 border-white/5 text-gray-400"
-                  }`}>
-                    {stats.advancedStats.chiSquare?.isNonRandom ? "⚡ Non-Random Pattern" : "✓ Uniform Distribution"}
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-amber-400">Entropy Score</span>
                   </div>
                   {(() => {
-                    const ratio = stats.advancedStats.entropy?.ratio || 0;
+                    const ratio = stats.advancedStats.entropy?.marks?.ratio || 0;
                     const pct = Math.round(ratio * 100);
-                    const color = pct < 85 ? "#34d399" : pct > 95 ? "#f87171" : "#38bdf8";
+                    const color = pct < 85 ? "#34d399" : pct > 95 ? "#f87171" : "#fbbf24";
                     return (
                       <>
-                        <div className="relative h-2.5 rounded-full bg-slate-800 overflow-hidden mt-2">
-                          <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+                        <div className="relative h-3 rounded-full bg-slate-800 overflow-hidden">
+                          <div className="absolute inset-y-0 left-0 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+                        </div>
+                        <div className="flex justify-between text-[9px] font-mono text-gray-500">
+                          <span>Predictable (0%)</span><span>Random (100%)</span>
                         </div>
                         <p className="text-[11px] font-bold font-mono" style={{ color }}>
-                          Entropy {pct}% — {stats.advancedStats.entropy?.signal?.toUpperCase()}
+                          {pct}% — {stats.advancedStats.entropy?.marks?.signal?.toUpperCase()}
                         </p>
                       </>
                     );
                   })()}
                 </div>
 
-                {/* Monte Carlo + Kelly */}
+                {/* Monte Carlo */}
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo · Kelly</span>
+                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo</span>
                   </div>
                   <div className="bg-violet-950/30 border border-violet-500/20 rounded-lg px-3 py-2">
                     <p className="text-[10px] font-mono text-gray-400">Top-5 Bayesian coverage</p>
                     <p className="text-2xl font-black font-mono text-violet-300">{stats.advancedStats.monteCarlo?.coveragePercent}%</p>
                     <p className="text-[9px] font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulations</p>
-                  </div>
-                  <div className="bg-amber-950/20 border border-amber-500/15 rounded-lg px-3 py-2">
-                    <p className="text-[10px] font-mono text-gray-400">½-Kelly optimal bet (of $100)</p>
-                    <p className="text-xl font-black font-mono text-amber-300">${stats.advancedStats.kelly?.halfKelly?.toFixed(2)}</p>
-                    <p className="text-[9px] font-mono text-gray-500">Play Whe pays 24× on a match</p>
                   </div>
                 </div>
               </div>

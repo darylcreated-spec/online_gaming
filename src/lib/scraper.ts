@@ -588,37 +588,41 @@ export async function scrapeWinForLifeMonth(monthStr: string, yearVal: number, s
     
     rows.each((_, row) => {
       const $row = $(row);
-      if ($row.hasClass("lotto-date-tr")) {
+      const tds = $row.find("td, th");
+      const text = $row.text().trim();
+      const dateMatch = text.match(/(\d{1,2}-[A-Za-z]{3}-\d{2,4})/);
+
+      if (dateMatch && tds.length <= 2) {
+        const rawDate = dateMatch[1];
+        currentDate = parseDate(rawDate);
+      } else if ($row.hasClass("lotto-date-tr")) {
         const dateText = $row.find("strong").text().trim();
         currentDate = parseDate(dateText);
-      } else if ($row.hasClass("lotto-tr")) {
-        const tds = $row.find("td");
-        if (tds.length >= 3 && currentDate) {
-          try {
-            const drawNum = parseInt($(tds[0]).text().trim());
-            const numsStr = $(tds[1]).text().trim();
-            const nums = numsStr.split(/\s+/).map(n => parseInt(n.trim())).sort((a, b) => a - b);
-            const cb = parseInt($(tds[2]).text().trim());
-            
-            const jackpot = tds.length >= 4 ? $(tds[3]).text().trim() : "X";
-            
-            if (isNaN(drawNum) || nums.length < 6 || isNaN(cb)) return;
+      } else if (tds.length >= 3) {
+        try {
+          const drawNum = parseInt($(tds[0]).text().trim());
+          const numsStr = $(tds[1]).text().trim();
+          const nums = numsStr.split(/[\s-]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n)).sort((a, b) => a - b);
+          const cb = parseInt($(tds[2]).text().trim());
+          
+          const jackpot = tds.length >= 4 ? $(tds[3]).text().trim() : "X";
+          
+          if (isNaN(drawNum) || nums.length < 6 || isNaN(cb) || !currentDate) return;
 
-            draws.push({
-              draw_number: drawNum,
-              draw_date: currentDate,
-              num1: nums[0],
-              num2: nums[1],
-              num3: nums[2],
-              num4: nums[3],
-              num5: nums[4],
-              num6: nums[5],
-              cash_ball: cb,
-              jackpot: jackpot || "X"
-            });
-          } catch (e) {
-            console.error("Error parsing Win for Life row in JS:", e);
-          }
+          draws.push({
+            draw_number: drawNum,
+            draw_date: currentDate,
+            num1: nums[0],
+            num2: nums[1],
+            num3: nums[2],
+            num4: nums[3],
+            num5: nums[4],
+            num6: nums[5],
+            cash_ball: cb,
+            jackpot: jackpot || "X"
+          });
+        } catch (e) {
+          console.error("Error parsing Win for Life row in JS:", e);
         }
       }
     });

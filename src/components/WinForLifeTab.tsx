@@ -166,6 +166,19 @@ export default function WinForLifeTab() {
     fetchStats();
     fetchPredictions();
     fetchAllDraws();
+
+    const handleSyncEvent = () => {
+      console.log("[WinForLifeTab] Global sync event received, refreshing data...");
+      fetchStats();
+      fetchPredictions();
+      fetchAllDraws();
+      if (subTab === "history") {
+        fetchHistory();
+      }
+    };
+
+    window.addEventListener("win_concept_sync_completed", handleSyncEvent);
+    return () => window.removeEventListener("win_concept_sync_completed", handleSyncEvent);
   }, []);
 
   useEffect(() => {
@@ -766,7 +779,7 @@ export default function WinForLifeTab() {
                 <Eye className="w-5 h-5 text-emerald-400" />
                 <div>
                   <h3 className="text-lg font-bold tracking-tight text-white">Advanced Statistical Intelligence</h3>
-                  <p className="text-xs text-gray-400">EWMA · RTM Z-Score · Chi-Square · Entropy · Bayesian · Monte Carlo · Kelly</p>
+                  <p className="text-xs text-gray-400">EWMA · RTM Z-Score · Chi-Square · Entropy · Bayesian · Monte Carlo</p>
                 </div>
               </div>
 
@@ -836,20 +849,16 @@ export default function WinForLifeTab() {
                   })()}
                 </div>
 
-                {/* Monte Carlo + Kelly */}
+                {/* Monte Carlo */}
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo · Kelly</span>
+                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo</span>
                   </div>
                   <div className="bg-violet-950/30 border border-violet-500/20 rounded-lg px-3 py-2">
                     <p className="text-[10px] font-mono text-gray-400">Bayesian top-6 coverage</p>
                     <p className="text-2xl font-black font-mono text-violet-300">{stats.advancedStats.monteCarlo?.coveragePercent}%</p>
                     <p className="text-[9px] font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulations</p>
-                  </div>
-                  <div className="bg-amber-950/20 border border-amber-500/15 rounded-lg px-3 py-2">
-                    <p className="text-[10px] font-mono text-gray-400">½-Kelly optimal bet (of $100)</p>
-                    <p className="text-xl font-black font-mono text-amber-300">${stats.advancedStats.kelly?.halfKelly?.toFixed(2)}</p>
                   </div>
                 </div>
               </div>
@@ -1515,7 +1524,7 @@ export default function WinForLifeTab() {
                 <div>
                   <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">4. Advanced Statistical Intelligence</h4>
                   <p>
-                    Evaluates distribution randomness via Chi-Square Goodness-of-Fit and Shannon Entropy, calculates Bayesian Posterior probabilities, simulates 10,000 Monte Carlo draw outcomes, and recommends optimal Kelly Criterion bet sizing.
+                    Evaluates distribution randomness via Chi-Square Goodness-of-Fit and Shannon Entropy, calculates Bayesian Posterior probabilities, and simulates 10,000 Monte Carlo draw outcomes.
                   </p>
                 </div>
                 <div>
