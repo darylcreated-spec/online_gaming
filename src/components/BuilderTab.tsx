@@ -505,7 +505,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
           }`}
         >
           <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-          3D PHYSICS TUMBLER
+          QUICK PICK
         </button>
       </div>
 

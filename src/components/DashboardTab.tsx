@@ -417,9 +417,9 @@ export default function DashboardTab({
           {/* Controls and Ball display (Col Span 8) */}
           <div className="md:col-span-8 space-y-4 font-mono">
             <div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Quick Pick 5 (QP5) Generator</h3>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">Quick Pick</h3>
               <p className="text-[11px] text-gray-400 leading-relaxed mt-1">
-                Draw 5 unique random numbers from 1 to 35 and 1 Powerball from 1 to 10 by spinning the animated lottery tumbler.
+                Draw 5 unique random numbers from 1 to 35 and 1 Powerball from 1 to 10.
               </p>
             </div>
 
@@ -429,7 +429,7 @@ export default function DashboardTab({
                 disabled={isSpinning}
                 className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 disabled:from-amber-500/50 disabled:to-amber-500/50 disabled:cursor-not-allowed text-slate-950 text-xs font-black tracking-widest uppercase transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:shadow-[0_0_25px_rgba(245,158,11,0.3)] rounded-lg cursor-pointer shrink-0"
               >
-                {isSpinning ? "SPINNING..." : "SPIN TUMBLER"}
+                {isSpinning ? "DRAWING..." : "DRAW"}
               </button>
 
               {/* Ball Drop Prediction Display */}

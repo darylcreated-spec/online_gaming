@@ -387,11 +387,11 @@ export default function InteractiveTumbler({
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <h3 className="text-sm font-black uppercase tracking-wider text-white">
-              3D Physics Tumbler Quick Pick
+              Quick Pick
             </h3>
           </div>
           <p className="text-[11px] text-gray-400 mt-0.5">
-            Real-time physics collision drum simulation with procedural sound and haptics.
+            Interactive ball draw simulation with sound and haptics.
           </p>
         </div>
 
@@ -447,12 +447,14 @@ export default function InteractiveTumbler({
             height={300}
             className="w-[260px] h-[260px] sm:w-[280px] sm:h-[280px] rounded-full border border-white/5 bg-slate-950 shadow-[inset_0_0_30px_rgba(0,0,0,0.8),0_0_30px_rgba(0,0,0,0.5)] cursor-pointer"
             onClick={handleSpinAndDraw}
-            title="Click drum to spin and draw"
+            title="Click to draw"
           />
 
-          <p className="text-[10px] text-gray-500 mt-3 uppercase tracking-widest text-center">
-            {isSpinning ? "Drawing random balls..." : "Tap drum or click button to spin"}
-          </p>
+          {isSpinning && (
+            <p className="text-[10px] text-emerald-400 mt-3 uppercase tracking-widest text-center animate-pulse">
+              Drawing random balls...
+            </p>
+          )}
         </div>
 
         {/* Drawn Result Chute & Action Controls */}
@@ -466,7 +468,7 @@ export default function InteractiveTumbler({
             <div className="min-h-[70px] p-4 bg-slate-900/60 border border-white/5 rounded-xl flex items-center justify-center gap-2 flex-wrap shadow-inner">
               {drawnNumbers.length === 0 && !isSpinning ? (
                 <span className="text-xs text-gray-500 italic">
-                  Press SPIN DRUM to generate ticket
+                  Press DRAW to generate numbers
                 </span>
               ) : (
                 <>
@@ -511,7 +513,7 @@ export default function InteractiveTumbler({
               }`}
             >
               <Play className={`w-4 h-4 fill-current ${isSpinning ? "animate-spin" : ""}`} />
-              <span>{isSpinning ? "SPINNING DRUM..." : "SPIN & DRAW"}</span>
+              <span>{isSpinning ? "DRAWING..." : "DRAW"}</span>
             </button>
           </div>
 

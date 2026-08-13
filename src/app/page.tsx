@@ -603,17 +603,17 @@ export default function Home() {
                 </ul>
               </div>
 
-              {/* Card 6: QP5 Lucky Tumbler */}
+              {/* Card 6: Quick Pick */}
               <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3">
                 <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
                   <RefreshCw className="w-4 h-4 text-primary" />
-                  6. QP5 Lucky Tumbler
+                  6. Quick Pick (QP5)
                 </div>
                 <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  Draws a Quick Pick 5 ticket (5 unique numbers from 1-35 + 1 Powerball from 1-10) using a physics-based lottery tumbler animation.
+                  Draws a Quick Pick ticket (5 unique numbers from 1-35 + 1 Powerball from 1-10) using interactive ball draw simulation with sound and haptics.
                 </p>
                 <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  The drawn main numbers are color-matched to the corresponding tumbler balls, while the Powerball is highlighted in solid white, mimicking standard physical drawing environments.
+                  The drawn main numbers are color-matched to the corresponding balls, while the Powerball is highlighted in solid white.
                 </p>
               </div>
             </div>

@@ -603,7 +603,7 @@ export default function WinForLifeTab() {
                     <div className="absolute inset-0 rounded-full border-2 border-dotted border-emerald-500/20 animate-spin-slow" />
                     <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-slate-900 via-[#0B0C0E] to-slate-950 border border-white/5 flex items-center justify-center relative overflow-hidden shadow-[inset_0_0_15px_rgba(255,255,255,0.05),0_0_20px_rgba(0,0,0,0.5)]">
                       <span className="font-mono text-[8px] text-gray-500 font-extrabold tracking-widest text-center uppercase leading-tight select-none z-10">
-                        WIN FOR LIFE<br />TUMBLER
+                        WIN FOR LIFE<br />QUICK PICK
                       </span>
                       {/* CSS-Animated bouncing balls inside */}
                       <div className="absolute w-5 h-5 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-white font-mono font-black text-[9px] flex items-center justify-center shadow-[0_0_8px_rgba(56,189,248,0.6)] animate-bounce-ball-1 select-none z-0">22</div>
@@ -621,10 +621,10 @@ export default function WinForLifeTab() {
                 <div>
                   <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                     <Play className="w-4 h-4 text-emerald-400" />
-                    Win for Life Tumbler Quick Pick
+                    Win for Life Quick Pick
                   </h3>
                   <p className="text-[11px] text-gray-400 leading-relaxed mt-1">
-                    Draw 6 unique random numbers from 1 to 28 and 1 Cash Ball from 1 to 3 by spinning the animated lottery tumbler.
+                    Draw 6 unique random numbers from 1 to 28 and 1 Cash Ball from 1 to 3.
                   </p>
                 </div>
 
@@ -634,7 +634,7 @@ export default function WinForLifeTab() {
                     disabled={isSpinning}
                     className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-350 hover:to-emerald-450 disabled:from-emerald-500/50 disabled:to-emerald-500/50 disabled:cursor-not-allowed text-slate-950 text-xs font-black tracking-widest uppercase transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:shadow-[0_0_25px_rgba(16,185,129,0.3)] rounded-lg cursor-pointer shrink-0"
                   >
-                    {isSpinning ? "SPINNING..." : "SPIN TUMBLER"}
+                    {isSpinning ? "DRAWING..." : "DRAW"}
                   </button>
 
                   {(luckyNumbers.length > 0 || isSpinning) && (

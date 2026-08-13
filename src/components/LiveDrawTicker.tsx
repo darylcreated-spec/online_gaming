@@ -39,22 +39,20 @@ export default function LiveDrawTicker({
       return d;
     };
 
-    // 1. Play Whe draws (Mon-Sat at 10:30, 13:00, 16:00, 18:30 AST)
+    // 1. Play Whe draws (Mon-Sun at 10:30 AM, 1:00 PM, 4:00 PM, 7:00 PM AST)
     const pwSlots = [
       { name: "Play Whe Morning", h: 10, m: 30, interval: 3.5 },
       { name: "Play Whe Midday", h: 13, m: 0, interval: 2.5 },
       { name: "Play Whe Afternoon", h: 16, m: 0, interval: 3.0 },
-      { name: "Play Whe Evening", h: 18, m: 30, interval: 2.5 },
+      { name: "Play Whe Evening", h: 19, m: 0, interval: 3.0 },
     ];
 
     for (let dayOffset = 0; dayOffset <= 2; dayOffset++) {
-      const checkDay = (astDate.getUTCDay() + dayOffset) % 7; // 0=Sun, 6=Sat
-      if (checkDay >= 1 && checkDay <= 6) { // Mon-Sat
-        for (const slot of pwSlots) {
-          const target = makeASTDate(dayOffset, slot.h, slot.m);
-          if (target.getTime() > now.getTime()) {
-            candidates.push({ game: "Play Whe", name: slot.name, date: target, intervalHrs: slot.interval });
-          }
+      // Play Whe is drawn 7 days a week (Monday to Sunday)
+      for (const slot of pwSlots) {
+        const target = makeASTDate(dayOffset, slot.h, slot.m);
+        if (target.getTime() > now.getTime()) {
+          candidates.push({ game: "Play Whe", name: slot.name, date: target, intervalHrs: slot.interval });
         }
       }
     }
