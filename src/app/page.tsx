@@ -9,6 +9,7 @@ import PlayWheTab from "@/components/PlayWheTab";
 import WinForLifeTab from "@/components/WinForLifeTab";
 import SettingsTab from "@/components/SettingsTab";
 import WelcomeTab from "@/components/WelcomeTab";
+import LiveDrawTicker from "@/components/LiveDrawTicker";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw } from "lucide-react";
 
 const TumblerIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -418,6 +419,9 @@ export default function Home() {
 
         {/* Desktop nav bar occupies this space; mobile nav bar is pinned to the screen bottom */}
       </header>
+
+      {/* Global Live Draw Ticker & Auto-Sync Bar */}
+      <LiveDrawTicker onSelectGame={setActiveTab} />
 
       {/* Main Viewport Container */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 py-8 pb-24 md:pb-8">

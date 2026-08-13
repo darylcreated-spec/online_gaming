@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { analyzeDeltas, DeltaAnalysis } from "@/lib/deltas";
 import { generateWheel } from "@/lib/wheeling";
-import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save } from "lucide-react";
+import { runGeneticOptimization, AlphaSlipResult } from "@/lib/geneticOptimizer";
+import InteractiveTumbler from "@/components/InteractiveTumbler";
+import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Sparkles, Play, Award, CheckCircle2 } from "lucide-react";
 
 interface BuilderTabProps {
   historicalDraws: any[];
@@ -80,6 +82,13 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
   const [selectedNums, setSelectedNums] = useState<number[]>([]);
   const [selectedPb, setSelectedPb] = useState<number | null>(null);
   const [wheelStrategy, setWheelStrategy] = useState<"full" | "abbreviated-4-4" | "abbreviated-3-3">("abbreviated-4-4");
+  const [activeMode, setActiveMode] = useState<"wheel" | "genetic" | "tumbler">("wheel");
+
+  // Genetic Algorithm States
+  const [geneticResults, setGeneticResults] = useState<AlphaSlipResult[]>([]);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [bestFitnessSoFar, setBestFitnessSoFar] = useState(0);
   
   const [deltaAnalysis, setDeltaAnalysis] = useState<DeltaAnalysis | null>(null);
   const [generatedTickets, setGeneratedTickets] = useState<number[][]>([]);
@@ -181,6 +190,53 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
     }
     setSelectedNums(numbers.sort((a, b) => a - b));
     setSelectedPb(Math.floor(Math.random() * 10) + 1);
+  };
+
+  // Genetic Algorithm Evolutionary Optimizer Runner
+  const handleRunGeneticOptimization = async () => {
+    setIsOptimizing(true);
+    setGenerationProgress(0);
+    setBestFitnessSoFar(0);
+
+    // Yield to let UI update state
+    await new Promise(r => setTimeout(r, 50));
+
+    try {
+      const results = runGeneticOptimization({
+        game: "lotto-plus",
+        poolSize: 35,
+        pickCount: 5,
+        populationSize: 5000,
+        generations: 50,
+        mutationRate: 0.12,
+        userAnchors: selectedNums.slice(0, 2), // If user selected any anchor numbers, respect them
+        historicalDraws
+      }, (progress, currentBest) => {
+        setGenerationProgress(progress);
+        setBestFitnessSoFar(currentBest);
+      });
+
+      setGeneticResults(results);
+      setGenerationProgress(100);
+      if (results.length > 0) {
+        setBestFitnessSoFar(results[0].fitness.totalScore);
+      }
+    } catch (err) {
+      console.error("Genetic optimization error:", err);
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  // Load Alpha Slips into Generated Tickets Workspace
+  const handleLoadAlphaSlipsIntoWorkspace = () => {
+    if (geneticResults.length === 0) return;
+    const slips = geneticResults.map(r => r.ticket);
+    setGeneratedTickets(slips);
+    if (!selectedPb && geneticResults[0].powerballOrBonus) {
+      setSelectedPb(geneticResults[0].powerballOrBonus);
+    }
+    setActiveMode("wheel");
   };
 
   // Live Delta Analyzer trigger
@@ -411,7 +467,212 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         </div>
       </div>
 
-      {/* Bento Grid Layout (60% Workspace / 40% Analytics Sidebar) */}
+      {/* Mode Selector Navigation Menu */}
+      <div className="flex bg-slate-900/60 p-1 rounded-lg border border-white/5 w-full md:w-fit gap-1 overflow-x-auto flex-nowrap scrollbar-none select-none">
+        <button
+          onClick={() => setActiveMode("wheel")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeMode === "wheel"
+              ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.3)]"
+              : "text-gray-400 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <Compass className="w-3.5 h-3.5" />
+          COMBINATORIAL WHEELER
+        </button>
+
+        <button
+          onClick={() => setActiveMode("genetic")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeMode === "genetic"
+              ? "bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+              : "text-gray-400 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <Dna className="w-3.5 h-3.5 text-emerald-400" />
+          GENETIC AI ALPHA OPTIMIZER
+          <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-extrabold uppercase">
+            5,000 POP
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveMode("tumbler")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeMode === "tumbler"
+              ? "bg-sky-400 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
+              : "text-gray-400 hover:text-white hover:bg-white/5"
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+          3D PHYSICS TUMBLER
+        </button>
+      </div>
+
+      {/* MODE 2: GENETIC AI ALPHA OPTIMIZER */}
+      {activeMode === "genetic" && (
+        <div className="space-y-6">
+          <div className="glass-panel p-6 rounded-2xl border border-emerald-500/20 bg-emerald-950/[0.04] space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-5">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Dna className="w-5 h-5 text-emerald-400 animate-pulse" />
+                  <h3 className="text-base font-black uppercase tracking-wider text-white">
+                    Genetic Algorithm Combinatorial Filter
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed max-w-2xl">
+                  Simulates <strong>5,000 candidate combinations</strong> across <strong>50 evolutionary generations</strong> to filter out non-viable permutations and isolate top-tier Alpha Slips based on 7 multi-objective fitness functions.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleRunGeneticOptimization}
+                  disabled={isOptimizing}
+                  className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer shadow-lg ${
+                    isOptimizing
+                      ? "bg-slate-800 text-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 hover:opacity-90 shadow-[0_0_25px_rgba(52,211,153,0.35)] hover:scale-105"
+                  }`}
+                >
+                  <Sparkles className={`w-4 h-4 ${isOptimizing ? "animate-spin" : ""}`} />
+                  <span>{isOptimizing ? `EVOLVING GEN (${generationProgress}%)...` : "RUN GENETIC OPTIMIZATION"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Evolution Progress Bar */}
+            {isOptimizing && (
+              <div className="space-y-2 p-4 bg-slate-950/80 border border-white/5 rounded-xl animate-pulse">
+                <div className="flex justify-between text-xs font-bold text-gray-400">
+                  <span>EVOLUTIONARY GENERATIONS PROGRESS</span>
+                  <span className="text-emerald-400 font-mono">{generationProgress}% (Best Fitness: {bestFitnessSoFar}/100)</span>
+                </div>
+                <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-emerald-400 to-teal-300 transition-all duration-300 rounded-full shadow-[0_0_12px_rgba(52,211,153,0.8)]"
+                    style={{ width: `${generationProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Genetic Fitness Criteria Radar Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+              {[
+                { name: "Sum Bell Curve", weight: "20% Weight", desc: "75–115 sum range" },
+                { name: "Delta Spacing", weight: "15% Weight", desc: "Even gap spread" },
+                { name: "Odd/Even Ratio", weight: "15% Weight", desc: "3:2 or 2:3 balance" },
+                { name: "High/Low Ratio", weight: "15% Weight", desc: "Balanced quadrants" },
+                { name: "Decade Spread", weight: "10% Weight", desc: "≥3 decades" },
+                { name: "Consecutive Limit", weight: "10% Weight", desc: "≤1 adjacent pair" },
+                { name: "Positional Matrix", weight: "15% Weight", desc: "Pos 1-5 mean fit" }
+              ].map((metric, i) => (
+                <div key={i} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl space-y-1">
+                  <span className="text-[10px] font-black text-emerald-400 uppercase block truncate">{metric.name}</span>
+                  <span className="text-[9px] text-gray-500 block uppercase font-bold">{metric.weight}</span>
+                  <span className="text-[9px] text-gray-400 block">{metric.desc}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Generated Top Alpha Slips */}
+            {geneticResults.length > 0 && (
+              <div className="space-y-4 pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-amber-400" />
+                    <h4 className="text-sm font-black uppercase text-white tracking-wider">
+                      Evolved Alpha Slips (Top 5 Highest Fitness)
+                    </h4>
+                  </div>
+                  
+                  <button
+                    onClick={handleLoadAlphaSlipsIntoWorkspace}
+                    className="px-4 py-2 bg-slate-900 border border-emerald-500/30 hover:border-emerald-500 text-emerald-400 text-xs font-bold uppercase tracking-wider rounded-lg transition cursor-pointer flex items-center gap-2 hover:bg-emerald-500/10"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    LOAD ALL 5 INTO SLIP PRINTER
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  {geneticResults.map((slip) => (
+                    <div 
+                      key={slip.rank}
+                      className="p-4 bg-slate-950/90 border border-emerald-500/20 hover:border-emerald-500/50 rounded-xl space-y-3 relative group transition-all duration-300 shadow-lg"
+                    >
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="text-xs font-black text-amber-400">ALPHA #{slip.rank}</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                          FITNESS {slip.fitness.totalScore}%
+                        </span>
+                      </div>
+
+                      {/* Number Balls */}
+                      <div className="flex flex-wrap items-center justify-center gap-1.5 py-2">
+                        {slip.ticket.map((num) => (
+                          <div 
+                            key={num}
+                            className="w-8 h-8 rounded-full bg-slate-900 border border-white/10 text-white font-black text-xs flex items-center justify-center shadow-md group-hover:border-emerald-400 transition"
+                          >
+                            {num}
+                          </div>
+                        ))}
+                        {slip.powerballOrBonus && (
+                          <div className="w-8 h-8 rounded-full bg-purple-600/30 border border-purple-500/40 text-purple-300 font-black text-xs flex items-center justify-center shadow-md ml-1" title="Powerball">
+                            {slip.powerballOrBonus}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Score Metrics Breakdown */}
+                      <div className="text-[10px] space-y-1 text-gray-400 border-t border-white/5 pt-2">
+                        <div className="flex justify-between">
+                          <span>Sum: <strong className="text-white">{slip.fitness.sum}</strong></span>
+                          <span>Spread: <strong className="text-white">{slip.fitness.spread}</strong></span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Odd:Even: <strong className="text-white">{slip.fitness.oddEvenRatio}</strong></span>
+                          <span>High:Low: <strong className="text-white">{slip.fitness.highLowRatio}</strong></span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setSelectedNums(slip.ticket);
+                          if (slip.powerballOrBonus) setSelectedPb(slip.powerballOrBonus);
+                          setActiveMode("wheel");
+                        }}
+                        className="w-full py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider rounded transition cursor-pointer"
+                      >
+                        Select in Wheeler
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODE 3: 3D PHYSICS TUMBLER */}
+      {activeMode === "tumbler" && (
+        <InteractiveTumbler
+          initialGame="lotto-plus"
+          onTicketGenerated={(numbers, bonus) => {
+            setSelectedNums(numbers);
+            if (bonus) setSelectedPb(bonus);
+          }}
+        />
+      )}
+
+      {/* MODE 1: COMBINATORIAL WHEELER */}
+      {activeMode === "wheel" && (
+        <>
+          {/* Bento Grid Layout (60% Workspace / 40% Analytics Sidebar) */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         
         {/* LEFT CARD: Wheeling Engine Workspace (60% width) */}
@@ -789,23 +1050,24 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                         )}
                       </div>
 
-                      {/* Staggered dashed divider & footer */}
-                      <div className="border-t border-dashed border-[#1F232B] mt-4 pt-2.5 flex justify-between items-center text-[8px] text-slate-500 font-mono">
-                        <div className="flex gap-2">
-                          <span>O/E: {evalResult.oddEvenRatio}</span>
-                          <span>H/L: {evalResult.highLowRatio}</span>
-                          <span>SUM: {ticket.reduce((a, b) => a + b, 0)} ({evalResult.checks.sum ? "PASS" : "FAIL"})</span>
+                        {/* Staggered dashed divider & footer */}
+                        <div className="border-t border-dashed border-[#1F232B] mt-4 pt-2.5 flex justify-between items-center text-[8px] text-slate-500 font-mono">
+                          <div className="flex gap-2">
+                            <span>O/E: {evalResult.oddEvenRatio}</span>
+                            <span>H/L: {evalResult.highLowRatio}</span>
+                            <span>SUM: {ticket.reduce((a, b) => a + b, 0)} ({evalResult.checks.sum ? "PASS" : "FAIL"})</span>
+                          </div>
+                          <span className="text-emerald-500 font-bold">ACTIVE FILTERED</span>
                         </div>
-                        <span className="text-emerald-500 font-bold">ACTIVE FILTERED</span>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            ))}
+                      </>
+                    );
+                  })()}
+                </div>
+              ))}
+            </div>
           </div>
-
-        </div>
+        )}
+      </>
       )}
 
       {/* Combinatorial Coverage Metrics Panel */}

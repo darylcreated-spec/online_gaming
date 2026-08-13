@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Info, Heart } from "lucide-react";
+import InteractiveTumbler from "@/components/InteractiveTumbler";
 
 export default function WelcomeTab() {
   const [shadedNums, setShadedNums] = useState<number[]>([]);
@@ -177,7 +178,10 @@ export default function WelcomeTab() {
         </div>
       </div>
 
-      {/* 3. Warning Disclaimer Panel */}
+      {/* 3. Interactive Physics Tumbler Quick Pick */}
+      <InteractiveTumbler initialGame="lotto-plus" />
+
+      {/* 4. Warning Disclaimer Panel */}
       <div className="glass-panel p-5 rounded-xl border-red-500/10 bg-red-500/[0.01] relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1 h-full bg-red-500/50" />
         <div className="flex items-start gap-3">

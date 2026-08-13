@@ -211,7 +211,7 @@ export default function DashboardTab({
             <div className="space-y-1.5">
               <h4 className="text-primary font-bold uppercase">3. ADVANCED STATISTICAL ENGINES</h4>
               <p>
-                Combines 8 advanced mathematical models: <strong>EWMA Exponential Recency</strong> (α=0.08), <strong>RTM Z-Score Rebound</strong> (Z &lt; -1.5), <strong>Chi-Square Goodness-of-Fit</strong> (p-value tests), <strong>Shannon Entropy</strong> (distribution randomness gauge), <strong>Bayesian Posteriors</strong>, <strong>Monte Carlo 10,000-draw coverage</strong>, and <strong>Kelly Criterion</strong> bankroll bet sizing.
+                Combines 7 advanced mathematical models: <strong>EWMA Exponential Recency</strong> (α=0.08), <strong>RTM Z-Score Rebound</strong> (Z &lt; -1.5), <strong>Chi-Square Goodness-of-Fit</strong> (p-value tests), <strong>Shannon Entropy</strong> (distribution randomness gauge), <strong>Bayesian Posteriors</strong>, and <strong>Monte Carlo 10,000-draw coverage</strong>.
               </p>
             </div>
             <div className="space-y-1.5">
@@ -714,7 +714,7 @@ export default function DashboardTab({
             <TrendingUp className="w-5 h-5 text-primary" />
             <div>
               <h3 className="text-lg font-bold tracking-tight text-white">Advanced Statistical Intelligence</h3>
-              <p className="text-xs text-gray-400">EWMA · RTM Z-Score · Chi-Square · Entropy · Bayesian · Monte Carlo · Kelly</p>
+              <p className="text-xs text-gray-400">EWMA · RTM Z-Score · Chi-Square · Entropy · Bayesian · Monte Carlo</p>
             </div>
           </div>
 
@@ -728,55 +728,58 @@ export default function DashboardTab({
               </div>
               <p className="text-[10px] text-gray-500 font-mono leading-snug">Statistically underdrawn main numbers (Z &lt; -1.5). Due for regression toward the mean.</p>
               <div className="flex flex-wrap gap-1.5">
-                {(stats.advancedStats.zScores?.reboundCandidates || []).map((z: any) => (
-                  <div key={z.number} className="flex flex-col items-center bg-emerald-950/40 border border-emerald-500/20 rounded-lg px-2 py-1.5 min-w-[44px]">
-                    <span className="text-sm font-black font-mono text-emerald-300">{String(z.number).padStart(2, "0")}</span>
-                    <span className="text-[9px] font-mono text-emerald-600">Z={z.zScore}</span>
-                  </div>
+                {(stats.advancedStats.rtmRebound?.candidates || []).map((n: number) => (
+                  <span key={n} className="px-2 py-1 rounded bg-emerald-950/50 border border-emerald-500/30 text-emerald-300 font-mono font-bold text-xs">
+                    {String(n).padStart(2, "0")}
+                  </span>
                 ))}
+                {(!stats.advancedStats.rtmRebound?.candidates || stats.advancedStats.rtmRebound?.candidates.length === 0) && (
+                  <span className="text-xs text-gray-500 font-mono">None currently (Z &ge; -1.5)</span>
+                )}
               </div>
             </div>
 
-            {/* Chi-Square Verdict */}
+            {/* Chi-Square & EWMA Hot */}
             <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
               <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom ? "bg-amber-400" : "bg-slate-500"}`} />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-amber-400">Chi-Square Test</span>
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-blue-400">Chi-Square &amp; EWMA Hot</span>
               </div>
-              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-bold font-mono ${
-                stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom
-                  ? "bg-amber-950/40 border-amber-500/30 text-amber-300"
-                  : "bg-slate-900/40 border-white/5 text-gray-400"
-              }`}>
-                {stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom ? "⚡ Non-Random Pattern" : "✓ Uniform Distribution"}
+              <div className="space-y-2">
+                <div className="bg-slate-900/60 rounded-lg p-2 border border-white/5">
+                  <p className="text-[10px] font-mono text-gray-400">Chi-Square Test (p-val)</p>
+                  <p className="text-sm font-black font-mono text-blue-300">
+                    {stats.advancedStats.chiSquare?.mainNumbers?.pValue?.toFixed(4)} — {stats.advancedStats.chiSquare?.mainNumbers?.signal?.toUpperCase()}
+                  </p>
+                </div>
+                <div className="bg-slate-900/60 rounded-lg p-2 border border-white/5">
+                  <p className="text-[10px] font-mono text-gray-400">Top EWMA Recency Picks</p>
+                  <div className="flex gap-1 mt-1">
+                    {(stats.advancedStats.ewma?.top3 || []).map((n: number) => (
+                      <span key={n} className="px-1.5 py-0.5 rounded bg-blue-950/60 border border-blue-500/20 text-blue-300 font-mono font-bold text-xs">
+                        {String(n).padStart(2, "0")}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <p className="text-[10px] text-gray-500 font-mono leading-snug">
-                χ²={stats.advancedStats.chiSquare?.mainNumbers?.statistic} &nbsp; p={stats.advancedStats.chiSquare?.mainNumbers?.pValue}
-              </p>
-              <p className="text-[10px] text-gray-500 font-mono leading-snug">
-                {stats.advancedStats.chiSquare?.mainNumbers?.interpretation?.slice(0, 80)}...
-              </p>
             </div>
 
-            {/* Shannon Entropy Gauge */}
+            {/* Shannon Entropy */}
             <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-sky-400">Entropy Score</span>
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-amber-400">Shannon Entropy</span>
               </div>
               {(() => {
-                const ratio = stats.advancedStats.entropy?.mainNumbers?.ratio || 0;
-                const pct = Math.round(ratio * 100);
-                const color = pct < 85 ? "#34d399" : pct > 95 ? "#f87171" : "#38bdf8";
+                const ent = stats.advancedStats.entropy?.mainNumbers?.entropyNormalized;
+                const pct = ent ? Math.round(ent * 100) : 0;
                 return (
                   <>
-                    <div className="relative h-3 rounded-full bg-slate-800 overflow-hidden">
-                      <div className="absolute inset-y-0 left-0 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+                    <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-white/5">
+                      <div className="bg-gradient-to-r from-amber-500 to-amber-300 h-full transition-all duration-500" style={{ width: `${pct}%` }} />
                     </div>
-                    <div className="flex justify-between text-[9px] font-mono text-gray-500">
-                      <span>Predictable (0%)</span><span>Random (100%)</span>
-                    </div>
-                    <p className="text-[11px] font-bold font-mono" style={{ color }}>
+                    <p className="text-xs font-mono font-bold text-amber-300">
                       {pct}% — {stats.advancedStats.entropy?.mainNumbers?.signal?.toUpperCase()}
                     </p>
                     <p className="text-[10px] text-gray-500 font-mono">{stats.advancedStats.entropy?.mainNumbers?.interpretation?.slice(0, 60)}...</p>
@@ -785,22 +788,16 @@ export default function DashboardTab({
               })()}
             </div>
 
-            {/* Monte Carlo + Kelly */}
+            {/* Monte Carlo */}
             <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo · Kelly</span>
+                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo</span>
               </div>
-              <div className="space-y-2">
-                <div className="bg-violet-950/30 border border-violet-500/20 rounded-lg px-3 py-2">
-                  <p className="text-[10px] font-mono text-gray-400">Top-5 Bayesian picks coverage</p>
-                  <p className="text-2xl font-black font-mono text-violet-300">{stats.advancedStats.monteCarlo?.coveragePercent}%</p>
-                  <p className="text-[9px] font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulated draws</p>
-                </div>
-                <div className="bg-amber-950/20 border border-amber-500/15 rounded-lg px-3 py-2">
-                  <p className="text-[10px] font-mono text-gray-400">Kelly optimal bet (of $100)</p>
-                  <p className="text-lg font-black font-mono text-amber-300">${stats.advancedStats.kelly?.halfKelly?.toFixed(2)} <span className="text-[10px] text-amber-600">½-Kelly</span></p>
-                </div>
+              <div className="bg-violet-950/30 border border-violet-500/20 rounded-lg px-3 py-2">
+                <p className="text-[10px] font-mono text-gray-400">Top-5 Bayesian picks coverage</p>
+                <p className="text-2xl font-black font-mono text-violet-300">{stats.advancedStats.monteCarlo?.coveragePercent}%</p>
+                <p className="text-[9px] font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulated draws</p>
               </div>
             </div>
           </div>
