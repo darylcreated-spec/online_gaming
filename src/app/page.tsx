@@ -479,7 +479,7 @@ export default function Home() {
         {/* Render Active View Tab */}
         {activeTab === "welcome" && (
           <div className="tab-content-enter">
-            <WelcomeTab />
+            <WelcomeTab onSelectGame={setActiveTab} />
           </div>
         )}
 

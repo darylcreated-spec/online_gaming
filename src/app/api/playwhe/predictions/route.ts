@@ -46,15 +46,15 @@ export async function GET() {
             LIMIT 100`
     });
 
-    const predictions = predictionsRes.rows.map(row => ({
-      id: Number(row[0]),
-      prediction_date: String(row[1]),
-      draw_time_slot: String(row[2]),
-      predicted_numbers: String(row[3]),
-      status: String(row[4]),
-      winning_number: row[5] !== null ? Number(row[5]) : null,
-      winning_draw_number: row[6] !== null ? Number(row[6]) : null,
-      created_at: String(row[7])
+    const predictions = predictionsRes.rows.map((row: any) => ({
+      id: Number(row.id ?? row[0]),
+      prediction_date: String(row.prediction_date ?? row[1]),
+      draw_time_slot: String(row.draw_time_slot ?? row[2]),
+      predicted_numbers: String(row.predicted_numbers ?? row[3]),
+      status: String(row.status ?? row[4]),
+      winning_number: (row.winning_number ?? row[5]) !== null && (row.winning_number ?? row[5]) !== undefined ? Number(row.winning_number ?? row[5]) : null,
+      winning_draw_number: (row.winning_draw_number ?? row[6]) !== null && (row.winning_draw_number ?? row[6]) !== undefined ? Number(row.winning_draw_number ?? row[6]) : null,
+      created_at: String(row.created_at ?? row[7])
     }));
 
     // 4. Compute overall statistics for predictions that have been completed
@@ -67,9 +67,10 @@ export async function GET() {
             WHERE status != 'PENDING'`
     });
 
-    const total = Number(statsRes.rows[0][0]) || 0;
-    const hits = Number(statsRes.rows[0][1]) || 0;
-    const misses = Number(statsRes.rows[0][2]) || 0;
+    const firstStatRow = statsRes.rows[0] as any;
+    const total = Number(firstStatRow?.total ?? firstStatRow?.[0]) || 0;
+    const hits = Number(firstStatRow?.hits ?? firstStatRow?.[1]) || 0;
+    const misses = Number(firstStatRow?.misses ?? firstStatRow?.[2]) || 0;
     const hitRate = total > 0 ? Math.round((hits / total) * 1000) / 10 : 0;
 
     return NextResponse.json({

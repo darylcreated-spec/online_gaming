@@ -249,14 +249,16 @@ export function checkSaturdayPlayback(draws: any[]) {
 
   for (let i = 0; i < draws.length; i++) {
     const draw = draws[i];
+    if (!draw || !draw.draw_date) continue;
     const date = new Date(draw.draw_date);
-    if (date.getDay() === 6 && draw.draw_time_slot.toLowerCase() === "evening") {
+    if (date.getDay() === 6 && (draw.draw_time_slot || "").toLowerCase() === "evening") {
       lastSaturdayDraw = draw;
       for (let j = i - 1; j >= 0; j--) {
         const nextDraw = draws[j];
+        if (!nextDraw || !nextDraw.draw_date) continue;
         const nextDate = new Date(nextDraw.draw_date);
         
-        if (nextDate.getDay() === 6 && nextDraw.draw_time_slot.toLowerCase() === "evening") {
+        if (nextDate.getDay() === 6 && (nextDraw.draw_time_slot || "").toLowerCase() === "evening") {
           break;
         }
         

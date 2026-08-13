@@ -70,7 +70,7 @@ export async function GET(request: Request) {
     const slotStats: Record<string, { hot: any[], cold: any[] }> = {};
     
     slots.forEach(slot => {
-      const slotDraws = draws.filter(d => d.draw_time_slot.toLowerCase() === slot.toLowerCase());
+      const slotDraws = draws.filter(d => (d.draw_time_slot || "").toLowerCase() === slot.toLowerCase());
       
       const freq: Record<number, number> = {};
       for (let n = 1; n <= 36; n++) freq[n] = 0;
@@ -80,9 +80,12 @@ export async function GET(request: Request) {
       for (let n = 1; n <= 36; n++) lastSeen[n] = 9999;
       
       slotDraws.forEach((d, idx) => {
-        freq[d.winning_number]++;
-        if (lastSeen[d.winning_number] === 9999) {
-          lastSeen[d.winning_number] = idx;
+        const num = Number(d.winning_number);
+        if (num >= 1 && num <= 36) {
+          freq[num]++;
+          if (lastSeen[num] === 9999) {
+            lastSeen[num] = idx;
+          }
         }
       });
       

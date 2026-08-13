@@ -1,47 +1,89 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Info, Heart } from "lucide-react";
+import { Info, Heart, ArrowRight, Sparkles, RefreshCw, Trophy, Flame } from "lucide-react";
 import InteractiveTumbler from "@/components/InteractiveTumbler";
+import { CHINAPOO_CHART } from "@/lib/playwhe";
 
-export default function WelcomeTab() {
+interface WelcomeTabProps {
+  onSelectGame?: (game: "welcome" | "lotto-plus" | "play-whe" | "win-for-life" | "scanner") => void;
+}
+
+export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
   const [shadedNums, setShadedNums] = useState<number[]>([]);
   const [pencilPos, setPencilPos] = useState({ x: 50, y: -25, rotate: 0, shake: false });
   const [showGoodLuck, setShowGoodLuck] = useState(false);
 
+  // Latest winning results states
+  const [latestLotto, setLatestLotto] = useState<any>(null);
+  const [latestPlayWhe, setLatestPlayWhe] = useState<any>(null);
+  const [latestWinForLife, setLatestWinForLife] = useState<any>(null);
+  const [loadingResults, setLoadingResults] = useState(true);
+
+  // Fetch latest draw results across all 3 games
+  const fetchLatestWinningNumbers = async () => {
+    setLoadingResults(true);
+    try {
+      const [lottoRes, playWheRes, wflRes] = await Promise.allSettled([
+        fetch("/api/draws?page=1&limit=1").then(r => r.json()),
+        fetch("/api/playwhe/draws?page=1&limit=1").then(r => r.json()),
+        fetch("/api/winforlife/draws?page=1&limit=1").then(r => r.json())
+      ]);
+
+      if (lottoRes.status === "fulfilled" && lottoRes.value?.draws?.[0]) {
+        setLatestLotto(lottoRes.value.draws[0]);
+      }
+      if (playWheRes.status === "fulfilled" && playWheRes.value?.draws?.[0]) {
+        setLatestPlayWhe(playWheRes.value.draws[0]);
+      }
+      if (wflRes.status === "fulfilled" && wflRes.value?.draws?.[0]) {
+        setLatestWinForLife(wflRes.value.draws[0]);
+      }
+    } catch (e) {
+      console.error("Error fetching latest winning numbers for Welcome tab:", e);
+    } finally {
+      setLoadingResults(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLatestWinningNumbers();
+
+    const handleSyncEvent = () => {
+      fetchLatestWinningNumbers();
+    };
+    window.addEventListener("win_concept_sync_completed", handleSyncEvent);
+    return () => window.removeEventListener("win_concept_sync_completed", handleSyncEvent);
+  }, []);
+
+  // Pencil shading animation
   useEffect(() => {
     let active = true;
     const targetNums = [4, 12, 19, 26, 33];
 
     const runSequence = async () => {
       while (active) {
-        // Reset state
         setShadedNums([]);
         setShowGoodLuck(false);
         setPencilPos({ x: 50, y: -30, rotate: 0, shake: false });
         
-        // Idle at start
         await new Promise((r) => setTimeout(r, 2000));
         if (!active) break;
 
-        // Move to each target number and shade it
         for (const num of targetNums) {
           const col = (num - 1) % 6;
           const row = Math.floor((num - 1) / 6);
           const targetX = 12 + col * 15.5;
           const targetY = 15 + row * 13.5;
 
-          // Move pencil to target
           setPencilPos({ x: targetX, y: targetY, rotate: -10, shake: false });
           await new Promise((r) => setTimeout(r, 800));
           if (!active) break;
 
-          // Shading motion
           setPencilPos({ x: targetX, y: targetY, rotate: -10, shake: true });
           await new Promise((r) => setTimeout(r, 550));
           if (!active) break;
 
-          // Mark as shaded
           setShadedNums((prev) => [...prev, num]);
           setPencilPos({ x: targetX, y: targetY, rotate: -10, shake: false });
           await new Promise((r) => setTimeout(r, 200));
@@ -50,12 +92,10 @@ export default function WelcomeTab() {
 
         if (!active) break;
 
-        // Move pencil off-screen
         setPencilPos({ x: 50, y: 130, rotate: 0, shake: false });
         await new Promise((r) => setTimeout(r, 600));
         if (!active) break;
 
-        // Show Good Luck message
         setShowGoodLuck(true);
         await new Promise((r) => setTimeout(r, 3500));
       }
@@ -69,119 +109,338 @@ export default function WelcomeTab() {
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-8 font-mono">
       
-      {/* 1. Welcome Text block */}
-      <div className="glass-panel p-8 rounded-xl border border-white/5 bg-slate-950/20 space-y-4 font-mono">
-        <h1 className="text-4xl font-extrabold tracking-tight uppercase text-white drop-shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+      {/* 1. Welcome Text Header */}
+      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 bg-slate-950/40 space-y-3 relative overflow-hidden">
+        <div className="flex items-center gap-2 text-primary text-xs font-black uppercase tracking-widest">
+          <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+          <span>Lottery Intelligence & Combinatorial Optimization</span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight uppercase text-white drop-shadow-[0_0_15px_rgba(56,189,248,0.2)]">
           THE WIN CONCEPT
         </h1>
-        <p className="text-sm text-gray-400 leading-relaxed font-mono">
-          Welcome to the analytical portal for local lottery prediction models. This application parses historical draw databases, builds mathematical successors/companions correlation models, and isolates statistical hot and cold mark frequencies to help you optimize and reduce your statistical odds.
+        <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-3xl">
+          Welcome to the advanced analytical platform for local Trinidad and Tobago lottery models. This platform tracks real-time historical draws, computes multi-model Bayesian/Markov consensus vectors, and optimizes your statistical odds.
         </p>
       </div>
 
-      {/* 2. Interactive Ticket Shading Animation (Centered & Stacked) */}
-      <div className="flex justify-center">
-        <div className="bg-[#f4efe0] text-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.35)] border border-slate-300/30 p-6 font-mono w-full max-w-md relative overflow-hidden h-[460px] flex flex-col justify-between select-none">
-
-          {/* Ticket Header Details */}
-          <div className="mt-2 space-y-1 border-b border-dashed border-slate-400 pb-3">
-            <h2 className="text-md font-black text-slate-800 uppercase tracking-widest text-center">
-              THE WIN CONCEPT
+      {/* 2. LATEST WINNING NUMBERS SECTION */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-amber-400" />
+            <h2 className="text-xs sm:text-sm font-black uppercase text-white tracking-wider">
+              Latest Official Winning Numbers
             </h2>
-            <div className="text-center text-[9px] font-bold text-slate-600 bg-slate-200 py-0.5 rounded tracking-wider uppercase">
-              Statistical Model Optimizer
-            </div>
           </div>
+          <span className="text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Live Cloud Data
+          </span>
+        </div>
 
-          {/* Checklist Number Matrix Grid */}
-          <div className="relative my-4 flex-1">
-            <div className="grid grid-cols-6 gap-2 h-full py-1">
-              {Array.from({ length: 36 }).map((_, idx) => {
-                const num = idx + 1;
-                const isShaded = shadedNums.includes(num);
-                return (
-                  <div
-                    key={num}
-                    className="border border-slate-400 bg-white/60 relative flex items-center justify-center rounded text-xs font-bold text-slate-800 transition"
-                  >
-                    <span>{String(num).padStart(2, "0")}</span>
-                    
-                    {/* Pencil Shading Overlay lines */}
-                    {isShaded && (
-                      <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
-                        <svg viewBox="0 0 100 100" className="w-full h-full text-slate-700 opacity-90">
-                          <path 
-                            d="M10,20 L90,80 M15,10 L85,90 M30,10 L70,90 M10,30 L90,70 M20,15 L80,85 M5,45 L95,55 M45,5 L55,95" 
-                            stroke="currentColor" 
-                            strokeWidth="10" 
-                            strokeLinecap="round"
-                            className="animate-scribble"
-                          />
-                        </svg>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          {/* Card 1: Lotto Plus */}
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-sky-500/20 hover:border-sky-500/50 transition-all duration-300 space-y-4 relative group shadow-lg flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] font-black text-sky-400 uppercase tracking-widest block">Lotto Plus</span>
+                  <span className="text-xs text-white font-bold">
+                    {latestLotto ? `Draw #${latestLotto.draw_number}` : "Loading..."}
+                  </span>
+                </div>
+                <span className="text-[9px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 font-bold">
+                  {latestLotto?.draw_date || "Official"}
+                </span>
+              </div>
+
+              {/* Lotto Plus Winning Balls */}
+              <div className="py-2">
+                {loadingResults && !latestLotto ? (
+                  <div className="flex gap-1.5 animate-pulse">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="w-8 h-8 rounded-full bg-slate-800" />
+                    ))}
+                    <div className="w-8 h-8 rounded-full bg-purple-900/40 ml-1" />
+                  </div>
+                ) : latestLotto ? (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {[latestLotto.num1, latestLotto.num2, latestLotto.num3, latestLotto.num4, latestLotto.num5].map((num: number, i: number) => (
+                      <div
+                        key={i}
+                        className="w-8 h-8 rounded-full bg-sky-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(56,189,248,0.3)]"
+                      >
+                        {num}
                       </div>
+                    ))}
+                    {latestLotto.powerball && (
+                      <>
+                        <span className="text-gray-600 font-bold mx-0.5">|</span>
+                        <div
+                          className="w-8 h-8 rounded-full bg-purple-600 border border-purple-400 text-white font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(168,85,247,0.4)]"
+                          title="Powerball"
+                        >
+                          {latestLotto.powerball}
+                        </div>
+                      </>
                     )}
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Absolute Pencil SVG Icon (w-36 h-36) */}
-            <div
-              className={`absolute z-30 w-36 h-36 pointer-events-none ${
-                pencilPos.shake ? "animate-pencil-wiggle animate-lead-scribble" : ""
-              }`}
-              style={{
-                left: `${pencilPos.x}%`,
-                top: `${pencilPos.y}%`,
-                transform: `translate(-2%, -98%) rotate(${pencilPos.rotate}deg)`,
-                transition: pencilPos.shake ? "none" : "left 0.75s cubic-bezier(0.25, 0.8, 0.25, 1), top 0.75s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.75s cubic-bezier(0.25, 0.8, 0.25, 1)",
-              }}
-            >
-              {/* Yellow Drawing Pencil SVG */}
-              <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible drop-shadow-[4px_10px_6px_rgba(0,0,0,0.35)]">
-                {/* Pencil Lead Tip (Jet Black) */}
-                <polygon points="4,94 6,96 0,100" fill="#000000" />
-                
-                {/* Wooden Taper Cone */}
-                <polygon points="12,82 18,88 6,96 4,94" fill="#fed7aa" />
-
-                {/* Yellow Pencil body (Left side - shadow yellow) */}
-                <polygon points="12,82 15,85 80,20 77,17" fill="#d97706" />
-
-                {/* Yellow Pencil body (Right side - light yellow) */}
-                <polygon points="15,85 18,88 83,23 80,20" fill="#fbbf24" />
-
-                {/* Eraser Ferrule (Metal Ring) */}
-                <polygon points="77,17 83,23 89,17 83,11" fill="#94a3b8" />
-
-                {/* Pink Eraser tip */}
-                <polygon points="83,11 89,17 95,11 89,5" fill="#f43f5e" />
-              </svg>
-            </div>
-
-            {/* Red Stamp Overlay saying Good Luck */}
-            {showGoodLuck && (
-              <div className="absolute inset-0 bg-[#f4efe0]/90 z-40 flex items-center justify-center animate-stamp-scale">
-                <div className="border-4 border-[#d93838] text-[#d93838] font-black rounded-lg px-6 py-3 text-xl tracking-widest rotate-[-6deg] uppercase flex flex-col items-center justify-center shadow-[0_0_20px_rgba(217,56,56,0.15)]">
-                  <span>GOOD LUCK!</span>
-                </div>
+                ) : (
+                  <span className="text-xs text-gray-500 italic">No draw data found</span>
+                )}
               </div>
-            )}
+
+              {latestLotto?.multiplier && (
+                <p className="text-[10px] text-gray-400">
+                  Multiplier: <strong className="text-white">{latestLotto.multiplier}X</strong>
+                </p>
+              )}
+            </div>
+
+            <button
+              onClick={() => onSelectGame && onSelectGame("lotto-plus")}
+              className="w-full py-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 text-[10px] font-black uppercase tracking-wider rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
+            >
+              <span>Explore Lotto Plus</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
 
-          <div className="border-t border-slate-300 pt-3 text-center text-[8px] text-slate-500 font-extrabold tracking-widest uppercase">
-            MODEL COMPILING SYSTEM
+          {/* Card 2: Play Whe */}
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-amber-500/20 hover:border-amber-500/50 transition-all duration-300 space-y-4 relative group shadow-lg flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest block">Play Whe</span>
+                  <span className="text-xs text-white font-bold">
+                    {latestPlayWhe ? `${latestPlayWhe.draw_time_slot || "Draw"} #${latestPlayWhe.draw_number}` : "Loading..."}
+                  </span>
+                </div>
+                <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 font-bold">
+                  {latestPlayWhe?.draw_date || "Official"}
+                </span>
+              </div>
+
+              {/* Play Whe Winning Ball & Mark */}
+              <div className="py-2 flex items-center gap-3">
+                {loadingResults && !latestPlayWhe ? (
+                  <div className="flex items-center gap-2 animate-pulse">
+                    <div className="w-10 h-10 rounded-full bg-slate-800" />
+                    <div className="w-20 h-4 bg-slate-800 rounded" />
+                  </div>
+                ) : latestPlayWhe ? (
+                  <>
+                    <div className="w-10 h-10 rounded-full bg-amber-400 text-slate-950 font-black text-sm flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.4)] shrink-0">
+                      {latestPlayWhe.winning_number}
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-black text-white uppercase tracking-wider">
+                        {CHINAPOO_CHART[latestPlayWhe.winning_number]?.mark || "Unknown"}
+                      </div>
+                      <div className="text-[10px] text-gray-400 truncate max-w-[140px]">
+                        {CHINAPOO_CHART[latestPlayWhe.winning_number]?.keywords?.slice(0, 2).join(", ") || "Tradition mark"}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <span className="text-xs text-gray-500 italic">No draw data found</span>
+                )}
+              </div>
+
+              <p className="text-[10px] text-gray-400">
+                Next: <strong className="text-amber-400">10:30 AM · 1:00 PM · 4:00 PM · 7:00 PM</strong>
+              </p>
+            </div>
+
+            <button
+              onClick={() => onSelectGame && onSelectGame("play-whe")}
+              className="w-full py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-black uppercase tracking-wider rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
+            >
+              <span>Explore Play Whe</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          {/* Card 3: Win For Life */}
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-emerald-500/20 hover:border-emerald-500/50 transition-all duration-300 space-y-4 relative group shadow-lg flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block">Win For Life</span>
+                  <span className="text-xs text-white font-bold">
+                    {latestWinForLife ? `Draw #${latestWinForLife.draw_number}` : "Loading..."}
+                  </span>
+                </div>
+                <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-bold">
+                  {latestWinForLife?.draw_date || "Official"}
+                </span>
+              </div>
+
+              {/* Win For Life Winning Balls */}
+              <div className="py-2">
+                {loadingResults && !latestWinForLife ? (
+                  <div className="flex gap-1.5 animate-pulse">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
+                    ))}
+                    <div className="w-7 h-7 rounded-full bg-emerald-900/40 ml-1" />
+                  </div>
+                ) : latestWinForLife ? (
+                  <div className="flex flex-wrap items-center gap-1">
+                    {[
+                      latestWinForLife.num1,
+                      latestWinForLife.num2,
+                      latestWinForLife.num3,
+                      latestWinForLife.num4,
+                      latestWinForLife.num5,
+                      latestWinForLife.num6
+                    ].map((num: number, i: number) => (
+                      <div
+                        key={i}
+                        className="w-7 h-7 rounded-full bg-emerald-400 text-slate-950 font-black text-[11px] flex items-center justify-center shadow-[0_0_8px_rgba(52,211,153,0.3)]"
+                      >
+                        {num}
+                      </div>
+                    ))}
+                    {latestWinForLife.cash_ball && (
+                      <>
+                        <span className="text-gray-600 font-bold mx-0.5">|</span>
+                        <div
+                          className="w-7 h-7 rounded-full bg-emerald-600 border border-emerald-400 text-white font-black text-[11px] flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                          title="Cash Ball"
+                        >
+                          {latestWinForLife.cash_ball}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-500 italic">No draw data found</span>
+                )}
+              </div>
+
+              <p className="text-[10px] text-gray-400">
+                Top Prize: <strong className="text-emerald-400">$1,000 / Day for Life</strong>
+              </p>
+            </div>
+
+            <button
+              onClick={() => onSelectGame && onSelectGame("win-for-life")}
+              className="w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-black uppercase tracking-wider rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
+            >
+              <span>Explore Win For Life</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
 
         </div>
       </div>
 
-      {/* 3. Interactive Physics Tumbler Quick Pick */}
-      <InteractiveTumbler initialGame="lotto-plus" />
+      {/* 3. Interactive Quick Pick */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-bold uppercase text-gray-400 tracking-wider">
+          Quick Pick Generator
+        </h2>
+        <InteractiveTumbler initialGame="lotto-plus" />
+      </div>
 
-      {/* 4. Warning Disclaimer Panel */}
+      {/* 4. Interactive Ticket Shading Demonstration Animation */}
+      <div className="space-y-3">
+        <h2 className="text-xs font-bold uppercase text-gray-400 tracking-wider">
+          Interactive Playslip Simulator
+        </h2>
+        <div className="flex justify-center">
+          <div className="bg-[#f4efe0] text-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.35)] border border-slate-300/30 p-6 font-mono w-full max-w-md relative overflow-hidden h-[460px] flex flex-col justify-between select-none">
+
+            {/* Ticket Header Details */}
+            <div className="mt-2 space-y-1 border-b border-dashed border-slate-400 pb-3">
+              <h2 className="text-md font-black text-slate-800 uppercase tracking-widest text-center">
+                THE WIN CONCEPT
+              </h2>
+              <div className="text-center text-[9px] font-bold text-slate-600 bg-slate-200 py-0.5 rounded tracking-wider uppercase">
+                Statistical Model Optimizer
+              </div>
+            </div>
+
+            {/* Checklist Number Matrix Grid */}
+            <div className="relative my-4 flex-1">
+              <div className="grid grid-cols-6 gap-2 h-full py-1">
+                {Array.from({ length: 36 }).map((_, idx) => {
+                  const num = idx + 1;
+                  const isShaded = shadedNums.includes(num);
+                  return (
+                    <div
+                      key={num}
+                      className="border border-slate-400 bg-white/60 relative flex items-center justify-center rounded text-xs font-bold text-slate-800 transition"
+                    >
+                      <span>{String(num).padStart(2, "0")}</span>
+                      
+                      {/* Pencil Shading Overlay lines */}
+                      {isShaded && (
+                        <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
+                          <svg viewBox="0 0 100 100" className="w-full h-full text-slate-700 opacity-90">
+                            <path 
+                              d="M10,20 L90,80 M15,10 L85,90 M30,10 L70,90 M10,30 L90,70 M20,15 L80,85 M5,45 L95,55 M45,5 L55,95" 
+                              stroke="currentColor" 
+                              strokeWidth="10" 
+                              strokeLinecap="round"
+                              className="animate-scribble"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Animated Floating Pencil */}
+              <div
+                className={`absolute w-8 h-8 pointer-events-none transition-all duration-300 ease-out z-20 ${
+                  pencilPos.shake ? "animate-pencil-wiggle" : ""
+                }`}
+                style={{
+                  left: `${pencilPos.x}%`,
+                  top: `${pencilPos.y}%`,
+                  transform: `translate(-2%, -98%) rotate(${pencilPos.rotate}deg)`,
+                }}
+              >
+                <svg viewBox="0 0 24 24" className="w-8 h-8 filter drop-shadow-md text-amber-500">
+                  <path
+                    d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"
+                    fill="#f59e0b"
+                    stroke="#b45309"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path d="m15 5 4 4" stroke="#78350f" strokeWidth="1.5" />
+                  <path d="M2 22l3-1-2-2z" fill="#1e293b" />
+                </svg>
+              </div>
+
+              {/* Good Luck Stamp Overlay */}
+              {showGoodLuck && (
+                <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+                  <div className="border-4 border-red-600 text-red-600 px-6 py-2 rounded-lg font-black text-2xl tracking-widest uppercase transform -rotate-6 animate-stamp-scale opacity-90 shadow-2xl bg-white/40 backdrop-blur-[1px]">
+                    GOOD LUCK!
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-slate-300 pt-3 text-center text-[8px] text-slate-500 font-extrabold tracking-widest uppercase">
+              MODEL COMPILING SYSTEM
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Warning Disclaimer Panel */}
       <div className="glass-panel p-5 rounded-xl border-red-500/10 bg-red-500/[0.01] relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1 h-full bg-red-500/50" />
         <div className="flex items-start gap-3">
@@ -195,7 +454,7 @@ export default function WelcomeTab() {
         </div>
       </div>
 
-      {/* 4. Tipping Panel */}
+      {/* 6. Tipping Panel */}
       <div className="glass-panel p-5 rounded-xl border-amber-500/15 bg-amber-500/[0.01] relative overflow-hidden font-mono">
         <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/50" />
         <div className="flex items-start gap-3">
