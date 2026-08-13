@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "NLCB Online Gaming Analytical System",
     start_url: "/",
     display: "standalone",
-    background_color: "#02326e",
-    theme_color: "#02326e",
+    background_color: "#070b19",
+    theme_color: "#070b19",
     icons: [
       {
         src: "/images/pwa-icon-192.png",

@@ -10,6 +10,7 @@ import WinForLifeTab from "@/components/WinForLifeTab";
 import SettingsTab from "@/components/SettingsTab";
 import WelcomeTab from "@/components/WelcomeTab";
 import LiveDrawTicker from "@/components/LiveDrawTicker";
+import AppSplashScreen from "@/components/AppSplashScreen";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw } from "lucide-react";
 
 const TumblerIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -302,6 +303,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col selection:bg-primary/30 selection:text-white">
       
+      {/* Pre-Landing Initial Loading & Splash Screen */}
+      <AppSplashScreen isLoading={statsLoading} />
+
       {/* Global Terminal Header */}
       <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-4 px-6 md:px-12 flex justify-between items-center bg-slate-950/70 backdrop-blur-md w-full">
         <div className="flex items-center gap-3">
