@@ -652,7 +652,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-6 text-center text-[10px] text-gray-500 font-mono tracking-wider space-y-1.5 bg-slate-950/20">
+      <footer className="border-t border-white/5 py-6 pb-28 md:pb-6 text-center text-[10px] text-gray-500 font-mono tracking-wider space-y-1.5 bg-slate-950/20">
         <div 
           className="text-white/90 font-bold" 
           style={{ textShadow: "0 0 8px rgba(56, 189, 248, 0.6), 0 0 16px rgba(56, 189, 248, 0.3)" }}

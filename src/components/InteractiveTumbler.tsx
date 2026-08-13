@@ -44,7 +44,7 @@ export default function InteractiveTumbler({
       bonusName: "Powerball",
       bonusMax: 10,
       accentColor: "#38bdf8",
-      ballColors: ["#38bdf8", "#818cf8", "#c084fc", "#f472b6", "#fb7185", "#34d399", "#fbbf24"]
+      ballColors: ["#38bdf8", "#0284c7", "#f59e0b", "#fbbf24", "#9333ea", "#38bdf8", "#f59e0b"]
     },
     "play-whe": {
       name: "Play Whe",
@@ -54,7 +54,7 @@ export default function InteractiveTumbler({
       bonusName: "",
       bonusMax: 0,
       accentColor: "#fbbf24",
-      ballColors: ["#fbbf24", "#f59e0b", "#d97706", "#f97316", "#ef4444", "#e11d48", "#ec4899"]
+      ballColors: ["#fbbf24", "#f59e0b", "#d97706", "#f97316", "#ef4444", "#fbbf24", "#f59e0b"]
     },
     "win-for-life": {
       name: "Win for Life",
@@ -64,7 +64,7 @@ export default function InteractiveTumbler({
       bonusName: "Cash Ball",
       bonusMax: 3,
       accentColor: "#34d399",
-      ballColors: ["#34d399", "#10b981", "#059669", "#14b8a6", "#06b6d4", "#38bdf8", "#6366f1"]
+      ballColors: ["#34d399", "#10b981", "#059669", "#14b8a6", "#34d399", "#10b981", "#059669"]
     }
   };
 
@@ -390,9 +390,6 @@ export default function InteractiveTumbler({
               Quick Pick
             </h3>
           </div>
-          <p className="text-[11px] text-gray-400 mt-0.5">
-            Interactive ball draw simulation with sound and haptics.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -506,10 +503,10 @@ export default function InteractiveTumbler({
             <button
               onClick={handleSpinAndDraw}
               disabled={isSpinning}
-              className={`flex-1 py-3 px-6 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg ${
+              className={`flex-1 py-3 px-6 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer ${
                 isSpinning
-                  ? "bg-slate-800 text-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-emerald-400 via-teal-400 to-sky-400 text-slate-950 hover:opacity-90 shadow-[0_0_25px_rgba(52,211,153,0.3)] hover:scale-[1.02]"
+                  ? "bg-gradient-to-r from-emerald-400 via-teal-400 to-sky-400 text-slate-950 shadow-[0_0_25px_rgba(52,211,153,0.4)] scale-[1.02] cursor-not-allowed"
+                  : "bg-slate-900 border border-white/10 hover:border-emerald-400/50 hover:bg-slate-800 text-white shadow-md active:bg-gradient-to-r active:from-emerald-400 active:via-teal-400 active:to-sky-400 active:text-slate-950"
               }`}
             >
               <Play className={`w-4 h-4 fill-current ${isSpinning ? "animate-spin" : ""}`} />
