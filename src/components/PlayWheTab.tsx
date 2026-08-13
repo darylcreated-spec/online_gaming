@@ -1114,7 +1114,7 @@ export default function PlayWheTab({
                       <div>
                         <div className="text-[9px] text-gray-500 font-mono">LAST SATURDAY EVENING:</div>
                         <div className="text-xs font-bold text-white font-mono uppercase tracking-wide mt-1">
-                          #{stats.saturdayPlayback.lastSaturdayDraw.winning_number} {CHINAPOO_CHART[stats.saturdayPlayback.lastSaturdayDraw.winning_number].mark}
+                          #{stats.saturdayPlayback.lastSaturdayDraw.winning_number} {CHINAPOO_CHART[Number(stats.saturdayPlayback.lastSaturdayDraw.winning_number)]?.mark || ""}
                         </div>
                       </div>
                       <div className="text-right">
@@ -1408,15 +1408,11 @@ export default function PlayWheTab({
                     <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                     <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-cyan-400">Lag Autocorrelation</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 font-mono leading-snug">
-                    Lag-1: {stats.advancedStats.autocorrelation?.lag1?.toFixed(3)} &nbsp; Lag-4: {stats.advancedStats.autocorrelation?.lag4?.toFixed(3)}
+                  <p className="text-[10px] text-gray-400 font-mono leading-snug">
+                    Top Lag-3 Cycle Signals: {Array.isArray(stats?.advancedStats?.autocorrelation?.lag3) ? stats.advancedStats.autocorrelation.lag3.slice(0, 4).map((a: any) => `#${a.number}`).join(", ") : "Active"}
                   </p>
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold font-mono ${
-                    stats.advancedStats.autocorrelation?.hasSerialDependence
-                      ? "bg-cyan-950/50 border-cyan-500/30 text-cyan-300"
-                      : "bg-slate-900/50 border-white/5 text-gray-400"
-                  }`}>
-                    {stats.advancedStats.autocorrelation?.hasSerialDependence ? "⚡ Serial Dependency" : "✓ Independent Draws"}
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold font-mono bg-cyan-950/40 border-cyan-500/30 text-cyan-300">
+                    ⚡ Lag-3 &amp; Lag-4 ACF Active
                   </div>
                 </div>
 
@@ -2000,7 +1996,7 @@ export default function PlayWheTab({
                                   }`}>
                                     {t.target}
                                   </span>
-                                  <span className="text-white font-bold uppercase">{CHINAPOO_CHART[t.target].mark}</span>
+                                  <span className="text-white font-bold uppercase">{CHINAPOO_CHART[Number(t.target)]?.mark || ""}</span>
                                 </div>
                                 <span className="text-white font-bold">{t.count}x hits</span>
                               </div>
@@ -2066,7 +2062,7 @@ export default function PlayWheTab({
                 <option value="">All Marks</option>
                 {Array.from({ length: 36 }).map((_, idx) => (
                   <option key={idx + 1} value={idx + 1}>
-                    {idx + 1} - {CHINAPOO_CHART[idx + 1].mark}
+                    {idx + 1} - {CHINAPOO_CHART[idx + 1]?.mark || ""}
                   </option>
                 ))}
               </select>
@@ -2114,7 +2110,7 @@ export default function PlayWheTab({
                         </span>
                       </td>
                       <td className="py-3 px-4 text-gray-300 font-bold uppercase tracking-wider">
-                        {CHINAPOO_CHART[draw.winning_number].mark}
+                        {CHINAPOO_CHART[Number(draw.winning_number)]?.mark || "Unknown"}
                       </td>
                     </tr>
                   ))
