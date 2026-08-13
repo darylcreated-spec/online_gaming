@@ -9,9 +9,10 @@ import PlayWheTab from "@/components/PlayWheTab";
 import WinForLifeTab from "@/components/WinForLifeTab";
 import SettingsTab from "@/components/SettingsTab";
 import WelcomeTab from "@/components/WelcomeTab";
+import SyndicateTab from "@/components/SyndicateTab";
 import LiveDrawTicker from "@/components/LiveDrawTicker";
 import AppSplashScreen from "@/components/AppSplashScreen";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw } from "lucide-react";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users } from "lucide-react";
 
 const TumblerIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -85,7 +86,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "settings">("welcome");
+  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "syndicate" | "settings">("welcome");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
@@ -387,6 +388,18 @@ export default function Home() {
             />
             WIN FOR LIFE
           </button>
+
+          <button
+            onClick={() => setActiveTab("syndicate")}
+            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+              activeTab === "syndicate"
+                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
+                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+            }`}
+          >
+            <Users className="w-5 h-5 text-primary" />
+            SYNDICATES
+          </button>
           
           <button
             onClick={() => setActiveTab("scanner")}
@@ -647,6 +660,12 @@ export default function Home() {
           </div>
         )}
 
+        {activeTab === "syndicate" && (
+          <div className="tab-content-enter">
+            <SyndicateTab onSelectGame={setActiveTab} />
+          </div>
+        )}
+
         {activeTab === "settings" && (
           <div className="tab-content-enter">
             <SettingsTab />
@@ -672,65 +691,75 @@ export default function Home() {
       </footer>
 
       {/* Mobile Sticky Bottom Tab Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070b19]/90 backdrop-blur-lg border-t border-white/10 px-4 py-2 flex justify-around items-center shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070b19]/90 backdrop-blur-lg border-t border-white/10 px-2 py-2 flex justify-around items-center shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
         <button
           onClick={() => setActiveTab("welcome")}
-          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 transition-all cursor-pointer ${
             activeTab === "welcome" ? "text-primary font-bold" : "text-gray-400"
           }`}
         >
           <img src="/images/welcome_icon.png" alt="Home" className="w-5 h-5 object-contain" />
-          <span className="text-[9px] font-mono tracking-wider">HOME</span>
+          <span className="text-[8px] font-mono tracking-wider">HOME</span>
           {activeTab === "welcome" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("dashboard"); }}
-          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 transition-all cursor-pointer ${
             activeTab === "lotto-plus" ? "text-primary font-bold" : "text-gray-400"
           }`}
         >
           <img src="/images/lotto_plus_icon.png" alt="Lotto" className="w-5 h-5 object-contain" />
-          <span className="text-[9px] font-mono tracking-wider">LOTTO</span>
+          <span className="text-[8px] font-mono tracking-wider">LOTTO</span>
           {activeTab === "lotto-plus" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("dashboard"); }}
-          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 transition-all cursor-pointer ${
             activeTab === "play-whe" ? "text-primary font-bold" : "text-gray-400"
           }`}
         >
           <img src="/images/play_whe_icon.png" alt="Play Whe" className="w-5 h-5 object-contain" />
-          <span className="text-[9px] font-mono tracking-wider">PLAY WHE</span>
+          <span className="text-[8px] font-mono tracking-wider">PLAY WHE</span>
           {activeTab === "play-whe" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => setActiveTab("win-for-life")}
-          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 transition-all cursor-pointer ${
             activeTab === "win-for-life" ? "text-primary font-bold" : "text-gray-400"
           }`}
         >
           <img src="/images/win_for_life_icon.png" alt="Win for Life" className="w-5 h-5 object-contain" />
-          <span className="text-[9px] font-mono tracking-wider">WFL</span>
+          <span className="text-[8px] font-mono tracking-wider">WFL</span>
           {activeTab === "win-for-life" && <span className="nav-active-dot" />}
         </button>
         <button
+          onClick={() => setActiveTab("syndicate")}
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 transition-all cursor-pointer ${
+            activeTab === "syndicate" ? "text-primary font-bold" : "text-gray-400"
+          }`}
+        >
+          <Users className="w-5 h-5 text-primary" />
+          <span className="text-[8px] font-mono tracking-wider">POOLS</span>
+          {activeTab === "syndicate" && <span className="nav-active-dot" />}
+        </button>
+        <button
           onClick={() => setActiveTab("scanner")}
-          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 transition-all cursor-pointer ${
             activeTab === "scanner" ? "text-primary font-bold" : "text-gray-400"
           }`}
         >
           <img src="/images/scanner_icon.png" alt="Scanner" className="w-5 h-5 object-contain" />
-          <span className="text-[9px] font-mono tracking-wider">SCANNER</span>
+          <span className="text-[8px] font-mono tracking-wider">SCAN</span>
           {activeTab === "scanner" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => setActiveTab("settings")}
-          className={`flex flex-col items-center gap-1 py-1 px-3.5 transition-all cursor-pointer ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 transition-all cursor-pointer ${
             activeTab === "settings" ? "text-primary font-bold" : "text-gray-400"
           }`}
         >
           <img src="/images/settings_icon.png" alt="Settings" className="w-5 h-5 object-contain" />
-          <span className="text-[9px] font-mono tracking-wider">SETTINGS</span>
+          <span className="text-[8px] font-mono tracking-wider">SETTINGS</span>
           {activeTab === "settings" && <span className="nav-active-dot" />}
         </button>
       </div>

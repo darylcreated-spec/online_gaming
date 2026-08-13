@@ -440,7 +440,70 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         </div>
       </div>
 
-      {/* 5. Warning Disclaimer Panel */}
+      {/* 5. Comprehensive How It Works & Architecture Hub */}
+      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 bg-slate-950/40 space-y-6">
+        <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+          <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+          <div>
+            <h3 className="text-base sm:text-lg font-black uppercase text-white tracking-wider">
+              How The Win Concept Mathematical Engine Works
+            </h3>
+            <p className="text-xs text-gray-400">
+              Transforming raw historical draw logs into predictive combinatorial advantages
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          
+          {/* Engine 1: Genetic Algorithm */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-sky-500/20 space-y-2">
+            <div className="flex items-center gap-2 text-sky-400 font-bold uppercase">
+              <span className="w-2 h-2 rounded-full bg-sky-400" />
+              <h4>1. Genetic Algorithm Optimizer</h4>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px]">
+              Simulates natural selection across a <strong>5,000-candidate population</strong> over 50 generations. It ranks lines based on historical companions, sum distribution equilibrium, and odd/even balance to isolate mathematically optimal combinations.
+            </p>
+          </div>
+
+          {/* Engine 2: Bayesian & Markov Consensus */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-500/20 space-y-2">
+            <div className="flex items-center gap-2 text-amber-400 font-bold uppercase">
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+              <h4>2. Bayesian &amp; Markov Networks</h4>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px]">
+              Tracks first and second-order transition matrices for Play Whe and Lotto Plus. It calculates the exact probability of mark <em>B</em> appearing immediately after mark <em>A</em>, isolating high-probability successor pathways.
+            </p>
+          </div>
+
+          {/* Engine 3: EWMA & RTM Z-Scores */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-emerald-500/20 space-y-2">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold uppercase">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <h4>3. EWMA &amp; RTM Z-Score Signals</h4>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px]">
+              Uses Exponentially Weighted Moving Averages (α=0.12) to weight recent draw trends, combined with Regression-To-The-Mean Z-Scores. Any number with <strong>Z &lt; -1.5</strong> is flagged as overdue for statistical rebound.
+            </p>
+          </div>
+
+          {/* Engine 4: Syndicate Group Pooling */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-violet-500/20 space-y-2">
+            <div className="flex items-center gap-2 text-violet-400 font-bold uppercase">
+              <span className="w-2 h-2 rounded-full bg-violet-400" />
+              <h4>4. Syndicate Group Pooling</h4>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px]">
+              Pooling stakes with friends and family drastically expands matrix coverage. The platform auto-manages share percentages, calculates jackpot payouts per member, and generates verified shareable slips for WhatsApp group chats.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      {/* 6. Warning Disclaimer Panel */}
       <div className="glass-panel p-5 rounded-xl border-red-500/10 bg-red-500/[0.01] relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1 h-full bg-red-500/50" />
         <div className="flex items-start gap-3">
