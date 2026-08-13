@@ -244,17 +244,16 @@ export default function Home() {
       const lastSyncStr = localStorage.getItem("win_concept_last_sync_timestamp");
       const lastSync = lastSyncStr ? parseInt(lastSyncStr, 10) : 0;
       const now = Date.now();
-      const tenMinutes = 10 * 60 * 1000;
+      const twoMinutes = 2 * 60 * 1000;
 
-      // Only skip if synced less than 10 minutes ago and not forced
-      if (!force && now - lastSync < tenMinutes) {
+      // Only skip if synced less than 2 minutes ago and not forced
+      if (!force && now - lastSync < twoMinutes) {
         return;
       }
 
       console.log("[AutoSync] Triggering background auto-sync...");
       try {
-        const secret = process.env.NEXT_PUBLIC_CRON_SECRET || 'win_concept_cron_secret_2026';
-        const res = await fetch(`/api/cron/sync-all?secret=${secret}`, {
+        const res = await fetch("/api/cron/sync-all", {
           method: "POST",
           headers: { "Content-Type": "application/json" }
         });
@@ -287,10 +286,10 @@ export default function Home() {
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // 3. Periodic safety interval every 5 minutes
+    // 3. Periodic interval every 2 minutes
     refreshInterval = setInterval(() => {
       triggerBackgroundAutoSync(false);
-    }, 5 * 60 * 1000);
+    }, 2 * 60 * 1000);
 
     return () => {
       isMounted = false;

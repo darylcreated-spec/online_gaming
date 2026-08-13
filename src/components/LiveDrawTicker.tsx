@@ -148,8 +148,7 @@ export default function LiveDrawTicker({
     if (syncStatus === "syncing") return;
     setSyncStatus("syncing");
     try {
-      const secret = process.env.NEXT_PUBLIC_CRON_SECRET || "win_concept_cron_secret_2026";
-      const res = await fetch(`/api/cron/sync-all?secret=${secret}`, {
+      const res = await fetch("/api/cron/sync-all", {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       });
@@ -162,6 +161,16 @@ export default function LiveDrawTicker({
       setSyncStatus("idle");
     }
   };
+
+  // Auto-trigger sync 15s after a scheduled draw occurs
+  useEffect(() => {
+    if (nextDraw && nextDraw.secondsRemaining === 0) {
+      const timer = setTimeout(() => {
+        handleManualSyncTrigger();
+      }, 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [nextDraw?.secondsRemaining]);
 
   if (!nextDraw) return null;
 
