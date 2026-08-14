@@ -19,14 +19,14 @@ const HEADERS = {
 };
 
 // Helper: fetch with exponential backoff retries for resilient scraping
-export async function fetchWithRetry(url: string, options: RequestInit = {}, retries: number = 3): Promise<Response> {
+export async function fetchWithRetry(url: string, options: RequestInit = {}, retries: number = 2): Promise<Response> {
   let lastError: any = null;
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(url, {
         ...options,
         headers: { ...HEADERS, ...(options.headers || {}) },
-        signal: AbortSignal.timeout(30000)
+        signal: AbortSignal.timeout(7000)
       });
       if (res.ok) return res;
       lastError = new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -34,7 +34,7 @@ export async function fetchWithRetry(url: string, options: RequestInit = {}, ret
       lastError = err;
     }
     if (i < retries - 1) {
-      await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i))); // 1s, 2s, 4s delay
+      await new Promise(r => setTimeout(r, 400 * Math.pow(2, i))); // 400ms, 800ms
     }
   }
   throw lastError || new Error(`Fetch failed after ${retries} attempts for ${url}`);
@@ -308,14 +308,15 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
 
     for (let y = endYear; y >= startYear; y--) {
       for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
-        // If not full sync, limit to current month and previous month (handling January/December crossover)
+        // If not full sync, only scrape current month (or previous month if in the first 3 days of month)
         if (!full && !targetYear) {
+          const nowDay = new Date().getDate();
           if (y === currentYear) {
-            if (mIdx > currentMonthIdx || (mIdx < currentMonthIdx - 1 && currentMonthIdx > 0)) {
+            if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
               continue;
             }
-          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11) {
-            // Allow December of previous year when we are in January
+          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
+            // Allow Dec of previous year on first 3 days of Jan
           } else {
             continue;
           }
@@ -504,14 +505,15 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
     
     for (let y = endYear; y >= startYear; y--) {
       for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
-        // If not full sync, limit to current month and previous month (handling January/December crossover)
+        // If not full sync, only scrape current month (or previous month if in first 3 days of month)
         if (!full && !targetYear) {
+          const nowDay = new Date().getDate();
           if (y === currentYear) {
-            if (mIdx > currentMonthIdx || (mIdx < currentMonthIdx - 1 && currentMonthIdx > 0)) {
+            if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
               continue;
             }
-          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11) {
-            // Allow December of previous year when we are in January
+          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
+            // Allow Dec of previous year on first 3 days of Jan
           } else {
             continue;
           }
@@ -690,13 +692,15 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
     
     for (let y = endYear; y >= startYear; y--) {
       for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+        // If not full sync, only scrape current month (or previous month if in first 3 days of month)
         if (!full && !targetYear) {
+          const nowDay = new Date().getDate();
           if (y === currentYear) {
-            if (mIdx > currentMonthIdx || (mIdx < currentMonthIdx - 1 && currentMonthIdx > 0)) {
+            if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
               continue;
             }
-          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11) {
-            // crossover Jan/Dec
+          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
+            // Allow Dec of previous year on first 3 days of Jan
           } else {
             continue;
           }
