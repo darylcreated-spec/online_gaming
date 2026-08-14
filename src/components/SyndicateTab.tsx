@@ -322,10 +322,13 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
       <div className="glass-panel p-6 rounded-2xl border border-white/5 bg-slate-950/40 space-y-4 relative overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="flex items-center gap-3">
+              <img 
+                src="/images/syndicate_icon.png" 
+                alt="Syndicate" 
+                className="w-8 h-8 object-contain rounded-lg shadow-[0_0_12px_rgba(168,85,247,0.4)]" 
+              />
               <h2 className="text-xl sm:text-2xl font-black uppercase text-white tracking-widest flex items-center gap-2">
-                <Users className="w-6 h-6 text-primary" />
                 <span>Syndicate Hub &amp; Live Chat</span>
               </h2>
             </div>

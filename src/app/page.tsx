@@ -393,7 +393,11 @@ export default function Home() {
                 : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
             }`}
           >
-            <Users className="w-5 h-5 text-primary" />
+            <img 
+              src="/images/syndicate_icon.png" 
+              alt="Syndicates" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(168,85,247,0.4)]" 
+            />
             SYNDICATES
           </button>
           
@@ -734,7 +738,7 @@ export default function Home() {
             activeTab === "syndicate" ? "text-primary font-bold" : "text-gray-400"
           }`}
         >
-          <Users className="w-5 h-5 text-primary" />
+          <img src="/images/syndicate_icon.png" alt="Pools" className="w-5 h-5 object-contain rounded" />
           <span className="text-[8px] font-mono tracking-wider">POOLS</span>
           {activeTab === "syndicate" && <span className="nav-active-dot" />}
         </button>
