@@ -263,12 +263,9 @@ export default function Home() {
           localStorage.setItem("win_concept_last_sync_timestamp", Date.now().toString());
           console.log("[AutoSync] Background sync result:", data);
           
-          if (data.totalDrawsAdded > 0 || !lastSyncStr) {
-            console.log(`[AutoSync] ${data.totalDrawsAdded} new draws ingested. Refreshing UI...`);
-            fetchStats();
-            fetchHistoryDraws(pagination.page);
-            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
-          }
+          fetchStats();
+          fetchHistoryDraws(pagination.page);
+          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
         }
       } catch (err) {
         console.warn("[AutoSync] Background sync network error (will retry):", err);
