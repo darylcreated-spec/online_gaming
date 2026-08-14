@@ -43,34 +43,34 @@ export function checkTicket(
     isWinner = true;
     if (pbMatched) {
       tierName = "5 Main + Powerball (JACKPOT)";
-      prizeEstimate = "GRAND JACKPOT!";
+      prizeEstimate = "GRAND JACKPOT (Min $2,000,000 TT)";
     } else {
-      tierName = "5 Main Numbers";
-      prizeEstimate = "$10,000.00 Est.";
+      tierName = "5 Main Numbers (Tier 2)";
+      prizeEstimate = "$50,000.00 TT";
     }
   } else if (matchCount === 4) {
     isWinner = true;
     if (pbMatched) {
-      tierName = "4 Main + Powerball";
-      prizeEstimate = "$1,500.00 Est.";
+      tierName = "4 Main + Powerball (Tier 3)";
+      prizeEstimate = "$1,500.00 TT";
     } else {
-      tierName = "4 Main Numbers";
-      prizeEstimate = "$200.00 Est.";
+      tierName = "4 Main Numbers (Tier 4)";
+      prizeEstimate = "$250.00 TT";
     }
   } else if (matchCount === 3) {
     isWinner = true;
     if (pbMatched) {
-      tierName = "3 Main + Powerball";
-      prizeEstimate = "$150.00 Est.";
+      tierName = "3 Main + Powerball (Tier 5)";
+      prizeEstimate = "$25.00 TT";
     } else {
-      tierName = "3 Main Numbers";
-      prizeEstimate = "$20.00 Est.";
+      tierName = "3 Main Numbers (Tier 6)";
+      prizeEstimate = "$5.00 TT";
     }
   } else if (matchCount === 2) {
     if (pbMatched) {
       isWinner = true;
-      tierName = "2 Main + Powerball";
-      prizeEstimate = "$15.00 Est.";
+      tierName = "2 Main + Powerball (Tier 7)";
+      prizeEstimate = "Free Quick Pick Ticket";
     }
   } else if (matchCount === 1) {
     if (pbMatched) {
@@ -344,44 +344,44 @@ export function checkWinForLifeTicket(
   if (matchCount === 6) {
     isWinner = true;
     if (pbMatched) {
-      tierName = "6 Main + Cash Ball (JACKPOT)";
-      prizeEstimate = "$1,000.00/Month for Life";
+      tierName = "6 Main + Cash Ball (1st PRIZE)";
+      prizeEstimate = "$20,000.00 / Month for 20 Years ($4.8M TT)";
     } else {
-      tierName = "6 Main Numbers";
-      prizeEstimate = "$10,000.00 Est.";
+      tierName = "6 Main Numbers (2nd PRIZE)";
+      prizeEstimate = "$20,000.00 / Month for 2 Years ($480K TT)";
     }
   } else if (matchCount === 5) {
     isWinner = true;
     if (pbMatched) {
       tierName = "5 Main + Cash Ball";
-      prizeEstimate = "$1,000.00 Est.";
+      prizeEstimate = "$1,000.00 TT";
     } else {
       tierName = "5 Main Numbers";
-      prizeEstimate = "$250.00 Est.";
+      prizeEstimate = "$250.00 TT";
     }
   } else if (matchCount === 4) {
     isWinner = true;
     if (pbMatched) {
       tierName = "4 Main + Cash Ball";
-      prizeEstimate = "$100.00 Est.";
+      prizeEstimate = "$100.00 TT";
     } else {
       tierName = "4 Main Numbers";
-      prizeEstimate = "$20.00 Est.";
+      prizeEstimate = "$20.00 TT";
     }
   } else if (matchCount === 3) {
     isWinner = true;
     if (pbMatched) {
       tierName = "3 Main + Cash Ball";
-      prizeEstimate = "$10.00 Est.";
+      prizeEstimate = "$10.00 TT";
     } else {
       tierName = "3 Main Numbers";
-      prizeEstimate = "$2.00 Est.";
+      prizeEstimate = "$2.00 TT";
     }
   } else if (matchCount === 2) {
     if (pbMatched) {
       isWinner = true;
       tierName = "2 Main + Cash Ball";
-      prizeEstimate = "$5.00 Est.";
+      prizeEstimate = "$5.00 TT";
     }
   } else if (matchCount === 1) {
     if (pbMatched) {

@@ -324,7 +324,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               </div>
 
               <p className="text-[10px] text-gray-400">
-                Top Prize: <strong className="text-emerald-400">$1,000 / Day for Life</strong>
+                Top Prize: <strong className="text-emerald-400">$20,000 / Month for 20 Yrs</strong>
               </p>
             </div>
 
