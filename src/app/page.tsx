@@ -244,14 +244,14 @@ export default function Home() {
       const lastSyncStr = localStorage.getItem("win_concept_last_sync_timestamp");
       const lastSync = lastSyncStr ? parseInt(lastSyncStr, 10) : 0;
       const now = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
+      const fortySeconds = 40 * 1000;
 
-      // Only skip if synced less than 2 minutes ago and not forced
-      if (!force && now - lastSync < twoMinutes) {
+      // Only skip if synced less than 40 seconds ago and not forced
+      if (!force && now - lastSync < fortySeconds) {
         return;
       }
 
-      console.log("[AutoSync] Triggering background auto-sync...");
+      console.log("[AutoSync] Triggering background auto-sync from NLCB...");
       try {
         const res = await fetch("/api/cron/sync-all", {
           method: "POST",
@@ -272,21 +272,21 @@ export default function Home() {
       }
     };
 
-    // 1. Run immediately on app load (ensures data is fresh even if user was away for days)
-    triggerBackgroundAutoSync(false);
+    // 1. Run immediately on app load (always forces fresh scrape check)
+    triggerBackgroundAutoSync(true);
 
-    // 2. Run whenever user switches back to this browser tab
+    // 2. Run whenever user switches back to this browser tab (force check)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        triggerBackgroundAutoSync(false);
+        triggerBackgroundAutoSync(true);
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // 3. Periodic interval every 2 minutes
+    // 3. Periodic interval every 60 seconds
     refreshInterval = setInterval(() => {
       triggerBackgroundAutoSync(false);
-    }, 2 * 60 * 1000);
+    }, 60 * 1000);
 
     return () => {
       isMounted = false;
