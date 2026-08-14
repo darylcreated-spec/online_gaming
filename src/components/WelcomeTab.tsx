@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Info, Heart, ArrowRight, Sparkles, RefreshCw, Trophy, Flame } from "lucide-react";
+import { Info, Heart, ArrowRight, Sparkles, RefreshCw, Trophy, Flame, Mail, Copy, Check } from "lucide-react";
 import InteractiveTumbler from "@/components/InteractiveTumbler";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 
@@ -13,6 +13,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
   const [shadedNums, setShadedNums] = useState<number[]>([]);
   const [pencilPos, setPencilPos] = useState({ x: 50, y: -25, rotate: 0, shake: false });
   const [showGoodLuck, setShowGoodLuck] = useState(false);
+  const [emailCopied, setEmailCopied] = useState(false);
 
   // Latest winning results states
   const [latestLotto, setLatestLotto] = useState<any>(null);
@@ -517,26 +518,49 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         </div>
       </div>
 
-      {/* 6. Tipping Panel */}
-      <div className="glass-panel p-5 rounded-xl border-amber-500/15 bg-amber-500/[0.01] relative overflow-hidden font-mono">
-        <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/50" />
-        <div className="flex items-start gap-3">
-          <Heart className="w-5 h-5 text-amber-400 shrink-0 mt-0.5 animate-pulse" />
-          <div className="space-y-2 w-full">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+      {/* 6. Support the Creator Panel */}
+      <div className="glass-panel p-5 sm:p-6 rounded-2xl border border-amber-500/20 bg-amber-500/[0.02] relative overflow-hidden font-mono">
+        <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-amber-400 to-amber-600 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
+        <div className="flex items-start gap-3.5">
+          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 shrink-0 mt-0.5">
+            <Heart className="w-5 h-5 text-amber-400 animate-pulse" />
+          </div>
+          <div className="space-y-3 w-full">
+            <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
               Support the Creator
             </h4>
-            <p className="text-xs leading-relaxed text-gray-400">
+            <p className="text-xs leading-relaxed text-gray-300">
               Creating and maintaining these complex analytical scraping systems requires time, hosting, and dedication. If this mathematical tool helps you hit a lucky streak, win big, or become wealthy, please show some love and support the creator!
             </p>
-            <div className="p-2.5 bg-slate-950/60 border border-white/5 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <span className="text-xs text-gray-400">Send Tips / Support (PayPal):</span>
+            <div className="p-3.5 sm:p-4 bg-slate-950/80 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-inner">
               <a 
                 href="mailto:daryl.created@gmail.com"
-                className="text-xs font-extrabold text-amber-400 hover:text-amber-300 transition tracking-wider underline underline-offset-4"
+                className="flex items-center gap-2.5 text-sm sm:text-base md:text-lg font-black text-amber-400 hover:text-amber-300 transition tracking-wider group"
               >
-                daryl.created@gmail.com
+                <Mail className="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
+                <span className="underline underline-offset-4 break-all">daryl.created@gmail.com</span>
               </a>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText("daryl.created@gmail.com");
+                  setEmailCopied(true);
+                  setTimeout(() => setEmailCopied(false), 2500);
+                }}
+                className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 self-start sm:self-auto"
+                title="Copy Email Address"
+              >
+                {emailCopied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-400">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
