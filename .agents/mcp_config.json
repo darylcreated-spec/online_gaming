@@ -27,6 +27,25 @@
     "memory": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "godot": {
+      "command": "dotnet",
+      "args": ["run", "--project", "path/to/Godot-MCP/Server"]
+    },
+    "blender": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-v", "/tmp:/tmp",
+        "-e", "BLENDER_RPC_HOST=host.docker.internal",
+        "ghcr.io/patrykiti/blender-ai-mcp:latest"
+      ]
+    },
+    "physics": {
+      "command": "uvx",
+      "args": ["chuk-mcp-physics"]
     }
   }
 }
