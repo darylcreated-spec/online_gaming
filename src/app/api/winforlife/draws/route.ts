@@ -47,16 +47,24 @@ export async function GET(request: Request) {
     const draws = await query(selectSql, [...args, limit, offset]);
     const pages = Math.ceil(total / limit);
     
-    return NextResponse.json({
-      success: true,
-      draws,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages
+    return NextResponse.json(
+      {
+        success: true,
+        draws,
+        pagination: {
+          total,
+          page,
+          limit,
+          pages
+        }
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+          "Pragma": "no-cache"
+        }
       }
-    });
+    );
   } catch (error: any) {
     console.error("[API /api/winforlife/draws] Error:", error);
     return NextResponse.json(

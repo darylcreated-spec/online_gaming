@@ -25,10 +25,11 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
   const fetchLatestWinningNumbers = async () => {
     setLoadingResults(true);
     try {
+      const now = Date.now();
       const [lottoRes, playWheRes, wflRes] = await Promise.allSettled([
-        fetch("/api/draws?page=1&limit=1").then(r => r.json()),
-        fetch("/api/playwhe/draws?page=1&limit=1").then(r => r.json()),
-        fetch("/api/winforlife/draws?page=1&limit=1").then(r => r.json())
+        fetch(`/api/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
+        fetch(`/api/playwhe/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
+        fetch(`/api/winforlife/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json())
       ]);
 
       if (lottoRes.status === "fulfilled" && lottoRes.value?.draws?.[0]) {

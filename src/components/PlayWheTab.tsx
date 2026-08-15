@@ -348,7 +348,8 @@ export default function PlayWheTab({
     try {
       setHistoryLoading(true);
       const res = await fetch(
-        `/api/playwhe/draws?page=${pagination.page}&limit=${pagination.limit}&search=${historySearch}&number=${historyNumberFilter}`
+        `/api/playwhe/draws?page=${pagination.page}&limit=${pagination.limit}&search=${historySearch}&number=${historyNumberFilter}&_t=${Date.now()}`,
+        { cache: "no-store" }
       );
       const data = await res.json();
       if (data.success) {
