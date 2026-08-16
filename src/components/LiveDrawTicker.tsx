@@ -277,7 +277,7 @@ export default function LiveDrawTicker({
           onClick={handleManualSyncTrigger}
           disabled={syncStatus === "syncing"}
           title="Click to force immediate Turso Cloud DB sync"
-          className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer ${
             syncStatus === "syncing"
               ? "bg-primary/20 border-primary text-primary animate-pulse"
               : syncStatus === "success"
@@ -287,7 +287,7 @@ export default function LiveDrawTicker({
         >
           <RefreshCw className={`w-3 h-3 ${syncStatus === "syncing" ? "animate-spin text-primary" : "text-emerald-400"}`} />
           <span>
-            {syncStatus === "syncing" ? "Syncing..." : syncStatus === "success" ? "Updated!" : `Cloud: ${lastSyncText}`}
+            {syncStatus === "syncing" ? "Syncing..." : syncStatus === "success" ? "Updated!" : `Sync`}
           </span>
         </button>
       </div>

@@ -9,7 +9,7 @@ export default function SettingsTab() {
   const [winForLifeStats, setWinForLifeStats] = useState<any>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   
-  const [syncingGame, setSyncingGame] = useState<"lotto" | "playwhe" | "winforlife" | null>(null);
+  const [syncingGame, setSyncingGame] = useState<"lotto" | "playwhe" | "winforlife" | "all" | null>(null);
   const [syncType, setSyncType] = useState<"recent" | "full" | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [syncSuccess, setSyncSuccess] = useState<boolean | null>(null);
@@ -86,6 +86,53 @@ export default function SettingsTab() {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
   };
 
+  const handleSyncAll = async () => {
+    if (syncingGame) return;
+    setSyncingGame("all");
+    setSyncType("recent");
+    setSyncSuccess(null);
+    setLogs([]);
+    setActiveStep("Syncing All 3 Games in Parallel from NLCB...");
+    addLog("Connecting to NLCB for Lotto Plus, Play Whe, and Win For Life...");
+
+    try {
+      const res = await fetch("/api/cron/sync-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      const data = await res.json();
+      if (data.success) {
+        addLog(`Sync All Complete! Total draws added/updated: ${data.results?.totalDrawsAdded ?? data.totalDrawsAdded ?? 0}`);
+        addLog(`Play Whe: ${data.results?.playWhe?.details || "Synced"}`);
+        addLog(`Lotto Plus: ${data.results?.lottoPlus?.details || "Synced"}`);
+        addLog(`Win For Life: ${data.results?.winForLife?.details || "Synced"}`);
+        setSyncSuccess(true);
+        setActiveStep("All Games Synchronized!");
+        fetchDBStatus();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("All Games Synced!", {
+              body: `Updated latest draws across all games!`,
+              icon: "/pwa-192x192.png"
+            });
+          }
+        }
+      } else {
+        addLog(`Sync All Failed: ${data.error || "Unknown error"}`);
+        setSyncSuccess(false);
+        setActiveStep("Sync Failed!");
+      }
+    } catch (err: any) {
+      addLog(`Sync Error: ${err.message}`);
+      setSyncSuccess(false);
+      setActiveStep("Sync Error!");
+    } finally {
+      setSyncingGame(null);
+      setSyncType(null);
+    }
+  };
+
   const handleLottoSync = async (full: boolean = false) => {
     if (syncingGame) return;
     
@@ -141,6 +188,9 @@ export default function SettingsTab() {
         setSyncSuccess(true);
         setActiveStep("Sync Completed!");
         fetchDBStatus();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: {} }));
+        }
       } catch (err: any) {
         addLog(`Full Sync Error: ${err.message}`);
         setSyncSuccess(false);
@@ -164,6 +214,9 @@ export default function SettingsTab() {
           setSyncSuccess(true);
           setActiveStep("Sync Completed!");
           fetchDBStatus();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
+          }
           if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
             new Notification("Lotto Plus Synced!", {
               body: `Added/Updated ${data.drawsAdded} draws successfully!`,
@@ -264,6 +317,9 @@ export default function SettingsTab() {
           setSyncSuccess(true);
           setActiveStep("Sync Completed!");
           fetchDBStatus();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
+          }
           if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
             new Notification("Play Whe Synced!", {
               body: `Added/Updated ${data.drawsAdded} draws successfully!`,
@@ -341,6 +397,9 @@ export default function SettingsTab() {
         setSyncSuccess(true);
         setActiveStep("Sync Completed!");
         fetchDBStatus();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: {} }));
+        }
       } catch (err: any) {
         addLog(`Full Sync Error: ${err.message}`);
         setSyncSuccess(false);
@@ -364,6 +423,9 @@ export default function SettingsTab() {
           setSyncSuccess(true);
           setActiveStep("Sync Completed!");
           fetchDBStatus();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
+          }
           if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
             new Notification("Win for Life Synced!", {
               body: `Added/Updated ${data.drawsAdded} draws successfully!`,
@@ -471,6 +533,36 @@ export default function SettingsTab() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Master 1-Click Sync All Games */}
+          <div className="glass-panel border border-primary/30 p-4 rounded-xl bg-gradient-to-r from-primary/10 via-amber-500/10 to-sky-500/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-lg bg-primary/20 text-primary border border-primary/40">
+                <RefreshCw className={`w-5 h-5 ${syncingGame === "all" ? "animate-spin" : ""}`} />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-white font-mono uppercase tracking-wider">
+                  Master 3-in-1 Auto-Sync
+                </h4>
+                <p className="text-xs text-gray-400">
+                  Instantly scrapes the latest live draws for <strong>Play Whe</strong>, <strong>Lotto Plus</strong>, and <strong>Win For Life</strong> in parallel (~2.3s).
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSyncAll}
+              disabled={syncingGame !== null}
+              className={`w-full sm:w-auto px-6 py-3 rounded-lg font-mono font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer shadow-lg ${
+                syncingGame === "all"
+                  ? "bg-primary text-slate-950 animate-pulse"
+                  : "bg-primary hover:bg-primary/90 text-slate-950 hover:shadow-primary/20"
+              }`}
+            >
+              <RefreshCw className={`w-4 h-4 ${syncingGame === "all" ? "animate-spin" : ""}`} />
+              <span>{syncingGame === "all" ? "Scraping NLCB..." : "⚡ Sync All Games Now"}</span>
+            </button>
           </div>
 
           {/* Database Overview & Sync Panels */}

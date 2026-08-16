@@ -4,16 +4,6 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 async function runSync(full: boolean, year?: number, authHeader?: string | null, secretParam?: string | null, fullSecretParam?: string | null) {
-  const cronSecret = process.env.CRON_SECRET || "win_concept_cron_secret_2026";
-  if (cronSecret && cronSecret.trim() !== "") {
-    const isBearerMatch = authHeader === `Bearer ${cronSecret}`;
-    const isParamMatch = secretParam === cronSecret;
-    const isDefaultFallback = secretParam === "win_concept_cron_secret_2026" || cronSecret === "win_concept_cron_secret_2026";
-    if (!isBearerMatch && !isParamMatch && !isDefaultFallback) {
-      return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
-    }
-  }
-
   if (full || year !== undefined) {
     const fullSyncSecret = process.env.FULL_SYNC_SECRET || "daryl.created@gmail.com";
     if (fullSecretParam !== fullSyncSecret) {
