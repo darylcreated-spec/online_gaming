@@ -1,0 +1,37 @@
+name: 🔄 Autonomous NLCB Live Results Sync
+
+on:
+  schedule:
+    # Run every 15 minutes during active draw windows (AST is UTC-4)
+    # 10:30 AM AST = 14:30 UTC
+    # 1:00 PM AST = 17:00 UTC
+    # 4:00 PM AST = 20:00 UTC
+    # 7:00 PM AST = 23:00 UTC
+    # 8:30 PM AST = 00:30 UTC
+    - cron: '*/15 14-23 * * *'
+    - cron: '*/15 0-2 * * *'
+  workflow_dispatch: # Allows manual 1-click trigger from GitHub Actions tab
+
+jobs:
+  sync:
+    name: Scrape NLCB & Update Turso Cloud DB
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Check out repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🚀 Run Autonomous Sync Engine
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: npx tsx scripts/autonomous_cron.ts
