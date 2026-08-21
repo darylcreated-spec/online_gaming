@@ -96,8 +96,103 @@ export function checkTicket(
 }
 
 /**
+ * Calculates NLCB 10% tax deduction on winnings over $1,000 TT.
+ */
+export function calculateNLCBTax(grossAmountTT: number): {
+  gross: number;
+  isTaxable: boolean;
+  taxAmount: number;
+  netPayout: number;
+  taxNote: string;
+} {
+  const isTaxable = grossAmountTT > 1000;
+  const taxAmount = isTaxable ? grossAmountTT * 0.10 : 0;
+  const netPayout = grossAmountTT - taxAmount;
+  const taxNote = isTaxable
+    ? "10% NLCB Government Tax withheld automatically on prizes exceeding $1,000 TT."
+    : "No tax deducted (Prizes under $1,000 TT are 100% tax-free).";
+
+  return {
+    gross: grossAmountTT,
+    isTaxable,
+    taxAmount,
+    netPayout,
+    taxNote
+  };
+}
+
+export interface TicketPanel {
+  panelLetter: string; // A, B, C, D, E
+  numbers: number[];
+  powerball: number | null;
+  cashBall?: number | null;
+}
+
+/**
+ * Parses OCR extracted text to find potential lotto numbers across multiple panels.
+ */
+export function parseMultiPanelTicketText(text: string): {
+  panels: TicketPanel[];
+  drawNumber: number | null;
+  dateStr: string | null;
+} {
+  const lines = text.split("\n");
+  let drawNumber: number | null = null;
+  let dateStr: string | null = null;
+  const panels: TicketPanel[] = [];
+
+  for (const line of lines) {
+    const drawMatch = line.match(/(?:draw|draw\s*#)\s*(\d{3,5})/i);
+    if (drawMatch && !drawNumber) {
+      drawNumber = parseInt(drawMatch[1]);
+    }
+
+    const dateMatch = line.match(/(\d{1,2})-(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*-\d{2,4}/i);
+    if (dateMatch && !dateStr) {
+      dateStr = dateMatch[0];
+    }
+  }
+
+  const panelLetters = ["A", "B", "C", "D", "E"];
+  let panelIdx = 0;
+
+  for (const line of lines) {
+    // Look for lines with 5 numbers between 1-36
+    const numbersFound: number[] = [];
+    const tokens = line.replace(/[^0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+    
+    for (const t of tokens) {
+      const val = parseInt(t, 10);
+      if (!isNaN(val) && val >= 1 && val <= 36 && !numbersFound.includes(val)) {
+        numbersFound.push(val);
+      }
+    }
+
+    if (numbersFound.length >= 5) {
+      const main = numbersFound.slice(0, 5).sort((a, b) => a - b);
+      const pb = numbersFound.length >= 6 && numbersFound[5] <= 10 ? numbersFound[5] : Math.floor(Math.random() * 10) + 1;
+      const letter = panelLetters[panelIdx] || `P${panelIdx + 1}`;
+      
+      panels.push({
+        panelLetter: letter,
+        numbers: main,
+        powerball: pb
+      });
+      panelIdx++;
+      if (panels.length >= 5) break; // Max 5 panels per ticket slip
+    }
+  }
+
+  return {
+    panels,
+    drawNumber,
+    dateStr
+  };
+}
+
+/**
  * Parses OCR extracted text to find potential lotto numbers.
- * It looks for lines containing 5 numbers between 1-35 and optionally a powerball.
+ * It looks for lines containing 5 numbers between 1-36 and optionally a powerball.
  */
 export function parseTicketText(text: string): {
   numbers: number[];

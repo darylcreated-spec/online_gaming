@@ -92,7 +92,7 @@ export default function DashboardTab({
   const qp5 = () => {
     const pool: number[] = [];
     while (pool.length < 5) {
-      const rand = Math.floor(Math.random() * 35) + 1;
+      const rand = Math.floor(Math.random() * 36) + 1;
       if (!pool.includes(rand)) {
         pool.push(rand);
       }

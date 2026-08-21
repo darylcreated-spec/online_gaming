@@ -88,7 +88,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "syndicate" | "settings">("welcome");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder" | "explain">("dashboard");
-  const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
+  const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
   
   

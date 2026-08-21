@@ -90,12 +90,12 @@ export default function PlayWheTab({
   showExplainer,
   onShowExplainerChange
 }: {
-  activeSubTab?: "translator" | "dashboard" | "relationship" | "history" | "hits" | "explain" | "network";
-  onSubTabChange?: (tab: "translator" | "dashboard" | "relationship" | "history" | "hits" | "explain" | "network") => void;
+  activeSubTab?: "translator" | "dashboard" | "transition" | "relationship" | "history" | "hits" | "explain" | "network";
+  onSubTabChange?: (tab: "translator" | "dashboard" | "transition" | "relationship" | "history" | "hits" | "explain" | "network") => void;
   showExplainer?: boolean;
   onShowExplainerChange?: (show: boolean) => void;
 } = {}) {
-  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "relationship" | "history" | "hits" | "explain" | "network">("dashboard");
+  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "transition" | "relationship" | "history" | "hits" | "explain" | "network">("dashboard");
   const [localShowHelp, setLocalShowHelp] = useState(false);
 
   const subTab = activeSubTab !== undefined ? activeSubTab : localSubTab;
@@ -151,6 +151,31 @@ export default function PlayWheTab({
 
   // Network Graph States
   const [hoveredNode, setHoveredNode] = useState<number | null>(null);
+
+  // Slot-to-Slot Markov Transition States
+  const [transitionData, setTransitionData] = useState<any>(null);
+  const [transitionLoading, setTransitionLoading] = useState(true);
+  const [transitionFromNumber, setTransitionFromNumber] = useState<number | null>(null);
+
+  const fetchTransitions = async (fromNum?: number | null) => {
+    try {
+      setTransitionLoading(true);
+      const url = fromNum ? `/api/playwhe/transition?fromNumber=${fromNum}` : `/api/playwhe/transition`;
+      const res = await fetch(url, { cache: "no-store" });
+      const data = await res.json();
+      if (data.success) {
+        setTransitionData(data);
+      }
+    } catch (err) {
+      console.error("Error fetching Play Whe transitions:", err);
+    } finally {
+      setTransitionLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransitions(transitionFromNumber);
+  }, [transitionFromNumber, subTab]);
 
   const handleDreamInterpret = (text: string) => {
     setDreamText(text);
@@ -558,6 +583,18 @@ export default function PlayWheTab({
         </button>
         
         <button
+          onClick={() => setSubTab("transition")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            subTab === "transition"
+              ? "bg-primary text-slate-950 font-bold"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <Activity className="w-3.5 h-3.5" />
+          SLOT TRANSITIONS
+        </button>
+
+        <button
           onClick={() => setSubTab("relationship")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
             subTab === "relationship"
@@ -684,6 +721,142 @@ export default function PlayWheTab({
               <p>
                 Automatically grades predictions against official Turso Cloud DB draw records immediately following each draw slot (Morning 10:30 AM, Midday 1:00 PM, Afternoon 4:00 PM, Evening 7:00 PM).
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 1.2: SLOT-TO-SLOT MARKOV TRANSITIONS */}
+      {subTab === "transition" && (
+        <div className="space-y-6">
+          {/* Header Banner */}
+          <div className="glass-panel border border-primary/20 p-6 rounded-2xl bg-gradient-to-r from-primary/10 via-amber-500/5 to-transparent space-y-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary animate-pulse" />
+                  <h3 className="text-base font-black uppercase tracking-wider text-white font-mono">
+                    Slot-to-Slot Markov Transition Engine
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-400 font-mono">
+                  Calculates empirical 1-step successor probabilities across 19,600+ NLCB draws (Morning → Midday → Afternoon → Evening → Morning).
+                </p>
+              </div>
+
+              {transitionData?.currentMark && (
+                <div className="flex items-center gap-3 bg-slate-950/80 border border-white/10 px-4 py-2 rounded-xl">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary text-primary flex items-center justify-center font-black text-lg shadow-[0_0_12px_rgba(56,189,248,0.3)] font-mono">
+                    {transitionData.currentMark.number}
+                  </div>
+                  <div className="font-mono text-xs">
+                    <span className="text-gray-400 block text-[10px] uppercase">Base Mark Drawn</span>
+                    <span className="text-white font-bold">{transitionData.currentMark.mark}</span>
+                    <span className="text-[10px] text-primary block">({transitionData.currentMark.timeSlot} Draw)</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Top Successor Cards Grid */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-gray-400 uppercase font-mono tracking-wider flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                Top High-Probability Successors for {transitionData?.expectedNextSlot || "Upcoming"} Draw
+              </h4>
+              <span className="text-[10px] text-gray-500 font-mono">
+                Sample Size: {transitionData?.sampleSize || 0} historical occurrences
+              </span>
+            </div>
+
+            {transitionLoading ? (
+              <div className="p-12 flex flex-col items-center justify-center space-y-3 glass-panel rounded-2xl">
+                <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+                <span className="text-xs font-mono text-gray-400">Computing conditional transition vectors...</span>
+              </div>
+            ) : transitionData?.topSuccessors?.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {transitionData.topSuccessors.map((item: any, idx: number) => {
+                  const rankColors = [
+                    "border-amber-400/40 bg-amber-500/10 text-amber-300",
+                    "border-sky-400/40 bg-sky-500/10 text-sky-300",
+                    "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
+                    "border-purple-400/40 bg-purple-500/10 text-purple-300",
+                    "border-rose-400/40 bg-rose-500/10 text-rose-300"
+                  ];
+                  return (
+                    <div
+                      key={item.number}
+                      className={`glass-panel p-5 rounded-2xl border ${rankColors[idx] || "border-white/10"} flex flex-col justify-between space-y-4 hover:scale-[1.02] transition-transform`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/40 border border-white/10 font-mono">
+                          Rank #{idx + 1}
+                        </span>
+                        <span className="text-xs font-black font-mono text-emerald-400">
+                          {item.percentage}% Probability
+                        </span>
+                      </div>
+
+                      <div className="text-center space-y-1">
+                        <div className="w-14 h-14 mx-auto rounded-full bg-slate-950 border-2 border-current flex items-center justify-center font-black text-2xl shadow-lg font-mono">
+                          {item.number}
+                        </div>
+                        <h5 className="text-sm font-bold text-white uppercase font-mono mt-2">
+                          {item.mark}
+                        </h5>
+                        <p className="text-[10px] text-gray-400 font-mono truncate" title={item.keywords}>
+                          {item.keywords}
+                        </p>
+                      </div>
+
+                      <div className="border-t border-white/5 pt-2 text-center text-[10px] text-gray-500 font-mono">
+                        Drawn <strong>{item.count} times</strong> after #{transitionData?.currentMark?.number}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-xs text-gray-500 glass-panel rounded-xl font-mono">
+                No transition data found for this mark.
+              </div>
+            )}
+          </div>
+
+          {/* Interactive 36-Mark Successor Simulator */}
+          <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-slate-950/40 space-y-4 font-mono">
+            <div className="space-y-1">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                Interactive Successor Matrix Simulator
+              </h4>
+              <p className="text-xs text-gray-400">
+                Click any mark (1–36) below to simulate its historical successor vector across all 4 daily time slots:
+              </p>
+            </div>
+
+            <div className="grid grid-cols-6 sm:grid-cols-12 gap-2 pt-2">
+              {Array.from({ length: 36 }, (_, i) => i + 1).map(num => {
+                const isSelected = (transitionFromNumber ?? transitionData?.currentMark?.number) === num;
+                return (
+                  <button
+                    key={num}
+                    onClick={() => setTransitionFromNumber(num)}
+                    className={`py-2 rounded-lg font-bold text-xs border transition cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                      isSelected
+                        ? "bg-primary text-slate-950 border-primary shadow-[0_0_12px_rgba(56,189,248,0.4)]"
+                        : "bg-slate-900/60 border-white/5 text-gray-300 hover:border-white/20 hover:text-white"
+                    }`}
+                  >
+                    <span className="text-xs font-black">{num}</span>
+                    <span className="text-[8px] opacity-70 truncate max-w-[36px]">
+                      {CHINAPOO_CHART[num as keyof typeof CHINAPOO_CHART]?.mark.split(" ")[0] || ""}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

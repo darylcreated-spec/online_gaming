@@ -1312,17 +1312,42 @@ export default function CheckerTab() {
 
           {/* Overall winner announcement banner */}
           {checkResult.isWinner ? (
-            <div className="bg-green-500/10 border border-green-500/25 p-5 rounded-xl text-center space-y-2 pulse-glow-green">
-              <h4 className="text-lg font-black text-green-400 tracking-wider uppercase font-mono">
-                🎉 WINNING TICKET DETECTED!
-              </h4>
-              <p className="text-[10px] text-gray-400 mt-1">
-                {selectedGame === "play-whe"
-                  ? "Play Whe payouts are fixed at 26-to-1 based on official NLCB regulations."
-                  : selectedGame === "win-for-life"
-                  ? "Win for Life payouts include lump sums or ongoing monthly distributions depending on top tier hit."
-                  : "Lotto Plus payouts are parimutuel and may vary based on actual draw sales and pool sizes."}
-              </p>
+            <div className="bg-green-500/10 border border-green-500/25 p-5 rounded-xl text-center space-y-4 pulse-glow-green">
+              <div>
+                <h4 className="text-lg font-black text-green-400 tracking-wider uppercase font-mono">
+                  🎉 WINNING TICKET DETECTED!
+                </h4>
+                <p className="text-[10px] text-gray-400 mt-1">
+                  {selectedGame === "play-whe"
+                    ? "Play Whe payouts are fixed at 26-to-1 based on official NLCB regulations."
+                    : selectedGame === "win-for-life"
+                    ? "Win for Life payouts include lump sums or ongoing monthly distributions depending on top tier hit."
+                    : "Lotto Plus payouts are parimutuel and may vary based on actual draw sales and pool sizes."}
+                </p>
+              </div>
+
+              {/* NLCB Tax Breakdown Card */}
+              <div className="glass-panel border border-white/10 p-3 rounded-lg bg-slate-950/60 max-w-md mx-auto text-left font-mono space-y-2">
+                <div className="flex items-center justify-between text-xs border-b border-white/5 pb-1.5">
+                  <span className="text-gray-400 font-bold uppercase">NLCB Tax Auditor (Trinidad & Tobago)</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-black">
+                    TAX CODE 10%
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-[10px] text-gray-500 block uppercase">Tax Exemption Threshold</span>
+                    <span className="text-white font-bold">$1,000.00 TT</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-gray-500 block uppercase">Government Tax Rate</span>
+                    <span className="text-amber-400 font-bold">10% Withholding</span>
+                  </div>
+                </div>
+                <p className="text-[9px] text-gray-400 leading-normal border-t border-white/5 pt-1">
+                  *Prizes of <strong>$1,000 TT or less</strong> are 100% tax-exempt. For prizes exceeding $1,000 TT, NLCB automatically withholds 10% tax for the Board of Inland Revenue.
+                </p>
+              </div>
               
               <style dangerouslySetInnerHTML={{__html: `
                 @keyframes pulse-glow-green {

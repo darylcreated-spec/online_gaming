@@ -3,9 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { analyzeDeltas, DeltaAnalysis } from "@/lib/deltas";
 import { generateWheel } from "@/lib/wheeling";
+import { generateAbbreviatedWheel, WHEEL_DESIGNS } from "@/lib/wheeling_matrix";
+import { evaluateTicketQuality } from "@/lib/quality_scorer";
 import { runGeneticOptimization, AlphaSlipResult } from "@/lib/geneticOptimizer";
 import InteractiveTumbler from "@/components/InteractiveTumbler";
-import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Sparkles, Play, Award, CheckCircle2 } from "lucide-react";
+import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Sparkles, Play, Award, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
 
 interface BuilderTabProps {
   historicalDraws: any[];
@@ -183,7 +185,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
     handleClear();
     const numbers: number[] = [];
     while (numbers.length < count) {
-      const rand = Math.floor(Math.random() * 35) + 1;
+      const rand = Math.floor(Math.random() * 36) + 1;
       if (!numbers.includes(rand)) {
         numbers.push(rand);
       }
@@ -260,6 +262,18 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
       alert("Please select at least 5 numbers to generate tickets.");
       return;
     }
+
+    // Instant Abbreviated Covering Designs
+    if (WHEEL_DESIGNS[wheelStrategy]) {
+      const wheelRes = generateAbbreviatedWheel(selectedNums, wheelStrategy, selectedPb || 2);
+      if (!wheelRes.isComplete) {
+        alert(`This covering matrix requires a pool of ${wheelRes.design.poolSize} numbers. Please select ${wheelRes.missingCount} more number(s).`);
+        return;
+      }
+      setGeneratedTickets(wheelRes.tickets.map(t => t.numbers));
+      return;
+    }
+
     setWheelingLoading(true);
     setGeneratedTickets([]);
     
@@ -788,37 +802,113 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                     );
                   })}
                 </div>
+
+                {/* Anti-Trap Quality Scorer Real-Time Live Widget */}
+                {selectedNums.length >= 5 && (
+                  <div className="mt-4 p-4 rounded-xl border border-white/10 bg-slate-950/60 font-mono space-y-3">
+                    {(() => {
+                      const quality = evaluateTicketQuality(selectedNums.slice(0, 5));
+                      return (
+                        <>
+                          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                            <div className="flex items-center gap-2">
+                              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                              <span className="text-xs font-bold text-white uppercase tracking-wider">
+                                Anti-Trap Quality Scorer
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs px-2 py-0.5 rounded border font-black ${quality.badgeColor}`}>
+                                {quality.grade} ({quality.score}/100)
+                              </span>
+                            </div>
+                          </div>
+
+                          {quality.isTrap && quality.traps.length > 0 && (
+                            <div className="bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-lg space-y-1">
+                              <div className="flex items-center gap-1.5 text-[11px] font-bold text-rose-400 uppercase">
+                                <AlertTriangle className="w-3.5 h-3.5" />
+                                <span>Statistical Traps Detected:</span>
+                              </div>
+                              <ul className="text-[10px] text-rose-300 list-disc list-inside space-y-0.5">
+                                {quality.traps.map((t, idx) => (
+                                  <li key={idx}>{t}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+                            <div className="bg-slate-900/80 p-2 border border-white/5 rounded">
+                              <span className="text-gray-500 block">Sum Total</span>
+                              <span className={`font-bold ${quality.metrics.sumStatus === 'Optimal' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                {quality.metrics.sum} ({quality.metrics.sumStatus})
+                              </span>
+                            </div>
+                            <div className="bg-slate-900/80 p-2 border border-white/5 rounded">
+                              <span className="text-gray-500 block">Odd / Even</span>
+                              <span className={`font-bold ${quality.metrics.oddEvenStatus === 'Balanced' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                {quality.metrics.oddEvenRatio}
+                              </span>
+                            </div>
+                            <div className="bg-slate-900/80 p-2 border border-white/5 rounded">
+                              <span className="text-gray-500 block">High / Low</span>
+                              <span className={`font-bold ${quality.metrics.highLowStatus === 'Balanced' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                {quality.metrics.highLowRatio}
+                              </span>
+                            </div>
+                            <div className="bg-slate-900/80 p-2 border border-white/5 rounded">
+                              <span className="text-gray-500 block">Max Run</span>
+                              <span className={`font-bold ${quality.metrics.consecutiveStatus === 'Optimal' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                {quality.metrics.maxConsecutive} in row
+                              </span>
+                            </div>
+                          </div>
+
+                          <p className="text-[10px] text-gray-400 border-t border-white/5 pt-1.5 leading-relaxed">
+                            <span className="text-amber-400 font-bold">Advice:</span> {quality.recommendation}
+                          </p>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
 
               {/* Step 3: Wheeling Strategy */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-white uppercase">
                   <Sliders className="w-4 h-4 text-amber-500" />
-                  <span>Step 3: Wheeling Options</span>
+                  <span>Step 3: Wheeling & Guaranteed Covering Designs</span>
                 </div>
                 
                 {selectedNums.length >= 5 ? (
                   <div className="space-y-4 bg-[#0B0C0E] p-4 border border-[#1F232B]">
                     <div className="space-y-1.5">
-                      <span className="text-xs text-slate-500 uppercase tracking-widest">Select Strategy</span>
+                      <span className="text-xs text-slate-500 uppercase tracking-widest">Select Covering Matrix</span>
                       <select
                         value={wheelStrategy}
                         onChange={(e) => setWheelStrategy(e.target.value as any)}
                         className="w-full bg-[#121418] border border-[#1F232B] focus:border-amber-400 focus:outline-none px-3 py-2 text-xs text-white rounded-none cursor-pointer"
                       >
-                        <option value="abbreviated-4-4">Abbreviated "4-if-4" (Optimized Slips)</option>
+                        <option value="pick-7-4">Pick 7 Pool (4 Tickets) — 81% Cost Reduction ($20 TT)</option>
+                        <option value="pick-8-6">Pick 8 Pool (6 Tickets) — 89% Cost Reduction ($30 TT)</option>
+                        <option value="pick-9-8">Pick 9 Pool (8 Tickets) — 94% Cost Reduction ($40 TT)</option>
+                        <option value="pick-10-12">Pick 10 Pool (12 Tickets) — 95% Cost Reduction ($60 TT)</option>
+                        <option value="abbreviated-4-4">Abbreviated "4-if-4" (Custom Subset)</option>
                         <option value="abbreviated-3-3">Abbreviated "3-if-3" (Budget Guarantee)</option>
-                        <option value="full">Full Wheel (All combinations)</option>
+                        <option value="full">Full Wheel (All Mathematical Combinations)</option>
                       </select>
                     </div>
 
                     <p className="text-[11px] text-slate-400 leading-relaxed">
-                      {wheelStrategy === "abbreviated-4-4" &&
-                        "Generates a filtered subset ensuring that if 4 of your chosen numbers are drawn, you have a 100% guarantee of hitting at least one 4-number match."}
-                      {wheelStrategy === "abbreviated-3-3" &&
-                        "Generates a high-efficiency budget subset ensuring that if 3 of your chosen numbers are drawn, you will match at least 3 numbers."}
-                      {wheelStrategy === "full" &&
-                        "Generates all possible combinations. Provides maximum mathematical coverage, but requires larger budgets."}
+                      {WHEEL_DESIGNS[wheelStrategy]
+                        ? WHEEL_DESIGNS[wheelStrategy].guarantee + ` (Standard System: $${WHEEL_DESIGNS[wheelStrategy].standardSystemCost} TT vs Abbreviated: $${WHEEL_DESIGNS[wheelStrategy].abbreviatedCost} TT).`
+                        : wheelStrategy === "abbreviated-4-4"
+                        ? "Generates a filtered subset ensuring that if 4 of your chosen numbers are drawn, you have a 100% guarantee of hitting at least one 4-number match."
+                        : wheelStrategy === "abbreviated-3-3"
+                        ? "Generates a high-efficiency budget subset ensuring that if 3 of your chosen numbers are drawn, you will match at least 3 numbers."
+                        : "Generates all possible combinations. Provides maximum mathematical coverage, but requires larger budgets."}
                     </p>
 
                     <button
