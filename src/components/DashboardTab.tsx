@@ -13,7 +13,7 @@ import {
   Scatter,
   ZAxis
 } from "recharts";
-import { RefreshCw, TrendingUp, Calendar, Award, DollarSign, Database, HelpCircle } from "lucide-react";
+import { RefreshCw, TrendingUp, Calendar, Award, DollarSign, Database, HelpCircle, Zap, Brain, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface DashboardTabProps {
@@ -48,6 +48,30 @@ export default function DashboardTab({
   const [luckyNumbers, setLuckyNumbers] = useState<number[]>([]);
   const [luckyPowerball, setLuckyPowerball] = useState<number | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
+
+  // MEV Engine States
+  const [mevTickets, setMevTickets] = useState<any[]>([]);
+  const [mevStats, setMevStats] = useState<any>(null);
+  const [mevLoading, setMevLoading] = useState(false);
+  const [mevTicketCount, setMevTicketCount] = useState(5);
+  const [mevHasRun, setMevHasRun] = useState(false);
+
+  const runMEVEngine = async () => {
+    try {
+      setMevLoading(true);
+      setMevHasRun(true);
+      const res = await fetch(`/api/mev?tickets=${mevTicketCount}&candidates=25000`, { cache: "no-store" });
+      const data = await res.json();
+      if (data.success) {
+        setMevTickets(data.tickets || []);
+        setMevStats(data.engineStats || null);
+      }
+    } catch (err) {
+      console.error("MEV Engine error:", err);
+    } finally {
+      setMevLoading(false);
+    }
+  };
 
   // Saved Slips States
   const [savedSlips, setSavedSlips] = useState<any[]>([]);
@@ -487,6 +511,163 @@ export default function DashboardTab({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          MEV ENGINE — Maximum Expected Value AI Optimizer
+          ═══════════════════════════════════════════════════════════════════ */}
+      <div className="glass-panel rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/20 via-slate-950/60 to-transparent p-6 space-y-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-emerald-400 animate-pulse" />
+              <h3 className="text-base font-black uppercase tracking-wider text-white font-mono">
+                MEV Engine — Maximum Expected Value AI
+              </h3>
+              <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black uppercase border border-emerald-500/30">
+                {mevStats ? `${mevStats.drawsAnalyzed} DRAWS` : "857+ DRAWS"}
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 font-mono max-w-2xl">
+              Scores 25,000 stochastic candidates against 6 weighted factors derived from every historical Lotto Plus draw:
+              Frequency Weight · Recency Decay · Companion Pair Synergy · Positional Matrix · Balance Score · Overdue Mean-Reversion.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 bg-slate-900/80 border border-white/10 px-3 py-1.5 rounded-lg">
+              <span className="text-[10px] text-gray-400 font-mono uppercase">Lines:</span>
+              <select
+                value={mevTicketCount}
+                onChange={(e) => setMevTicketCount(parseInt(e.target.value))}
+                className="bg-transparent border-none text-white font-bold text-xs font-mono cursor-pointer focus:outline-none"
+              >
+                <option value="3">3</option>
+                <option value="5">5</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+              </select>
+            </div>
+
+            <button
+              onClick={runMEVEngine}
+              disabled={mevLoading}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 disabled:from-emerald-500/50 disabled:to-teal-500/50 disabled:cursor-not-allowed text-slate-950 text-xs font-black tracking-widest uppercase transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] rounded-lg cursor-pointer"
+            >
+              {mevLoading ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  COMPUTING...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-3.5 h-3.5" />
+                  {mevHasRun ? "RE-GENERATE" : "GENERATE OPTIMAL LINES"}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* MEV Results */}
+        {mevLoading ? (
+          <div className="p-12 flex flex-col items-center justify-center space-y-3">
+            <RefreshCw className="w-8 h-8 text-emerald-400 animate-spin" />
+            <span className="text-xs font-mono text-gray-400">Scoring 25,000 weighted candidates across 6 statistical dimensions...</span>
+          </div>
+        ) : mevTickets.length > 0 ? (
+          <div className="space-y-4">
+            {/* Engine Stats Bar */}
+            {mevStats && (
+              <div className="flex flex-wrap gap-4 text-[10px] font-mono text-gray-400 uppercase bg-slate-950/40 border border-white/5 px-4 py-2 rounded-lg">
+                <span>Draws Analyzed: <strong className="text-emerald-400">{mevStats.drawsAnalyzed}</strong></span>
+                <span>Candidates Scored: <strong className="text-emerald-400">{mevStats.candidatesScored.toLocaleString()}</strong></span>
+                <span>Score Cutoff: <strong className="text-emerald-400">{mevStats.topScoreCutoff}</strong></span>
+                <span>Compute Time: <strong className="text-emerald-400">{mevStats.computeTimeMs}ms</strong></span>
+              </div>
+            )}
+
+            {/* Ticket Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {mevTickets.map((ticket: any, idx: number) => {
+                const gradeColors: Record<string, string> = {
+                  "S": "border-amber-400/40 bg-amber-500/10",
+                  "A+": "border-emerald-400/40 bg-emerald-500/10",
+                  "A": "border-sky-400/40 bg-sky-500/10",
+                  "B": "border-purple-400/40 bg-purple-500/10"
+                };
+                const gradeTextColors: Record<string, string> = {
+                  "S": "text-amber-300",
+                  "A+": "text-emerald-300",
+                  "A": "text-sky-300",
+                  "B": "text-purple-300"
+                };
+                return (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-xl border ${gradeColors[ticket.grade] || "border-white/10"} space-y-3 font-mono hover:scale-[1.02] transition-transform`}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/40 border border-white/10 text-gray-300">
+                        Line #{idx + 1}
+                      </span>
+                      <span className={`text-xs font-black ${gradeTextColors[ticket.grade] || "text-gray-400"}`}>
+                        {ticket.grade} · {ticket.mevScore}
+                      </span>
+                    </div>
+
+                    {/* Ball Numbers */}
+                    <div className="flex items-center justify-center gap-1.5 py-2">
+                      {ticket.numbers.map((num: number, i: number) => (
+                        <div
+                          key={i}
+                          className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                        >
+                          {String(num).padStart(2, "0")}
+                        </div>
+                      ))}
+                      <span className="text-gray-500 font-bold text-[10px] mx-0.5">+</span>
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-white to-gray-200 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.3)] border border-white/30">
+                        {String(ticket.powerball).padStart(2, "0")}
+                      </div>
+                    </div>
+
+                    {/* Score Breakdown */}
+                    <div className="space-y-1 text-[9px] border-t border-white/5 pt-2">
+                      {[
+                        { label: "Frequency", val: ticket.breakdown.frequencyScore, color: "bg-blue-400" },
+                        { label: "Recency", val: ticket.breakdown.recencyScore, color: "bg-emerald-400" },
+                        { label: "Companion", val: ticket.breakdown.companionScore, color: "bg-amber-400" },
+                        { label: "Positional", val: ticket.breakdown.positionalScore, color: "bg-purple-400" },
+                        { label: "Balance", val: ticket.breakdown.balanceScore, color: "bg-sky-400" },
+                        { label: "Overdue", val: ticket.breakdown.overdueBoost, color: "bg-rose-400" }
+                      ].map((metric) => (
+                        <div key={metric.label} className="flex items-center gap-2">
+                          <span className="text-gray-500 w-16 shrink-0">{metric.label}</span>
+                          <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${metric.color} rounded-full transition-all duration-500`}
+                              style={{ width: `${Math.min(100, metric.val)}%` }}
+                            />
+                          </div>
+                          <span className="text-gray-400 w-8 text-right">{metric.val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="p-8 text-center space-y-2">
+            <Shield className="w-8 h-8 text-emerald-400/30 mx-auto" />
+            <p className="text-xs font-mono text-gray-500">
+              Click <strong className="text-emerald-400">GENERATE OPTIMAL LINES</strong> to run the MEV engine against {stats?.totalDraws || 857}+ historical draws.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Main Charts & Rankings Grid */}
