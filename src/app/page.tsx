@@ -12,7 +12,8 @@ import WelcomeTab from "@/components/WelcomeTab";
 import SyndicateTab from "@/components/SyndicateTab";
 import LiveDrawTicker from "@/components/LiveDrawTicker";
 import AppSplashScreen from "@/components/AppSplashScreen";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users } from "lucide-react";
+import MultiBallMathPanel from "@/components/MultiBallMathPanel";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain } from "lucide-react";
 
 const TumblerIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -87,7 +88,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "syndicate" | "settings">("welcome");
-  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "history" | "builder" | "explain">("dashboard");
+  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
   
@@ -458,6 +459,17 @@ export default function Home() {
               DASHBOARD
             </button>
             <button
+              onClick={() => setLottoSubTab("math-engine")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+                lottoSubTab === "math-engine"
+                  ? "bg-primary text-slate-950 font-bold"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Brain className="w-3.5 h-3.5" />
+              MATHEMATICAL ENGINE
+            </button>
+            <button
               onClick={() => setLottoSubTab("history")}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
                 lottoSubTab === "history"
@@ -508,6 +520,12 @@ export default function Home() {
               timeframe={timeframe}
               setTimeframe={setTimeframe}
             />
+          </div>
+        )}
+
+        {activeTab === "lotto-plus" && lottoSubTab === "math-engine" && (
+          <div className="tab-content-enter">
+            <MultiBallMathPanel game="lotto-plus" />
           </div>
         )}
         

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield } from "lucide-react";
 import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
+import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 
 // Helper to generate all combinations of size k from an array
 function getCombinations(arr: number[], k: number): number[][] {
@@ -126,7 +127,7 @@ const validateTicket = (ticket: number[]) => {
 };
 
 export default function WinForLifeTab() {
-  const [subTab, setSubTab] = useState<"dashboard" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
+  const [subTab, setSubTab] = useState<"dashboard" | "math-engine" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   
@@ -427,6 +428,15 @@ export default function WinForLifeTab() {
         >
           <BarChart2 className="w-3.5 h-3.5" />
           DASHBOARD
+        </button>
+        <button
+          onClick={() => setSubTab("math-engine")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            subTab === "math-engine" ? "bg-primary text-slate-950 font-bold" : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <Brain className="w-3.5 h-3.5" />
+          MATHEMATICAL ENGINE
         </button>
         <button
           onClick={() => setSubTab("history")}
@@ -1061,6 +1071,11 @@ export default function WinForLifeTab() {
           )}
 
         </div>
+      )}
+
+      {/* SUBTAB: MATHEMATICAL ENGINE */}
+      {subTab === "math-engine" && (
+        <MultiBallMathPanel game="win-for-life" />
       )}
 
       {/* SUBTAB: HISTORY */}
