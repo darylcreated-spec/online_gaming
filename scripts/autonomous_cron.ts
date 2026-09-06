@@ -1,4 +1,5 @@
 import { syncLatest, syncPlayWhe, syncWinForLife } from "../src/lib/scraper";
+import { verifyPlayWhePredictions, generatePlayWhePredictions, getLocalDateString } from "../src/lib/predictions";
 
 async function main() {
   console.log("=================================================");
@@ -18,6 +19,21 @@ async function main() {
   console.log("Play Whe:", playWheResult.status === "fulfilled" ? playWheResult.value : playWheResult.reason);
   console.log("Lotto Plus:", lottoResult.status === "fulfilled" ? lottoResult.value : lottoResult.reason);
   console.log("Win For Life:", winForLifeResult.status === "fulfilled" ? winForLifeResult.value : winForLifeResult.reason);
+
+  // Auto-verify predictions and prepare next slot
+  try {
+    const verResult = await verifyPlayWhePredictions();
+    console.log(`\n🎯 Play Whe Verification: Verified ${verResult.verifiedCount} draws (${verResult.hitsAdded} hits recorded)`);
+    
+    // Ensure all 4 slots are ready for today
+    const todayStr = getLocalDateString();
+    for (const slot of ["MORNING", "MIDDAY", "AFTERNOON", "EVENING"]) {
+      await generatePlayWhePredictions(todayStr, slot);
+    }
+    console.log("✅ Next Play Whe predictions prepared and ready.");
+  } catch (err) {
+    console.warn("⚠️ Post-sync prediction update notice:", err);
+  }
 }
 
 main().catch(err => {
