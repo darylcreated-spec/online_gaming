@@ -725,3 +725,173 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
     return { success: false, drawsAdded, details: error.message };
   }
 }
+
+// === CASHPOT SCRAPING & REST API ENGINE ===
+
+export async function syncCashPot(full: boolean = false, targetYear?: number): Promise<{ success: boolean; drawsAdded: number; details: string }> {
+  let drawsAdded = 0;
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS cashpot_draws (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        draw_number INTEGER UNIQUE,
+        draw_date TEXT NOT NULL,
+        num1 INTEGER NOT NULL,
+        num2 INTEGER NOT NULL,
+        num3 INTEGER NOT NULL,
+        num4 INTEGER NOT NULL,
+        num5 INTEGER NOT NULL,
+        multiplier INTEGER
+      )
+    `);
+
+    // 1. If not full sync, first fetch latest draw via fast REST endpoint
+    if (!full && !targetYear) {
+      try {
+        const res = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/cashpot/results/latest-date");
+        if (res.ok) {
+          const items = await res.json();
+          const list = Array.isArray(items) ? items : [items];
+          for (const item of list) {
+            if (item && item.draw_number) {
+              const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
+              const nums = [item.number1, item.number2, item.number3, item.number4, item.number5].sort((a: number, b: number) => a - b);
+              await db.execute({
+                sql: `INSERT OR IGNORE INTO cashpot_draws (draw_number, draw_date, num1, num2, num3, num4, num5, multiplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                args: [item.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], item.multiplier || 1]
+              });
+              drawsAdded++;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[CashPot] Latest-date fetch warning:", err);
+      }
+    }
+
+    // 2. Fetch monthly archive (current month or historical range)
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1; // 1-12
+    const startYear = targetYear ? targetYear : (full ? 2022 : currentYear);
+    const endYear = targetYear ? targetYear : currentYear;
+
+    for (let y = endYear; y >= startYear; y--) {
+      const maxMonth = (y === currentYear) ? currentMonth : 12;
+      const minMonth = (!full && !targetYear && y === currentYear) ? Math.max(1, currentMonth - 1) : 1;
+
+      for (let m = maxMonth; m >= minMonth; m--) {
+        const mStr = String(m).padStart(2, "0");
+        try {
+          const res = await fetchWithRetry(`https://backend-production-412b.up.railway.app/api/cashpot/results/by-month-year/${y}/${mStr}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              const batch = data.map((d: any) => {
+                const nums = [d.number1, d.number2, d.number3, d.number4, d.number5].sort((a: number, b: number) => a - b);
+                const dDate = d.draw_date ? d.draw_date.split("T")[0] : "";
+                return {
+                  sql: `INSERT OR IGNORE INTO cashpot_draws (draw_number, draw_date, num1, num2, num3, num4, num5, multiplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                  args: [d.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], d.multiplier || 1]
+                };
+              });
+              await db.batch(batch);
+              drawsAdded += data.length;
+            }
+          }
+        } catch (e) {
+          console.warn(`[CashPot] Month ${y}-${mStr} sync notice:`, e);
+        }
+      }
+    }
+
+    return { success: true, drawsAdded, details: `Cash Pot sync complete. ${drawsAdded} records processed.` };
+  } catch (error: any) {
+    console.error("Cash Pot sync error:", error);
+    return { success: false, drawsAdded, details: error.message };
+  }
+}
+
+// === PICK 4 SCRAPING & REST API ENGINE ===
+
+export async function syncPick4(full: boolean = false, targetYear?: number): Promise<{ success: boolean; drawsAdded: number; details: string }> {
+  let drawsAdded = 0;
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS pick4_draws (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        draw_number INTEGER UNIQUE,
+        draw_date TEXT NOT NULL,
+        draw_time_slot TEXT NOT NULL,
+        digit1 INTEGER NOT NULL,
+        digit2 INTEGER NOT NULL,
+        digit3 INTEGER NOT NULL,
+        digit4 INTEGER NOT NULL
+      )
+    `);
+
+    // 1. If not full sync, first fetch latest draw via fast REST endpoint
+    if (!full && !targetYear) {
+      try {
+        const res = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/pick4/results/latest-date");
+        if (res.ok) {
+          const items = await res.json();
+          const list = Array.isArray(items) ? items : [items];
+          for (const item of list) {
+            if (item && item.draw_number) {
+              const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
+              const slot = (item.draw_period || item.draw_time || "MORNING").toUpperCase();
+              await db.execute({
+                sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                args: [item.draw_number, dDate, slot, item.number1, item.number2, item.number3, item.number4]
+              });
+              drawsAdded++;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[Pick4] Latest-date fetch warning:", err);
+      }
+    }
+
+    // 2. Fetch monthly archive (current month or historical range)
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1; // 1-12
+    const startYear = targetYear ? targetYear : (full ? 2022 : currentYear);
+    const endYear = targetYear ? targetYear : currentYear;
+
+    for (let y = endYear; y >= startYear; y--) {
+      const maxMonth = (y === currentYear) ? currentMonth : 12;
+      const minMonth = (!full && !targetYear && y === currentYear) ? Math.max(1, currentMonth - 1) : 1;
+
+      for (let m = maxMonth; m >= minMonth; m--) {
+        const mStr = String(m).padStart(2, "0");
+        try {
+          const res = await fetchWithRetry(`https://backend-production-412b.up.railway.app/api/pick4/results/by-month-year/${y}/${mStr}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              const batch = data.map((d: any) => {
+                const dDate = d.draw_date ? d.draw_date.split("T")[0] : "";
+                const slot = (d.draw_period || d.draw_time || "MORNING").toUpperCase();
+                return {
+                  sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                  args: [d.draw_number, dDate, slot, d.number1, d.number2, d.number3, d.number4]
+                };
+              });
+              await db.batch(batch);
+              drawsAdded += data.length;
+            }
+          }
+        } catch (e) {
+          console.warn(`[Pick4] Month ${y}-${mStr} sync notice:`, e);
+        }
+      }
+    }
+
+    return { success: true, drawsAdded, details: `Pick 4 sync complete. ${drawsAdded} records processed.` };
+  } catch (error: any) {
+    console.error("Pick 4 sync error:", error);
+    return { success: false, drawsAdded, details: error.message };
+  }
+}
+

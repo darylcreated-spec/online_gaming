@@ -1,6 +1,4 @@
-import { syncLatest } from "@/lib/scraper";
-import { syncPlayWhe } from "@/lib/scraper";
-import { syncWinForLife } from "@/lib/scraper";
+import { syncLatest, syncPlayWhe, syncWinForLife, syncCashPot, syncPick4 } from "@/lib/scraper";
 import { verifyPlayWhePredictions } from "@/lib/predictions";
 import { NextResponse } from "next/server";
 
@@ -27,13 +25,15 @@ async function handleSync(request: Request) {
     const astHour = (now.getUTCHours() - 4 + 24) % 24;
     const dayOfWeek = new Date(now.getTime() - 4 * 60 * 60 * 1000).getDay(); // 0=Sun, 6=Sat
 
-    // 2. Execute all 3 game scrapers CONCURRENTLY via Promise.allSettled
-    console.log(`[Auto-Sync] Starting parallel sync cycle at ${now.toISOString()} (AST hour ${astHour})...`);
+    // 2. Execute all 5 game scrapers CONCURRENTLY via Promise.allSettled
+    console.log(`[Auto-Sync] Starting parallel sync cycle for 5 games at ${now.toISOString()} (AST hour ${astHour})...`);
     
-    const [playWheResult, lottoResult, winForLifeResult] = await Promise.allSettled([
+    const [playWheResult, lottoResult, winForLifeResult, cashPotResult, pick4Result] = await Promise.allSettled([
       syncPlayWhe(false),
       syncLatest(false),
-      syncWinForLife(false)
+      syncWinForLife(false),
+      syncCashPot(false),
+      syncPick4(false)
     ]);
 
     const results: Record<string, any> = {
@@ -42,7 +42,9 @@ async function handleSync(request: Request) {
       dayOfWeek,
       playWhe: playWheResult.status === "fulfilled" ? playWheResult.value : { success: false, error: (playWheResult as any).reason?.message },
       lottoPlus: lottoResult.status === "fulfilled" ? lottoResult.value : { success: false, error: (lottoResult as any).reason?.message },
-      winForLife: winForLifeResult.status === "fulfilled" ? winForLifeResult.value : { success: false, error: (winForLifeResult as any).reason?.message }
+      winForLife: winForLifeResult.status === "fulfilled" ? winForLifeResult.value : { success: false, error: (winForLifeResult as any).reason?.message },
+      cashPot: cashPotResult.status === "fulfilled" ? cashPotResult.value : { success: false, error: (cashPotResult as any).reason?.message },
+      pick4: pick4Result.status === "fulfilled" ? pick4Result.value : { success: false, error: (pick4Result as any).reason?.message }
     };
 
     // 3. Verify Play Whe predictions if Play Whe sync succeeded
@@ -54,7 +56,11 @@ async function handleSync(request: Request) {
       }
     }
 
-    const totalAdded = (results.playWhe?.drawsAdded || 0) + (results.lottoPlus?.drawsAdded || 0) + (results.winForLife?.drawsAdded || 0);
+    const totalAdded = (results.playWhe?.drawsAdded || 0) + 
+      (results.lottoPlus?.drawsAdded || 0) + 
+      (results.winForLife?.drawsAdded || 0) + 
+      (results.cashPot?.drawsAdded || 0) + 
+      (results.pick4?.drawsAdded || 0);
     results.totalDrawsAdded = totalAdded;
 
     console.log(`[Auto-Sync] Sync complete. Total new draws added across all games: ${totalAdded}`);

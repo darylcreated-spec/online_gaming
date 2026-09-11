@@ -10,6 +10,8 @@ import WinForLifeTab from "@/components/WinForLifeTab";
 import SettingsTab from "@/components/SettingsTab";
 import WelcomeTab from "@/components/WelcomeTab";
 import SyndicateTab from "@/components/SyndicateTab";
+import CashPotTab from "@/components/CashPotTab";
+import Pick4Tab from "@/components/Pick4Tab";
 import LiveDrawTicker from "@/components/LiveDrawTicker";
 import AppSplashScreen from "@/components/AppSplashScreen";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
@@ -87,7 +89,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "syndicate" | "settings">("welcome");
+  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings">("welcome");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
@@ -387,6 +389,34 @@ export default function Home() {
           </button>
 
           <button
+            onClick={() => setActiveTab("cashpot")}
+            className={`flex items-center justify-center gap-2 px-3.5 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+              activeTab === "cashpot"
+                ? "bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold"
+                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+            }`}
+          >
+            <span className="w-5 h-5 rounded-md bg-amber-500/20 text-amber-400 font-black text-[10px] flex items-center justify-center border border-amber-500/40 font-mono shadow-[0_0_8px_rgba(245,158,11,0.3)]">
+              CP
+            </span>
+            CASHPOT
+          </button>
+
+          <button
+            onClick={() => setActiveTab("pick4")}
+            className={`flex items-center justify-center gap-2 px-3.5 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+              activeTab === "pick4"
+                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold"
+                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+            }`}
+          >
+            <span className="w-5 h-5 rounded-md bg-emerald-500/20 text-emerald-400 font-black text-[10px] flex items-center justify-center border border-emerald-500/40 font-mono shadow-[0_0_8px_rgba(16,185,129,0.3)]">
+              P4
+            </span>
+            PICK 4
+          </button>
+
+          <button
             onClick={() => setActiveTab("syndicate")}
             className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
               activeTab === "syndicate"
@@ -678,6 +708,18 @@ export default function Home() {
           </div>
         )}
 
+        {activeTab === "cashpot" && (
+          <div className="tab-content-enter">
+            <CashPotTab />
+          </div>
+        )}
+
+        {activeTab === "pick4" && (
+          <div className="tab-content-enter">
+            <Pick4Tab />
+          </div>
+        )}
+
         {activeTab === "syndicate" && (
           <div className="tab-content-enter">
             <SyndicateTab onSelectGame={setActiveTab} />
@@ -742,13 +784,37 @@ export default function Home() {
         </button>
         <button
           onClick={() => setActiveTab("win-for-life")}
-          className={`flex flex-col items-center gap-1 py-1 px-2.5 transition-all cursor-pointer ${
+          className={`flex flex-col items-center gap-1 py-1 px-2 transition-all cursor-pointer ${
             activeTab === "win-for-life" ? "text-primary font-bold" : "text-gray-400"
           }`}
         >
           <img src="/images/win_for_life_icon.png" alt="Win for Life" className="w-5 h-5 object-contain" />
           <span className="text-[8px] font-mono tracking-wider">WFL</span>
           {activeTab === "win-for-life" && <span className="nav-active-dot" />}
+        </button>
+        <button
+          onClick={() => setActiveTab("cashpot")}
+          className={`flex flex-col items-center gap-1 py-1 px-2 transition-all cursor-pointer ${
+            activeTab === "cashpot" ? "text-amber-400 font-bold" : "text-gray-400"
+          }`}
+        >
+          <span className="w-5 h-5 rounded bg-amber-500/20 text-amber-400 font-black text-[9px] flex items-center justify-center border border-amber-500/30 font-mono">
+            CP
+          </span>
+          <span className="text-[8px] font-mono tracking-wider">CP</span>
+          {activeTab === "cashpot" && <span className="nav-active-dot" />}
+        </button>
+        <button
+          onClick={() => setActiveTab("pick4")}
+          className={`flex flex-col items-center gap-1 py-1 px-2 transition-all cursor-pointer ${
+            activeTab === "pick4" ? "text-emerald-400 font-bold" : "text-gray-400"
+          }`}
+        >
+          <span className="w-5 h-5 rounded bg-emerald-500/20 text-emerald-400 font-black text-[9px] flex items-center justify-center border border-emerald-500/30 font-mono">
+            P4
+          </span>
+          <span className="text-[8px] font-mono tracking-wider">P4</span>
+          {activeTab === "pick4" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => setActiveTab("syndicate")}

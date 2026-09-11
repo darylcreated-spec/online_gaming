@@ -19,13 +19,14 @@ import {
 } from "lucide-react";
 
 interface MultiBallMathPanelProps {
-  game: "lotto-plus" | "win-for-life";
+  game: "lotto-plus" | "win-for-life" | "cashpot";
 }
 
 export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
   const isLotto = game === "lotto-plus";
-  const gameTitle = isLotto ? "Lotto Plus" : "Win For Life";
-  const bonusLabel = isLotto ? "Powerball" : "Cash Ball";
+  const isCashPot = game === "cashpot";
+  const gameTitle = isLotto ? "Lotto Plus" : (isCashPot ? "Cash Pot" : "Win For Life");
+  const bonusLabel = isLotto ? "Powerball" : (isCashPot ? "Multiplier" : "Cash Ball");
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -39,7 +40,9 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
       if (runBacktest) setBacktestLoading(true);
       else setLoading(true);
 
-      const endpoint = isLotto ? "/api/lotto/math-engine" : "/api/winforlife/math-engine";
+      const endpoint = isLotto 
+        ? "/api/lotto/math-engine" 
+        : (isCashPot ? "/api/cashpot/math-engine" : "/api/winforlife/math-engine");
       const url = runBacktest 
         ? `${endpoint}?backtest=true&sampleSize=${backtestSampleSize}` 
         : endpoint;

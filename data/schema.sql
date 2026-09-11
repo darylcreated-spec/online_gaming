@@ -31,6 +31,43 @@ CREATE TABLE IF NOT EXISTS eligible_combinations (
 
 CREATE INDEX IF NOT EXISTS idx_eligible_nums ON eligible_combinations(num1, num2, num3, num4, num5);
 
+CREATE TABLE IF NOT EXISTS winforlife_draws (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  draw_number INTEGER UNIQUE,
+  draw_date TEXT NOT NULL,
+  num1 INTEGER NOT NULL,
+  num2 INTEGER NOT NULL,
+  num3 INTEGER NOT NULL,
+  num4 INTEGER NOT NULL,
+  num5 INTEGER NOT NULL,
+  num6 INTEGER NOT NULL,
+  cash_ball INTEGER NOT NULL,
+  jackpot TEXT
+);
+
+CREATE TABLE IF NOT EXISTS cashpot_draws (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  draw_number INTEGER UNIQUE,
+  draw_date TEXT NOT NULL,
+  num1 INTEGER NOT NULL,
+  num2 INTEGER NOT NULL,
+  num3 INTEGER NOT NULL,
+  num4 INTEGER NOT NULL,
+  num5 INTEGER NOT NULL,
+  multiplier INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS pick4_draws (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  draw_number INTEGER UNIQUE,
+  draw_date TEXT NOT NULL,
+  draw_time_slot TEXT NOT NULL,
+  digit1 INTEGER NOT NULL,
+  digit2 INTEGER NOT NULL,
+  digit3 INTEGER NOT NULL,
+  digit4 INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT

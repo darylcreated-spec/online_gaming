@@ -24,14 +24,14 @@ export interface MultiBallDrawRecord {
   cash_ball?: number;
 }
 
-export type SupportedGame = "lotto-plus" | "win-for-life";
+export type SupportedGame = "lotto-plus" | "win-for-life" | "cashpot";
 
 export interface GameMathSpecs {
   game: SupportedGame;
   title: string;
   poolMax: number;
   pickCount: number;
-  bonusLabel: "Powerball" | "Cash Ball";
+  bonusLabel: "Powerball" | "Cash Ball" | "Multiplier";
   bonusMax: number;
   targetSumMin: number;
   targetSumMax: number;
@@ -57,6 +57,16 @@ export const GAME_SPECS: Record<SupportedGame, GameMathSpecs> = {
     bonusMax: 3,
     targetSumMin: 65,
     targetSumMax: 110
+  },
+  "cashpot": {
+    game: "cashpot",
+    title: "Cash Pot",
+    poolMax: 20,
+    pickCount: 5,
+    bonusLabel: "Multiplier",
+    bonusMax: 5,
+    targetSumMin: 40,
+    targetSumMax: 65
   }
 };
 
@@ -167,6 +177,9 @@ export function extractMainNumbers(draw: MultiBallDrawRecord, pickCount: number)
 export function extractBonusBall(draw: MultiBallDrawRecord, game: SupportedGame): number {
   if (game === "win-for-life") {
     return Number(draw.cash_ball || 1);
+  }
+  if (game === "cashpot") {
+    return Number((draw as any).multiplier || 1);
   }
   return Number(draw.powerball || 1);
 }
