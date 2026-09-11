@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Tesseract from "tesseract.js";
-import { parseTicketText, checkTicket, CheckResult, parsePlayWheTicketText, checkPlayWheTicket, parseWinForLifeTicketText, checkWinForLifeTicket, parseMultiPlays } from "@/lib/checker";
+import { parseTicketText, checkTicket, CheckResult, parsePlayWheTicketText, checkPlayWheTicket, parseWinForLifeTicketText, checkWinForLifeTicket, checkCashPotTicket, checkPick4Ticket, parseMultiPlays } from "@/lib/checker";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 import { Upload, Camera, CheckCircle2, AlertTriangle, RefreshCw, HelpCircle, Zap } from "lucide-react";
 
@@ -36,7 +36,8 @@ export default function CheckerTab() {
   const [manualWinningNumbers, setManualWinningNumbers] = useState<string[]>(["", "", "", "", "", ""]);
   const [manualWinningPb, setManualWinningPb] = useState<string>("");
   const [manualWinningPlayWheNumber, setManualWinningPlayWheNumber] = useState<string>("");
-  const [selectedGame, setSelectedGame] = useState<"lotto-plus" | "play-whe" | "win-for-life">("lotto-plus");
+  const [selectedGame, setSelectedGame] = useState<"lotto-plus" | "play-whe" | "win-for-life" | "cashpot" | "pick4">("lotto-plus");
+  const [pick4BetType, setPick4BetType] = useState<"STRAIGHT" | "BOX">("STRAIGHT");
 
   // In-App Video Scanner States
   const [showScannerModal, setShowScannerModal] = useState(false);
@@ -210,9 +211,13 @@ export default function CheckerTab() {
 
       // Auto-detect game type from slip headers
       const textLower = text.toLowerCase();
-      let gameType: "lotto-plus" | "play-whe" | "win-for-life" = selectedGame;
+      let gameType: "lotto-plus" | "play-whe" | "win-for-life" | "cashpot" | "pick4" = selectedGame;
       if (textLower.includes("win for life") || textLower.includes("win-for-life") || (textLower.includes("win") && textLower.includes("life"))) {
         gameType = "win-for-life";
+      } else if (textLower.includes("cash pot") || textLower.includes("cashpot") || (textLower.includes("cash") && textLower.includes("pot"))) {
+        gameType = "cashpot";
+      } else if (textLower.includes("pick 4") || textLower.includes("pick4") || textLower.includes("pick-4")) {
+        gameType = "pick4";
       } else if (textLower.includes("play whe") || textLower.includes("play-whe") || (textLower.includes("play") && textLower.includes("whe"))) {
         gameType = "play-whe";
       } else if (textLower.includes("lotto plus") || textLower.includes("lotto-plus") || (textLower.includes("lotto") && textLower.includes("plus"))) {
@@ -247,19 +252,19 @@ export default function CheckerTab() {
         }
       }
 
-      if (gameType === "play-whe") {
+      if (gameType === "play-whe" || gameType === "pick4") {
         for (const line of lines) {
           const cleanLine = line.toLowerCase();
-          if (cleanLine.includes("morning") || cleanLine.includes("morn") || cleanLine.includes("10:30")) {
+          if (cleanLine.includes("morning") || cleanLine.includes("morn") || cleanLine.includes("10:30") || cleanLine.includes("10.30")) {
             timeSlotStr = "Morning";
             break;
-          } else if (cleanLine.includes("midday") || cleanLine.includes("mid") || cleanLine.includes("1:00")) {
+          } else if (cleanLine.includes("midday") || cleanLine.includes("mid") || cleanLine.includes("1:00") || cleanLine.includes("1.00")) {
             timeSlotStr = "Midday";
             break;
-          } else if (cleanLine.includes("afternoon") || cleanLine.includes("aft") || cleanLine.includes("4:00")) {
+          } else if (cleanLine.includes("afternoon") || cleanLine.includes("aft") || cleanLine.includes("4:00") || cleanLine.includes("4.00")) {
             timeSlotStr = "Afternoon";
             break;
-          } else if (cleanLine.includes("evening") || cleanLine.includes("eve") || cleanLine.includes("7:00")) {
+          } else if (cleanLine.includes("evening") || cleanLine.includes("eve") || cleanLine.includes("7:00") || cleanLine.includes("7.00")) {
             timeSlotStr = "Evening";
             break;
           }
@@ -284,6 +289,19 @@ export default function CheckerTab() {
         const firstPlay = parsedPlays[0];
         if (gameType === "play-whe") {
           setPlayWheSelectedNumber(firstPlay.numbers[0] ? firstPlay.numbers[0].toString() : "");
+        } else if (gameType === "pick4") {
+          const newNums = ["", "", "", "", "", ""];
+          for (let i = 0; i < 4; i++) {
+            newNums[i] = firstPlay.numbers[i] !== undefined ? firstPlay.numbers[i].toString() : "";
+          }
+          setTicketNumbers(newNums);
+        } else if (gameType === "cashpot") {
+          setTicketPb(firstPlay.pb ? firstPlay.pb.toString() : "1");
+          const newNums = ["", "", "", "", "", ""];
+          for (let i = 0; i < 5; i++) {
+            newNums[i] = firstPlay.numbers[i] ? firstPlay.numbers[i].toString() : "";
+          }
+          setTicketNumbers(newNums);
         } else if (gameType === "win-for-life") {
           setTicketPb(firstPlay.pb ? firstPlay.pb.toString() : "");
           const newNums = ["", "", "", "", "", ""];
@@ -355,6 +373,10 @@ export default function CheckerTab() {
         }
       } else if (selectedGame === "win-for-life") {
         url = `/api/winforlife/draws?page=1&limit=1&search=${drawNum}`;
+      } else if (selectedGame === "cashpot") {
+        url = `/api/cashpot/draws?page=1&limit=1&search=${drawNum}`;
+      } else if (selectedGame === "pick4") {
+        url = `/api/pick4/draws?page=1&limit=1&search=${drawNum}`;
       } else {
         url = `/api/draws/by-number?number=${drawNum}`;
       }
@@ -363,7 +385,7 @@ export default function CheckerTab() {
       const data = await res.json();
 
       let draw: any = null;
-      if (selectedGame === "win-for-life") {
+      if (selectedGame === "win-for-life" || selectedGame === "cashpot" || selectedGame === "pick4") {
         if (data.success && data.draws && data.draws.length > 0) {
           draw = data.draws[0];
         }
@@ -399,6 +421,10 @@ export default function CheckerTab() {
             };
           } else if (selectedGame === "win-for-life") {
             grade = checkWinForLifeTicket(nums, pb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5, draw.num6], draw.cash_ball);
+          } else if (selectedGame === "cashpot") {
+            grade = checkCashPotTicket(nums, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5], draw.multiplier || pb || 1);
+          } else if (selectedGame === "pick4") {
+            grade = checkPick4Ticket(nums, [draw.digit1, draw.digit2, draw.digit3, draw.digit4], pick4BetType);
           } else {
             grade = checkTicket(nums, pb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5], draw.powerball);
           }
@@ -435,6 +461,13 @@ export default function CheckerTab() {
           const parsedNums = ticketNumbers.slice(0, 6).map(n => parseInt(n)).filter(n => !isNaN(n));
           const cb = parseInt(ticketPb);
           resGraded = checkWinForLifeTicket(parsedNums, cb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5, draw.num6], draw.cash_ball);
+        } else if (selectedGame === "cashpot") {
+          const parsedNums = ticketNumbers.slice(0, 5).map(n => parseInt(n)).filter(n => !isNaN(n));
+          const mult = parseInt(ticketPb) || 1;
+          resGraded = checkCashPotTicket(parsedNums, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5], draw.multiplier || mult);
+        } else if (selectedGame === "pick4") {
+          const parsedNums = ticketNumbers.slice(0, 4).map(n => parseInt(n)).filter(n => !isNaN(n));
+          resGraded = checkPick4Ticket(parsedNums, [draw.digit1, draw.digit2, draw.digit3, draw.digit4], pick4BetType);
         } else {
           const parsedNums = ticketNumbers.slice(0, 5).map(n => parseInt(n)).filter(n => !isNaN(n));
           const pb = parseInt(ticketPb);
@@ -444,7 +477,7 @@ export default function CheckerTab() {
         setCheckResult(resGraded);
         setCheckResults([{
           label: "Play A",
-          numbers: selectedGame === "play-whe" ? [playWheSelectedNumber] : ticketNumbers,
+          numbers: selectedGame === "play-whe" ? [playWheSelectedNumber] : selectedGame === "pick4" ? ticketNumbers.slice(0, 4) : ticketNumbers,
           pb: ticketPb,
           grade: resGraded
         }]);
@@ -470,6 +503,39 @@ export default function CheckerTab() {
         draw_date: ticketDate || "Manual Entry",
         draw_time_slot: ticketTimeSlot,
         winning_number: winNum
+      };
+    } else if (selectedGame === "pick4") {
+      const winDigits = manualWinningNumbers.slice(0, 4).map(n => parseInt(n)).filter(n => !isNaN(n));
+      if (winDigits.length < 4 || winDigits.some(n => n < 0 || n > 9)) {
+        alert("Please enter 4 winning digits between 0 and 9.");
+        return;
+      }
+      draw = {
+        draw_number: parseInt(ticketDrawNum) || 0,
+        draw_date: ticketDate || "Manual Entry",
+        draw_time_slot: ticketTimeSlot,
+        digit1: winDigits[0],
+        digit2: winDigits[1],
+        digit3: winDigits[2],
+        digit4: winDigits[3]
+      };
+    } else if (selectedGame === "cashpot") {
+      const winNums = manualWinningNumbers.slice(0, 5).map(n => parseInt(n)).filter(n => !isNaN(n));
+      const winMult = parseInt(manualWinningPb) || 1;
+      if (winNums.length < 5 || winNums.some(n => n < 1 || n > 20)) {
+        alert("Please enter 5 winning numbers between 1 and 20.");
+        return;
+      }
+      draw = {
+        draw_number: parseInt(ticketDrawNum) || 0,
+        draw_date: "Manual Entry",
+        num1: winNums[0],
+        num2: winNums[1],
+        num3: winNums[2],
+        num4: winNums[3],
+        num5: winNums[4],
+        multiplier: winMult,
+        jackpot: "Manual Check"
       };
     } else if (selectedGame === "win-for-life") {
       const winNums = manualWinningNumbers.slice(0, 6).map(n => parseInt(n)).filter(n => !isNaN(n));
@@ -538,6 +604,10 @@ export default function CheckerTab() {
           };
         } else if (selectedGame === "win-for-life") {
           grade = checkWinForLifeTicket(nums, pb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5, draw.num6], draw.cash_ball);
+        } else if (selectedGame === "cashpot") {
+          grade = checkCashPotTicket(nums, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5], draw.multiplier || pb || 1);
+        } else if (selectedGame === "pick4") {
+          grade = checkPick4Ticket(nums, [draw.digit1, draw.digit2, draw.digit3, draw.digit4], pick4BetType);
         } else {
           grade = checkTicket(nums, pb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5], draw.powerball);
         }
@@ -574,6 +644,13 @@ export default function CheckerTab() {
         const parsedNums = ticketNumbers.slice(0, 6).map(n => parseInt(n)).filter(n => !isNaN(n));
         const cb = parseInt(ticketPb);
         resGraded = checkWinForLifeTicket(parsedNums, cb, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5, draw.num6], draw.cash_ball);
+      } else if (selectedGame === "cashpot") {
+        const parsedNums = ticketNumbers.slice(0, 5).map(n => parseInt(n)).filter(n => !isNaN(n));
+        const mult = parseInt(ticketPb) || 1;
+        resGraded = checkCashPotTicket(parsedNums, [draw.num1, draw.num2, draw.num3, draw.num4, draw.num5], draw.multiplier || mult);
+      } else if (selectedGame === "pick4") {
+        const parsedNums = ticketNumbers.slice(0, 4).map(n => parseInt(n)).filter(n => !isNaN(n));
+        resGraded = checkPick4Ticket(parsedNums, [draw.digit1, draw.digit2, draw.digit3, draw.digit4], pick4BetType);
       } else {
         const parsedNums = ticketNumbers.slice(0, 5).map(n => parseInt(n)).filter(n => !isNaN(n));
         const pb = parseInt(ticketPb);
@@ -583,7 +660,7 @@ export default function CheckerTab() {
       setCheckResult(resGraded);
       setCheckResults([{
         label: "Play A",
-        numbers: selectedGame === "play-whe" ? [playWheSelectedNumber] : ticketNumbers,
+        numbers: selectedGame === "play-whe" ? [playWheSelectedNumber] : selectedGame === "pick4" ? ticketNumbers.slice(0, 4) : ticketNumbers,
         pb: ticketPb,
         grade: resGraded
       }]);
@@ -601,6 +678,7 @@ export default function CheckerTab() {
     setTicketDate("");
     setTicketTimeSlot("Morning");
     setPlayWheSelectedNumber("");
+    setPick4BetType("STRAIGHT");
     setCheckResult(null);
     setCheckResults([]);
     setMultiPlays([]);
@@ -626,6 +704,12 @@ export default function CheckerTab() {
           <p className="text-sm text-gray-400">
             {selectedGame === "play-whe"
               ? "Scan or photograph your Play Whe receipt to verify wins instantly"
+              : selectedGame === "cashpot"
+              ? "Scan or enter your Cash Pot ticket (5/20) with Multiplier to verify wins instantly"
+              : selectedGame === "pick4"
+              ? "Scan or enter your Pick 4 4-digit ticket (Straight or Box) to verify wins instantly"
+              : selectedGame === "win-for-life"
+              ? "Scan or photograph your Win for Life ticket to verify wins instantly"
               : "Scan or photograph your lotto ticket to verify wins instantly"}
           </p>
         </div>
@@ -646,6 +730,8 @@ export default function CheckerTab() {
             <option value="lotto-plus">Lotto Plus (Active)</option>
             <option value="play-whe">Play Whe (Active)</option>
             <option value="win-for-life">Win for Life (Active)</option>
+            <option value="cashpot">Cash Pot 5/20 (Active)</option>
+            <option value="pick4">Pick 4 (Active)</option>
           </select>
         </div>
         <div className="text-[10px] text-gray-500 font-mono">
@@ -795,11 +881,11 @@ export default function CheckerTab() {
                     type="number"
                     value={ticketDrawNum}
                     onChange={(e) => setTicketDrawNum(e.target.value)}
-                    placeholder={selectedGame === "win-for-life" ? "e.g. 447" : selectedGame === "play-whe" ? "e.g. 27178" : "e.g. 2537"}
+                    placeholder={selectedGame === "win-for-life" ? "e.g. 447" : selectedGame === "play-whe" ? "e.g. 27178" : selectedGame === "cashpot" ? "e.g. 155" : selectedGame === "pick4" ? "e.g. 703" : "e.g. 2537"}
                     className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground"
                   />
                 </div>
-                {selectedGame === "play-whe" ? (
+                {selectedGame === "play-whe" || selectedGame === "pick4" ? (
                   <div className="space-y-1.5">
                     <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Time Slot</label>
                     <select
@@ -827,6 +913,38 @@ export default function CheckerTab() {
                 )}
               </div>
 
+              {/* Pick 4 Bet Type Selector */}
+              {selectedGame === "pick4" && (
+                <div className="flex items-center justify-between p-2.5 bg-slate-950/80 rounded-lg border border-white/10">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Bet Mode:</span>
+                    <button
+                      type="button"
+                      onClick={() => setPick4BetType("STRAIGHT")}
+                      className={`px-3 py-1 rounded text-xs font-bold font-mono transition-all cursor-pointer ${
+                        pick4BetType === "STRAIGHT"
+                          ? "bg-primary text-slate-950 shadow-[0_0_10px_rgba(56,189,248,0.3)]"
+                          : "bg-slate-900 text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      STRAIGHT (Exact Order · $5,000)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPick4BetType("BOX")}
+                      className={`px-3 py-1 rounded text-xs font-bold font-mono transition-all cursor-pointer ${
+                        pick4BetType === "BOX"
+                          ? "bg-amber-400 text-slate-950 shadow-[0_0_10px_rgba(251,191,36,0.3)]"
+                          : "bg-slate-900 text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      BOX (Any Order · Up to $1,250)
+                    </button>
+                  </div>
+                  <span className="text-[9px] text-gray-500 font-mono hidden sm:inline">$1.00 BASE</span>
+                </div>
+              )}
+
               {/* Plays Workspace */}
               {multiPlays.length > 0 ? (
                 <div className="space-y-4 border-t border-white/5 pt-3">
@@ -835,7 +953,7 @@ export default function CheckerTab() {
                     <button
                       onClick={() => {
                         const nextLabel = String.fromCharCode(65 + multiPlays.length);
-                        const defaultCount = selectedGame === "win-for-life" ? 6 : selectedGame === "play-whe" ? 1 : 5;
+                        const defaultCount = selectedGame === "win-for-life" ? 6 : selectedGame === "play-whe" ? 1 : selectedGame === "pick4" ? 4 : 5;
                         setMultiPlays([
                           ...multiPlays,
                           {
@@ -861,7 +979,7 @@ export default function CheckerTab() {
                               const updated = multiPlays.filter((_, idx) => idx !== playIdx);
                               setMultiPlays(updated);
                             }}
-                            className="text-[10px] text-red-400 hover:text-red-300 font-bold"
+                            className="text-[10px] text-red-400 hover:text-red-300 font-bold cursor-pointer"
                           >
                             REMOVE
                           </button>
@@ -884,6 +1002,28 @@ export default function CheckerTab() {
                               className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-1.5 text-xs text-foreground font-bold text-primary"
                             />
                           </div>
+                        ) : selectedGame === "pick4" ? (
+                          <div className="space-y-1">
+                            <label className="text-[10px] text-gray-500 uppercase">4 Digits (0-9)</label>
+                            <div className="grid grid-cols-4 gap-2">
+                              {play.numbers.slice(0, 4).map((d, dIdx) => (
+                                <input
+                                  key={dIdx}
+                                  type="number"
+                                  min="0"
+                                  max="9"
+                                  value={d}
+                                  onChange={(e) => {
+                                    const updated = [...multiPlays];
+                                    updated[playIdx].numbers[dIdx] = e.target.value;
+                                    setMultiPlays(updated);
+                                  }}
+                                  placeholder={`D${dIdx + 1}`}
+                                  className="text-center bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg py-1.5 text-xs text-foreground font-bold"
+                                />
+                              ))}
+                            </div>
+                          </div>
                         ) : (
                           <div className="flex gap-2 items-end">
                             <div className="flex-1 space-y-1">
@@ -894,7 +1034,7 @@ export default function CheckerTab() {
                                     key={numIdx}
                                     type="number"
                                     min="1"
-                                    max={selectedGame === "win-for-life" ? 28 : 35}
+                                    max={selectedGame === "win-for-life" ? 28 : selectedGame === "cashpot" ? 20 : 36}
                                     value={num}
                                     onChange={(e) => {
                                       const updated = [...multiPlays];
@@ -910,19 +1050,19 @@ export default function CheckerTab() {
 
                             <div className="w-16 space-y-1">
                               <label className="text-[10px] text-gray-500 uppercase">
-                                {selectedGame === "win-for-life" ? "CB" : "PB"}
+                                {selectedGame === "win-for-life" ? "CB" : selectedGame === "cashpot" ? "MULT" : "PB"}
                               </label>
                               <input
                                 type="number"
                                 min="1"
-                                max={selectedGame === "win-for-life" ? 3 : 10}
+                                max={selectedGame === "win-for-life" ? 3 : selectedGame === "cashpot" ? 5 : 10}
                                 value={play.pb}
                                 onChange={(e) => {
                                   const updated = [...multiPlays];
                                   updated[playIdx].pb = e.target.value;
                                   setMultiPlays(updated);
                                 }}
-                                placeholder={selectedGame === "win-for-life" ? "CB" : "PB"}
+                                placeholder={selectedGame === "win-for-life" ? "CB" : selectedGame === "cashpot" ? "1-5" : "PB"}
                                 className="w-full text-center bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg py-1.5 text-xs text-foreground font-bold text-primary"
                               />
                             </div>
@@ -938,7 +1078,7 @@ export default function CheckerTab() {
                     <span className="text-[10px] text-gray-400 uppercase tracking-wider font-extrabold">Single Play Review</span>
                     <button
                       onClick={() => {
-                        const count = selectedGame === "win-for-life" ? 6 : selectedGame === "play-whe" ? 1 : 5;
+                        const count = selectedGame === "win-for-life" ? 6 : selectedGame === "play-whe" ? 1 : selectedGame === "pick4" ? 4 : 5;
                         setMultiPlays([
                           {
                             label: "A",
@@ -947,7 +1087,7 @@ export default function CheckerTab() {
                           }
                         ]);
                       }}
-                      className="text-[10px] text-primary hover:text-primary/80 font-bold"
+                      className="text-[10px] text-primary hover:text-primary/80 font-bold cursor-pointer"
                     >
                       SWITCH TO MULTI-PLAY
                     </button>
@@ -968,6 +1108,65 @@ export default function CheckerTab() {
                         />
                       </div>
                     </div>
+                  ) : selectedGame === "pick4" ? (
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-primary">Your 4 Digits (0-9)</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {ticketNumbers.slice(0, 4).map((num, idx) => (
+                          <input
+                            key={idx}
+                            type="number"
+                            min="0"
+                            max="9"
+                            value={num}
+                            onChange={(e) => {
+                              const newNums = [...ticketNumbers];
+                              newNums[idx] = e.target.value;
+                              setTicketNumbers(newNums);
+                            }}
+                            placeholder={`D${idx + 1}`}
+                            className="text-center bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg py-2 text-sm text-foreground font-bold"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ) : selectedGame === "cashpot" ? (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-amber-400">Multiplier (1-5)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={ticketPb}
+                          onChange={(e) => setTicketPb(e.target.value)}
+                          placeholder="e.g. 1"
+                          className="w-full bg-slate-950 border border-white/10 focus:border-amber-400 focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground text-amber-400 font-bold"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-20)</label>
+                        <div className="flex gap-2">
+                          {ticketNumbers.slice(0, 5).map((num, idx) => (
+                            <input
+                              key={idx}
+                              type="number"
+                              min="1"
+                              max="20"
+                              value={num}
+                              onChange={(e) => {
+                                const newNums = [...ticketNumbers];
+                                newNums[idx] = e.target.value;
+                                setTicketNumbers(newNums);
+                              }}
+                              placeholder={`#${idx + 1}`}
+                              className="w-full text-center bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg py-2 text-sm text-foreground font-bold"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </>
                   ) : selectedGame === "win-for-life" ? (
                     <>
                       <div className="space-y-1.5">
@@ -1021,14 +1220,14 @@ export default function CheckerTab() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-35)</label>
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-36)</label>
                         <div className="flex gap-2">
                           {ticketNumbers.slice(0, 5).map((num, idx) => (
                             <input
                               key={idx}
                               type="number"
                               min="1"
-                              max="35"
+                              max="36"
                               value={num}
                               onChange={(e) => {
                                 const newNums = [...ticketNumbers];
@@ -1091,6 +1290,64 @@ export default function CheckerTab() {
                       placeholder="e.g. 10"
                       className="w-full bg-slate-950 border border-white/10 focus:border-primary focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground text-primary font-bold"
                     />
+                  </div>
+                ) : selectedGame === "pick4" ? (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Winning Digits (4 Digits, 0-9)</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {manualWinningNumbers.slice(0, 4).map((num, idx) => (
+                        <input
+                          key={idx}
+                          type="number"
+                          min="0"
+                          max="9"
+                          value={num}
+                          onChange={(e) => {
+                            const newNums = [...manualWinningNumbers];
+                            newNums[idx] = e.target.value;
+                            setManualWinningNumbers(newNums);
+                          }}
+                          placeholder={`D${idx + 1}`}
+                          className="w-full text-center bg-slate-950 border border-white/10 focus:border-rose-500 focus:outline-none rounded-lg py-2 text-sm text-foreground font-bold"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : selectedGame === "cashpot" ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5 col-span-2">
+                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Official Winning Numbers (5 Balls, 1-20)</label>
+                      <div className="flex gap-2">
+                        {manualWinningNumbers.slice(0, 5).map((num, idx) => (
+                          <input
+                            key={idx}
+                            type="number"
+                            min="1"
+                            max="20"
+                            value={num}
+                            onChange={(e) => {
+                              const newNums = [...manualWinningNumbers];
+                              newNums[idx] = e.target.value;
+                              setManualWinningNumbers(newNums);
+                            }}
+                            placeholder={`#${idx + 1}`}
+                            className="w-full text-center bg-slate-950 border border-white/10 focus:border-rose-500 focus:outline-none rounded-lg py-2 text-sm text-foreground font-bold"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-amber-400">Official Multiplier (1-5)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={manualWinningPb}
+                        onChange={(e) => setManualWinningPb(e.target.value)}
+                        placeholder="e.g. 1"
+                        className="w-full bg-slate-950 border border-white/10 focus:border-amber-400 focus:outline-none rounded-lg px-3.5 py-2 text-sm text-foreground text-amber-400 font-bold"
+                      />
+                    </div>
                   </div>
                 ) : selectedGame === "win-for-life" ? (
                   <div className="grid grid-cols-2 gap-4">
@@ -1168,7 +1425,7 @@ export default function CheckerTab() {
 
                 <button
                   onClick={handleManualCheck}
-                  className="w-full py-2 bg-slate-950 hover:bg-slate-900 border border-rose-500/40 hover:border-rose-500 text-rose-400 rounded-lg text-xs font-mono font-semibold tracking-wider transition-all"
+                  className="w-full py-2 bg-slate-950 hover:bg-slate-900 border border-rose-500/40 hover:border-rose-500 text-rose-400 rounded-lg text-xs font-mono font-semibold tracking-wider transition-all cursor-pointer"
                 >
                   PERFORM MANUAL VERIFICATION
                 </button>
@@ -1197,8 +1454,32 @@ export default function CheckerTab() {
             {selectedGame !== "play-whe" && (
               <div className="bg-slate-950/80 px-4 py-2 rounded-lg border border-white/5 font-mono text-left md:text-right shrink-0">
                 <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1">Official Winning Numbers</span>
-                <div className="flex gap-1.5">
-                  {selectedGame === "win-for-life" ? (
+                <div className="flex gap-1.5 items-center">
+                  {selectedGame === "pick4" ? (
+                    <>
+                      {[winningDraw.digit1, winningDraw.digit2, winningDraw.digit3, winningDraw.digit4].map((d, i) => (
+                        <div key={i} className="w-6 h-6 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs">
+                          {d}
+                        </div>
+                      ))}
+                      {winningDraw.draw_time_slot && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-gray-400 border border-white/10 ml-1">
+                          {winningDraw.draw_time_slot}
+                        </span>
+                      )}
+                    </>
+                  ) : selectedGame === "cashpot" ? (
+                    <>
+                      {[winningDraw.num1, winningDraw.num2, winningDraw.num3, winningDraw.num4, winningDraw.num5].map((num, i) => (
+                        <div key={i} className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                          {num}
+                        </div>
+                      ))}
+                      <div className="w-6 h-6 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-400 flex items-center justify-center font-bold text-[10px]">
+                        {winningDraw.multiplier ? `${winningDraw.multiplier}X` : "1X"}
+                      </div>
+                    </>
+                  ) : selectedGame === "win-for-life" ? (
                     <>
                       {[winningDraw.num1, winningDraw.num2, winningDraw.num3, winningDraw.num4, winningDraw.num5, winningDraw.num6].map((num, i) => (
                         <div key={i} className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
@@ -1265,6 +1546,42 @@ export default function CheckerTab() {
                         </span>
                       </div>
                     </div>
+                  ) : selectedGame === "pick4" ? (
+                    <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-3">
+                      <div className="flex gap-2 items-center">
+                        {resultItem.numbers.slice(0, 4).map((digitStr, i) => {
+                          const d = parseInt(digitStr);
+                          const winDigits = [winningDraw.digit1, winningDraw.digit2, winningDraw.digit3, winningDraw.digit4];
+                          const isPosMatch = !isNaN(d) && d === winDigits[i];
+                          return (
+                            <div
+                              key={i}
+                              className={`w-9 h-9 rounded-lg flex flex-col items-center justify-center font-bold border ${
+                                isPosMatch
+                                  ? "bg-green-500 border-green-500 text-slate-950 shadow-[0_0_8px_rgba(74,222,128,0.3)]"
+                                  : isWinner
+                                  ? "bg-amber-400/20 border-amber-400/40 text-amber-400"
+                                  : "bg-slate-900 border-white/10 text-gray-400"
+                              }`}
+                            >
+                              <span className="text-[9px] text-gray-400 leading-none">D{i + 1}</span>
+                              <span className="text-sm">{digitStr}</span>
+                            </div>
+                          );
+                        })}
+                        <span className="text-[10px] text-gray-400 font-mono ml-2">
+                          Type: <strong className="text-primary">{pick4BetType}</strong>
+                        </span>
+                      </div>
+
+                      <div className="text-left lg:text-right font-mono text-xs">
+                        {isWinner ? (
+                          <span className="text-green-400 font-extrabold block">Est. Payout: {grade.prizeEstimate}</span>
+                        ) : (
+                          <span className="text-gray-500 block">No Match</span>
+                        )}
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-3">
                       <div className="flex gap-1.5 items-center">
@@ -1283,17 +1600,30 @@ export default function CheckerTab() {
                             </div>
                           );
                         })}
-                        <div
-                          className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border ${
-                            grade.pbMatched
-                              ? selectedGame === "win-for-life"
-                                ? "bg-emerald-500 border-emerald-555 text-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
-                                : "bg-primary border-primary text-slate-950 shadow-[0_0_8px_rgba(56,189,248,0.3)]"
-                              : "bg-slate-900 border-white/10 text-gray-505"
-                          }`}
-                        >
-                          {resultItem.pb}
-                        </div>
+                        {selectedGame === "cashpot" ? (
+                          <div
+                            className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border ${
+                              resultItem.pb && parseInt(resultItem.pb) > 1
+                                ? "bg-amber-400 border-amber-400 text-slate-950 shadow-[0_0_8px_rgba(251,191,36,0.3)]"
+                                : "bg-slate-900 border-white/10 text-gray-400"
+                            }`}
+                            title="Cash Pot Multiplier"
+                          >
+                            {resultItem.pb ? `${resultItem.pb}X` : "1X"}
+                          </div>
+                        ) : (
+                          <div
+                            className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border ${
+                              grade.pbMatched
+                                ? selectedGame === "win-for-life"
+                                  ? "bg-emerald-500 border-emerald-555 text-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                                  : "bg-primary border-primary text-slate-950 shadow-[0_0_8px_rgba(56,189,248,0.3)]"
+                                : "bg-slate-900 border-white/10 text-gray-505"
+                            }`}
+                          >
+                            {resultItem.pb}
+                          </div>
+                        )}
                       </div>
 
                       <div className="text-left lg:text-right font-mono text-xs">
@@ -1320,6 +1650,12 @@ export default function CheckerTab() {
                 <p className="text-[10px] text-gray-400 mt-1">
                   {selectedGame === "play-whe"
                     ? "Play Whe payouts are fixed at 26-to-1 based on official NLCB regulations."
+                    : selectedGame === "pick4"
+                    ? pick4BetType === "STRAIGHT"
+                      ? "Pick 4 Straight pays $5,000.00 TT per $1.00 wagered for exact 4-digit order."
+                      : "Pick 4 Box pays out based on combination permutations (4-Way, 6-Way, 12-Way, or 24-Way)."
+                    : selectedGame === "cashpot"
+                    ? "Cash Pot pays $100,000 for Match 5, with multiplier multiplying tiers 2 through 4!"
                     : selectedGame === "win-for-life"
                     ? "Win for Life payouts include lump sums or ongoing monthly distributions depending on top tier hit."
                     : "Lotto Plus payouts are parimutuel and may vary based on actual draw sales and pool sizes."}
@@ -1367,6 +1703,10 @@ export default function CheckerTab() {
               <p className="text-xs text-gray-500 mt-1">
                 {selectedGame === "play-whe"
                   ? "Your mark did not match the official winning number. Try interpreting companion gaps!"
+                  : selectedGame === "pick4"
+                  ? "Your 4-digit combinations did not match the winning draw."
+                  : selectedGame === "cashpot"
+                  ? "None of your 5 numbers matched the winning draw."
                   : selectedGame === "win-for-life"
                   ? `None of your plays matched. Review statistical pools!`
                   : `None of your plays matched. Keep playing and analyze deltas to build better pools!`}

@@ -502,6 +502,113 @@ export function checkWinForLifeTicket(
 }
 
 /**
+ * Checks a Cash Pot ticket against winning numbers and calculates the prize tier.
+ */
+export function checkCashPotTicket(
+  ticketNumbers: number[],
+  winningNumbers: number[],
+  multiplier: number = 1
+): CheckResult {
+  const tNums = [...ticketNumbers].sort((a, b) => a - b);
+  const wNums = [...winningNumbers].sort((a, b) => a - b);
+
+  const matchedNumbers = tNums.filter(n => wNums.includes(n));
+  const matchCount = matchedNumbers.length;
+
+  let tierName = "No Match";
+  let prizeEstimate = "$0.00";
+  let isWinner = false;
+
+  const multFactor = multiplier > 1 ? multiplier : 1;
+
+  if (matchCount === 5) {
+    isWinner = true;
+    tierName = "Match 5 of 5 (JACKPOT)";
+    prizeEstimate = "$100,000.00 TT";
+  } else if (matchCount === 4) {
+    isWinner = true;
+    tierName = multiplier > 1 ? `Match 4 of 5 (${multiplier}x Multiplier)` : "Match 4 of 5";
+    prizeEstimate = `$${(1000 * multFactor).toLocaleString()}.00 TT`;
+  } else if (matchCount === 3) {
+    isWinner = true;
+    tierName = multiplier > 1 ? `Match 3 of 5 (${multiplier}x Multiplier)` : "Match 3 of 5";
+    prizeEstimate = `$${(20 * multFactor).toLocaleString()}.00 TT`;
+  } else if (matchCount === 2) {
+    isWinner = true;
+    tierName = multiplier > 1 ? `Match 2 of 5 (${multiplier}x Multiplier)` : "Match 2 of 5 (Free Play)";
+    prizeEstimate = multiplier > 1 ? `$${(4 * multFactor).toLocaleString()}.00 TT` : "Free $4.00 Quick Pick";
+  }
+
+  return {
+    matchedNumbers,
+    pbMatched: multiplier > 1,
+    tierName,
+    prizeEstimate,
+    isWinner
+  };
+}
+
+/**
+ * Checks a Pick 4 ticket against winning digits for Straight or Box play.
+ */
+export function checkPick4Ticket(
+  ticketDigits: number[],
+  winningDigits: number[],
+  betType: "STRAIGHT" | "BOX" = "STRAIGHT"
+): CheckResult {
+  const isStraightMatch = 
+    ticketDigits.length === 4 &&
+    winningDigits.length === 4 &&
+    ticketDigits[0] === winningDigits[0] &&
+    ticketDigits[1] === winningDigits[1] &&
+    ticketDigits[2] === winningDigits[2] &&
+    ticketDigits[3] === winningDigits[3];
+
+  const sortedTicket = [...ticketDigits].sort();
+  const sortedWinning = [...winningDigits].sort();
+  const isBoxMatch = sortedTicket.every((v, i) => v === sortedWinning[i]);
+
+  const matchedPositions: number[] = [];
+  for (let i = 0; i < 4; i++) {
+    if (ticketDigits[i] === winningDigits[i]) {
+      matchedPositions.push(ticketDigits[i]);
+    }
+  }
+
+  let tierName = "No Match";
+  let prizeEstimate = "$0.00";
+  let isWinner = false;
+
+  const counts = new Map<number, number>();
+  winningDigits.forEach(d => counts.set(d, (counts.get(d) || 0) + 1));
+  const maxRepeats = Math.max(...Array.from(counts.values()));
+  const boxWays = maxRepeats === 4 ? 1 : maxRepeats === 3 ? 4 : maxRepeats === 2 && counts.size === 2 ? 6 : maxRepeats === 2 ? 12 : 24;
+  const boxPayout = boxWays === 4 ? 1250 : boxWays === 6 ? 833 : boxWays === 12 ? 417 : 208;
+
+  if (betType === "STRAIGHT") {
+    if (isStraightMatch) {
+      isWinner = true;
+      tierName = "Pick 4 STRAIGHT (Exact Order)";
+      prizeEstimate = "$5,000.00 TT per $1.00 wagered";
+    }
+  } else {
+    if (isBoxMatch) {
+      isWinner = true;
+      tierName = `Pick 4 ${boxWays}-Way BOX (${isStraightMatch ? "Exact Order" : "Any Order"})`;
+      prizeEstimate = `$${boxPayout}.00 TT per $1.00 wagered`;
+    }
+  }
+
+  return {
+    matchedNumbers: isWinner ? (isStraightMatch ? ticketDigits : sortedTicket) : matchedPositions,
+    pbMatched: isStraightMatch,
+    tierName,
+    prizeEstimate,
+    isWinner
+  };
+}
+
+/**
  * Parses OCR extracted text to find potential Win for Life ticket numbers.
  */
 export function parseWinForLifeTicketText(text: string): {
@@ -596,7 +703,7 @@ export interface ExtractedPlay {
  */
 export function parseMultiPlays(
   text: string,
-  gameType: "lotto-plus" | "play-whe" | "win-for-life"
+  gameType: "lotto-plus" | "play-whe" | "win-for-life" | "cashpot" | "pick4"
 ): ExtractedPlay[] {
   const lines = text.split("\n");
   const plays: ExtractedPlay[] = [];
@@ -622,7 +729,7 @@ export function parseMultiPlays(
           const prevToken = tokens[i - 1]?.toLowerCase();
           if (prevToken === "pb" || prevToken === "powerball" || prevToken === "power" || prevToken === "p/b") {
             pbCandidate = val;
-          } else if (val >= 1 && val <= 35) {
+          } else if (val >= 1 && val <= 36) {
             parsedNums.push(val);
           } else if (val >= 1 && val <= 10 && parsedNums.length >= 5) {
             pbCandidate = val;
@@ -674,6 +781,48 @@ export function parseMultiPlays(
           label,
           numbers: uniqueNums.slice(0, 6),
           pb: cbCandidate || 1
+        });
+        playIndex++;
+      }
+
+    } else if (gameType === "cashpot") {
+      const tokens = cleanLine.replace(/[^a-zA-Z0-9\s-]/g, " ").split(/\s+/).filter(t => t.length > 0);
+      const parsedNums: number[] = [];
+      let multCandidate: number | null = null;
+
+      for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
+        const val = parseInt(token);
+        if (!isNaN(val)) {
+          const prevToken = tokens[i - 1]?.toLowerCase();
+          if (prevToken === "mult" || prevToken === "multiplier" || prevToken === "x") {
+            multCandidate = val;
+          } else if (val >= 1 && val <= 20) {
+            parsedNums.push(val);
+          } else if (val >= 1 && val <= 5 && parsedNums.length >= 5) {
+            multCandidate = val;
+          }
+        }
+      }
+
+      const uniqueNums = Array.from(new Set(parsedNums)).sort((a, b) => a - b);
+      if (uniqueNums.length >= 5) {
+        plays.push({
+          label,
+          numbers: uniqueNums.slice(0, 5),
+          pb: multCandidate || 1
+        });
+        playIndex++;
+      }
+
+    } else if (gameType === "pick4") {
+      const rawDigits = cleanLine.replace(/[^0-9]/g, "");
+      if (rawDigits.length >= 4) {
+        const digits = rawDigits.slice(0, 4).split("").map(d => parseInt(d));
+        plays.push({
+          label,
+          numbers: digits,
+          pb: undefined
         });
         playIndex++;
       }
