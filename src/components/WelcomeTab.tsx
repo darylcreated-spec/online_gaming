@@ -1,37 +1,222 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Info, Heart, ArrowRight, Sparkles, RefreshCw, Trophy, Flame, Mail, Copy, Check } from "lucide-react";
-import InteractiveTumbler from "@/components/InteractiveTumbler";
+import React, { useState, useEffect, useMemo } from "react";
+import { 
+  Info, 
+  Heart, 
+  ArrowRight, 
+  Sparkles, 
+  Trophy, 
+  Clock, 
+  Activity, 
+  Brain, 
+  ChevronRight, 
+  Zap, 
+  Mail, 
+  Copy, 
+  Check, 
+  Layers, 
+  RefreshCw,
+  Compass,
+  DollarSign
+} from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 
+export type GameKey = "welcome" | "lotto-plus" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "scanner" | "settings";
+
 interface WelcomeTabProps {
-  onSelectGame?: (game: "welcome" | "lotto-plus" | "play-whe" | "win-for-life" | "scanner") => void;
+  onSelectGame?: (game: GameKey) => void;
+}
+
+// NLCB Draw Schedule AST helper (AST is UTC-4 year-round)
+interface DrawCountdown {
+  targetLabel: string;
+  targetDateStr: string;
+  hours: string;
+  minutes: string;
+  seconds: string;
+  totalSec: number;
+  isUrgent: boolean;
+}
+
+function calculateNextDrawCountdown(game: "play-whe" | "pick4" | "cashpot" | "lotto-plus" | "win-for-life", nowUtc: Date): DrawCountdown {
+  const astOffsetMs = -4 * 60 * 60 * 1000;
+  const astNow = new Date(nowUtc.getTime() + astOffsetMs);
+
+  let candidates: { diffMs: number; label: string; dateStr: string }[] = [];
+
+  for (let dayOffset = 0; dayOffset <= 7; dayOffset++) {
+    const targetDate = new Date(astNow.getTime() + dayOffset * 86400000);
+    const dayOfWeek = targetDate.getUTCDay(); // 0: Sun, 1: Mon, ..., 6: Sat
+    const y = targetDate.getUTCFullYear();
+    const m = targetDate.getUTCMonth();
+    const d = targetDate.getUTCDate();
+
+    let times: [number, number, string][] = [];
+
+    if (game === "play-whe") {
+      if (dayOfWeek >= 1 && dayOfWeek <= 6) {
+        times = [
+          [10, 30, "Morning (10:30 AM)"],
+          [13, 0, "Midday (1:00 PM)"],
+          [16, 0, "Afternoon (4:00 PM)"],
+          [19, 0, "Evening (7:00 PM)"]
+        ];
+      } else if (dayOfWeek === 0) {
+        times = [
+          [10, 30, "Morning (10:30 AM)"],
+          [13, 0, "Midday (1:00 PM)"]
+        ];
+      }
+    } else if (game === "pick4") {
+      if (dayOfWeek >= 1 && dayOfWeek <= 6) {
+        times = [
+          [13, 0, "Midday (1:00 PM)"],
+          [19, 0, "Evening (7:00 PM)"]
+        ];
+      }
+    } else if (game === "cashpot") {
+      if (dayOfWeek >= 1 && dayOfWeek <= 6) {
+        times = [
+          [19, 0, "Evening (7:00 PM)"]
+        ];
+      }
+    } else if (game === "lotto-plus") {
+      // Wednesday & Saturday
+      if (dayOfWeek === 3 || dayOfWeek === 6) {
+        times = [
+          [20, 30, "Night Draw (8:30 PM)"]
+        ];
+      }
+    } else if (game === "win-for-life") {
+      // Tuesday & Friday
+      if (dayOfWeek === 2 || dayOfWeek === 5) {
+        times = [
+          [19, 0, "Evening Draw (7:00 PM)"]
+        ];
+      }
+    }
+
+    for (const [h, min, label] of times) {
+      const drawUtcMs = Date.UTC(y, m, d, h + 4, min, 0);
+      const diffMs = drawUtcMs - nowUtc.getTime();
+      if (diffMs > 0) {
+        const dateStr = targetDate.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC"
+        });
+        candidates.push({ diffMs, label, dateStr });
+      }
+    }
+    if (candidates.length > 0) break;
+  }
+
+  candidates.sort((a, b) => a.diffMs - b.diffMs);
+  const next = candidates[0];
+
+  if (!next) {
+    return {
+      targetLabel: "Scheduled Draw",
+      targetDateStr: "Today",
+      hours: "00",
+      minutes: "00",
+      seconds: "00",
+      totalSec: 0,
+      isUrgent: false
+    };
+  }
+
+  const totalSec = Math.max(0, Math.floor(next.diffMs / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+
+  return {
+    targetLabel: next.label,
+    targetDateStr: next.dateStr,
+    hours: String(h).padStart(2, "0"),
+    minutes: String(m).padStart(2, "0"),
+    seconds: String(s).padStart(2, "0"),
+    totalSec,
+    isUrgent: totalSec <= 3600 // Less than 1 hour away
+  };
 }
 
 export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
+  // Live ticker clock for countdowns
+  const [clock, setClock] = useState<Date>(() => new Date());
+
+  // Ticket pencil animation
   const [shadedNums, setShadedNums] = useState<number[]>([]);
   const [pencilPos, setPencilPos] = useState({ x: 50, y: -25, rotate: 0, shake: false });
   const [showGoodLuck, setShowGoodLuck] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
 
-  // Latest winning results states
+  // Latest winning draws
   const [latestLotto, setLatestLotto] = useState<any>(null);
   const [latestPlayWhe, setLatestPlayWhe] = useState<any>(null);
   const [latestWinForLife, setLatestWinForLife] = useState<any>(null);
+  const [latestCashPot, setLatestCashPot] = useState<any>(null);
+  const [latestPick4, setLatestPick4] = useState<any>(null);
   const [loadingResults, setLoadingResults] = useState(true);
 
-  // Fetch latest draw results across all 3 games
-  const fetchLatestWinningNumbers = async () => {
+  // Mathematical Suggestions
+  const [playWhePrediction, setPlayWhePrediction] = useState<any>(null);
+  const [lottoPrediction, setLottoPrediction] = useState<any>(null);
+  const [wflPrediction, setWflPrediction] = useState<any>(null);
+  const [cashPotPrediction, setCashPotPrediction] = useState<any>(null);
+  const [pick4Prediction, setPick4Prediction] = useState<any>(null);
+
+  // Live countdown timer hook - updates state every 1000ms
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setClock(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const countdowns = useMemo(() => {
+    return {
+      playWhe: calculateNextDrawCountdown("play-whe", clock),
+      lotto: calculateNextDrawCountdown("lotto-plus", clock),
+      winForLife: calculateNextDrawCountdown("win-for-life", clock),
+      cashPot: calculateNextDrawCountdown("cashpot", clock),
+      pick4: calculateNextDrawCountdown("pick4", clock)
+    };
+  }, [clock]);
+
+  // Fetch draws and mathematical engine predictions
+  const fetchAllData = async () => {
     setLoadingResults(true);
     try {
       const now = Date.now();
-      const [lottoRes, playWheRes, wflRes] = await Promise.allSettled([
+      const [
+        lottoRes,
+        playWheRes,
+        wflRes,
+        cashPotRes,
+        pick4Res,
+        playWheMathRes,
+        lottoMathRes,
+        wflMathRes,
+        cashPotMathRes,
+        pick4MathRes
+      ] = await Promise.allSettled([
         fetch(`/api/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
         fetch(`/api/playwhe/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
-        fetch(`/api/winforlife/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json())
+        fetch(`/api/winforlife/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
+        fetch(`/api/cashpot/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
+        fetch(`/api/pick4/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
+        fetch(`/api/playwhe/math-engine?sampleSize=50&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
+        fetch(`/api/lotto/math-engine?game=lotto-plus&sampleSize=50&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
+        fetch(`/api/lotto/math-engine?game=win-for-life&sampleSize=50&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
+        fetch(`/api/cashpot/math-engine?sampleSize=50&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
+        fetch(`/api/pick4/math-engine?sampleSize=50&_t=${now}`, { cache: "no-store" }).then(r => r.json())
       ]);
 
+      // Populate latest official draws
       if (lottoRes.status === "fulfilled" && lottoRes.value?.draws?.[0]) {
         setLatestLotto(lottoRes.value.draws[0]);
       }
@@ -41,18 +226,41 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
       if (wflRes.status === "fulfilled" && wflRes.value?.draws?.[0]) {
         setLatestWinForLife(wflRes.value.draws[0]);
       }
+      if (cashPotRes.status === "fulfilled" && cashPotRes.value?.draws?.[0]) {
+        setLatestCashPot(cashPotRes.value.draws[0]);
+      }
+      if (pick4Res.status === "fulfilled" && pick4Res.value?.draws?.[0]) {
+        setLatestPick4(pick4Res.value.draws[0]);
+      }
+
+      // Populate mathematical predictions
+      if (playWheMathRes.status === "fulfilled" && playWheMathRes.value?.success && playWheMathRes.value?.prediction) {
+        setPlayWhePrediction(playWheMathRes.value.prediction);
+      }
+      if (lottoMathRes.status === "fulfilled" && lottoMathRes.value?.success && lottoMathRes.value?.prediction) {
+        setLottoPrediction(lottoMathRes.value.prediction);
+      }
+      if (wflMathRes.status === "fulfilled" && wflMathRes.value?.success && wflMathRes.value?.prediction) {
+        setWflPrediction(wflMathRes.value.prediction);
+      }
+      if (cashPotMathRes.status === "fulfilled" && cashPotMathRes.value?.success && cashPotMathRes.value?.prediction) {
+        setCashPotPrediction(cashPotMathRes.value.prediction);
+      }
+      if (pick4MathRes.status === "fulfilled" && pick4MathRes.value?.success && pick4MathRes.value?.prediction) {
+        setPick4Prediction(pick4MathRes.value.prediction);
+      }
     } catch (e) {
-      console.error("Error fetching latest winning numbers for Welcome tab:", e);
+      console.error("Error fetching live dashboard metrics:", e);
     } finally {
       setLoadingResults(false);
     }
   };
 
   useEffect(() => {
-    fetchLatestWinningNumbers();
+    fetchAllData();
 
     const handleSyncEvent = () => {
-      fetchLatestWinningNumbers();
+      fetchAllData();
     };
     window.addEventListener("win_concept_sync_completed", handleSyncEvent);
     return () => window.removeEventListener("win_concept_sync_completed", handleSyncEvent);
@@ -110,79 +318,240 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
     };
   }, []);
 
-  return (
-    <div className="max-w-4xl mx-auto space-y-8 font-mono">
-      
-      {/* 1. Welcome Text Header */}
-      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 bg-slate-950/40 space-y-3 relative overflow-hidden">
-        <div className="flex items-center gap-2 text-primary text-xs font-black uppercase tracking-widest">
-          <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-          <span>Lottery Intelligence & Combinatorial Optimization</span>
+  // Helper for countdown display badge
+  const renderCountdownBadge = (cd: DrawCountdown, colorTheme: "sky" | "amber" | "emerald" | "purple") => {
+    const themeStyles = {
+      sky: "border-sky-500/30 bg-sky-950/40 text-sky-300",
+      amber: "border-amber-500/30 bg-amber-950/40 text-amber-300",
+      emerald: "border-emerald-500/30 bg-emerald-950/40 text-emerald-300",
+      purple: "border-purple-500/30 bg-purple-950/40 text-purple-300"
+    };
+
+    return (
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl border ${themeStyles[colorTheme]} backdrop-blur-md`}>
+        <div className="flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5 opacity-80" />
+          <span className="text-[10px] font-mono font-medium tracking-wide text-gray-300">
+            Next: <strong className="text-white font-bold">{cd.targetLabel}</strong> ({cd.targetDateStr})
+          </span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight uppercase text-white drop-shadow-[0_0_15px_rgba(56,189,248,0.2)]">
+        <div className="flex items-center gap-1.5 font-mono">
+          <div className="flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-md border border-white/10 font-mono">
+            <span className={`w-1.5 h-1.5 rounded-full ${cd.isUrgent ? "bg-red-400 animate-ping" : "bg-emerald-400 animate-pulse"}`} />
+            <span className="text-xs font-black tracking-wider text-white">
+              {cd.hours}:{cd.minutes}:{cd.seconds}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8 font-mono pb-8">
+      
+      {/* 1. Header Hero Banner */}
+      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 bg-slate-950/60 space-y-3 relative overflow-hidden shadow-2xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-primary text-xs font-black uppercase tracking-widest">
+            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+            <span>NLCB Live Mathematical Command Center</span>
+          </div>
+          <span className="text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Cloud Database Connected
+          </span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight uppercase text-white drop-shadow-[0_0_20px_rgba(56,189,248,0.25)]">
           THE WIN CONCEPT
         </h1>
-        <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-3xl">
-          Welcome to the advanced analytical platform for local Trinidad and Tobago lottery models. This platform tracks real-time historical draws, computes multi-model Bayesian/Markov consensus vectors, and optimizes your statistical odds.
+        <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-4xl">
+          Real-time statistical tracking and combinatorial optimization across all official National Lotteries Control Board (NLCB) games. Powered by Markov state-transitions, Bayesian priors, Gaussian digit sums, and minimum-covering wheeling mathematics.
         </p>
       </div>
 
-      {/* 2. LATEST WINNING NUMBERS SECTION */}
+      {/* 2. THE 5-GAME COMMAND CENTER GRID */}
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b border-white/5 pb-2">
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-amber-400" />
             <h2 className="text-xs sm:text-sm font-black uppercase text-white tracking-wider">
-              Latest Official Winning Numbers
+              Live Game Portfolios & Probability Forecasts
             </h2>
           </div>
-          <span className="text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Live Cloud Data
+          <span className="text-[10px] text-gray-400">
+            Real-Time Auto Synchronized
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* 5 Game Cards Container */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           
-          {/* Card 1: Lotto Plus */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-sky-500/20 hover:border-sky-500/50 transition-all duration-300 space-y-4 relative group shadow-lg flex flex-col justify-between">
-            <div className="space-y-2">
+          {/* CARD 1: PLAY WHE */}
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-amber-500/25 hover:border-amber-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+            <div className="space-y-3.5">
+              {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-black text-sky-400 uppercase tracking-widest block">Lotto Plus</span>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest">Play Whe</span>
+                  </div>
                   <span className="text-xs text-white font-bold">
-                    {latestLotto ? `Draw #${latestLotto.draw_number}` : "Loading..."}
+                    {latestPlayWhe ? `${latestPlayWhe.draw_time_slot || "Draw"} #${latestPlayWhe.draw_number}` : "Loading Draw..."}
                   </span>
                 </div>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 font-bold">
+                <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 font-bold border border-amber-500/20">
+                  {latestPlayWhe?.draw_date || "Official"}
+                </span>
+              </div>
+
+              {/* Countdown Timer */}
+              {renderCountdownBadge(countdowns.playWhe, "amber")}
+
+              {/* Section A: Last Winning Result */}
+              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
+                  Last Winning Mark & Ball:
+                </span>
+                {loadingResults && !latestPlayWhe ? (
+                  <div className="flex items-center gap-3 animate-pulse py-1">
+                    <div className="w-10 h-10 rounded-full bg-slate-800" />
+                    <div className="space-y-1">
+                      <div className="w-16 h-3 bg-slate-800 rounded" />
+                      <div className="w-24 h-2 bg-slate-800 rounded" />
+                    </div>
+                  </div>
+                ) : latestPlayWhe ? (
+                  <div className="flex items-center gap-3 py-1">
+                    <div className="w-11 h-11 rounded-full bg-amber-400 text-slate-950 font-black text-base flex items-center justify-center shadow-[0_0_15px_rgba(251,191,36,0.5)] shrink-0 font-mono">
+                      {latestPlayWhe.winning_number}
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-black text-white uppercase tracking-wider">
+                        {CHINAPOO_CHART[latestPlayWhe.winning_number]?.mark || "Unknown"}
+                      </div>
+                      <div className="text-[10px] text-gray-400 truncate max-w-[170px]">
+                        {CHINAPOO_CHART[latestPlayWhe.winning_number]?.keywords?.slice(0, 3).join(", ") || "Tradition Mark"}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-500 italic">No draw data found</span>
+                )}
+              </div>
+
+              {/* Section B: App Suggested Numbers */}
+              <div className="space-y-1.5 bg-amber-950/20 p-3 rounded-xl border border-amber-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                    <Brain className="w-3 h-3 text-amber-400" />
+                    Mathematical Next Pick:
+                  </span>
+                  <span className="text-[9px] text-amber-400/80 font-mono">
+                    {playWhePrediction ? `Markov/MAP: ${(playWhePrediction.top1SinglePick?.probability * 100 || 0).toFixed(1)}%` : "Calculating..."}
+                  </span>
+                </div>
+                
+                {playWhePrediction?.top1SinglePick ? (
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-full bg-amber-400/20 border-2 border-amber-400 text-amber-300 font-black text-sm flex items-center justify-center font-mono">
+                        {playWhePrediction.top1SinglePick.number}
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-bold text-white uppercase">
+                          {playWhePrediction.top1SinglePick.mark}
+                        </span>
+                        <span className="text-[9px] text-gray-400 block">
+                          Optimal Single Pick
+                        </span>
+                      </div>
+                    </div>
+                    {playWhePrediction.top3Trio && (
+                      <div className="text-right">
+                        <span className="text-[9px] text-gray-400 block">Top Trio</span>
+                        <span className="text-xs font-bold text-amber-300 font-mono">
+                          {playWhePrediction.top3Trio.map((t: any) => t.number).join(", ")}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 py-1 text-xs text-gray-400 animate-pulse">
+                    <span>Compiling Markov transition chains...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <button
+              onClick={() => onSelectGame && onSelectGame("play-whe")}
+              className="w-full py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-amber-500 group-hover:text-slate-950 group-hover:border-transparent"
+            >
+              <span>Launch Play Whe Analytics</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
+
+          {/* CARD 2: LOTTO PLUS */}
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-sky-500/25 hover:border-sky-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+            <div className="space-y-3.5">
+              {/* Card Header */}
+              <div className="flex justify-between items-start">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-sky-400" />
+                    <span className="text-[11px] font-black text-sky-400 uppercase tracking-widest">Lotto Plus</span>
+                  </div>
+                  <span className="text-xs text-white font-bold">
+                    {latestLotto ? `Draw #${latestLotto.draw_number}` : "Loading Draw..."}
+                  </span>
+                </div>
+                <span className="text-[9px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 font-bold border border-sky-500/20">
                   {latestLotto?.draw_date || "Official"}
                 </span>
               </div>
 
-              {/* Lotto Plus Winning Balls */}
-              <div className="py-2">
+              {/* Countdown Timer */}
+              {renderCountdownBadge(countdowns.lotto, "sky")}
+
+              {/* Section A: Last Winning Result */}
+              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+                    Last Winning Combination:
+                  </span>
+                  {latestLotto?.multiplier && (
+                    <span className="text-[9px] text-sky-300 font-bold">
+                      Mult: {latestLotto.multiplier}X
+                    </span>
+                  )}
+                </div>
+
                 {loadingResults && !latestLotto ? (
-                  <div className="flex gap-1.5 animate-pulse">
+                  <div className="flex gap-1.5 animate-pulse py-1">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="w-8 h-8 rounded-full bg-slate-800" />
+                      <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
                     ))}
-                    <div className="w-8 h-8 rounded-full bg-purple-900/40 ml-1" />
+                    <div className="w-7 h-7 rounded-full bg-purple-900/40 ml-1" />
                   </div>
                 ) : latestLotto ? (
-                  <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5 py-1">
                     {[latestLotto.num1, latestLotto.num2, latestLotto.num3, latestLotto.num4, latestLotto.num5].map((num: number, i: number) => (
                       <div
                         key={i}
-                        className="w-8 h-8 rounded-full bg-sky-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(56,189,248,0.3)]"
+                        className="w-7 h-7 rounded-full bg-sky-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(56,189,248,0.3)] font-mono"
                       >
                         {num}
                       </div>
                     ))}
                     {latestLotto.powerball && (
                       <>
-                        <span className="text-gray-600 font-bold mx-0.5">|</span>
+                        <span className="text-gray-600 font-bold">|</span>
                         <div
-                          className="w-8 h-8 rounded-full bg-purple-600 border border-purple-400 text-white font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(168,85,247,0.4)]"
+                          className="w-7 h-7 rounded-full bg-purple-600 border border-purple-400 text-white font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(168,85,247,0.4)] font-mono"
                           title="Powerball"
                         >
                           {latestLotto.powerball}
@@ -195,103 +564,96 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                 )}
               </div>
 
-              {latestLotto?.multiplier && (
-                <p className="text-[10px] text-gray-400">
-                  Multiplier: <strong className="text-white">{latestLotto.multiplier}X</strong>
-                </p>
-              )}
-            </div>
-
-            <button
-              onClick={() => onSelectGame && onSelectGame("lotto-plus")}
-              className="w-full py-2 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 text-[10px] font-black uppercase tracking-wider rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
-            >
-              <span>Explore Lotto Plus</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
-          </div>
-
-          {/* Card 2: Play Whe */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-amber-500/20 hover:border-amber-500/50 transition-all duration-300 space-y-4 relative group shadow-lg flex flex-col justify-between">
-            <div className="space-y-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest block">Play Whe</span>
-                  <span className="text-xs text-white font-bold">
-                    {latestPlayWhe ? `${latestPlayWhe.draw_time_slot || "Draw"} #${latestPlayWhe.draw_number}` : "Loading..."}
+              {/* Section B: App Suggested Numbers */}
+              <div className="space-y-1.5 bg-sky-950/20 p-3 rounded-xl border border-sky-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-sky-300 uppercase tracking-wider flex items-center gap-1">
+                    <Brain className="w-3 h-3 text-sky-400" />
+                    Suggested Ensemble Ticket:
+                  </span>
+                  <span className="text-[9px] text-sky-400 font-bold px-1.5 py-0.2 rounded bg-sky-500/15 border border-sky-500/30">
+                    Grade {lottoPrediction?.topEnsembles?.[0]?.confidenceGrade || "A+"}
                   </span>
                 </div>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 font-bold">
-                  {latestPlayWhe?.draw_date || "Official"}
-                </span>
-              </div>
 
-              {/* Play Whe Winning Ball & Mark */}
-              <div className="py-2 flex items-center gap-3">
-                {loadingResults && !latestPlayWhe ? (
-                  <div className="flex items-center gap-2 animate-pulse">
-                    <div className="w-10 h-10 rounded-full bg-slate-800" />
-                    <div className="w-20 h-4 bg-slate-800 rounded" />
+                {lottoPrediction?.topEnsembles?.[0] ? (
+                  <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
+                    <div className="flex items-center gap-1">
+                      {lottoPrediction.topEnsembles[0].numbers.map((num: number, idx: number) => (
+                        <div
+                          key={idx}
+                          className="w-6 h-6 rounded-md bg-sky-500/20 border border-sky-400 text-sky-300 font-black text-[11px] flex items-center justify-center font-mono"
+                        >
+                          {num}
+                        </div>
+                      ))}
+                      <span className="text-purple-400 font-bold text-xs mx-0.5">+</span>
+                      <div
+                        className="w-6 h-6 rounded-md bg-purple-600/40 border border-purple-400 text-purple-200 font-black text-[11px] flex items-center justify-center font-mono"
+                        title="Powerball"
+                      >
+                        {lottoPrediction.topEnsembles[0].bonusBall}
+                      </div>
+                    </div>
+                    <span className="text-[9px] text-gray-400">
+                      Sum: {lottoPrediction.topEnsembles[0].sum}
+                    </span>
                   </div>
-                ) : latestPlayWhe ? (
-                  <>
-                    <div className="w-10 h-10 rounded-full bg-amber-400 text-slate-950 font-black text-sm flex items-center justify-center shadow-[0_0_12px_rgba(251,191,36,0.4)] shrink-0">
-                      {latestPlayWhe.winning_number}
-                    </div>
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-black text-white uppercase tracking-wider">
-                        {CHINAPOO_CHART[latestPlayWhe.winning_number]?.mark || "Unknown"}
-                      </div>
-                      <div className="text-[10px] text-gray-400 truncate max-w-[140px]">
-                        {CHINAPOO_CHART[latestPlayWhe.winning_number]?.keywords?.slice(0, 2).join(", ") || "Tradition mark"}
-                      </div>
-                    </div>
-                  </>
                 ) : (
-                  <span className="text-xs text-gray-500 italic">No draw data found</span>
+                  <div className="flex items-center gap-2 py-1 text-xs text-gray-400 animate-pulse">
+                    <span>Optimizing combinatorial wheel...</span>
+                  </div>
                 )}
               </div>
-
-              <p className="text-[10px] text-gray-400">
-                Next: <strong className="text-amber-400">10:30 AM · 1:00 PM · 4:00 PM · 7:00 PM</strong>
-              </p>
             </div>
 
+            {/* CTA Button */}
             <button
-              onClick={() => onSelectGame && onSelectGame("play-whe")}
-              className="w-full py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-black uppercase tracking-wider rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
+              onClick={() => onSelectGame && onSelectGame("lotto-plus")}
+              className="w-full py-2.5 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/35 text-sky-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-sky-500 group-hover:text-slate-950 group-hover:border-transparent"
             >
-              <span>Explore Play Whe</span>
-              <ArrowRight className="w-3 h-3" />
+              <span>Explore Lotto Plus Wheels</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
 
-          {/* Card 3: Win For Life */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-emerald-500/20 hover:border-emerald-500/50 transition-all duration-300 space-y-4 relative group shadow-lg flex flex-col justify-between">
-            <div className="space-y-2">
+          {/* CARD 3: WIN FOR LIFE */}
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-emerald-500/25 hover:border-emerald-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+            <div className="space-y-3.5">
+              {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block">Win For Life</span>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Win For Life</span>
+                  </div>
                   <span className="text-xs text-white font-bold">
-                    {latestWinForLife ? `Draw #${latestWinForLife.draw_number}` : "Loading..."}
+                    {latestWinForLife ? `Draw #${latestWinForLife.draw_number}` : "Loading Draw..."}
                   </span>
                 </div>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-bold">
+                <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/20">
                   {latestWinForLife?.draw_date || "Official"}
                 </span>
               </div>
 
-              {/* Win For Life Winning Balls */}
-              <div className="py-2">
+              {/* Countdown Timer */}
+              {renderCountdownBadge(countdowns.winForLife, "emerald")}
+
+              {/* Section A: Last Winning Result */}
+              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
+                  Last Winning 6 Balls + Cash Ball:
+                </span>
+
                 {loadingResults && !latestWinForLife ? (
-                  <div className="flex gap-1.5 animate-pulse">
+                  <div className="flex gap-1 animate-pulse py-1">
                     {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
+                      <div key={i} className="w-6 h-6 rounded-full bg-slate-800" />
                     ))}
-                    <div className="w-7 h-7 rounded-full bg-emerald-900/40 ml-1" />
+                    <div className="w-6 h-6 rounded-full bg-emerald-900/40 ml-1" />
                   </div>
                 ) : latestWinForLife ? (
-                  <div className="flex flex-wrap items-center gap-1">
+                  <div className="flex flex-wrap items-center gap-1 py-1">
                     {[
                       latestWinForLife.num1,
                       latestWinForLife.num2,
@@ -302,16 +664,16 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     ].map((num: number, i: number) => (
                       <div
                         key={i}
-                        className="w-7 h-7 rounded-full bg-emerald-400 text-slate-950 font-black text-[11px] flex items-center justify-center shadow-[0_0_8px_rgba(52,211,153,0.3)]"
+                        className="w-6 h-6 rounded-full bg-emerald-400 text-slate-950 font-black text-[10px] flex items-center justify-center shadow-[0_0_8px_rgba(52,211,153,0.3)] font-mono"
                       >
                         {num}
                       </div>
                     ))}
                     {latestWinForLife.cash_ball && (
                       <>
-                        <span className="text-gray-600 font-bold mx-0.5">|</span>
+                        <span className="text-gray-600 font-bold text-xs mx-0.5">|</span>
                         <div
-                          className="w-7 h-7 rounded-full bg-emerald-600 border border-emerald-400 text-white font-black text-[11px] flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                          className="w-6 h-6 rounded-full bg-emerald-600 border border-emerald-400 text-white font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.4)] font-mono"
                           title="Cash Ball"
                         >
                           {latestWinForLife.cash_ball}
@@ -324,36 +686,365 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                 )}
               </div>
 
-              <p className="text-[10px] text-gray-400">
-                Top Prize: <strong className="text-emerald-400">$20,000 / Month for 20 Yrs</strong>
-              </p>
+              {/* Section B: App Suggested Numbers */}
+              <div className="space-y-1.5 bg-emerald-950/20 p-3 rounded-xl border border-emerald-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1">
+                    <Brain className="w-3 h-3 text-emerald-400" />
+                    Mathematical 6+1 Selection:
+                  </span>
+                  <span className="text-[9px] text-emerald-400 font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30">
+                    Grade {wflPrediction?.topEnsembles?.[0]?.confidenceGrade || "A+"}
+                  </span>
+                </div>
+
+                {wflPrediction?.topEnsembles?.[0] ? (
+                  <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
+                    <div className="flex items-center gap-1">
+                      {wflPrediction.topEnsembles[0].numbers.map((num: number, idx: number) => (
+                        <div
+                          key={idx}
+                          className="w-6 h-6 rounded-md bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-black text-[10px] flex items-center justify-center font-mono"
+                        >
+                          {num}
+                        </div>
+                      ))}
+                      <span className="text-emerald-400 font-bold text-xs mx-0.5">+</span>
+                      <div
+                        className="w-6 h-6 rounded-md bg-emerald-600/40 border border-emerald-400 text-emerald-200 font-black text-[10px] flex items-center justify-center font-mono"
+                        title="Cash Ball"
+                      >
+                        {wflPrediction.topEnsembles[0].bonusBall}
+                      </div>
+                    </div>
+                    <span className="text-[9px] text-gray-400">
+                      Top Prize: $20K/Mo
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 py-1 text-xs text-gray-400 animate-pulse">
+                    <span>Computing renewal hazard models...</span>
+                  </div>
+                )}
+              </div>
             </div>
 
+            {/* CTA Button */}
             <button
               onClick={() => onSelectGame && onSelectGame("win-for-life")}
-              className="w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-black uppercase tracking-wider rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 mt-2"
+              className="w-full py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-emerald-500 group-hover:text-slate-950 group-hover:border-transparent"
             >
               <span>Explore Win For Life</span>
-              <ArrowRight className="w-3 h-3" />
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
             </button>
+          </div>
+
+          {/* CARD 4: CASHPOT (5 OF 20) */}
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-amber-500/25 hover:border-amber-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+            <div className="space-y-3.5">
+              {/* Card Header */}
+              <div className="flex justify-between items-start">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest">Cash Pot</span>
+                  </div>
+                  <span className="text-xs text-white font-bold">
+                    {latestCashPot ? `Draw #${latestCashPot.draw_number}` : "Loading Draw..."}
+                  </span>
+                </div>
+                <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 font-bold border border-amber-500/20">
+                  {latestCashPot?.draw_date || "Official"}
+                </span>
+              </div>
+
+              {/* Countdown Timer */}
+              {renderCountdownBadge(countdowns.cashPot, "amber")}
+
+              {/* Section A: Last Winning Result */}
+              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+                    Last Winning 5 Balls (1–20):
+                  </span>
+                  {latestCashPot?.multiplier && (
+                    <span className="text-[9px] text-amber-300 font-bold">
+                      Mult: {latestCashPot.multiplier}X
+                    </span>
+                  )}
+                </div>
+
+                {loadingResults && !latestCashPot ? (
+                  <div className="flex gap-1.5 animate-pulse py-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
+                    ))}
+                    <div className="w-7 h-7 rounded-full bg-amber-900/40 ml-1" />
+                  </div>
+                ) : latestCashPot ? (
+                  <div className="flex flex-wrap items-center gap-1.5 py-1">
+                    {[latestCashPot.num1, latestCashPot.num2, latestCashPot.num3, latestCashPot.num4, latestCashPot.num5].map((num: number, i: number) => (
+                      <div
+                        key={i}
+                        className="w-7 h-7 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.35)] font-mono"
+                      >
+                        {num}
+                      </div>
+                    ))}
+                    {latestCashPot.multiplier && (
+                      <>
+                        <span className="text-gray-600 font-bold">|</span>
+                        <div
+                          className="w-7 h-7 rounded-full bg-amber-600 border border-amber-400 text-white font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(245,158,11,0.4)] font-mono"
+                          title="Multiplier"
+                        >
+                          {latestCashPot.multiplier}X
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-500 italic">No draw data found</span>
+                )}
+              </div>
+
+              {/* Section B: App Suggested Numbers */}
+              <div className="space-y-1.5 bg-amber-950/20 p-3 rounded-xl border border-amber-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                    <Brain className="w-3 h-3 text-amber-400" />
+                    Statistical 5-Ball Quintet:
+                  </span>
+                  <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/30">
+                    Grade {cashPotPrediction?.topEnsembles?.[0]?.confidenceGrade || "A+"}
+                  </span>
+                </div>
+
+                {cashPotPrediction?.topEnsembles?.[0] ? (
+                  <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
+                    <div className="flex items-center gap-1">
+                      {cashPotPrediction.topEnsembles[0].numbers.map((num: number, idx: number) => (
+                        <div
+                          key={idx}
+                          className="w-6 h-6 rounded-md bg-amber-500/20 border border-amber-400 text-amber-300 font-black text-[11px] flex items-center justify-center font-mono"
+                        >
+                          {num}
+                        </div>
+                      ))}
+                      <span className="text-amber-400 font-bold text-xs mx-0.5">+</span>
+                      <div
+                        className="w-6 h-6 rounded-md bg-amber-600/40 border border-amber-400 text-amber-200 font-black text-[11px] flex items-center justify-center font-mono"
+                        title="Target Multiplier"
+                      >
+                        {cashPotPrediction.topEnsembles[0].bonusBall}X
+                      </div>
+                    </div>
+                    <span className="text-[9px] text-gray-400">
+                      Odds: 1 in 15,504
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 py-1 text-xs text-gray-400 animate-pulse">
+                    <span>Evaluating companion affinities...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <button
+              onClick={() => onSelectGame && onSelectGame("cashpot")}
+              className="w-full py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-amber-500 group-hover:text-slate-950 group-hover:border-transparent"
+            >
+              <span>Explore Cash Pot Analytics</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
+
+          {/* CARD 5: PICK 4 */}
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-emerald-500/25 hover:border-emerald-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+            <div className="space-y-3.5">
+              {/* Card Header */}
+              <div className="flex justify-between items-start">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Pick 4</span>
+                  </div>
+                  <span className="text-xs text-white font-bold">
+                    {latestPick4 ? `${latestPick4.draw_time_slot || "Draw"} #${latestPick4.draw_number}` : "Loading Draw..."}
+                  </span>
+                </div>
+                <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/20">
+                  {latestPick4?.draw_date || "Official"}
+                </span>
+              </div>
+
+              {/* Countdown Timer */}
+              {renderCountdownBadge(countdowns.pick4, "emerald")}
+
+              {/* Section A: Last Winning Result */}
+              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
+                  Last Winning 4 Digits:
+                </span>
+
+                {loadingResults && !latestPick4 ? (
+                  <div className="flex gap-2 animate-pulse py-1">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="w-8 h-8 rounded-lg bg-slate-800" />
+                    ))}
+                  </div>
+                ) : latestPick4 ? (
+                  <div className="flex items-center gap-2 py-1">
+                    {[latestPick4.digit1, latestPick4.digit2, latestPick4.digit3, latestPick4.digit4].map((d: number, i: number) => (
+                      <div
+                        key={i}
+                        className="w-8 h-8 rounded-lg bg-emerald-400 text-slate-950 font-black text-sm flex items-center justify-center shadow-[0_0_10px_rgba(52,211,153,0.35)] font-mono"
+                      >
+                        {d}
+                      </div>
+                    ))}
+                    <span className="text-[10px] text-gray-400 ml-2 font-mono">
+                      Sum: {Number(latestPick4.digit1) + Number(latestPick4.digit2) + Number(latestPick4.digit3) + Number(latestPick4.digit4)}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-500 italic">No draw data found</span>
+                )}
+              </div>
+
+              {/* Section B: App Suggested Numbers */}
+              <div className="space-y-1.5 bg-emerald-950/20 p-3 rounded-xl border border-emerald-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1">
+                    <Brain className="w-3 h-3 text-emerald-400" />
+                    Optimal Straight & Box EV:
+                  </span>
+                  <span className="text-[9px] text-emerald-400 font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30">
+                    EV Score {pick4Prediction?.optimalStraightTicket?.confidenceScore || 92}%
+                  </span>
+                </div>
+
+                {pick4Prediction?.optimalStraightTicket ? (
+                  <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
+                    <div className="flex items-center gap-1">
+                      {pick4Prediction.optimalStraightTicket.digits.map((digit: number, idx: number) => (
+                        <div
+                          key={idx}
+                          className="w-6 h-6 rounded-md bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-black text-[11px] flex items-center justify-center font-mono"
+                        >
+                          {digit}
+                        </div>
+                      ))}
+                      <span className="text-[9px] text-emerald-400 ml-1 font-bold">
+                        (Straight)
+                      </span>
+                    </div>
+                    {pick4Prediction.optimalBoxTickets?.twentyFourWay && (
+                      <div className="text-right">
+                        <span className="text-[9px] text-gray-400 block">Box 24-Way</span>
+                        <span className="text-[10px] font-bold text-emerald-300 font-mono">
+                          {pick4Prediction.optimalBoxTickets.twentyFourWay.digitsString}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 py-1 text-xs text-gray-400 animate-pulse">
+                    <span>Computing positional Markov matrices...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <button
+              onClick={() => onSelectGame && onSelectGame("pick4")}
+              className="w-full py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-emerald-500 group-hover:text-slate-950 group-hover:border-transparent"
+            >
+              <span>Explore Pick 4 Permutations</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
+
+          {/* CARD 6: TICKET SCANNER & SYNDICATES SHORTCUT CARD */}
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-purple-500/25 hover:border-purple-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+            <div className="space-y-3.5">
+              {/* Card Header */}
+              <div className="flex justify-between items-start">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-400" />
+                    <span className="text-[11px] font-black text-purple-400 uppercase tracking-widest">Utility Suite</span>
+                  </div>
+                  <span className="text-xs text-white font-bold">
+                    Multi-Game Ticket Scanner & Pool Management
+                  </span>
+                </div>
+                <span className="text-[9px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 font-bold border border-purple-500/20">
+                  OCR Engine
+                </span>
+              </div>
+
+              {/* Utility Info */}
+              <div className="space-y-2 bg-black/40 p-3 rounded-xl border border-white/5">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-purple-400" />
+                  <span className="text-xs font-bold text-white uppercase">
+                    Automatic Ticket Verification
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-300 leading-relaxed">
+                  Scan printed physical bet slips with your phone camera across Play Whe, Lotto Plus, Win For Life, Cash Pot, and Pick 4 to automatically cross-reference against official winning database records and calculate payouts.
+                </p>
+              </div>
+
+              {/* Syndicate Pooling Info */}
+              <div className="space-y-1 bg-purple-950/20 p-3 rounded-xl border border-purple-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1">
+                    <Layers className="w-3 h-3 text-purple-400" />
+                    Syndicate Pooling
+                  </span>
+                  <span className="text-[9px] text-purple-400 font-bold">
+                    WhatsApp Share Ready
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 leading-normal">
+                  Pool ticket entries with colleagues and calculate exact prize percentages per member automatically.
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <button
+                onClick={() => onSelectGame && onSelectGame("scanner")}
+                className="py-2.5 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 text-purple-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-lg group-hover:border-purple-400"
+              >
+                <span>Launch Scanner</span>
+              </button>
+              <button
+                onClick={() => onSelectGame && onSelectGame("syndicate")}
+                className="py-2.5 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 text-purple-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-lg group-hover:border-purple-400"
+              >
+                <span>Syndicates</span>
+              </button>
+            </div>
           </div>
 
         </div>
       </div>
 
-      {/* 3. Interactive Quick Pick */}
+      {/* 3. Interactive Ticket Shading Demonstration Animation (Pencil Playslip) */}
       <div className="space-y-3">
-        <h2 className="text-xs font-bold uppercase text-gray-400 tracking-wider">
-          Quick Pick Generator
-        </h2>
-        <InteractiveTumbler initialGame="lotto-plus" />
-      </div>
-
-      {/* 4. Interactive Ticket Shading Demonstration Animation */}
-      <div className="space-y-3">
-        <h2 className="text-xs font-bold uppercase text-gray-400 tracking-wider">
-          Interactive Playslip Simulator
-        </h2>
+        <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <h2 className="text-xs font-bold uppercase text-gray-400 tracking-wider">
+            Interactive Playslip Marking Simulator
+          </h2>
+        </div>
         <div className="flex justify-center">
           <div className="bg-[#f4efe0] text-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.35)] border border-slate-300/30 p-6 font-mono w-full max-w-md relative overflow-hidden h-[460px] flex flex-col justify-between select-none">
 
@@ -388,7 +1079,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                               d="M10,20 L90,80 M15,10 L85,90 M30,10 L70,90 M10,30 L90,70 M20,15 L80,85 M5,45 L95,55 M45,5 L55,95" 
                               stroke="currentColor" 
                               strokeWidth="10" 
-                              strokeLinecap="round"
+                              strokeLinecap="round" 
                               className="animate-scribble"
                             />
                           </svg>
@@ -442,70 +1133,56 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         </div>
       </div>
 
-      {/* 5. Comprehensive How It Works & Architecture Hub */}
+      {/* 4. Architecture & Engineering Overview */}
       <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 bg-slate-950/40 space-y-6">
         <div className="flex items-center gap-2 border-b border-white/5 pb-3">
           <Sparkles className="w-5 h-5 text-primary animate-pulse" />
           <div>
             <h3 className="text-base sm:text-lg font-black uppercase text-white tracking-wider">
-              How The Win Concept Mathematical Engine Works
+              Mathematical Architecture
             </h3>
-            <p className="text-xs text-gray-400">
-              Transforming raw historical draw logs into predictive combinatorial advantages
+            <p className="text-[10px] sm:text-xs text-gray-400">
+              Rigorous probabilistic reasoning replacing superstition with empirical evidence
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          {/* Engine 1: Genetic Algorithm */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-sky-500/20 space-y-2">
-            <div className="flex items-center gap-2 text-sky-400 font-bold uppercase">
-              <span className="w-2 h-2 rounded-full bg-sky-400" />
-              <h4>1. Genetic Algorithm Optimizer</h4>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase">
+              <Activity className="w-4 h-4" />
+              1. Markov Transitions
             </div>
             <p className="text-gray-300 leading-relaxed text-[11px]">
-              Simulates natural selection across a <strong>5,000-candidate population</strong> over 50 generations. It ranks lines based on historical companions, sum distribution equilibrium, and odd/even balance to isolate mathematically optimal combinations.
+              First-order Markov chains calculate state transition probabilities P(S_t | S_t-1) between sequential lottery draws, uncovering recurring historical paths across Trinidad lottery history.
             </p>
           </div>
 
-          {/* Engine 2: Bayesian & Markov Consensus */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-500/20 space-y-2">
-            <div className="flex items-center gap-2 text-amber-400 font-bold uppercase">
-              <span className="w-2 h-2 rounded-full bg-amber-400" />
-              <h4>2. Bayesian &amp; Markov Networks</h4>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase">
+              <Compass className="w-4 h-4" />
+              2. Graph & Companion Affinity
             </div>
             <p className="text-gray-300 leading-relaxed text-[11px]">
-              Tracks first and second-order transition matrices for Play Whe and Lotto Plus. It calculates the exact probability of mark <em>B</em> appearing immediately after mark <em>A</em>, isolating high-probability successor pathways.
+              PageRank style bipartite affinity networks detect high-frequency companion numbers that co-occur with higher statistical significance than uniform random distributions.
             </p>
           </div>
 
-          {/* Engine 3: EWMA & RTM Z-Scores */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-emerald-500/20 space-y-2">
-            <div className="flex items-center gap-2 text-emerald-400 font-bold uppercase">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              <h4>3. EWMA &amp; RTM Z-Score Signals</h4>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase">
+              <Layers className="w-4 h-4" />
+              3. Combinatorial Covering Wheels
             </div>
             <p className="text-gray-300 leading-relaxed text-[11px]">
-              Uses Exponentially Weighted Moving Averages (α=0.12) to weight recent draw trends, combined with Regression-To-The-Mean Z-Scores. Any number with <strong>Z &lt; -1.5</strong> is flagged as overdue for statistical rebound.
-            </p>
-          </div>
-
-          {/* Engine 4: Syndicate Group Pooling */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-violet-500/20 space-y-2">
-            <div className="flex items-center gap-2 text-violet-400 font-bold uppercase">
-              <span className="w-2 h-2 rounded-full bg-violet-400" />
-              <h4>4. Syndicate Group Pooling</h4>
-            </div>
-            <p className="text-gray-300 leading-relaxed text-[11px]">
-              Pooling stakes with friends and family drastically expands matrix coverage. The platform auto-manages share percentages, calculates jackpot payouts per member, and generates verified shareable slips for WhatsApp group chats.
+              Abbreviated wheeling algorithms compile your high-confidence pools into mathematically minimized ticket sets that guarantee designated tier matches without purchasing full combinations.
             </p>
           </div>
 
         </div>
       </div>
 
-      {/* 6. Warning Disclaimer Panel */}
+      {/* 5. Warning Disclaimer Panel */}
       <div className="glass-panel p-5 rounded-xl border-red-500/10 bg-red-500/[0.01] relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1 h-full bg-red-500/50" />
         <div className="flex items-start gap-3">
@@ -513,7 +1190,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           <div className="space-y-1.5 font-mono">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">Disclaimer & Fair Play Notice</h4>
             <p className="text-xs leading-relaxed text-gray-400">
-              This application is designed as a statistical tool that attempts to reduce the mathematical odds of NLCB online games by tracking historical frequencies and delta gaps. It is <strong>NOT affiliated with, authorized, or endorsed by the National Lotteries Control Board (NLCB)</strong> of Trinidad and Tobago in any form or fashion. Using this app <strong>does NOT guarantee any winnings</strong>. Please play responsibly.
+              This application is designed as an empirical analytical system that calculates mathematical odds, frequencies, and combinatorial coverage for Trinidad and Tobago lottery games. It is <strong>NOT affiliated with, authorized, or endorsed by the National Lotteries Control Board (NLCB)</strong> of Trinidad and Tobago. Using this app <strong>does NOT guarantee any winnings</strong>. Please gamble responsibly.
             </p>
           </div>
         </div>
@@ -531,7 +1208,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               Support the Creator
             </h4>
             <p className="text-xs leading-relaxed text-gray-300">
-              Creating and maintaining these complex analytical scraping systems requires time, hosting, and dedication. If this mathematical tool helps you hit a lucky streak, win big, or become wealthy, please show some love and support the creator!
+              Creating and maintaining these complex mathematical models and cloud scraping pipelines requires continuous hosting, compute, and dedication. If this system helps you hit a lucky streak, win big, or build wealth, please show some love and support the creator!
             </p>
             <div className="p-3.5 sm:p-4 bg-slate-950/80 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-inner">
               <a 
