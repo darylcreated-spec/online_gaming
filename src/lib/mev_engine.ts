@@ -4,20 +4,13 @@
  * Uses ALL historical draw data to build a multi-factor probabilistic scoring
  * model that ranks candidate combinations by expected value.
  *
+ * Enhanced with:
+ *  - Personalized PageRank Graph Affinity
+ *  - Weibull Inter-Arrival Hazard Aging
+ *
  * Supports both:
  *  - Lotto Plus (5/36 + Powerball 1-10)
  *  - Win For Life (6/28 + Cash Ball 1-3)
- *
- * Factors computed from the database:
- *  1. Individual Number Frequency Weight (empirical vs expected)
- *  2. Exponential Recency Decay (0.985 factor, favoring active trends)
- *  3. Companion Pair Affinity Matrix (co-occurrence strength)
- *  4. Positional Frequency (which numbers appear in which sorted position)
- *  5. Sum Distribution Bell Curve Fit
- *  6. Odd/Even & High/Low Balance Score
- *  7. Consecutive Run Penalty
- *  8. Gap / Overdue Mean-Reversion Boost
- *  9. Powerball / Cash Ball Frequency & Recency Weight
  */
 
 export interface MEVTicket {
@@ -90,6 +83,50 @@ const WIN_FOR_LIFE_CONFIG: GameConfig = {
   targetMaxSum: 110,
   midPoint: 14,
 };
+
+/**
+ * Computes stationary PageRank vector over the companion affinity graph
+ */
+function computePageRankGraph(
+  companionMatrix: Float64Array[],
+  poolMax: number,
+  damping: number = 0.85,
+  iterations: number = 15
+): Float64Array {
+  const P: number[][] = Array.from({ length: poolMax + 1 }, () => new Array(poolMax + 1).fill(0));
+  for (let i = 1; i <= poolMax; i++) {
+    let rowSum = 0;
+    for (let j = 1; j <= poolMax; j++) {
+      rowSum += companionMatrix[i][j] || 0;
+    }
+    if (rowSum > 0) {
+      for (let j = 1; j <= poolMax; j++) {
+        P[i][j] = (companionMatrix[i][j] || 0) / rowSum;
+      }
+    } else {
+      for (let j = 1; j <= poolMax; j++) {
+        P[i][j] = 1.0 / poolMax;
+      }
+    }
+  }
+
+  const uniform = 1.0 / poolMax;
+  let r = new Float64Array(poolMax + 1).fill(uniform);
+
+  for (let iter = 0; iter < iterations; iter++) {
+    const nextR = new Float64Array(poolMax + 1);
+    for (let j = 1; j <= poolMax; j++) {
+      let incoming = 0;
+      for (let i = 1; i <= poolMax; i++) {
+        incoming += r[i] * P[i][j];
+      }
+      nextR[j] = (1.0 - damping) * uniform + damping * incoming;
+    }
+    r = nextR;
+  }
+
+  return r;
+}
 
 // ─────────────────────────────────────────────────────────────────────
 // 1. Build Statistical Model from Historical Data
@@ -165,12 +202,20 @@ function buildStatisticalModel(draws: GenericDrawRecord[], config: GameConfig) {
   const maxBonusFreq = Math.max(1, ...Array.from(bonusFreq).slice(1));
   const maxBonusRecency = Math.max(1, ...Array.from(bonusRecency).slice(1));
 
-  // Overdue scores (higher = more overdue relative to expected frequency)
-  const expectedInterval = totalDraws / (totalDraws * pickCount / poolMax);
+  // Compute PageRank Graph Vector
+  const pageRank = computePageRankGraph(companion, poolMax, 0.85, 15);
+  const maxPageRank = Math.max(1e-6, ...Array.from(pageRank).slice(1));
+
+  // Overdue scores with Weibull Renewal Aging Function
+  const expectedInterval = poolMax / pickCount;
   const overdueScore = new Float64Array(poolMax + 1);
+  const beta = 1.35; // Aging hazard exponent
+
   for (let n = 1; n <= poolMax; n++) {
-    const drawsAgo = lastSeen[n] === -1 ? totalDraws : lastSeen[n];
-    overdueScore[n] = Math.min(1.0, drawsAgo / (expectedInterval * 3));
+    const drawsAgo = lastSeen[n] === -1 ? expectedInterval * 2.5 : lastSeen[n];
+    const normalizedGap = drawsAgo / expectedInterval;
+    const hazard = beta * Math.pow(Math.max(0.1, normalizedGap), beta - 1);
+    overdueScore[n] = Math.min(1.0, hazard / 2.5);
   }
 
   return {
@@ -183,11 +228,13 @@ function buildStatisticalModel(draws: GenericDrawRecord[], config: GameConfig) {
     bonusFreq,
     bonusRecency,
     overdueScore,
+    pageRank,
     maxFreq,
     maxRecency,
     maxCompanion,
     maxBonusFreq,
     maxBonusRecency,
+    maxPageRank,
   };
 }
 
@@ -203,30 +250,34 @@ function scoreCombination(
   const sorted = [...nums].sort((a, b) => a - b);
   const n = sorted.length;
 
-  // 1. Frequency Score (are these historically common numbers?)
+  // 1. Frequency Score (Dirichlet smoothed frequency)
   let freqSum = 0;
   for (const num of sorted) {
     freqSum += model.freq[num] / model.maxFreq;
   }
   const frequencyScore = (freqSum / n) * 100;
 
-  // 2. Recency Score (are these numbers trending in recent draws?)
+  // 2. Recency Score (EWMA momentum)
   let recSum = 0;
   for (const num of sorted) {
     recSum += model.recency[num] / model.maxRecency;
   }
   const recencyScore = (recSum / n) * 100;
 
-  // 3. Companion Pair Synergy (do these numbers co-occur historically?)
+  // 3. Companion Pair Synergy & PageRank Graph Centrality
   let pairScore = 0;
   let pairCount = 0;
+  let pRankSum = 0;
   for (let a = 0; a < n; a++) {
+    pRankSum += model.pageRank[sorted[a]] / model.maxPageRank;
     for (let b = a + 1; b < n; b++) {
       pairScore += model.companion[sorted[a]][sorted[b]] / model.maxCompanion;
       pairCount++;
     }
   }
-  const companionScore = pairCount > 0 ? (pairScore / pairCount) * 100 : 50;
+  const rawCompanion = pairCount > 0 ? (pairScore / pairCount) * 100 : 50;
+  const rawPageRank = (pRankSum / n) * 100;
+  const companionScore = rawCompanion * 0.65 + rawPageRank * 0.35;
 
   // 4. Positional Fitness
   let posScore = 0;
@@ -290,7 +341,7 @@ function scoreCombination(
 
   const balanceScore = Math.max(0, Math.min(100, balance));
 
-  // 6. Overdue Mean-Reversion Boost
+  // 6. Overdue Mean-Reversion Boost (Weibull renewal hazard)
   let overdueSum = 0;
   for (const num of sorted) {
     overdueSum += model.overdueScore[num];
@@ -301,8 +352,8 @@ function scoreCombination(
   const total =
     frequencyScore * 0.18 +
     recencyScore * 0.22 +
-    companionScore * 0.15 +
-    positionalScore * 0.15 +
+    companionScore * 0.16 +
+    positionalScore * 0.14 +
     balanceScore * 0.18 +
     overdueBoost * 0.12;
 
@@ -330,9 +381,10 @@ function generateWeightedCandidate(
   const weights = new Float64Array(poolMax + 1);
   for (let n = 1; n <= poolMax; n++) {
     weights[n] =
-      (model.freq[n] / model.maxFreq) * 0.3 +
-      (model.recency[n] / model.maxRecency) * 0.4 +
-      model.overdueScore[n] * 0.3;
+      (model.freq[n] / model.maxFreq) * 0.25 +
+      (model.recency[n] / model.maxRecency) * 0.35 +
+      (model.pageRank[n] / model.maxPageRank) * 0.20 +
+      model.overdueScore[n] * 0.20;
   }
 
   const totalWeight = Array.from(weights).slice(1).reduce((a, b) => a + b, 0);
@@ -343,21 +395,20 @@ function generateWeightedCandidate(
     let r = Math.random() * totalWeight;
     for (let n = 1; n <= poolMax; n++) {
       r -= weights[n];
-      if (r <= 0 && !selected.includes(n)) {
-        selected.push(n);
+      if (r <= 0) {
+        if (!selected.includes(n)) {
+          selected.push(n);
+        }
         break;
       }
     }
     attempts++;
-    // Fallback if needed
-    if (selected.length < pickCount && attempts >= 100) {
-      for (let n = 1; n <= poolMax; n++) {
-        if (!selected.includes(n)) {
-          selected.push(n);
-          if (selected.length === pickCount) break;
-        }
-      }
-    }
+  }
+
+  // Fallback if needed
+  while (selected.length < pickCount) {
+    const fallback = Math.floor(Math.random() * poolMax) + 1;
+    if (!selected.includes(fallback)) selected.push(fallback);
   }
 
   return selected.sort((a, b) => a - b);
@@ -369,13 +420,16 @@ function selectBonusBall(
 ): number {
   const { bonusMax } = config;
   const weights = new Float64Array(bonusMax + 1);
-  for (let p = 1; p <= bonusMax; p++) {
-    weights[p] =
-      (model.bonusFreq[p] / model.maxBonusFreq) * 0.4 +
-      (model.bonusRecency[p] / model.maxBonusRecency) * 0.6;
+
+  for (let b = 1; b <= bonusMax; b++) {
+    weights[b] =
+      (model.bonusFreq[b] / model.maxBonusFreq) * 0.5 +
+      (model.bonusRecency[b] / model.maxBonusRecency) * 0.5;
   }
-  const totalWeight = Array.from(weights).slice(1).reduce((a, b) => a + b, 0);
-  let r = Math.random() * totalWeight;
+
+  const total = Array.from(weights).slice(1).reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+
   for (let p = 1; p <= bonusMax; p++) {
     r -= weights[p];
     if (r <= 0) return p;

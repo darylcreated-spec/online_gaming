@@ -1,12 +1,15 @@
 /**
  * lotto_wfl_math_engine.ts
  * Rigorous Mathematical Inference, Multi-Factor Probabilistic Decomposition,
- * and Walk-Forward Out-Of-Sample Historical Backtesting Engine
+ * PageRank Graph Network Companion Affinity, Weibull Renewal Hazard Aging,
+ * and Walk-Forward Out-Of-Sample Historical Backtesting Engine.
  * 
  * Supports:
  * 1. Lotto Plus (5 of 36, Powerball 1–10)
  * 2. Win For Life (6 of 28, Cash Ball 1–3)
  */
+
+import { generateAbbreviatedWheel } from "./wheeling";
 
 export interface MultiBallDrawRecord {
   draw_number: number | string;
@@ -68,6 +71,8 @@ export interface NumberFactorBreakdown {
     companionAffinity: number;
     cycleRenewal: number;
     rtmRebound: number;
+    pageRankAffinity: number;
+    weibullHazard: number;
   };
 }
 
@@ -191,6 +196,63 @@ export function computeHypergeometricProbability(
 }
 
 /**
+ * Personalized PageRank algorithm over companion graph:
+ * r = (1 - d) * s + d * P^T * r
+ */
+export function computePersonalizedPageRank(
+  adjMatrix: number[][],
+  seedNumbers: number[],
+  poolMax: number,
+  damping: number = 0.85,
+  iterations: number = 15
+): Float64Array {
+  // Build stochastic row-normalized transition matrix P
+  const P: number[][] = Array.from({ length: poolMax + 1 }, () => new Array(poolMax + 1).fill(0));
+  for (let i = 1; i <= poolMax; i++) {
+    let rowSum = 0;
+    for (let j = 1; j <= poolMax; j++) {
+      rowSum += adjMatrix[i][j] || 0;
+    }
+    if (rowSum > 0) {
+      for (let j = 1; j <= poolMax; j++) {
+        P[i][j] = (adjMatrix[i][j] || 0) / rowSum;
+      }
+    } else {
+      for (let j = 1; j <= poolMax; j++) {
+        P[i][j] = 1.0 / poolMax;
+      }
+    }
+  }
+
+  // Teleport vector s
+  const s = new Float64Array(poolMax + 1);
+  if (seedNumbers.length > 0) {
+    const seedWeight = 1.0 / seedNumbers.length;
+    for (const seed of seedNumbers) {
+      if (seed <= poolMax) s[seed] = seedWeight;
+    }
+  } else {
+    for (let i = 1; i <= poolMax; i++) s[i] = 1.0 / poolMax;
+  }
+
+  // Power iterations
+  let r = new Float64Array(s);
+  for (let iter = 0; iter < iterations; iter++) {
+    const nextR = new Float64Array(poolMax + 1);
+    for (let j = 1; j <= poolMax; j++) {
+      let incoming = 0;
+      for (let i = 1; i <= poolMax; i++) {
+        incoming += r[i] * P[i][j];
+      }
+      nextR[j] = (1.0 - damping) * s[j] + damping * incoming;
+    }
+    r = nextR;
+  }
+
+  return r;
+}
+
+/**
  * Computes multi-factor probabilities and next-draw recommendation
  */
 export function computeMultiBallNextDrawProbabilities(
@@ -279,6 +341,22 @@ export function computeMultiBallNextDrawProbabilities(
     }
   }
 
+  // 2. Personalized PageRank random walk seeded on last drawn numbers
+  const pageRankScores = computePersonalizedPageRank(companionMatrix, lastNumbers, poolMax, 0.85, 15);
+
+  // 3. Weibull Inter-Arrival Hazard Model & Cycle Renewal
+  const expectedCycleGap = poolMax / pickCount;
+  const weibullHazardScores = new Float64Array(poolMax + 1);
+  const betaAging = 1.35; // Aging hazard parameter: overdue numbers face increasing emergence hazard
+
+  for (let num = 1; num <= poolMax; num++) {
+    const gap = lastSeenIndex[num] === -1 ? expectedCycleGap * 2.5 : totalDraws - 1 - lastSeenIndex[num];
+    const normalizedGap = gap / expectedCycleGap;
+    // Weibull hazard h(t) = beta * t^(beta - 1)
+    const hazard = betaAging * Math.pow(Math.max(0.1, normalizedGap), betaAging - 1);
+    weibullHazardScores[num] = Math.min(3.0, hazard);
+  }
+
   // Factor 4: Regression to the Mean (RTM) Gaussian Z-Score
   const expectedPerNum = (totalDraws * pickCount) / poolMax;
   const pSingle = pickCount / poolMax;
@@ -287,7 +365,6 @@ export function computeMultiBallNextDrawProbabilities(
 
   // Cycle Periodicity & Renewal Interval Score
   const cycleScores = new Float64Array(poolMax + 1);
-  const expectedCycleGap = poolMax / pickCount;
 
   for (let num = 1; num <= poolMax; num++) {
     // RTM
@@ -328,20 +405,23 @@ export function computeMultiBallNextDrawProbabilities(
   const maxEwma = Math.max(1, ...Array.from(ewmaScores).slice(1));
   const maxMarkov = Math.max(1, ...Array.from(markovTransitions).slice(1));
   const maxCompanion = Math.max(1, ...Array.from(companionScores).slice(1));
+  const maxPageRank = Math.max(1e-6, ...Array.from(pageRankScores).slice(1));
 
   // Multi-Factor Composite Scoring for each number
   const numberRankings: NumberFactorBreakdown[] = [];
   let totalRawScore = 0;
 
   for (let num = 1; num <= poolMax; num++) {
-    const fScore = (frequencies[num] / maxFreq) * 2.5;
-    const eScore = (ewmaScores[num] / maxEwma) * 2.5;
-    const mScore = (markovTransitions[num] / maxMarkov) * 1.8;
-    const cScore = (companionScores[num] / maxCompanion) * 2.2;
+    const fScore = (frequencies[num] / maxFreq) * 2.0;
+    const eScore = (ewmaScores[num] / maxEwma) * 2.2;
+    const mScore = (markovTransitions[num] / maxMarkov) * 1.5;
+    const cScore = (companionScores[num] / maxCompanion) * 1.8;
+    const pRankScore = (pageRankScores[num] / maxPageRank) * 2.2; // PageRank graph affinity
+    const wHazardScore = weibullHazardScores[num] * 1.2;          // Weibull renewal hazard
     const cycScore = cycleScores[num];
     const rScore = rtmScores[num];
 
-    const composite = Math.max(0.1, fScore + eScore + mScore + cScore + cycScore + rScore);
+    const composite = Math.max(0.1, fScore + eScore + mScore + cScore + pRankScore + wHazardScore + cycScore + rScore);
     totalRawScore += composite;
 
     numberRankings.push({
@@ -354,7 +434,9 @@ export function computeMultiBallNextDrawProbabilities(
         markovTransition: Math.round(mScore * 100) / 100,
         companionAffinity: Math.round(cScore * 100) / 100,
         cycleRenewal: Math.round(cycScore * 100) / 100,
-        rtmRebound: Math.round(rScore * 100) / 100
+        rtmRebound: Math.round(rScore * 100) / 100,
+        pageRankAffinity: Math.round(pRankScore * 100) / 100,
+        weibullHazard: Math.round(wHazardScore * 100) / 100
       }
     });
   }
@@ -466,35 +548,18 @@ export function computeMultiBallNextDrawProbabilities(
     )
   ];
 
-  // 3. Five-Ticket Covering Ensemble (Covering Wheel)
-  const pool16 = numberRankings.slice(0, Math.min(16, poolMax)).map(n => n.number);
-  const fiveTicketCoveringWheel: TicketEnsemble[] = [
-    optimalTicket,
-    buildTicket(
-      "cover-2",
-      "High-Affinity Pair Vector",
-      [pool16[0], pool16[1], pool16[4], pool16[5], pool16[8], pool16[9]].slice(0, pickCount),
-      bonusRankings[0].number
-    ),
-    buildTicket(
-      "cover-3",
-      "Renewal Cycle Balanced Vector",
-      [pool16[2], pool16[3], pool16[6], pool16[7], pool16[10], pool16[11]].slice(0, pickCount),
-      bonusRankings[1]?.number || bonusRankings[0].number
-    ),
-    buildTicket(
-      "cover-4",
-      "Momentum Cross-Cover Vector",
-      [pool16[0], pool16[2], pool16[5], pool16[7], pool16[12], pool16[13]].slice(0, pickCount),
-      bonusRankings[0].number
-    ),
-    buildTicket(
-      "cover-5",
-      "Deep Gap Rebound Vector",
-      [pool16[1], pool16[3], pool16[4], pool16[6], pool16[14], pool16[15]].slice(0, pickCount),
-      bonusRankings[2]?.number || bonusRankings[0].number
-    )
-  ];
+  // 3. Five-Ticket Covering Ensemble (Generated with Bitmask Set Cover)
+  const pool12ForWheel = numberRankings.slice(0, Math.min(12, poolMax)).map(n => n.number);
+  const bitmaskWheelTickets = generateAbbreviatedWheel(pool12ForWheel, 3, 3, pickCount);
+  
+  const fiveTicketCoveringWheel: TicketEnsemble[] = bitmaskWheelTickets.slice(0, 5).map((tNums, idx) => {
+    return buildTicket(
+      `cover-${idx + 1}`,
+      idx === 0 ? "Optimal Primary Pick" : `Bitmask Covering Vector ${String.fromCharCode(65 + idx)}`,
+      tNums,
+      bonusRankings[idx % bonusRankings.length].number
+    );
+  });
 
   return {
     game,

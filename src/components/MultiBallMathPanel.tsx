@@ -494,7 +494,8 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                     <th className="py-2.5 px-3">Posterior Prob</th>
                     <th className="py-2.5 px-3">EWMA Recency</th>
                     <th className="py-2.5 px-3">Markov Vector</th>
-                    <th className="py-2.5 px-3">Companion Affinity</th>
+                    <th className="py-2.5 px-3">PageRank Graph</th>
+                    <th className="py-2.5 px-3">Weibull Hazard</th>
                     <th className="py-2.5 px-3">Cycle Renewal</th>
                     <th className="py-2.5 px-3">RTM Z-Score</th>
                   </tr>
@@ -511,7 +512,8 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                       <td className="py-2 px-3 font-bold text-emerald-400">{row.posteriorProbability}%</td>
                       <td className="py-2 px-3 text-gray-300">{row.factors?.ewmaRecency}</td>
                       <td className="py-2 px-3 text-gray-300">{row.factors?.markovTransition}</td>
-                      <td className="py-2 px-3 text-gray-300">{row.factors?.companionAffinity}</td>
+                      <td className="py-2 px-3 text-primary font-bold">{row.factors?.pageRankAffinity ?? "-"}</td>
+                      <td className="py-2 px-3 text-amber-300">{row.factors?.weibullHazard ?? "-"}</td>
                       <td className="py-2 px-3 text-gray-300">{row.factors?.cycleRenewal}</td>
                       <td className="py-2 px-3 text-gray-300">{row.factors?.rtmRebound}</td>
                     </tr>
