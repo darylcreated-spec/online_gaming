@@ -148,10 +148,6 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
   // Live ticker clock for countdowns
   const [clock, setClock] = useState<Date>(() => new Date());
 
-  // Ticket pencil animation
-  const [shadedNums, setShadedNums] = useState<number[]>([]);
-  const [pencilPos, setPencilPos] = useState({ x: 50, y: -25, rotate: 0, shake: false });
-  const [showGoodLuck, setShowGoodLuck] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
 
   // Latest winning draws
@@ -266,57 +262,6 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
     return () => window.removeEventListener("win_concept_sync_completed", handleSyncEvent);
   }, []);
 
-  // Pencil shading animation
-  useEffect(() => {
-    let active = true;
-    const targetNums = [4, 12, 19, 26, 33];
-
-    const runSequence = async () => {
-      while (active) {
-        setShadedNums([]);
-        setShowGoodLuck(false);
-        setPencilPos({ x: 50, y: -30, rotate: 0, shake: false });
-        
-        await new Promise((r) => setTimeout(r, 2000));
-        if (!active) break;
-
-        for (const num of targetNums) {
-          const col = (num - 1) % 6;
-          const row = Math.floor((num - 1) / 6);
-          const targetX = 12 + col * 15.5;
-          const targetY = 15 + row * 13.5;
-
-          setPencilPos({ x: targetX, y: targetY, rotate: -10, shake: false });
-          await new Promise((r) => setTimeout(r, 800));
-          if (!active) break;
-
-          setPencilPos({ x: targetX, y: targetY, rotate: -10, shake: true });
-          await new Promise((r) => setTimeout(r, 550));
-          if (!active) break;
-
-          setShadedNums((prev) => [...prev, num]);
-          setPencilPos({ x: targetX, y: targetY, rotate: -10, shake: false });
-          await new Promise((r) => setTimeout(r, 200));
-          if (!active) break;
-        }
-
-        if (!active) break;
-
-        setPencilPos({ x: 50, y: 130, rotate: 0, shake: false });
-        await new Promise((r) => setTimeout(r, 600));
-        if (!active) break;
-
-        setShowGoodLuck(true);
-        await new Promise((r) => setTimeout(r, 3500));
-      }
-    };
-
-    runSequence();
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   // Helper for countdown display badge
   const renderCountdownBadge = (cd: DrawCountdown, colorTheme: "sky" | "amber" | "emerald" | "purple") => {
@@ -1037,102 +982,6 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         </div>
       </div>
 
-      {/* 3. Interactive Ticket Shading Demonstration Animation (Pencil Playslip) */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <h2 className="text-xs font-bold uppercase text-gray-400 tracking-wider">
-            Interactive Playslip Marking Simulator
-          </h2>
-        </div>
-        <div className="flex justify-center">
-          <div className="bg-[#f4efe0] text-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.35)] border border-slate-300/30 p-6 font-mono w-full max-w-md relative overflow-hidden h-[460px] flex flex-col justify-between select-none">
-
-            {/* Ticket Header Details */}
-            <div className="mt-2 space-y-1 border-b border-dashed border-slate-400 pb-3">
-              <h2 className="text-md font-black text-slate-800 uppercase tracking-widest text-center">
-                THE WIN CONCEPT
-              </h2>
-              <div className="text-center text-[9px] font-bold text-slate-600 bg-slate-200 py-0.5 rounded tracking-wider uppercase">
-                Statistical Model Optimizer
-              </div>
-            </div>
-
-            {/* Checklist Number Matrix Grid */}
-            <div className="relative my-4 flex-1">
-              <div className="grid grid-cols-6 gap-2 h-full py-1">
-                {Array.from({ length: 36 }).map((_, idx) => {
-                  const num = idx + 1;
-                  const isShaded = shadedNums.includes(num);
-                  return (
-                    <div
-                      key={num}
-                      className="border border-slate-400 bg-white/60 relative flex items-center justify-center rounded text-xs font-bold text-slate-800 transition"
-                    >
-                      <span>{String(num).padStart(2, "0")}</span>
-                      
-                      {/* Pencil Shading Overlay lines */}
-                      {isShaded && (
-                        <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
-                          <svg viewBox="0 0 100 100" className="w-full h-full text-slate-700 opacity-90">
-                            <path 
-                              d="M10,20 L90,80 M15,10 L85,90 M30,10 L70,90 M10,30 L90,70 M20,15 L80,85 M5,45 L95,55 M45,5 L55,95" 
-                              stroke="currentColor" 
-                              strokeWidth="10" 
-                              strokeLinecap="round" 
-                              className="animate-scribble"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Animated Floating Pencil */}
-              <div
-                className={`absolute w-8 h-8 pointer-events-none transition-all duration-300 ease-out z-20 ${
-                  pencilPos.shake ? "animate-pencil-wiggle" : ""
-                }`}
-                style={{
-                  left: `${pencilPos.x}%`,
-                  top: `${pencilPos.y}%`,
-                  transform: `translate(-2%, -98%) rotate(${pencilPos.rotate}deg)`,
-                }}
-              >
-                <svg viewBox="0 0 24 24" className="w-8 h-8 filter drop-shadow-md text-amber-500">
-                  <path
-                    d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"
-                    fill="#f59e0b"
-                    stroke="#b45309"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path d="m15 5 4 4" stroke="#78350f" strokeWidth="1.5" />
-                  <path d="M2 22l3-1-2-2z" fill="#1e293b" />
-                </svg>
-              </div>
-
-              {/* Good Luck Stamp Overlay */}
-              {showGoodLuck && (
-                <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-                  <div className="border-4 border-red-600 text-red-600 px-6 py-2 rounded-lg font-black text-2xl tracking-widest uppercase transform -rotate-6 animate-stamp-scale opacity-90 shadow-2xl bg-white/40 backdrop-blur-[1px]">
-                    GOOD LUCK!
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-slate-300 pt-3 text-center text-[8px] text-slate-500 font-extrabold tracking-widest uppercase">
-              MODEL COMPILING SYSTEM
-            </div>
-
-          </div>
-        </div>
-      </div>
-
       {/* 4. Architecture & Engineering Overview */}
       <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 bg-slate-950/40 space-y-6">
         <div className="flex items-center gap-2 border-b border-white/5 pb-3">
@@ -1243,42 +1092,6 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           </div>
         </div>
       </div>
-
-      {/* Embedded Animation Styles */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes scribble {
-          from {
-            stroke-dasharray: 600;
-            stroke-dashoffset: 600;
-          }
-          to {
-            stroke-dasharray: 600;
-            stroke-dashoffset: 0;
-          }
-        }
-        .animate-scribble {
-          animation: scribble 0.4s ease-out forwards;
-        }
-        
-        @keyframes pencil-wiggle {
-          0%, 100% { transform: translate(-2%, -98%) rotate(-10deg) translate(0, 0); }
-          25% { transform: translate(-2%, -98%) rotate(-10deg) translate(-2px, 2px); }
-          50% { transform: translate(-2%, -98%) rotate(-10deg) translate(2px, -2px); }
-          75% { transform: translate(-2%, -98%) rotate(-10deg) translate(-1px, -1px); }
-        }
-        .animate-pencil-wiggle {
-          animation: pencil-wiggle 0.08s infinite;
-        }
-
-        @keyframes stamp-scale {
-          0% { transform: scale(3) rotate(0deg); opacity: 0; }
-          40% { transform: scale(1) rotate(-6deg); opacity: 1; }
-          100% { transform: scale(1) rotate(-6deg); opacity: 1; }
-        }
-        .animate-stamp-scale {
-          animation: stamp-scale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-      `}} />
 
     </div>
   );
