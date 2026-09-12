@@ -302,42 +302,10 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           THE WIN CONCEPT
         </h1>
 
-        {/* Live Date & Time Ribbon with Countdown Status */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 pb-2.5 px-3.5 rounded-xl bg-slate-900/70 border border-white/10 shadow-inner">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-xs font-mono text-sky-300">
-              <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-              <span className="font-bold">
-                {clock.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  timeZone: "America/Port_of_Spain"
-                })}
-              </span>
-            </div>
-
-            <span className="text-gray-600 hidden sm:inline">|</span>
-
-            <div className="flex items-center gap-2 text-xs font-mono text-amber-300">
-              <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span className="font-bold font-mono">
-                {clock.toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                  hour12: true,
-                  timeZone: "America/Port_of_Spain"
-                })} <span className="text-[10px] text-amber-400/80 font-bold">AST</span>
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span className="font-semibold">Live Draw Countdowns Active Across All Game Sections</span>
-          </div>
+        {/* Live Draw Countdowns Active Notice */}
+        <div className="flex items-center gap-2 py-1.5 px-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/20 w-fit text-[11px] text-emerald-400 font-mono shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <span className="font-semibold tracking-wide">Live Draw Countdowns Active Across All Game Sections</span>
         </div>
 
         <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-4xl">

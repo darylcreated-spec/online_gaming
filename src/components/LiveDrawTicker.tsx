@@ -21,9 +21,11 @@ export default function LiveDrawTicker({
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success">("idle");
   const [lastSyncText, setLastSyncText] = useState<string>("Active");
   const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+  const [mounted, setMounted] = useState(false);
 
   // Clock tick interval for live AST time display
   useEffect(() => {
+    setMounted(true);
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -190,27 +192,27 @@ export default function LiveDrawTicker({
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2 text-sky-400 bg-sky-950/40 border border-sky-500/20 px-3 py-1.5 rounded-lg shadow-sm">
           <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-          <span className="font-bold text-[11px] sm:text-xs tracking-wide">
-            {currentTime.toLocaleDateString("en-US", {
+          <span suppressHydrationWarning className="font-bold text-[11px] sm:text-xs tracking-wide">
+            {mounted ? currentTime.toLocaleDateString("en-US", {
               weekday: "short",
               year: "numeric",
               month: "short",
               day: "numeric",
               timeZone: "America/Port_of_Spain"
-            })}
+            }) : "Loading..."}
           </span>
         </div>
 
         <div className="flex items-center gap-2 text-amber-400 bg-amber-950/40 border border-amber-500/20 px-3 py-1.5 rounded-lg shadow-sm">
           <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span className="font-black font-mono text-[11px] sm:text-xs tracking-wider">
-            {currentTime.toLocaleTimeString("en-US", {
+          <span suppressHydrationWarning className="font-black font-mono text-[11px] sm:text-xs tracking-wider">
+            {mounted ? currentTime.toLocaleTimeString("en-US", {
               hour: "2-digit",
               minute: "2-digit",
               second: "2-digit",
               hour12: true,
               timeZone: "America/Port_of_Spain"
-            })} <span className="text-[10px] text-amber-400/80 font-bold">AST</span>
+            }) : "--:--:--"} <span className="text-[10px] text-amber-400/80 font-bold">AST</span>
           </span>
         </div>
       </div>
