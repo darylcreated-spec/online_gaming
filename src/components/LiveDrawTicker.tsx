@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, RefreshCw, Zap, Sparkles, CheckCircle2 } from "lucide-react";
+import { Clock, Calendar, RefreshCw, Zap, Sparkles, CheckCircle2 } from "lucide-react";
 
 interface NextDrawInfo {
   game: "Play Whe" | "Lotto Plus" | "Win for Life";
@@ -206,78 +206,62 @@ export default function LiveDrawTicker({
 
   const currentTheme = gameColors[nextDraw.game];
 
+  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+
+  // Clock tick interval
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="w-full bg-slate-950/80 border-b border-white/5 backdrop-blur-md px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono select-none">
       
-      {/* Left: Next Draw Countdown Banner */}
-      <div 
-        onClick={() => onSelectGame && onSelectGame(currentTheme.tab)}
-        className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity"
-      >
-        {/* Animated Progress Ring */}
-        <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-            <path
-              className="text-slate-800"
-              strokeWidth="3"
-              stroke="currentColor"
-              fill="none"
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            />
-            <path
-              className={`${currentTheme.ring} transition-all duration-1000`}
-              strokeDasharray={`${progressPercent}, 100`}
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              stroke="currentColor"
-              fill="none"
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            />
-          </svg>
-          <Clock className={`w-3.5 h-3.5 ${currentTheme.accent} absolute`} />
+      {/* Left: Actual Current Date & Time (AST) */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-sky-400 bg-sky-950/40 border border-sky-500/20 px-3 py-1.5 rounded-lg shadow-sm">
+          <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+          <span className="font-bold text-[11px] sm:text-xs tracking-wide">
+            {currentTime.toLocaleDateString("en-US", {
+              weekday: "short",
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              timeZone: "America/Port_of_Spain"
+            })}
+          </span>
         </div>
 
-        {/* Game & Time Details */}
-        <div className="space-y-0.5">
-          <div className="flex items-center gap-2">
-            <span className={`px-1.5 py-0.2 rounded border text-[9px] font-black uppercase tracking-wider ${currentTheme.badge}`}>
-              {nextDraw.game}
-            </span>
-            <span className="text-white font-bold text-[11px] truncate max-w-[160px] sm:max-w-none">
-              {nextDraw.name}
-            </span>
-          </div>
-          <p className="text-[10px] text-gray-400">
-            Draws at <span className="text-white font-semibold">{nextDraw.timeStringAST}</span> AST
-          </p>
+        <div className="flex items-center gap-2 text-amber-400 bg-amber-950/40 border border-amber-500/20 px-3 py-1.5 rounded-lg shadow-sm">
+          <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span className="font-black font-mono text-[11px] sm:text-xs tracking-wider">
+            {currentTime.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: true,
+              timeZone: "America/Port_of_Spain"
+            })} <span className="text-[10px] text-amber-400/80 font-bold">AST</span>
+          </span>
         </div>
       </div>
 
-      {/* Center / Right: Countdown Digits */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5 bg-slate-900/90 border border-white/5 px-3 py-1.5 rounded-lg">
-          <div className="text-center">
-            <span className="text-sm font-black text-white">{String(hours).padStart(2, "0")}</span>
-            <span className="text-[8px] text-gray-500 block uppercase">HRS</span>
-          </div>
-          <span className="text-gray-600 font-black text-xs mb-2">:</span>
-          <div className="text-center">
-            <span className="text-sm font-black text-white">{String(minutes).padStart(2, "0")}</span>
-            <span className="text-[8px] text-gray-500 block uppercase">MIN</span>
-          </div>
-          <span className="text-gray-600 font-black text-xs mb-2">:</span>
-          <div className="text-center">
-            <span className={`text-sm font-black ${currentTheme.accent}`}>{String(seconds).padStart(2, "0")}</span>
-            <span className="text-[8px] text-gray-500 block uppercase">SEC</span>
-          </div>
+      {/* Right: Cloud Database Connected Badge + Sync Button */}
+      <div className="flex items-center gap-2.5">
+        {/* Cloud Database Connected Badge matching button size */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/50 text-[10px] text-emerald-400 font-bold uppercase tracking-wider shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+          <span>Cloud Database Connected</span>
         </div>
 
-        {/* Right: Live Cloud Auto-Sync Health Badge */}
+        {/* Live Cloud Auto-Sync Button */}
         <button
           onClick={handleManualSyncTrigger}
           disabled={syncStatus === "syncing"}
           title="Click to force immediate Turso Cloud DB sync"
-          className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg border text-[9px] sm:text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer ${
             syncStatus === "syncing"
               ? "bg-primary/20 border-primary text-primary animate-pulse"
               : syncStatus === "success"

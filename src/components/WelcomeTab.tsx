@@ -298,16 +298,6 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
       
       {/* 1. Header Hero Banner */}
       <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 bg-slate-950/60 space-y-3 relative overflow-hidden shadow-2xl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-primary text-xs font-black uppercase tracking-widest">
-            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-            <span>NLCB Live Mathematical Command Center</span>
-          </div>
-          <span className="text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Cloud Database Connected
-          </span>
-        </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight uppercase text-white drop-shadow-[0_0_20px_rgba(56,189,248,0.25)]">
           THE WIN CONCEPT
         </h1>
