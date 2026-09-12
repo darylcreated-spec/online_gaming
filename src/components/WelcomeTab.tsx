@@ -302,12 +302,6 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           THE WIN CONCEPT
         </h1>
 
-        {/* Live Draw Countdowns Active Notice */}
-        <div className="flex items-center gap-2 py-1.5 px-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/20 w-fit text-[11px] text-emerald-400 font-mono shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-          <span className="font-semibold tracking-wide">Live Draw Countdowns Active Across All Game Sections</span>
-        </div>
-
         <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-4xl">
           Real-time statistical tracking and combinatorial optimization across all official National Lotteries Control Board (NLCB) games. Powered by Markov state-transitions, Bayesian priors, Gaussian digit sums, and minimum-covering wheeling mathematics.
         </p>
@@ -315,18 +309,6 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
 
       {/* 2. THE 5-GAME COMMAND CENTER GRID */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-amber-400" />
-            <h2 className="text-xs sm:text-sm font-black uppercase text-white tracking-wider">
-              Live Game Portfolios & Probability Forecasts
-            </h2>
-          </div>
-          <span className="text-[10px] text-gray-400">
-            Real-Time Auto Synchronized
-          </span>
-        </div>
-
         {/* 5 Game Cards Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           
