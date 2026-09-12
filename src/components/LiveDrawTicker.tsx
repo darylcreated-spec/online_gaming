@@ -20,6 +20,15 @@ export default function LiveDrawTicker({
   const [nextDraw, setNextDraw] = useState<NextDrawInfo | null>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success">("idle");
   const [lastSyncText, setLastSyncText] = useState<string>("Active");
+  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
+
+  // Clock tick interval for live AST time display
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Calculate upcoming draws across all 3 games based on AST (UTC-4)
   const calculateNextDraw = (): NextDrawInfo => {
@@ -172,49 +181,7 @@ export default function LiveDrawTicker({
     }
   }, [nextDraw?.secondsRemaining]);
 
-  if (!nextDraw) return null;
 
-  const hours = Math.floor(nextDraw.secondsRemaining / 3600);
-  const minutes = Math.floor((nextDraw.secondsRemaining % 3600) / 60);
-  const seconds = nextDraw.secondsRemaining % 60;
-
-  const progressPercent = Math.max(0, Math.min(100, ((nextDraw.totalIntervalSeconds - nextDraw.secondsRemaining) / nextDraw.totalIntervalSeconds) * 100));
-
-  const gameColors = {
-    "Play Whe": {
-      badge: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-      accent: "text-amber-400",
-      ring: "stroke-amber-400",
-      glow: "shadow-[0_0_15px_rgba(251,191,36,0.2)]",
-      tab: "play-whe" as const
-    },
-    "Lotto Plus": {
-      badge: "bg-sky-500/10 text-sky-400 border-sky-500/30",
-      accent: "text-sky-400",
-      ring: "stroke-sky-400",
-      glow: "shadow-[0_0_15px_rgba(56,189,248,0.2)]",
-      tab: "lotto-plus" as const
-    },
-    "Win for Life": {
-      badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-      accent: "text-emerald-400",
-      ring: "stroke-emerald-400",
-      glow: "shadow-[0_0_15px_rgba(52,211,153,0.2)]",
-      tab: "win-for-life" as const
-    }
-  };
-
-  const currentTheme = gameColors[nextDraw.game];
-
-  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
-
-  // Clock tick interval
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <div className="w-full bg-slate-950/80 border-b border-white/5 backdrop-blur-md px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono select-none">
