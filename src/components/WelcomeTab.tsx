@@ -5,7 +5,10 @@ import {
   Info, 
   Heart, 
   ArrowRight, 
-  Sparkles, 
+  Sigma,
+  Network,
+  Scale,
+  Hourglass,
   Trophy, 
   Clock, 
   Calendar, 
@@ -1001,8 +1004,10 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
 
       {/* 4. Architecture & Engineering Overview */}
       <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 bg-slate-950/40 space-y-6">
-        <div className="flex items-center gap-2 border-b border-white/5 pb-3">
-          <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+        <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+          <div className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.25)] shrink-0">
+            <Sigma className="w-5 h-5" />
+          </div>
           <div>
             <h3 className="text-base sm:text-lg font-black uppercase text-white tracking-wider">
               Mathematical Architecture
@@ -1013,35 +1018,71 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase">
-              <Activity className="w-4 h-4" />
-              1. Markov Transitions
+          {/* 1. Markov Transitions */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-500/20 hover:border-amber-500/40 transition space-y-2">
+            <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase">
+              <Activity className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>1. Markov Transitions</span>
             </div>
             <p className="text-gray-300 leading-relaxed text-[11px]">
-              First-order Markov chains calculate state transition probabilities P(S_t | S_t-1) between sequential lottery draws, uncovering recurring historical paths across Trinidad lottery history.
+              First-order Markov chains calculate state transition probabilities P(S_t | S_t-1) between sequential lottery draws, uncovering recurring directional paths across Trinidad lottery history.
             </p>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase">
-              <Compass className="w-4 h-4" />
-              2. Graph & Companion Affinity
+          {/* 2. Graph & Companion Affinity */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-sky-500/20 hover:border-sky-500/40 transition space-y-2">
+            <div className="flex items-center gap-2 text-sky-400 font-bold text-xs uppercase">
+              <Network className="w-4 h-4 text-sky-400 shrink-0" />
+              <span>2. Graph & Companion Affinity</span>
             </div>
             <p className="text-gray-300 leading-relaxed text-[11px]">
-              PageRank style bipartite affinity networks detect high-frequency companion numbers that co-occur with higher statistical significance than uniform random distributions.
+              PageRank-inspired bipartite affinity networks detect high-frequency companion numbers and co-occurrence cliques that depart significantly from uniform random distributions.
             </p>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase">
-              <Layers className="w-4 h-4" />
-              3. Combinatorial Covering Wheels
+          {/* 3. Combinatorial Covering Wheels */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-emerald-500/20 hover:border-emerald-500/40 transition space-y-2">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase">
+              <Layers className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>3. Combinatorial Covering Wheels</span>
             </div>
             <p className="text-gray-300 leading-relaxed text-[11px]">
               Abbreviated wheeling algorithms compile your high-confidence pools into mathematically minimized ticket sets that guarantee designated tier matches without purchasing full combinations.
+            </p>
+          </div>
+
+          {/* 4. Gaussian Sum Distribution & CLT */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-yellow-500/20 hover:border-yellow-500/40 transition space-y-2">
+            <div className="flex items-center gap-2 text-yellow-400 font-bold text-xs uppercase">
+              <Sigma className="w-4 h-4 text-yellow-400 shrink-0" />
+              <span>4. Gaussian Sums & Central Limit</span>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px]">
+              Normal distribution modeling enforces empirical μ ± 2σ sum envelopes, eliminating combinations whose digit sums fall into low-probability statistical tails (&lt;5% historical frequency).
+            </p>
+          </div>
+
+          {/* 5. Weibull Renewal Hazard Aging */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-rose-500/20 hover:border-rose-500/40 transition space-y-2">
+            <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase">
+              <Hourglass className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>5. Weibull Renewal Hazard</span>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px]">
+              Non-linear survival analysis measures interval aging and hazard arrival rates λ(t) for overdue numbers, separating genuine cyclical regime changes from the gambler's fallacy.
+            </p>
+          </div>
+
+          {/* 6. Maximum Expected Value & Shannon Entropy */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-purple-500/20 hover:border-purple-500/40 transition space-y-2">
+            <div className="flex items-center gap-2 text-purple-400 font-bold text-xs uppercase">
+              <Scale className="w-4 h-4 text-purple-400 shrink-0" />
+              <span>6. Maximum Expected Value (MEV)</span>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px]">
+              Information-theoretic Shannon entropy optimization evaluates ticket portfolio diversity, maximizing unique combinatorial coverage while penalizing redundant ball overlaps.
             </p>
           </div>
 
