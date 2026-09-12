@@ -317,14 +317,20 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-400" />
-                    <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest">Play Whe</span>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/images/play_whe_icon.png" 
+                    alt="Play Whe" 
+                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(251,191,36,0.3)] border border-amber-500/30 shrink-0" 
+                  />
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest">Play Whe</span>
+                    </div>
+                    <span className="text-xs text-white font-bold">
+                      {latestPlayWhe ? `${latestPlayWhe.draw_time_slot || "Draw"} #${latestPlayWhe.draw_number}` : "Loading Draw..."}
+                    </span>
                   </div>
-                  <span className="text-xs text-white font-bold">
-                    {latestPlayWhe ? `${latestPlayWhe.draw_time_slot || "Draw"} #${latestPlayWhe.draw_number}` : "Loading Draw..."}
-                  </span>
                 </div>
                 <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 font-bold border border-amber-500/20">
                   {latestPlayWhe?.draw_date || "Official"}
@@ -425,14 +431,20 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-sky-400" />
-                    <span className="text-[11px] font-black text-sky-400 uppercase tracking-widest">Lotto Plus</span>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/images/lotto_plus_icon.png" 
+                    alt="Lotto Plus" 
+                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(56,189,248,0.3)] border border-sky-500/30 shrink-0" 
+                  />
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-black text-sky-400 uppercase tracking-widest">Lotto Plus</span>
+                    </div>
+                    <span className="text-xs text-white font-bold">
+                      {latestLotto ? `Draw #${latestLotto.draw_number}` : "Loading Draw..."}
+                    </span>
                   </div>
-                  <span className="text-xs text-white font-bold">
-                    {latestLotto ? `Draw #${latestLotto.draw_number}` : "Loading Draw..."}
-                  </span>
                 </div>
                 <span className="text-[9px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 font-bold border border-sky-500/20">
                   {latestLotto?.draw_date || "Official"}
@@ -547,14 +559,20 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Win For Life</span>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/images/win_for_life_icon.png" 
+                    alt="Win For Life" 
+                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(52,211,153,0.3)] border border-emerald-500/30 shrink-0" 
+                  />
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Win For Life</span>
+                    </div>
+                    <span className="text-xs text-white font-bold">
+                      {latestWinForLife ? `Draw #${latestWinForLife.draw_number}` : "Loading Draw..."}
+                    </span>
                   </div>
-                  <span className="text-xs text-white font-bold">
-                    {latestWinForLife ? `Draw #${latestWinForLife.draw_number}` : "Loading Draw..."}
-                  </span>
                 </div>
                 <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/20">
                   {latestWinForLife?.draw_date || "Official"}
@@ -669,14 +687,20 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-400" />
-                    <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest">Cash Pot</span>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/images/cash_pot_icon.png" 
+                    alt="Cash Pot" 
+                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(251,191,36,0.35)] border border-amber-500/30 shrink-0" 
+                  />
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest">Cash Pot</span>
+                    </div>
+                    <span className="text-xs text-white font-bold">
+                      {latestCashPot ? `Draw #${latestCashPot.draw_number}` : "Loading Draw..."}
+                    </span>
                   </div>
-                  <span className="text-xs text-white font-bold">
-                    {latestCashPot ? `Draw #${latestCashPot.draw_number}` : "Loading Draw..."}
-                  </span>
                 </div>
                 <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 font-bold border border-amber-500/20">
                   {latestCashPot?.draw_date || "Official"}
@@ -787,26 +811,32 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           </div>
 
           {/* CARD 5: PICK 4 */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-emerald-500/25 hover:border-emerald-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-slate-950/80 border border-purple-500/25 hover:border-purple-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Pick 4</span>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/images/pick_four_icon.png" 
+                    alt="Pick 4" 
+                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(168,85,247,0.35)] border border-purple-500/30 shrink-0" 
+                  />
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-black text-purple-400 uppercase tracking-widest">Pick 4</span>
+                    </div>
+                    <span className="text-xs text-white font-bold">
+                      {latestPick4 ? `${latestPick4.draw_time_slot || "Draw"} #${latestPick4.draw_number}` : "Loading Draw..."}
+                    </span>
                   </div>
-                  <span className="text-xs text-white font-bold">
-                    {latestPick4 ? `${latestPick4.draw_time_slot || "Draw"} #${latestPick4.draw_number}` : "Loading Draw..."}
-                  </span>
                 </div>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/20">
+                <span className="text-[9px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 font-bold border border-purple-500/20">
                   {latestPick4?.draw_date || "Official"}
                 </span>
               </div>
 
               {/* Countdown Timer */}
-              {renderCountdownBadge(countdowns.pick4, "emerald")}
+              {renderCountdownBadge(countdowns.pick4, "purple")}
 
               {/* Section A: Last Winning Result */}
               <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
@@ -886,7 +916,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             {/* CTA Button */}
             <button
               onClick={() => onSelectGame && onSelectGame("pick4")}
-              className="w-full py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-emerald-500 group-hover:text-slate-950 group-hover:border-transparent"
+              className="w-full py-2.5 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 text-purple-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-purple-500 group-hover:text-white group-hover:border-transparent"
             >
               <span>Explore Pick 4 Permutations</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
@@ -898,14 +928,20 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-purple-400" />
-                    <span className="text-[11px] font-black text-purple-400 uppercase tracking-widest">Utility Suite</span>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/images/scanner_icon.png" 
+                    alt="Utility Suite" 
+                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(168,85,247,0.35)] border border-purple-500/30 shrink-0" 
+                  />
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-black text-purple-400 uppercase tracking-widest">Utility Suite</span>
+                    </div>
+                    <span className="text-xs text-white font-bold">
+                      Multi-Game Ticket Scanner & Pool Management
+                    </span>
                   </div>
-                  <span className="text-xs text-white font-bold">
-                    Multi-Game Ticket Scanner & Pool Management
-                  </span>
                 </div>
                 <span className="text-[9px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 font-bold border border-purple-500/20">
                   OCR Engine

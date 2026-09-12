@@ -390,29 +390,33 @@ export default function Home() {
 
           <button
             onClick={() => setActiveTab("cashpot")}
-            className={`flex items-center justify-center gap-2 px-3.5 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
               activeTab === "cashpot"
                 ? "bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold"
                 : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
             }`}
           >
-            <span className="w-5 h-5 rounded-md bg-amber-500/20 text-amber-400 font-black text-[10px] flex items-center justify-center border border-amber-500/40 font-mono shadow-[0_0_8px_rgba(245,158,11,0.3)]">
-              CP
-            </span>
+            <img 
+              src="/images/cash_pot_icon.png" 
+              alt="Cashpot" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(245,158,11,0.4)]" 
+            />
             CASHPOT
           </button>
 
           <button
             onClick={() => setActiveTab("pick4")}
-            className={`flex items-center justify-center gap-2 px-3.5 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
               activeTab === "pick4"
-                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold"
+                ? "bg-purple-500/15 border border-purple-500/30 text-purple-300 font-bold"
                 : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
             }`}
           >
-            <span className="w-5 h-5 rounded-md bg-emerald-500/20 text-emerald-400 font-black text-[10px] flex items-center justify-center border border-emerald-500/40 font-mono shadow-[0_0_8px_rgba(16,185,129,0.3)]">
-              P4
-            </span>
+            <img 
+              src="/images/pick_four_icon.png" 
+              alt="Pick 4" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(168,85,247,0.4)]" 
+            />
             PICK 4
           </button>
 
