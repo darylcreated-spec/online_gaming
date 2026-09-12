@@ -5,6 +5,11 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Allow up to 60s for full sync cycle
 
+// In-memory rate limiting and result caching (25-second cooldown against spam clicks/bots)
+let lastSyncTimestamp = 0;
+let lastCachedResponse: any = null;
+const SYNC_COOLDOWN_MS = 25 * 1000; // 25 seconds
+
 /**
  * Unified cron & auto-sync endpoint that syncs ALL games and verifies predictions in parallel.
  * Called automatically by Vercel Cron, external cron services (cron-job.org),
@@ -15,9 +20,24 @@ export const maxDuration = 60; // Allow up to 60s for full sync cycle
  */
 async function handleSync(request: Request) {
   try {
+    const nowMs = Date.now();
+    const { searchParams } = new URL(request.url);
+    const force = searchParams.get("force") === "true";
+
+    // Rate-limiting check: if synced recently, return cached response immediately without scraping
+    if (!force && lastCachedResponse && (nowMs - lastSyncTimestamp < SYNC_COOLDOWN_MS)) {
+      const remainingSec = Math.ceil((SYNC_COOLDOWN_MS - (nowMs - lastSyncTimestamp)) / 1000);
+      console.log(`[Auto-Sync] Cooldown active (${remainingSec}s remaining). Serving cached response.`);
+      return NextResponse.json({
+        ...lastCachedResponse,
+        rateLimited: true,
+        cooldownRemainingSeconds: remainingSec,
+        message: `Sync throttled. Serving latest database snapshot (next live scrape allowed in ${remainingSec}s).`
+      });
+    }
+
     // 1. Log request source
     const authHeader = request.headers.get("Authorization");
-    const { searchParams } = new URL(request.url);
     const secretParam = searchParams.get("secret");
     console.log(`[Auto-Sync] Received sync trigger from: ${request.headers.get("user-agent") || "unknown"}`);
 
@@ -64,7 +84,13 @@ async function handleSync(request: Request) {
     results.totalDrawsAdded = totalAdded;
 
     console.log(`[Auto-Sync] Sync complete. Total new draws added across all games: ${totalAdded}`);
-    return NextResponse.json({ success: true, results, totalDrawsAdded: totalAdded });
+    const responsePayload = { success: true, results, totalDrawsAdded: totalAdded };
+    
+    // Save to in-memory cache and update timestamp
+    lastSyncTimestamp = nowMs;
+    lastCachedResponse = responsePayload;
+
+    return NextResponse.json(responsePayload);
   } catch (error: any) {
     console.error("[Auto-Sync] Fatal error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
