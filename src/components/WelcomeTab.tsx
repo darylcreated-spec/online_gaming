@@ -265,12 +265,13 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
 
 
   // Helper for countdown display badge
-  const renderCountdownBadge = (cd: DrawCountdown, colorTheme: "sky" | "amber" | "emerald" | "purple") => {
+  const renderCountdownBadge = (cd: DrawCountdown, colorTheme: "sky" | "amber" | "emerald" | "purple" | "yellow") => {
     const themeStyles = {
       sky: "border-sky-500/30 bg-sky-950/40 text-sky-300",
       amber: "border-amber-500/30 bg-amber-950/40 text-amber-300",
       emerald: "border-emerald-500/30 bg-emerald-950/40 text-emerald-300",
-      purple: "border-purple-500/30 bg-purple-950/40 text-purple-300"
+      purple: "border-purple-500/30 bg-purple-950/40 text-purple-300",
+      yellow: "border-yellow-500/30 bg-yellow-950/40 text-yellow-300"
     };
 
     return (
@@ -313,26 +314,26 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           
           {/* CARD 1: PLAY WHE */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-amber-500/25 hover:border-amber-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-gradient-to-b from-amber-950/25 via-slate-950/90 to-slate-950 border border-amber-500/30 hover:border-amber-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(251,191,36,0.18)] flex flex-col justify-between">
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
                   <img 
                     src="/images/play_whe_icon.png" 
                     alt="Play Whe" 
-                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(251,191,36,0.3)] border border-amber-500/30 shrink-0" 
+                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(251,191,36,0.35)] border border-amber-500/40 shrink-0" 
                   />
                   <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest">Play Whe</span>
-                    </div>
-                    <span className="text-xs text-white font-bold">
+                    <h3 className="text-lg sm:text-xl font-black text-amber-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(251,191,36,0.45)]">
+                      Play Whe
+                    </h3>
+                    <span className="text-xs text-gray-300 font-semibold block">
                       {latestPlayWhe ? `${latestPlayWhe.draw_time_slot || "Draw"} #${latestPlayWhe.draw_number}` : "Loading Draw..."}
                     </span>
                   </div>
                 </div>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 font-bold border border-amber-500/20">
+                <span className="text-[10px] px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-300 font-bold border border-amber-500/30">
                   {latestPlayWhe?.draw_date || "Official"}
                 </span>
               </div>
@@ -419,7 +420,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             {/* CTA Button */}
             <button
               onClick={() => onSelectGame && onSelectGame("play-whe")}
-              className="w-full py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-amber-500 group-hover:text-slate-950 group-hover:border-transparent"
+              className="w-full py-2.5 bg-amber-500/15 hover:bg-amber-500 border border-amber-500/40 text-amber-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-amber-500 group-hover:text-slate-950 group-hover:border-transparent"
             >
               <span>Launch Play Whe Analytics</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
@@ -427,26 +428,26 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           </div>
 
           {/* CARD 2: LOTTO PLUS */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-sky-500/25 hover:border-sky-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-gradient-to-b from-sky-950/25 via-slate-950/90 to-slate-950 border border-sky-500/30 hover:border-sky-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(56,189,248,0.18)] flex flex-col justify-between">
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
                   <img 
                     src="/images/lotto_plus_icon.png" 
                     alt="Lotto Plus" 
-                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(56,189,248,0.3)] border border-sky-500/30 shrink-0" 
+                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(56,189,248,0.35)] border border-sky-500/40 shrink-0" 
                   />
                   <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-black text-sky-400 uppercase tracking-widest">Lotto Plus</span>
-                    </div>
-                    <span className="text-xs text-white font-bold">
+                    <h3 className="text-lg sm:text-xl font-black text-sky-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]">
+                      Lotto Plus
+                    </h3>
+                    <span className="text-xs text-gray-300 font-semibold block">
                       {latestLotto ? `Draw #${latestLotto.draw_number}` : "Loading Draw..."}
                     </span>
                   </div>
                 </div>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 font-bold border border-sky-500/20">
+                <span className="text-[10px] px-2.5 py-1 rounded-md bg-sky-500/10 text-sky-300 font-bold border border-sky-500/30">
                   {latestLotto?.draw_date || "Official"}
                 </span>
               </div>
@@ -547,7 +548,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             {/* CTA Button */}
             <button
               onClick={() => onSelectGame && onSelectGame("lotto-plus")}
-              className="w-full py-2.5 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/35 text-sky-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-sky-500 group-hover:text-slate-950 group-hover:border-transparent"
+              className="w-full py-2.5 bg-sky-500/15 hover:bg-sky-500 border border-sky-500/40 text-sky-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-sky-500 group-hover:text-slate-950 group-hover:border-transparent"
             >
               <span>Explore Lotto Plus Wheels</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
@@ -555,26 +556,26 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           </div>
 
           {/* CARD 3: WIN FOR LIFE */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-emerald-500/25 hover:border-emerald-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-gradient-to-b from-emerald-950/25 via-slate-950/90 to-slate-950 border border-emerald-500/30 hover:border-emerald-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(52,211,153,0.18)] flex flex-col justify-between">
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
                   <img 
                     src="/images/win_for_life_icon.png" 
                     alt="Win For Life" 
-                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(52,211,153,0.3)] border border-emerald-500/30 shrink-0" 
+                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(52,211,153,0.35)] border border-emerald-500/40 shrink-0" 
                   />
                   <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Win For Life</span>
-                    </div>
-                    <span className="text-xs text-white font-bold">
+                    <h3 className="text-lg sm:text-xl font-black text-emerald-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(52,211,153,0.45)]">
+                      Win For Life
+                    </h3>
+                    <span className="text-xs text-gray-300 font-semibold block">
                       {latestWinForLife ? `Draw #${latestWinForLife.draw_number}` : "Loading Draw..."}
                     </span>
                   </div>
                 </div>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/20">
+                <span className="text-[10px] px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/30">
                   {latestWinForLife?.draw_date || "Official"}
                 </span>
               </div>
@@ -675,7 +676,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             {/* CTA Button */}
             <button
               onClick={() => onSelectGame && onSelectGame("win-for-life")}
-              className="w-full py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-emerald-500 group-hover:text-slate-950 group-hover:border-transparent"
+              className="w-full py-2.5 bg-emerald-500/15 hover:bg-emerald-500 border border-emerald-500/40 text-emerald-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-emerald-500 group-hover:text-slate-950 group-hover:border-transparent"
             >
               <span>Explore Win For Life</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
@@ -683,32 +684,32 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           </div>
 
           {/* CARD 4: CASHPOT (5 OF 20) */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-amber-500/25 hover:border-amber-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-gradient-to-b from-yellow-950/25 via-slate-950/90 to-slate-950 border border-yellow-500/30 hover:border-yellow-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(250,204,21,0.18)] flex flex-col justify-between">
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
                   <img 
                     src="/images/cash_pot_icon.png" 
                     alt="Cash Pot" 
-                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(251,191,36,0.35)] border border-amber-500/30 shrink-0" 
+                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(250,204,21,0.35)] border border-yellow-500/40 shrink-0" 
                   />
                   <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-black text-amber-400 uppercase tracking-widest">Cash Pot</span>
-                    </div>
-                    <span className="text-xs text-white font-bold">
+                    <h3 className="text-lg sm:text-xl font-black text-yellow-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(250,204,21,0.45)]">
+                      Cash Pot
+                    </h3>
+                    <span className="text-xs text-gray-300 font-semibold block">
                       {latestCashPot ? `Draw #${latestCashPot.draw_number}` : "Loading Draw..."}
                     </span>
                   </div>
                 </div>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 font-bold border border-amber-500/20">
+                <span className="text-[10px] px-2.5 py-1 rounded-md bg-yellow-500/10 text-yellow-300 font-bold border border-yellow-500/30">
                   {latestCashPot?.draw_date || "Official"}
                 </span>
               </div>
 
               {/* Countdown Timer */}
-              {renderCountdownBadge(countdowns.cashPot, "amber")}
+              {renderCountdownBadge(countdowns.cashPot, "yellow")}
 
               {/* Section A: Last Winning Result */}
               <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
@@ -717,7 +718,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     Last Winning 5 Balls (1–20):
                   </span>
                   {latestCashPot?.multiplier && (
-                    <span className="text-[9px] text-amber-300 font-bold">
+                    <span className="text-[9px] text-yellow-300 font-bold">
                       Mult: {latestCashPot.multiplier}X
                     </span>
                   )}
@@ -728,14 +729,14 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     {Array.from({ length: 5 }).map((_, i) => (
                       <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
                     ))}
-                    <div className="w-7 h-7 rounded-full bg-amber-900/40 ml-1" />
+                    <div className="w-7 h-7 rounded-full bg-yellow-900/40 ml-1" />
                   </div>
                 ) : latestCashPot ? (
                   <div className="flex flex-wrap items-center gap-1.5 py-1">
                     {[latestCashPot.num1, latestCashPot.num2, latestCashPot.num3, latestCashPot.num4, latestCashPot.num5].map((num: number, i: number) => (
                       <div
                         key={i}
-                        className="w-7 h-7 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.35)] font-mono"
+                        className="w-7 h-7 rounded-full bg-yellow-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(250,204,21,0.35)] font-mono"
                       >
                         {num}
                       </div>
@@ -744,7 +745,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                       <>
                         <span className="text-gray-600 font-bold">|</span>
                         <div
-                          className="w-7 h-7 rounded-full bg-amber-600 border border-amber-400 text-white font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(245,158,11,0.4)] font-mono"
+                          className="w-7 h-7 rounded-full bg-amber-500 border border-amber-300 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(245,158,11,0.4)] font-mono"
                           title="Multiplier"
                         >
                           {latestCashPot.multiplier}X
@@ -758,13 +759,13 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               </div>
 
               {/* Section B: App Suggested Numbers */}
-              <div className="space-y-1.5 bg-amber-950/20 p-3 rounded-xl border border-amber-500/20">
+              <div className="space-y-1.5 bg-yellow-950/20 p-3 rounded-xl border border-yellow-500/20">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
-                    <Brain className="w-3 h-3 text-amber-400" />
+                  <span className="text-[9px] font-bold text-yellow-300 uppercase tracking-wider flex items-center gap-1">
+                    <Brain className="w-3 h-3 text-yellow-400" />
                     Statistical 5-Ball Quintet:
                   </span>
-                  <span className="text-[9px] text-amber-400 font-bold px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/30">
+                  <span className="text-[9px] text-yellow-400 font-bold px-1.5 py-0.2 rounded bg-yellow-500/15 border border-yellow-500/30">
                     Grade {cashPotPrediction?.topEnsembles?.[0]?.confidenceGrade || "A+"}
                   </span>
                 </div>
@@ -775,14 +776,14 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                       {cashPotPrediction.topEnsembles[0].numbers.map((num: number, idx: number) => (
                         <div
                           key={idx}
-                          className="w-6 h-6 rounded-md bg-amber-500/20 border border-amber-400 text-amber-300 font-black text-[11px] flex items-center justify-center font-mono"
+                          className="w-6 h-6 rounded-md bg-yellow-500/20 border border-yellow-400 text-yellow-300 font-black text-[11px] flex items-center justify-center font-mono"
                         >
                           {num}
                         </div>
                       ))}
-                      <span className="text-amber-400 font-bold text-xs mx-0.5">+</span>
+                      <span className="text-yellow-400 font-bold text-xs mx-0.5">+</span>
                       <div
-                        className="w-6 h-6 rounded-md bg-amber-600/40 border border-amber-400 text-amber-200 font-black text-[11px] flex items-center justify-center font-mono"
+                        className="w-6 h-6 rounded-md bg-amber-500/40 border border-amber-400 text-amber-200 font-black text-[11px] flex items-center justify-center font-mono"
                         title="Target Multiplier"
                       >
                         {cashPotPrediction.topEnsembles[0].bonusBall}X
@@ -803,7 +804,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             {/* CTA Button */}
             <button
               onClick={() => onSelectGame && onSelectGame("cashpot")}
-              className="w-full py-2.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-amber-500 group-hover:text-slate-950 group-hover:border-transparent"
+              className="w-full py-2.5 bg-yellow-500/15 hover:bg-yellow-500 border border-yellow-500/40 text-yellow-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-yellow-500 group-hover:text-slate-950 group-hover:border-transparent"
             >
               <span>Explore Cash Pot Analytics</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
@@ -811,26 +812,26 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           </div>
 
           {/* CARD 5: PICK 4 */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-purple-500/25 hover:border-purple-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-gradient-to-b from-purple-950/25 via-slate-950/90 to-slate-950 border border-purple-500/30 hover:border-purple-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(168,85,247,0.18)] flex flex-col justify-between">
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
                   <img 
                     src="/images/pick_four_icon.png" 
                     alt="Pick 4" 
-                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(168,85,247,0.35)] border border-purple-500/30 shrink-0" 
+                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(168,85,247,0.35)] border border-purple-500/40 shrink-0" 
                   />
                   <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-black text-purple-400 uppercase tracking-widest">Pick 4</span>
-                    </div>
-                    <span className="text-xs text-white font-bold">
+                    <h3 className="text-lg sm:text-xl font-black text-purple-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(168,85,247,0.45)]">
+                      Pick 4
+                    </h3>
+                    <span className="text-xs text-gray-300 font-semibold block">
                       {latestPick4 ? `${latestPick4.draw_time_slot || "Draw"} #${latestPick4.draw_number}` : "Loading Draw..."}
                     </span>
                   </div>
                 </div>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 font-bold border border-purple-500/20">
+                <span className="text-[10px] px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-300 font-bold border border-purple-500/30">
                   {latestPick4?.draw_date || "Official"}
                 </span>
               </div>
@@ -855,7 +856,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     {[latestPick4.digit1, latestPick4.digit2, latestPick4.digit3, latestPick4.digit4].map((d: number, i: number) => (
                       <div
                         key={i}
-                        className="w-8 h-8 rounded-lg bg-emerald-400 text-slate-950 font-black text-sm flex items-center justify-center shadow-[0_0_10px_rgba(52,211,153,0.35)] font-mono"
+                        className="w-8 h-8 rounded-lg bg-purple-500/25 border border-purple-400 text-purple-200 font-black text-sm flex items-center justify-center shadow-[0_0_10px_rgba(168,85,247,0.35)] font-mono"
                       >
                         {d}
                       </div>
@@ -870,13 +871,13 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               </div>
 
               {/* Section B: App Suggested Numbers */}
-              <div className="space-y-1.5 bg-emerald-950/20 p-3 rounded-xl border border-emerald-500/20">
+              <div className="space-y-1.5 bg-purple-950/20 p-3 rounded-xl border border-purple-500/20">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1">
-                    <Brain className="w-3 h-3 text-emerald-400" />
+                  <span className="text-[9px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1">
+                    <Brain className="w-3 h-3 text-purple-400" />
                     Optimal Straight & Box EV:
                   </span>
-                  <span className="text-[9px] text-emerald-400 font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30">
+                  <span className="text-[9px] text-purple-400 font-bold px-1.5 py-0.2 rounded bg-purple-500/15 border border-purple-500/30">
                     EV Score {pick4Prediction?.optimalStraightTicket?.confidenceScore || 92}%
                   </span>
                 </div>
@@ -887,19 +888,19 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                       {pick4Prediction.optimalStraightTicket.digits.map((digit: number, idx: number) => (
                         <div
                           key={idx}
-                          className="w-6 h-6 rounded-md bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-black text-[11px] flex items-center justify-center font-mono"
+                          className="w-6 h-6 rounded-md bg-purple-500/20 border border-purple-400 text-purple-200 font-black text-[11px] flex items-center justify-center font-mono"
                         >
                           {digit}
                         </div>
                       ))}
-                      <span className="text-[9px] text-emerald-400 ml-1 font-bold">
+                      <span className="text-[9px] text-purple-400 ml-1 font-bold">
                         (Straight)
                       </span>
                     </div>
                     {pick4Prediction.optimalBoxTickets?.twentyFourWay && (
                       <div className="text-right">
                         <span className="text-[9px] text-gray-400 block">Box 24-Way</span>
-                        <span className="text-[10px] font-bold text-emerald-300 font-mono">
+                        <span className="text-[10px] font-bold text-purple-300 font-mono">
                           {pick4Prediction.optimalBoxTickets.twentyFourWay.digitsString}
                         </span>
                       </div>
@@ -916,7 +917,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             {/* CTA Button */}
             <button
               onClick={() => onSelectGame && onSelectGame("pick4")}
-              className="w-full py-2.5 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 text-purple-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-purple-500 group-hover:text-white group-hover:border-transparent"
+              className="w-full py-2.5 bg-purple-500/15 hover:bg-purple-500 border border-purple-500/40 text-purple-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-purple-500 group-hover:text-white group-hover:border-transparent"
             >
               <span>Explore Pick 4 Permutations</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
@@ -924,26 +925,26 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           </div>
 
           {/* CARD 6: TICKET SCANNER & SYNDICATES SHORTCUT CARD */}
-          <div className="p-5 rounded-2xl bg-slate-950/80 border border-purple-500/25 hover:border-purple-500/50 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-gradient-to-b from-indigo-950/25 via-slate-950/90 to-slate-950 border border-indigo-500/30 hover:border-indigo-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(99,102,241,0.18)] flex flex-col justify-between">
             <div className="space-y-3.5">
               {/* Card Header */}
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
                   <img 
                     src="/images/scanner_icon.png" 
                     alt="Utility Suite" 
-                    className="w-10 h-10 rounded-xl object-contain shadow-[0_0_12px_rgba(168,85,247,0.35)] border border-purple-500/30 shrink-0" 
+                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(99,102,241,0.35)] border border-indigo-500/40 shrink-0" 
                   />
                   <div className="space-y-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-black text-purple-400 uppercase tracking-widest">Utility Suite</span>
-                    </div>
-                    <span className="text-xs text-white font-bold">
-                      Multi-Game Ticket Scanner & Pool Management
+                    <h3 className="text-lg sm:text-xl font-black text-indigo-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(99,102,241,0.45)]">
+                      Utility Suite
+                    </h3>
+                    <span className="text-xs text-gray-300 font-semibold block">
+                      Ticket Scanner & Syndicates
                     </span>
                   </div>
                 </div>
-                <span className="text-[9px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 font-bold border border-purple-500/20">
+                <span className="text-[10px] px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-300 font-bold border border-indigo-500/30">
                   OCR Engine
                 </span>
               </div>
