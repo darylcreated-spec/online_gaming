@@ -322,152 +322,163 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Global Navigation Tabs (Desktop Only) */}
-        <nav className="hidden md:flex bg-slate-900/60 p-1 rounded-lg border border-white/5 gap-1">
+        {/* Global Navigation Ribbon (Scrollable horizontally from left to right) */}
+        <div className="hidden md:flex items-center min-w-0 max-w-[calc(100vw-360px)]">
+          <nav className="flex items-center gap-2 p-1.5 bg-slate-900/80 rounded-xl border border-white/10 overflow-x-auto scrollbar-none sleek-scrollbar scroll-smooth w-full">
+          {/* HOME */}
           <button
             onClick={() => setActiveTab("welcome")}
-            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`min-w-[115px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "welcome"
-                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
-                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+                ? "bg-sky-500/20 border border-sky-400 text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]"
+                : "text-gray-400 hover:text-sky-300 border border-transparent hover:border-sky-500/30 hover:bg-sky-500/10"
             }`}
           >
             <img 
               src="/images/welcome_icon.png" 
               alt="Welcome" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)] shrink-0" 
             />
-            HOME
+            <span>HOME</span>
           </button>
 
+          {/* LOTTO PLUS */}
           <button
             onClick={() => setActiveTab("lotto-plus")}
-            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`min-w-[125px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "lotto-plus"
-                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
-                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+                ? "bg-sky-500/20 border border-sky-400 text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]"
+                : "text-gray-400 hover:text-sky-300 border border-transparent hover:border-sky-500/30 hover:bg-sky-500/10"
             }`}
           >
             <img 
               src="/images/lotto_plus_icon.png" 
               alt="Lotto Plus" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)] shrink-0" 
             />
-            LOTTO PLUS
+            <span>LOTTO PLUS</span>
           </button>
           
+          {/* PLAY WHE */}
           <button
             onClick={() => setActiveTab("play-whe")}
-            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`min-w-[120px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "play-whe"
-                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
-                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+                ? "bg-amber-500/20 border border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.25)]"
+                : "text-gray-400 hover:text-amber-300 border border-transparent hover:border-amber-500/30 hover:bg-amber-500/10"
             }`}
           >
             <img 
               src="/images/play_whe_icon.png" 
               alt="Play Whe" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(251,191,36,0.4)] shrink-0" 
             />
-            PLAY WHE
+            <span>PLAY WHE</span>
           </button>
           
+          {/* WIN FOR LIFE */}
           <button
             onClick={() => setActiveTab("win-for-life")}
-            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`min-w-[130px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "win-for-life"
-                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
-                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+                ? "bg-emerald-500/20 border border-emerald-400 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.25)]"
+                : "text-gray-400 hover:text-emerald-300 border border-transparent hover:border-emerald-500/30 hover:bg-emerald-500/10"
             }`}
           >
             <img 
               src="/images/win_for_life_icon.png" 
               alt="Win for Life" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(52,211,153,0.4)] shrink-0" 
             />
-            WIN FOR LIFE
+            <span>WIN FOR LIFE</span>
           </button>
 
+          {/* CASHPOT */}
           <button
             onClick={() => setActiveTab("cashpot")}
-            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`min-w-[120px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "cashpot"
-                ? "bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold"
-                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+                ? "bg-yellow-500/20 border border-yellow-400 text-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.25)]"
+                : "text-gray-400 hover:text-yellow-300 border border-transparent hover:border-yellow-500/30 hover:bg-yellow-500/10"
             }`}
           >
             <img 
               src="/images/cash_pot_icon.png" 
               alt="Cashpot" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(245,158,11,0.4)]" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(250,204,21,0.4)] shrink-0" 
             />
-            CASHPOT
+            <span>CASHPOT</span>
           </button>
 
+          {/* PICK 4 */}
           <button
             onClick={() => setActiveTab("pick4")}
-            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`min-w-[115px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "pick4"
-                ? "bg-purple-500/15 border border-purple-500/30 text-purple-300 font-bold"
-                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+                ? "bg-purple-500/20 border border-purple-400 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.25)]"
+                : "text-gray-400 hover:text-purple-300 border border-transparent hover:border-purple-500/30 hover:bg-purple-500/10"
             }`}
           >
             <img 
               src="/images/pick_four_icon.png" 
               alt="Pick 4" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(168,85,247,0.4)]" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(168,85,247,0.4)] shrink-0" 
             />
-            PICK 4
+            <span>PICK 4</span>
           </button>
 
+          {/* SYNDICATES */}
           <button
             onClick={() => setActiveTab("syndicate")}
-            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`min-w-[125px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "syndicate"
-                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
-                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+                ? "bg-violet-500/20 border border-violet-400 text-violet-300 shadow-[0_0_15px_rgba(167,139,250,0.25)]"
+                : "text-gray-400 hover:text-violet-300 border border-transparent hover:border-violet-500/30 hover:bg-violet-500/10"
             }`}
           >
             <img 
               src="/images/syndicate_icon.png" 
               alt="Syndicates" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(168,85,247,0.4)]" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(167,139,250,0.4)] shrink-0" 
             />
-            SYNDICATES
+            <span>SYNDICATES</span>
           </button>
           
+          {/* TICKET SCANNER */}
           <button
             onClick={() => setActiveTab("scanner")}
-            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`min-w-[140px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "scanner"
-                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
-                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+                ? "bg-emerald-500/20 border border-emerald-400 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.25)]"
+                : "text-gray-400 hover:text-emerald-300 border border-transparent hover:border-emerald-500/30 hover:bg-emerald-500/10"
             }`}
           >
             <img 
               src="/images/scanner_icon.png" 
               alt="Scanner" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(74,222,128,0.4)]" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(52,211,153,0.4)] shrink-0" 
             />
-            TICKET SCANNER
+            <span>SCANNER</span>
           </button>
 
+          {/* SETTINGS */}
           <button
             onClick={() => setActiveTab("settings")}
-            className={`flex items-center justify-center gap-2.5 px-4 py-2 rounded-md text-xs font-semibold font-mono tracking-wider transition-all whitespace-nowrap ${
+            className={`min-w-[115px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "settings"
-                ? "bg-primary/10 border border-primary/20 text-primary font-bold"
-                : "text-gray-400 hover:text-white border border-transparent hover:bg-white/5"
+                ? "bg-slate-700/40 border border-slate-400 text-slate-200 shadow-[0_0_15px_rgba(148,163,184,0.25)]"
+                : "text-gray-400 hover:text-slate-200 border border-transparent hover:border-slate-500/30 hover:bg-slate-700/20"
             }`}
           >
             <img 
               src="/images/settings_icon.png" 
               alt="Settings" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)]" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(148,163,184,0.4)] shrink-0" 
             />
-            SETTINGS
+            <span>SETTINGS</span>
           </button>
         </nav>
+        </div>
 
         {/* Desktop nav bar occupies this space; mobile nav bar is pinned to the screen bottom */}
       </header>
@@ -799,25 +810,21 @@ export default function Home() {
         <button
           onClick={() => setActiveTab("cashpot")}
           className={`flex flex-col items-center gap-1 py-1 px-2 transition-all cursor-pointer ${
-            activeTab === "cashpot" ? "text-amber-400 font-bold" : "text-gray-400"
+            activeTab === "cashpot" ? "text-yellow-400 font-bold" : "text-gray-400"
           }`}
         >
-          <span className="w-5 h-5 rounded bg-amber-500/20 text-amber-400 font-black text-[9px] flex items-center justify-center border border-amber-500/30 font-mono">
-            CP
-          </span>
-          <span className="text-[8px] font-mono tracking-wider">CP</span>
+          <img src="/images/cash_pot_icon.png" alt="Cashpot" className="w-5 h-5 object-contain" />
+          <span className="text-[8px] font-mono tracking-wider">CASHPOT</span>
           {activeTab === "cashpot" && <span className="nav-active-dot" />}
         </button>
         <button
           onClick={() => setActiveTab("pick4")}
           className={`flex flex-col items-center gap-1 py-1 px-2 transition-all cursor-pointer ${
-            activeTab === "pick4" ? "text-emerald-400 font-bold" : "text-gray-400"
+            activeTab === "pick4" ? "text-purple-400 font-bold" : "text-gray-400"
           }`}
         >
-          <span className="w-5 h-5 rounded bg-emerald-500/20 text-emerald-400 font-black text-[9px] flex items-center justify-center border border-emerald-500/30 font-mono">
-            P4
-          </span>
-          <span className="text-[8px] font-mono tracking-wider">P4</span>
+          <img src="/images/pick_four_icon.png" alt="Pick 4" className="w-5 h-5 object-contain" />
+          <span className="text-[8px] font-mono tracking-wider">PICK 4</span>
           {activeTab === "pick4" && <span className="nav-active-dot" />}
         </button>
         <button
