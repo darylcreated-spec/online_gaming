@@ -25,6 +25,7 @@ import {
   DollarSign
 } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
+import InteractiveTumbler from "@/components/InteractiveTumbler";
 
 export type GameKey = "welcome" | "lotto-plus" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "scanner" | "settings";
 
@@ -925,6 +926,16 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               <span>Explore Pick 4 Permutations</span>
               <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
             </button>
+          </div>
+
+          {/* UNIFIED 3D BLENDER-GRADE TUMBLER QUICK PICK (Placed Between Pick 4 & Utility Suite) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-3">
+            <InteractiveTumbler
+              initialGame="lotto-plus"
+              onNavigateGame={(game) => {
+                if (onSelectGame) onSelectGame(game as GameKey);
+              }}
+            />
           </div>
 
           {/* CARD 6: TICKET SCANNER & SYNDICATES SHORTCUT CARD */}

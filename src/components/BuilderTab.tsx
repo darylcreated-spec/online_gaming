@@ -676,7 +676,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
       {activeMode === "tumbler" && (
         <InteractiveTumbler
           initialGame="lotto-plus"
-          onTicketGenerated={(numbers, bonus) => {
+          onTicketGenerated={(_game, numbers, bonus) => {
             setSelectedNums(numbers);
             if (bonus) setSelectedPb(bonus);
           }}
