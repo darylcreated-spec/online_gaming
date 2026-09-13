@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Play, RotateCcw, Volume2, VolumeX, Sparkles, Zap, Brain, ArrowRight, Layers, Award } from "lucide-react";
+import { Play, RotateCcw, Volume2, VolumeX, Dices, Shuffle, ArrowRight, Layers, Award } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 
 interface BallPhysics {
   id: number;
+  label: string;
   x: number;
   y: number;
   vx: number;
@@ -13,6 +14,10 @@ interface BallPhysics {
   radius: number;
   color: string;
   glowColor: string;
+  badgeColor: string;
+  textColor: string;
+  angle: number;
+  spinSpeed: number;
 }
 
 export type LotteryGameType = "play-whe" | "lotto-plus" | "win-for-life" | "cashpot" | "pick4";
@@ -261,28 +266,293 @@ export default function InteractiveTumbler({
     }
   };
 
-  // Re-populate unnumbered balls inside tumbler on game selection
-  useEffect(() => {
+  // Helper to generate the official numbered balls with actual official colors for each game
+  const generateGameBalls = (game: LotteryGameType): BallPhysics[] => {
     const balls: BallPhysics[] = [];
-    const count = Math.min(36, currentConfig.poolSize);
-    const colorPalette = currentConfig.ballColors;
+    const centerX = 150;
+    const centerY = 150;
 
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = Math.random() * 55;
-      const palette = colorPalette[i % colorPalette.length];
+    if (game === "play-whe") {
+      // 36 balls: 1 to 36 with official Trinidad Play Whe color quadrants
+      for (let i = 1; i <= 36; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 58;
+        let color = "#eab308";
+        let glowColor = "#fde047";
+        let badgeColor = "#ffffff";
+        let textColor = "#713f12";
+
+        if (i >= 1 && i <= 9) {
+          // Yellow / Gold
+          color = "#eab308";
+          glowColor = "#fde047";
+          badgeColor = "#ffffff";
+          textColor = "#713f12";
+        } else if (i >= 10 && i <= 18) {
+          // Carmine Red
+          color = "#dc2626";
+          glowColor = "#f87171";
+          badgeColor = "#ffffff";
+          textColor = "#7f1d1d";
+        } else if (i >= 19 && i <= 27) {
+          // Royal Blue
+          color = "#2563eb";
+          glowColor = "#60a5fa";
+          badgeColor = "#ffffff";
+          textColor = "#1e3a8a";
+        } else {
+          // Emerald Green
+          color = "#059669";
+          glowColor = "#34d399";
+          badgeColor = "#ffffff";
+          textColor = "#064e3b";
+        }
+
+        balls.push({
+          id: i,
+          label: String(i),
+          x: centerX + Math.cos(angle) * dist,
+          y: centerY + Math.sin(angle) * dist,
+          vx: (Math.random() - 0.5) * 3.2,
+          vy: (Math.random() - 0.5) * 3.2,
+          radius: 10.5,
+          color,
+          glowColor,
+          badgeColor,
+          textColor,
+          angle: Math.random() * Math.PI * 2,
+          spinSpeed: (Math.random() - 0.5) * 0.08
+        });
+      }
+    } else if (game === "lotto-plus") {
+      // 35 main balls (1 to 35) + 1 Powerball (PB)
+      for (let i = 1; i <= 35; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 58;
+        let color = "#0284c7";
+        let glowColor = "#38bdf8";
+        let badgeColor = "#ffffff";
+        let textColor = "#0f172a";
+
+        if (i >= 1 && i <= 9) {
+          color = "#f1f5f9";
+          glowColor = "#ffffff";
+          badgeColor = "#0284c7";
+          textColor = "#ffffff";
+        } else if (i >= 10 && i <= 19) {
+          color = "#0284c7";
+          glowColor = "#38bdf8";
+          badgeColor = "#ffffff";
+          textColor = "#0c4a6e";
+        } else if (i >= 20 && i <= 29) {
+          color = "#e11d48";
+          glowColor = "#fb7185";
+          badgeColor = "#ffffff";
+          textColor = "#881337";
+        } else {
+          color = "#d97706";
+          glowColor = "#fbbf24";
+          badgeColor = "#ffffff";
+          textColor = "#78350f";
+        }
+
+        balls.push({
+          id: i,
+          label: String(i),
+          x: centerX + Math.cos(angle) * dist,
+          y: centerY + Math.sin(angle) * dist,
+          vx: (Math.random() - 0.5) * 3.2,
+          vy: (Math.random() - 0.5) * 3.2,
+          radius: 10.5,
+          color,
+          glowColor,
+          badgeColor,
+          textColor,
+          angle: Math.random() * Math.PI * 2,
+          spinSpeed: (Math.random() - 0.5) * 0.08
+        });
+      }
+      // Add Powerball
+      const pbAngle = Math.random() * Math.PI * 2;
+      const pbDist = Math.random() * 45;
       balls.push({
-        id: i,
-        x: 150 + Math.cos(angle) * dist,
-        y: 150 + Math.sin(angle) * dist,
-        vx: (Math.random() - 0.5) * 3,
-        vy: (Math.random() - 0.5) * 3,
-        radius: 11.5,
-        color: palette.main,
-        glowColor: palette.glow
+        id: 999,
+        label: "PB",
+        x: centerX + Math.cos(pbAngle) * pbDist,
+        y: centerY + Math.sin(pbAngle) * pbDist,
+        vx: (Math.random() - 0.5) * 3.5,
+        vy: (Math.random() - 0.5) * 3.5,
+        radius: 11,
+        color: "#9333ea",
+        glowColor: "#c084fc",
+        badgeColor: "#ffffff",
+        textColor: "#581c87",
+        angle: Math.random() * Math.PI * 2,
+        spinSpeed: (Math.random() - 0.5) * 0.08
       });
+    } else if (game === "win-for-life") {
+      // 28 main balls (1 to 28) + 1 Cash Ball (CB)
+      for (let i = 1; i <= 28; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 58;
+        let color = "#059669";
+        let glowColor = "#34d399";
+        let badgeColor = "#ffffff";
+        let textColor = "#064e3b";
+
+        if (i >= 1 && i <= 10) {
+          color = "#059669";
+          glowColor = "#34d399";
+          badgeColor = "#ffffff";
+          textColor = "#064e3b";
+        } else if (i >= 11 && i <= 20) {
+          color = "#0d9488";
+          glowColor = "#2dd4bf";
+          badgeColor = "#ffffff";
+          textColor = "#134e4a";
+        } else {
+          color = "#047857";
+          glowColor = "#10b981";
+          badgeColor = "#ffffff";
+          textColor = "#022c22";
+        }
+
+        balls.push({
+          id: i,
+          label: String(i),
+          x: centerX + Math.cos(angle) * dist,
+          y: centerY + Math.sin(angle) * dist,
+          vx: (Math.random() - 0.5) * 3.2,
+          vy: (Math.random() - 0.5) * 3.2,
+          radius: 11,
+          color,
+          glowColor,
+          badgeColor,
+          textColor,
+          angle: Math.random() * Math.PI * 2,
+          spinSpeed: (Math.random() - 0.5) * 0.08
+        });
+      }
+      // Add Cash Ball
+      const cbAngle = Math.random() * Math.PI * 2;
+      const cbDist = Math.random() * 45;
+      balls.push({
+        id: 998,
+        label: "CB",
+        x: centerX + Math.cos(cbAngle) * cbDist,
+        y: centerY + Math.sin(cbAngle) * cbDist,
+        vx: (Math.random() - 0.5) * 3.5,
+        vy: (Math.random() - 0.5) * 3.5,
+        radius: 11.5,
+        color: "#f59e0b",
+        glowColor: "#fde047",
+        badgeColor: "#ffffff",
+        textColor: "#78350f",
+        angle: Math.random() * Math.PI * 2,
+        spinSpeed: (Math.random() - 0.5) * 0.08
+      });
+    } else if (game === "cashpot") {
+      // 20 main balls (1 to 20) + 1 Multiplier ball (5X)
+      for (let i = 1; i <= 20; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 55;
+        let color = "#eab308";
+        let glowColor = "#fde047";
+        let badgeColor = "#ffffff";
+        let textColor = "#713f12";
+
+        if (i >= 1 && i <= 10) {
+          color = "#eab308";
+          glowColor = "#fde047";
+          badgeColor = "#ffffff";
+          textColor = "#713f12";
+        } else {
+          color = "#f97316";
+          glowColor = "#fdba74";
+          badgeColor = "#ffffff";
+          textColor = "#7c2d12";
+        }
+
+        balls.push({
+          id: i,
+          label: String(i),
+          x: centerX + Math.cos(angle) * dist,
+          y: centerY + Math.sin(angle) * dist,
+          vx: (Math.random() - 0.5) * 3.2,
+          vy: (Math.random() - 0.5) * 3.2,
+          radius: 12,
+          color,
+          glowColor,
+          badgeColor,
+          textColor,
+          angle: Math.random() * Math.PI * 2,
+          spinSpeed: (Math.random() - 0.5) * 0.08
+        });
+      }
+      // Add Multiplier ball
+      const mAngle = Math.random() * Math.PI * 2;
+      const mDist = Math.random() * 45;
+      balls.push({
+        id: 997,
+        label: "5X",
+        x: centerX + Math.cos(mAngle) * mDist,
+        y: centerY + Math.sin(mAngle) * mDist,
+        vx: (Math.random() - 0.5) * 3.5,
+        vy: (Math.random() - 0.5) * 3.5,
+        radius: 12.5,
+        color: "#dc2626",
+        glowColor: "#f87171",
+        badgeColor: "#ffffff",
+        textColor: "#7f1d1d",
+        angle: Math.random() * Math.PI * 2,
+        spinSpeed: (Math.random() - 0.5) * 0.08
+      });
+    } else if (game === "pick4") {
+      // 40 digit balls: 4 complete sets of 0 through 9
+      const digitThemes = [
+        { color: "#06b6d4", glow: "#22d3ee", text: "#164e63" },
+        { color: "#0284c7", glow: "#38bdf8", text: "#0c4a6e" },
+        { color: "#6366f1", glow: "#818cf8", text: "#312e81" },
+        { color: "#8b5cf6", glow: "#a78bfa", text: "#4c1d95" },
+        { color: "#a855f7", glow: "#c084fc", text: "#581c87" },
+        { color: "#d946ef", glow: "#f0abfc", text: "#701a75" },
+        { color: "#ec4899", glow: "#f472b6", text: "#831843" },
+        { color: "#f97316", glow: "#fdba74", text: "#7c2d12" },
+        { color: "#eab308", glow: "#fde047", text: "#713f12" },
+        { color: "#10b981", glow: "#34d399", text: "#064e3b" }
+      ];
+
+      for (let set = 0; set < 4; set++) {
+        for (let digit = 0; digit <= 9; digit++) {
+          const angle = Math.random() * Math.PI * 2;
+          const dist = Math.random() * 58;
+          const theme = digitThemes[digit];
+
+          balls.push({
+            id: set * 10 + digit,
+            label: String(digit),
+            x: centerX + Math.cos(angle) * dist,
+            y: centerY + Math.sin(angle) * dist,
+            vx: (Math.random() - 0.5) * 3.2,
+            vy: (Math.random() - 0.5) * 3.2,
+            radius: 10.5,
+            color: theme.color,
+            glowColor: theme.glow,
+            badgeColor: "#ffffff",
+            textColor: theme.text,
+            angle: Math.random() * Math.PI * 2,
+            spinSpeed: (Math.random() - 0.5) * 0.08
+          });
+        }
+      }
     }
-    ballsRef.current = balls;
+
+    return balls;
+  };
+
+  // Re-populate official numbered balls inside tumbler whenever game selection changes
+  useEffect(() => {
+    ballsRef.current = generateGameBalls(selectedGame);
     setDrawnNumbers([]);
     setDrawnBonus(null);
   }, [selectedGame]);
@@ -372,39 +642,46 @@ export default function InteractiveTumbler({
       ctx.stroke();
       ctx.restore();
 
-      // ─── 3. PHYSICS PARTICLES: UNNUMBERED LOTTERY BALLS ─────────────────
+      // ─── 3. PHYSICS PARTICLES: OFFICIAL NUMBERED LOTTERY BALLS ─────────
       const balls = ballsRef.current;
-      const speedMultiplier = isSpinning ? 2.6 : 0.65;
-      const gravity = isSpinning ? 0.09 : 0.26;
+      const speedMultiplier = isSpinning ? 2.6 : 0.8;
+      const gravity = isSpinning ? 0.08 : 0.16;
 
+      // Move balls & resolve drum boundaries
       balls.forEach((ball) => {
         ball.vy += gravity;
         if (isSpinning) {
           ball.vx += (Math.random() - 0.5) * 2.8;
           ball.vy += (Math.random() - 0.5) * 2.8;
+        } else {
+          // Gentle pneumatic breeze keeps balls lively and visible
+          ball.vx += (Math.random() - 0.5) * 0.16;
+          ball.vy += (Math.random() - 0.5) * 0.16;
         }
 
         ball.x += ball.vx * speedMultiplier;
         ball.y += ball.vy * speedMultiplier;
+        ball.angle += isSpinning ? ball.spinSpeed * 2.6 : ball.spinSpeed;
 
-        ball.vx *= 0.985;
-        ball.vy *= 0.985;
+        ball.vx *= isSpinning ? 0.985 : 0.94;
+        ball.vy *= isSpinning ? 0.985 : 0.94;
 
         // Circular Cage Collision
         const dx = ball.x - centerX;
         const dy = ball.y - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist + ball.radius > drumRadius - 3) {
+        if (dist + ball.radius > drumRadius - 4) {
           const nx = dx / dist;
           const ny = dy / dist;
 
-          ball.x = centerX + nx * (drumRadius - 3 - ball.radius);
-          ball.y = centerY + ny * (drumRadius - 3 - ball.radius);
+          ball.x = centerX + nx * (drumRadius - 4 - ball.radius);
+          ball.y = centerY + ny * (drumRadius - 4 - ball.radius);
 
           const dot = ball.vx * nx + ball.vy * ny;
-          ball.vx = (ball.vx - 2 * dot * nx) * 0.85;
-          ball.vy = (ball.vy - 2 * dot * ny) * 0.85;
+          ball.vx = (ball.vx - 2 * dot * nx) * 0.82;
+          ball.vy = (ball.vy - 2 * dot * ny) * 0.82;
+          ball.spinSpeed = (Math.random() - 0.5) * 0.12;
 
           const now = performance.now();
           if (isSpinning && now - lastCollisionTime > 90 && Math.random() < 0.25) {
@@ -412,18 +689,56 @@ export default function InteractiveTumbler({
             lastCollisionTime = now;
           }
         }
+      });
 
-        // Draw Blender-Grade 3D Spherical Ball (NO NUMBERS ON BALLS INSIDE TUMBLER)
+      // Pairwise Ball-to-Ball Stacking & Repulsion (prevents overlapping!)
+      for (let i = 0; i < balls.length; i++) {
+        for (let j = i + 1; j < balls.length; j++) {
+          const b1 = balls[i];
+          const b2 = balls[j];
+          const bdx = b2.x - b1.x;
+          const bdy = b2.y - b1.y;
+          const bdist = Math.sqrt(bdx * bdx + bdy * bdy);
+          const minDist = b1.radius + b2.radius;
+
+          if (bdist < minDist && bdist > 0) {
+            const overlap = (minDist - bdist) * 0.5;
+            const bnx = bdx / bdist;
+            const bny = bdy / bdist;
+
+            b1.x -= bnx * overlap;
+            b1.y -= bny * overlap;
+            b2.x += bnx * overlap;
+            b2.y += bny * overlap;
+
+            const kx = b1.vx - b2.vx;
+            const ky = b1.vy - b2.vy;
+            const p = 2 * (bnx * kx + bny * ky) / 2;
+
+            b1.vx -= p * bnx * 0.65;
+            b1.vy -= p * bny * 0.65;
+            b2.vx += p * bnx * 0.65;
+            b2.vy += p * bny * 0.65;
+          }
+        }
+      }
+
+      // Render each 3D spherical numbered ball
+      balls.forEach((ball) => {
         ctx.save();
+        ctx.translate(ball.x, ball.y);
+        ctx.rotate(ball.angle);
+
+        // 1. 3D Radial Gradient Sphere
         ctx.beginPath();
-        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.arc(0, 0, ball.radius, 0, Math.PI * 2);
 
         const sphereGrad = ctx.createRadialGradient(
-          ball.x - ball.radius * 0.35,
-          ball.y - ball.radius * 0.35,
+          -ball.radius * 0.35,
+          -ball.radius * 0.35,
           ball.radius * 0.05,
-          ball.x,
-          ball.y,
+          0,
+          0,
           ball.radius
         );
         sphereGrad.addColorStop(0, "#ffffff");
@@ -433,19 +748,38 @@ export default function InteractiveTumbler({
 
         ctx.fillStyle = sphereGrad;
         ctx.shadowColor = ball.glowColor;
-        ctx.shadowBlur = isSpinning ? 8 : 3;
+        ctx.shadowBlur = isSpinning ? 7 : 3;
         ctx.fill();
 
-        // Glossy Specular Highlight arc
+        // 2. High-contrast circular number badge
+        ctx.beginPath();
+        const badgeR = ball.radius * 0.58;
+        ctx.arc(0, 0, badgeR, 0, Math.PI * 2);
+        ctx.fillStyle = ball.badgeColor;
+        ctx.shadowBlur = 0;
+        ctx.fill();
+
+        // 3. Clear number text
+        ctx.fillStyle = ball.textColor;
+        const fontSize = ball.label.length >= 2 ? Math.round(ball.radius * 0.7) : Math.round(ball.radius * 0.82);
+        ctx.font = `900 ${fontSize}px "Geist Mono", monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(ball.label, 0, 0.5);
+
+        ctx.restore();
+
+        // 4. Glossy Specular Highlight arc (fixed to light source direction)
+        ctx.save();
         ctx.beginPath();
         ctx.arc(
           ball.x - ball.radius * 0.25,
           ball.y - ball.radius * 0.25,
-          ball.radius * 0.45,
+          ball.radius * 0.42,
           0,
           Math.PI * 2
         );
-        ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.42)";
         ctx.fill();
         ctx.restore();
       });
@@ -576,20 +910,20 @@ export default function InteractiveTumbler({
               className="p-1.5 rounded-lg border shadow-sm"
               style={{ borderColor: `${currentConfig.accentColor}50`, backgroundColor: `${currentConfig.accentColor}15` }}
             >
-              <Sparkles className="w-4 h-4" style={{ color: currentConfig.accentColor }} />
+              <Dices className="w-4 h-4" style={{ color: currentConfig.accentColor }} />
             </div>
             <div>
               <h3 
                 className="text-base sm:text-lg font-black uppercase tracking-wider flex items-center gap-2"
                 style={{ color: "#ffffff" }}
               >
-                Blender 3D Physics Tumbler
+                Quick Pick Generator
                 <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold border border-emerald-500/30">
                   ALL 5 GAMES
                 </span>
               </h3>
               <p className="text-[11px] text-gray-300 mt-0.5">
-                Stochastic pneumatic mixing simulation with game-specific ball drop physics
+                Pneumatic mixing simulation with official numbered ball physics & real-time extraction
               </p>
             </div>
           </div>
@@ -691,13 +1025,13 @@ export default function InteractiveTumbler({
                     Tumbler Ready for {currentConfig.name}
                   </span>
                   <span className="text-[10px] text-gray-400 block">
-                    Unnumbered balls agitated stochastically inside blender chassis
+                    Official numbered balls agitated stochastically inside pneumatic chamber
                   </span>
                 </div>
               ) : isSpinning && drawnNumbers.length === 0 ? (
-                <div className="flex items-center gap-2 text-xs text-emerald-400 animate-pulse font-bold">
-                  <Sparkles className="w-4 h-4 animate-spin" />
-                  <span>Drawing lucky balls from pneumatic chamber...</span>
+                <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold">
+                  <RotateCcw className="w-4 h-4 animate-spin text-emerald-400" />
+                  <span>Extracting official numbered balls from pneumatic chamber...</span>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-3 w-full">
@@ -853,8 +1187,8 @@ export default function InteractiveTumbler({
                 boxShadow: !isSpinning ? `0 0 25px ${currentConfig.activeGlow}` : undefined
               }}
             >
-              <Play className={`w-4 h-4 fill-current ${isSpinning ? "animate-spin" : ""}`} />
-              <span>{isSpinning ? "SPINNING & DRAWING..." : `QUICK PICK ${currentConfig.name.toUpperCase()}`}</span>
+              <Play className="w-4 h-4 fill-current" />
+              <span>{isSpinning ? "MIXING & EXTRACTING..." : `QUICK PICK ${currentConfig.name.toUpperCase()}`}</span>
             </button>
 
             {onNavigateGame && (

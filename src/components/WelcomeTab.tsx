@@ -13,7 +13,9 @@ import {
   Clock, 
   Calendar, 
   Activity, 
-  Brain, 
+  Calculator,
+  TrendingUp,
+  BarChart3,
   ChevronRight, 
   Zap, 
   Mail, 
@@ -381,7 +383,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               <div className="space-y-1.5 bg-amber-950/20 p-3 rounded-xl border border-amber-500/20">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
-                    <Brain className="w-3 h-3 text-amber-400" />
+                    <Calculator className="w-3 h-3 text-amber-400" />
                     Mathematical Next Pick:
                   </span>
                   <span className="text-[9px] text-amber-400/80 font-mono">
@@ -510,7 +512,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               <div className="space-y-1.5 bg-sky-950/20 p-3 rounded-xl border border-sky-500/20">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-sky-300 uppercase tracking-wider flex items-center gap-1">
-                    <Brain className="w-3 h-3 text-sky-400" />
+                    <Calculator className="w-3 h-3 text-sky-400" />
                     Suggested Ensemble Ticket:
                   </span>
                   <span className="text-[9px] text-sky-400 font-bold px-1.5 py-0.2 rounded bg-sky-500/15 border border-sky-500/30">
@@ -638,7 +640,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               <div className="space-y-1.5 bg-emerald-950/20 p-3 rounded-xl border border-emerald-500/20">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1">
-                    <Brain className="w-3 h-3 text-emerald-400" />
+                    <Calculator className="w-3 h-3 text-emerald-400" />
                     Mathematical 6+1 Selection:
                   </span>
                   <span className="text-[9px] text-emerald-400 font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30">
@@ -766,7 +768,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               <div className="space-y-1.5 bg-yellow-950/20 p-3 rounded-xl border border-yellow-500/20">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-yellow-300 uppercase tracking-wider flex items-center gap-1">
-                    <Brain className="w-3 h-3 text-yellow-400" />
+                    <Calculator className="w-3 h-3 text-yellow-400" />
                     Statistical 5-Ball Quintet:
                   </span>
                   <span className="text-[9px] text-yellow-400 font-bold px-1.5 py-0.2 rounded bg-yellow-500/15 border border-yellow-500/30">
@@ -878,7 +880,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               <div className="space-y-1.5 bg-purple-950/20 p-3 rounded-xl border border-purple-500/20">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1">
-                    <Brain className="w-3 h-3 text-purple-400" />
+                    <Calculator className="w-3 h-3 text-purple-400" />
                     Optimal Straight & Box EV:
                   </span>
                   <span className="text-[9px] text-purple-400 font-bold px-1.5 py-0.2 rounded bg-purple-500/15 border border-purple-500/30">
@@ -1020,10 +1022,13 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             <Sigma className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-black uppercase text-white tracking-wider">
+            <h3 
+              className="text-base sm:text-lg font-black uppercase tracking-wider"
+              style={{ color: "#ffffff" }}
+            >
               Mathematical Architecture
             </h3>
-            <p className="text-[10px] sm:text-xs text-gray-400">
+            <p className="text-[10px] sm:text-xs text-gray-300">
               Rigorous probabilistic reasoning replacing superstition with empirical evidence
             </p>
           </div>
@@ -1094,6 +1099,39 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             </div>
             <p className="text-gray-300 leading-relaxed text-[11px]">
               Information-theoretic Shannon entropy optimization evaluates ticket portfolio diversity, maximizing unique combinatorial coverage while penalizing redundant ball overlaps.
+            </p>
+          </div>
+
+          {/* 7. Bayesian Dirichlet Conjugate Priors */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-cyan-500/20 hover:border-cyan-500/40 transition space-y-2">
+            <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase">
+              <Calculator className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span>7. Bayesian Dirichlet Priors</span>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px]">
+              Conjugate Dirichlet-multinomial updating adjusts prior likelihood distributions with rolling historical observations, filtering out transient variance and small-sample bias.
+            </p>
+          </div>
+
+          {/* 8. Non-Homogeneous Poisson Arrival */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-indigo-500/20 hover:border-indigo-500/40 transition space-y-2">
+            <div className="flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase">
+              <TrendingUp className="w-4 h-4 text-indigo-400 shrink-0" />
+              <span>8. Poisson Point-Process Renewal</span>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px]">
+              Time-varying Poisson process likelihoods evaluate interval recurrence intervals between hits, statistically detecting burst clusters versus steady Poisson equilibrium.
+            </p>
+          </div>
+
+          {/* 9. Monte Carlo Permutation Entropy */}
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-pink-500/20 hover:border-pink-500/40 transition space-y-2">
+            <div className="flex items-center gap-2 text-pink-400 font-bold text-xs uppercase">
+              <BarChart3 className="w-4 h-4 text-pink-400 shrink-0" />
+              <span>9. Monte Carlo Entropy Audit</span>
+            </div>
+            <p className="text-gray-300 leading-relaxed text-[11px]">
+              Stochastic 100,000-draw synthetic bootstrap iterations benchmark actual official lottery distributions against true random noise to guarantee algorithmic integrity.
             </p>
           </div>
 
