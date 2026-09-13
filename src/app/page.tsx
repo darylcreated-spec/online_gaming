@@ -308,25 +308,23 @@ export default function Home() {
       <AppSplashScreen isLoading={statsLoading} />
 
       {/* Global Terminal Header */}
-      <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-3 px-4 md:px-12 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 bg-slate-950/80 backdrop-blur-md w-full">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 border border-primary/20 text-primary rounded-lg shadow-[0_0_15px_rgba(56,189,248,0.25)]">
-              <TumblerIcon className="w-6 h-6 animate-pulse" />
-            </div>
-            <div>
-              <h1 className="text-lg md:text-xl font-black tracking-widest text-white uppercase font-mono">
-                The Win Concept
-              </h1>
-              <p className="text-[9px] md:text-[10px] tracking-wider text-primary font-mono font-semibold uppercase">
-                Your Online Gaming Resource
-              </p>
-            </div>
+      <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-4 px-6 md:px-12 flex justify-between items-center bg-slate-950/70 backdrop-blur-md w-full">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 border border-primary/20 text-primary rounded-lg shadow-[0_0_15px_rgba(56,189,248,0.25)]">
+            <TumblerIcon className="w-6 h-6 animate-pulse" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black tracking-widest text-white uppercase font-mono">
+              The Win Concept
+            </h1>
+            <p className="text-[10px] tracking-wider text-primary font-mono font-semibold uppercase">
+              Your Online Gaming Resource
+            </p>
           </div>
         </div>
 
-        {/* Global Navigation Ribbon (Scrollable horizontally from left to right on both desktop and mobile) */}
-        <div className="flex items-center min-w-0 max-w-full md:max-w-[calc(100vw-360px)] w-full md:w-auto overflow-hidden">
+        {/* Desktop Global Navigation Ribbon (Hidden on mobile, bottom bar used on mobile) */}
+        <div className="hidden md:flex items-center min-w-0 max-w-[calc(100vw-360px)]">
           <nav className="flex items-center gap-2 p-1.5 bg-slate-900/80 rounded-xl border border-white/10 overflow-x-auto scrollbar-none sleek-scrollbar scroll-smooth w-full">
           {/* HOME */}
           <button
