@@ -15,6 +15,7 @@ import Pick4Tab from "@/components/Pick4Tab";
 import LiveDrawTicker from "@/components/LiveDrawTicker";
 import AppSplashScreen from "@/components/AppSplashScreen";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
+import GameHeaderBanner from "@/components/GameHeaderBanner";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain } from "lucide-react";
 
 const TumblerIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -489,64 +490,109 @@ export default function Home() {
       {/* Main Viewport Container */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 py-8 pb-24 md:pb-8">
         
-        {/* Lotto Plus Sub-navigation menu */}
+        {/* Lotto Plus Hero Header & Sub-Navigation */}
         {activeTab === "lotto-plus" && (
-          <div className="flex bg-slate-950/40 p-1 rounded-lg border border-white/5 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none">
-            <button
-              onClick={() => setLottoSubTab("dashboard")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-                lottoSubTab === "dashboard"
-                  ? "bg-primary text-slate-950 font-bold"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <BarChart2 className="w-3.5 h-3.5" />
-              DASHBOARD
-            </button>
-            <button
-              onClick={() => setLottoSubTab("math-engine")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-                lottoSubTab === "math-engine"
-                  ? "bg-primary text-slate-950 font-bold"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <Brain className="w-3.5 h-3.5" />
-              MATHEMATICAL ENGINE
-            </button>
-            <button
-              onClick={() => setLottoSubTab("history")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-                lottoSubTab === "history"
-                  ? "bg-primary text-slate-950 font-bold"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              DRAW LOG
-            </button>
-            <button
-              onClick={() => setLottoSubTab("builder")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-                lottoSubTab === "builder"
-                  ? "bg-primary text-slate-950 font-bold"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <ClipboardList className="w-3.5 h-3.5" />
-              ODDS REDUCTION
-            </button>
-            <button
-              onClick={() => setLottoSubTab("explain")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-                lottoSubTab === "explain"
-                  ? "bg-primary text-slate-950 font-bold"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              HOW IT WORKS
-            </button>
+          <div className="space-y-6 mb-6">
+            <GameHeaderBanner
+              game="lotto-plus"
+              title="Lotto Plus"
+              subtitle="5 of 35 Main Numbers + 1 of 10 Powerball • Wednesday & Saturday 8:30 PM • Estimated Jackpot"
+              themeColor="sky"
+              iconSrc="/images/lotto_plus_icon.png"
+              totalDrawsCount={stats?.totalDraws || pagination.total}
+              loading={statsLoading}
+              latestDraw={
+                stats?.latestDraw || (draws.length > 0 ? draws[0] : null)
+                  ? {
+                      draw_number: (stats?.latestDraw || draws[0]).draw_number,
+                      draw_date: (stats?.latestDraw || draws[0]).draw_date,
+                      winning_display: (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {[
+                            (stats?.latestDraw || draws[0]).num1,
+                            (stats?.latestDraw || draws[0]).num2,
+                            (stats?.latestDraw || draws[0]).num3,
+                            (stats?.latestDraw || draws[0]).num4,
+                            (stats?.latestDraw || draws[0]).num5,
+                          ].map((n: number, idx: number) => (
+                            <span
+                              key={idx}
+                              className="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-400 text-sky-200 font-black text-xs flex items-center justify-center font-mono shadow-[0_0_8px_rgba(56,189,248,0.4)]"
+                            >
+                              {n}
+                            </span>
+                          ))}
+                          <span className="text-white font-bold text-xs">+</span>
+                          <span
+                            className="w-7 h-7 rounded-full bg-red-600 text-white font-black text-xs flex items-center justify-center font-mono shadow-[0_0_10px_rgba(239,68,68,0.6)]"
+                            title="Powerball"
+                          >
+                            {(stats?.latestDraw || draws[0]).powerball}
+                          </span>
+                        </div>
+                      ),
+                    }
+                  : null
+              }
+            />
+
+            <div className="flex bg-slate-900/60 p-1 rounded-xl border border-sky-500/20 w-full md:w-fit overflow-x-auto flex-nowrap scrollbar-none gap-1">
+              <button
+                onClick={() => setLottoSubTab("dashboard")}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  lottoSubTab === "dashboard"
+                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
+                    : "text-gray-400 hover:text-sky-300 hover:bg-sky-500/10"
+                }`}
+              >
+                <BarChart2 className="w-3.5 h-3.5" />
+                DASHBOARD & STATS
+              </button>
+              <button
+                onClick={() => setLottoSubTab("math-engine")}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  lottoSubTab === "math-engine"
+                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
+                    : "text-sky-400/90 hover:text-sky-300 hover:bg-sky-500/10"
+                }`}
+              >
+                <Brain className="w-3.5 h-3.5" />
+                MATHEMATICAL ENGINE
+              </button>
+              <button
+                onClick={() => setLottoSubTab("builder")}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  lottoSubTab === "builder"
+                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
+                    : "text-gray-400 hover:text-sky-300 hover:bg-sky-500/10"
+                }`}
+              >
+                <ClipboardList className="w-3.5 h-3.5" />
+                ODDS REDUCTION & WHEELING
+              </button>
+              <button
+                onClick={() => setLottoSubTab("history")}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  lottoSubTab === "history"
+                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
+                    : "text-gray-400 hover:text-sky-300 hover:bg-sky-500/10"
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                DRAW LOG ARCHIVE
+              </button>
+              <button
+                onClick={() => setLottoSubTab("explain")}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  lottoSubTab === "explain"
+                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
+                    : "text-gray-400 hover:text-sky-300 hover:bg-sky-500/10"
+                }`}
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                HOW IT WORKS
+              </button>
+            </div>
           </div>
         )}
 

@@ -24,15 +24,25 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const limit = Math.max(1, parseInt(searchParams.get("limit") || "1000"));
+    const limitParam = searchParams.get("limit");
+    let draws: any[] = [];
     
-    // 1. Fetch draws
-    const sql = `
-      SELECT * FROM playwhe_draws 
-      ORDER BY CAST(draw_number AS INTEGER) DESC 
-      LIMIT ?
-    `;
-    const draws = await query<any>(sql, [limit]);
+    // 1. Fetch draws (default to ALL draws for 100% database statistical integrity)
+    if (!limitParam || limitParam === "all" || parseInt(limitParam) >= 10000) {
+      const sql = `
+        SELECT * FROM playwhe_draws 
+        ORDER BY CAST(draw_number AS INTEGER) DESC
+      `;
+      draws = await query<any>(sql);
+    } else {
+      const limit = Math.max(1, parseInt(limitParam));
+      const sql = `
+        SELECT * FROM playwhe_draws 
+        ORDER BY CAST(draw_number AS INTEGER) DESC 
+        LIMIT ?
+      `;
+      draws = await query<any>(sql, [limit]);
+    }
     
     if (draws.length === 0) {
       return NextResponse.json({

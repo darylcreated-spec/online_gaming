@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield } from "lucide-react";
 import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
+import GameHeaderBanner from "@/components/GameHeaderBanner";
 
 // Helper to generate all combinations of size k from an array
 function getCombinations(arr: number[], k: number): number[][] {
@@ -415,77 +416,136 @@ export default function WinForLifeTab() {
 
   const currentGaps = getGaps();
 
+  const latestDrawItem = stats?.latestDraw || (draws.length > 0 ? draws[0] : null);
+
   return (
     <div className="space-y-6">
+      {/* Game Hero Header Banner */}
+      <GameHeaderBanner
+        game="win-for-life"
+        title="Win For Life"
+        subtitle="6 of 28 Main Numbers + 1 of 3 Cash Ball • Tuesday & Friday 7:00 PM • Annuity Top Prize"
+        themeColor="emerald"
+        iconSrc="/images/win_for_life_icon.png"
+        totalDrawsCount={stats?.totalDraws || draws.length}
+        loading={statsLoading}
+        latestDraw={
+          latestDrawItem
+            ? {
+                draw_number: latestDrawItem.draw_number,
+                draw_date: latestDrawItem.draw_date,
+                winning_display: (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[
+                      latestDrawItem.num1,
+                      latestDrawItem.num2,
+                      latestDrawItem.num3,
+                      latestDrawItem.num4,
+                      latestDrawItem.num5,
+                      latestDrawItem.num6,
+                    ].map((n: number, idx: number) => (
+                      <span
+                        key={idx}
+                        className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-200 font-black text-xs flex items-center justify-center font-mono shadow-[0_0_8px_rgba(52,211,153,0.4)]"
+                      >
+                        {n}
+                      </span>
+                    ))}
+                    <span className="text-white font-bold text-xs">+</span>
+                    <span
+                      className="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center font-mono shadow-[0_0_10px_rgba(245,158,11,0.6)]"
+                      title="Cash Ball"
+                    >
+                      {latestDrawItem.cash_ball}
+                    </span>
+                  </div>
+                ),
+              }
+            : null
+        }
+      />
       
       {/* Sub-Navigation Menu */}
-      <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none">
+      <div className="flex bg-slate-900/60 p-1 rounded-xl border border-emerald-500/20 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
         <button
           onClick={() => setSubTab("dashboard")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-            subTab === "dashboard" ? "bg-primary text-slate-950 font-bold" : "text-gray-400 hover:text-white"
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "dashboard"
+              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
           }`}
         >
           <BarChart2 className="w-3.5 h-3.5" />
-          DASHBOARD
+          DASHBOARD & STATS
         </button>
         <button
           onClick={() => setSubTab("math-engine")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-            subTab === "math-engine" ? "bg-primary text-slate-950 font-bold" : "text-gray-400 hover:text-white"
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "math-engine"
+              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+              : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
           }`}
         >
           <Brain className="w-3.5 h-3.5" />
           MATHEMATICAL ENGINE
         </button>
         <button
+          onClick={() => setSubTab("builder")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "builder"
+              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
+          }`}
+        >
+          <ClipboardList className="w-3.5 h-3.5" />
+          ODDS REDUCTION & WHEELING
+        </button>
+        <button
           onClick={() => setSubTab("history")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-            subTab === "history" ? "bg-primary text-slate-950 font-bold" : "text-gray-400 hover:text-white"
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "history"
+              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
           }`}
         >
           <Calendar className="w-3.5 h-3.5" />
-          DRAW LOG
+          DRAW LOG ARCHIVE
         </button>
         <button
           onClick={() => setSubTab("network")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-            subTab === "network" ? "bg-primary text-slate-950 font-bold" : "text-gray-400 hover:text-white"
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "network"
+              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
           }`}
         >
           <GitBranch className="w-3.5 h-3.5" />
           SUCCESSOR MATRIX
         </button>
         <button
-          onClick={() => setSubTab("builder")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-            subTab === "builder" ? "bg-primary text-slate-950 font-bold" : "text-gray-400 hover:text-white"
-          }`}
-        >
-          <ClipboardList className="w-3.5 h-3.5" />
-          WHEELING WORKSPACE
-        </button>
-        <button
           onClick={() => setSubTab("predictions")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-            subTab === "predictions" ? "bg-primary text-slate-950 font-bold" : "text-gray-400 hover:text-white"
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "predictions"
+              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
           }`}
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          PREDICTIONS LOG
+          PREDICTION HITS
         </button>
         <button
           onClick={() => setSubTab("explain")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-            subTab === "explain" ? "bg-primary text-slate-950 font-bold" : "text-gray-400 hover:text-white"
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "explain"
+              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
           }`}
         >
-          <Info className="w-3.5 h-3.5" />
+          <HelpCircle className="w-3.5 h-3.5" />
           HOW IT WORKS
         </button>
       </div>
 
-      {/* SUBTAB: DASHBOARD */}
       {subTab === "dashboard" && (
         <div className="space-y-6">
           

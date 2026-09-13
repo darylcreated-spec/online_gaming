@@ -36,6 +36,7 @@ import {
   Zap,
   ShieldCheck
 } from "lucide-react";
+import GameHeaderBanner from "@/components/GameHeaderBanner";
 
 const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -611,29 +612,72 @@ export default function PlayWheTab({
     }
   };
 
+  const latestDrawItem = draws.length > 0 ? draws[0] : null;
+
   return (
     <div className="space-y-6">
+      {/* Game Hero Header Banner */}
+      <GameHeaderBanner
+        game="play-whe"
+        title="Play Whe"
+        subtitle="1 of 36 Marks • Daily 4 Slots (Morning, Midday, Afternoon, Evening) • Chinapoo Lineage"
+        themeColor="amber"
+        iconSrc="/images/play_whe_icon.png"
+        totalDrawsCount={stats?.totalDraws || pagination.total}
+        loading={statsLoading}
+        latestDraw={
+          latestDrawItem
+            ? {
+                draw_number: latestDrawItem.draw_number,
+                draw_date: latestDrawItem.draw_date,
+                time_slot: latestDrawItem.draw_time_slot,
+                winning_display: (
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-full bg-amber-400 text-slate-950 font-black text-sm flex items-center justify-center font-mono shadow-[0_0_12px_rgba(251,191,36,0.6)]">
+                      {latestDrawItem.winning_number}
+                    </span>
+                    <span className="text-amber-300 font-bold uppercase tracking-wider text-xs">
+                      {CHINAPOO_CHART[latestDrawItem.winning_number]?.mark || "Mark"}
+                    </span>
+                  </div>
+                ),
+              }
+            : null
+        }
+      />
       
       {/* Tab Sub-Navigation Menu */}
-      <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none">
+      <div className="flex bg-slate-900/60 p-1 rounded-xl border border-amber-500/20 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
         <button
           onClick={() => setSubTab("dashboard")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "dashboard"
-              ? "bg-primary text-slate-950 font-bold"
-              : "text-gray-400 hover:text-white"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
           }`}
         >
           <BarChart2 className="w-3.5 h-3.5" />
-          DASHBOARD
+          DASHBOARD & STATS
         </button>
         
         <button
+          onClick={() => setSubTab("math-engine")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "math-engine"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-amber-400/90 hover:text-amber-300 hover:bg-amber-500/10"
+          }`}
+        >
+          <Brain className="w-3.5 h-3.5" />
+          MATHEMATICAL ENGINE
+        </button>
+
+        <button
           onClick={() => setSubTab("transition")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "transition"
-              ? "bg-primary text-slate-950 font-bold"
-              : "text-gray-400 hover:text-white"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
           }`}
         >
           <Activity className="w-3.5 h-3.5" />
@@ -641,23 +685,11 @@ export default function PlayWheTab({
         </button>
 
         <button
-          onClick={() => setSubTab("math-engine")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-            subTab === "math-engine"
-              ? "bg-emerald-400 text-slate-950 font-bold shadow-[0_0_12px_rgba(52,211,153,0.3)]"
-              : "text-emerald-400/80 hover:text-emerald-300"
-          }`}
-        >
-          <Brain className="w-3.5 h-3.5 text-emerald-400" />
-          MATHEMATICAL ENGINE
-        </button>
-
-        <button
           onClick={() => setSubTab("relationship")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "relationship"
-              ? "bg-primary text-slate-950 font-bold"
-              : "text-gray-400 hover:text-white"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
           }`}
         >
           <TrendingUp className="w-3.5 h-3.5" />
@@ -666,10 +698,10 @@ export default function PlayWheTab({
 
         <button
           onClick={() => setSubTab("translator")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "translator"
-              ? "bg-primary text-slate-950 font-bold"
-              : "text-gray-400 hover:text-white"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
           }`}
         >
           <BookOpen className="w-3.5 h-3.5" />
@@ -678,10 +710,10 @@ export default function PlayWheTab({
         
         <button
           onClick={() => setSubTab("network")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "network"
-              ? "bg-primary text-slate-950 font-bold"
-              : "text-gray-400 hover:text-white"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
           }`}
         >
           <Network className="w-3.5 h-3.5" />
@@ -689,23 +721,11 @@ export default function PlayWheTab({
         </button>
         
         <button
-          onClick={() => setSubTab("history")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
-            subTab === "history"
-              ? "bg-primary text-slate-950 font-bold"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          <Calendar className="w-3.5 h-3.5" />
-          DRAW LOG
-        </button>
-
-        <button
           onClick={() => setSubTab("hits")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "hits"
-              ? "bg-primary text-slate-950 font-bold"
-              : "text-gray-400 hover:text-white"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
           }`}
         >
           <Activity className="w-3.5 h-3.5" />
@@ -713,11 +733,23 @@ export default function PlayWheTab({
         </button>
 
         <button
+          onClick={() => setSubTab("history")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "history"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          DRAW LOG ARCHIVE
+        </button>
+
+        <button
           onClick={() => setSubTab("explain")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "explain"
-              ? "bg-primary text-slate-950 font-bold"
-              : "text-gray-400 hover:text-white"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5" />
