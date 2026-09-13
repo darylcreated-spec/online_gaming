@@ -387,7 +387,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     Mathematical Next Pick:
                   </span>
                   <span className="text-[9px] text-amber-400/80 font-mono">
-                    {playWhePrediction ? `Markov/MAP: ${(playWhePrediction.top1SinglePick?.probability * 100 || 0).toFixed(1)}%` : "Calculating..."}
+                    {playWhePrediction ? `Markov/MAP: ${(Number(playWhePrediction.top1SinglePick?.probability) || 0).toFixed(1)}%` : "Calculating..."}
                   </span>
                 </div>
                 
@@ -516,14 +516,14 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     Suggested Ensemble Ticket:
                   </span>
                   <span className="text-[9px] text-sky-400 font-bold px-1.5 py-0.2 rounded bg-sky-500/15 border border-sky-500/30">
-                    Grade {lottoPrediction?.topEnsembles?.[0]?.confidenceGrade || "A+"}
+                    Grade {(lottoPrediction?.optimalTicket || lottoPrediction?.topEnsembles?.[0])?.confidenceGrade || "A+"}
                   </span>
                 </div>
 
-                {lottoPrediction?.topEnsembles?.[0] ? (
+                {(lottoPrediction?.optimalTicket || lottoPrediction?.topEnsembles?.[0]) ? (
                   <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
                     <div className="flex items-center gap-1">
-                      {lottoPrediction.topEnsembles[0].numbers.map((num: number, idx: number) => (
+                      {(lottoPrediction.optimalTicket || lottoPrediction.topEnsembles[0]).numbers.map((num: number, idx: number) => (
                         <div
                           key={idx}
                           className="w-6 h-6 rounded-md bg-sky-500/20 border border-sky-400 text-sky-300 font-black text-[11px] flex items-center justify-center font-mono"
@@ -536,11 +536,11 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                         className="w-6 h-6 rounded-md bg-purple-600/40 border border-purple-400 text-purple-200 font-black text-[11px] flex items-center justify-center font-mono"
                         title="Powerball"
                       >
-                        {lottoPrediction.topEnsembles[0].bonusBall}
+                        {(lottoPrediction.optimalTicket || lottoPrediction.topEnsembles[0]).bonusBall}
                       </div>
                     </div>
                     <span className="text-[9px] text-gray-400">
-                      Sum: {lottoPrediction.topEnsembles[0].sum}
+                      Sum: {(lottoPrediction.optimalTicket || lottoPrediction.topEnsembles[0]).sum}
                     </span>
                   </div>
                 ) : (
@@ -644,14 +644,14 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     Mathematical 6+1 Selection:
                   </span>
                   <span className="text-[9px] text-emerald-400 font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30">
-                    Grade {wflPrediction?.topEnsembles?.[0]?.confidenceGrade || "A+"}
+                    Grade {(wflPrediction?.optimalTicket || wflPrediction?.topEnsembles?.[0])?.confidenceGrade || "A+"}
                   </span>
                 </div>
 
-                {wflPrediction?.topEnsembles?.[0] ? (
+                {(wflPrediction?.optimalTicket || wflPrediction?.topEnsembles?.[0]) ? (
                   <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
                     <div className="flex items-center gap-1">
-                      {wflPrediction.topEnsembles[0].numbers.map((num: number, idx: number) => (
+                      {(wflPrediction.optimalTicket || wflPrediction.topEnsembles[0]).numbers.map((num: number, idx: number) => (
                         <div
                           key={idx}
                           className="w-6 h-6 rounded-md bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-black text-[10px] flex items-center justify-center font-mono"
@@ -664,7 +664,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                         className="w-6 h-6 rounded-md bg-emerald-600/40 border border-emerald-400 text-emerald-200 font-black text-[10px] flex items-center justify-center font-mono"
                         title="Cash Ball"
                       >
-                        {wflPrediction.topEnsembles[0].bonusBall}
+                        {(wflPrediction.optimalTicket || wflPrediction.topEnsembles[0]).bonusBall}
                       </div>
                     </div>
                     <span className="text-[9px] text-gray-400">
@@ -772,14 +772,14 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     Statistical 5-Ball Quintet:
                   </span>
                   <span className="text-[9px] text-yellow-400 font-bold px-1.5 py-0.2 rounded bg-yellow-500/15 border border-yellow-500/30">
-                    Grade {cashPotPrediction?.topEnsembles?.[0]?.confidenceGrade || "A+"}
+                    Grade {(cashPotPrediction?.optimalTicket || cashPotPrediction?.topEnsembles?.[0])?.confidenceGrade || "A+"}
                   </span>
                 </div>
 
-                {cashPotPrediction?.topEnsembles?.[0] ? (
+                {(cashPotPrediction?.optimalTicket || cashPotPrediction?.topEnsembles?.[0]) ? (
                   <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
                     <div className="flex items-center gap-1">
-                      {cashPotPrediction.topEnsembles[0].numbers.map((num: number, idx: number) => (
+                      {(cashPotPrediction.optimalTicket || cashPotPrediction.topEnsembles[0]).numbers.map((num: number, idx: number) => (
                         <div
                           key={idx}
                           className="w-6 h-6 rounded-md bg-yellow-500/20 border border-yellow-400 text-yellow-300 font-black text-[11px] flex items-center justify-center font-mono"
@@ -792,7 +792,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                         className="w-6 h-6 rounded-md bg-amber-500/40 border border-amber-400 text-amber-200 font-black text-[11px] flex items-center justify-center font-mono"
                         title="Target Multiplier"
                       >
-                        {cashPotPrediction.topEnsembles[0].bonusBall}X
+                        {(cashPotPrediction.optimalTicket || cashPotPrediction.topEnsembles[0]).bonusBall}X
                       </div>
                     </div>
                     <span className="text-[9px] text-gray-400">
@@ -1166,13 +1166,14 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             <p className="text-xs leading-relaxed text-gray-300">
               Creating and maintaining these complex mathematical models and cloud scraping pipelines requires continuous hosting, compute, and dedication. If this system helps you hit a lucky streak, win big, or build wealth, please show some love and support the creator!
             </p>
-            <div className="p-3.5 sm:p-4 bg-slate-950/80 border border-amber-500/30 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-inner">
+            <div className="p-3 bg-slate-950/90 border border-amber-500/40 rounded-xl flex items-center justify-between gap-2 overflow-hidden shadow-inner">
               <a 
                 href="mailto:daryl.created@gmail.com"
-                className="flex items-center gap-2.5 text-sm sm:text-base md:text-lg font-black text-amber-400 hover:text-amber-300 transition tracking-wider group"
+                className="flex items-center gap-2 text-xs sm:text-sm font-bold min-w-0 truncate group transition"
+                style={{ color: "#fbbf24" }}
               >
-                <Mail className="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
-                <span className="underline underline-offset-4 break-all">daryl.created@gmail.com</span>
+                <Mail className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
+                <span className="underline underline-offset-4 truncate">daryl.created@gmail.com</span>
               </a>
               <button
                 onClick={() => {
@@ -1180,18 +1181,18 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                   setEmailCopied(true);
                   setTimeout(() => setEmailCopied(false), 2500);
                 }}
-                className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 self-start sm:self-auto"
+                className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
                 title="Copy Email Address"
               >
                 {emailCopied ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400">Copied!</span>
+                    <span className="text-emerald-400 text-[11px]">Copied!</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>Copy</span>
+                    <span className="text-[11px]">Copy</span>
                   </>
                 )}
               </button>
