@@ -1153,51 +1153,55 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
       </div>
 
       {/* 6. Support the Creator Panel */}
-      <div className="glass-panel p-5 sm:p-6 rounded-2xl border border-amber-500/20 bg-amber-500/[0.02] relative overflow-hidden font-mono">
+      <div className="glass-panel p-5 sm:p-6 rounded-2xl border border-amber-500/20 bg-amber-500/[0.02] relative overflow-hidden font-mono space-y-4">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-amber-400 to-amber-600 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
+        
+        {/* Top row: Heart icon + Title and Description */}
         <div className="flex items-start gap-3.5">
           <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 shrink-0 mt-0.5">
             <Heart className="w-5 h-5 text-amber-400 animate-pulse" />
           </div>
-          <div className="space-y-3 w-full">
+          <div className="space-y-1.5 w-full">
             <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
               Support the Creator
             </h4>
             <p className="text-xs leading-relaxed text-gray-300">
               Creating and maintaining these complex mathematical models and cloud scraping pipelines requires continuous hosting, compute, and dedication. If this system helps you hit a lucky streak, win big, or build wealth, please show some love and support the creator!
             </p>
-            <div className="p-3 bg-slate-950/90 border border-amber-500/40 rounded-xl flex items-center justify-between gap-2 overflow-hidden shadow-inner">
-              <a 
-                href="mailto:daryl.created@gmail.com"
-                className="flex items-center gap-2 text-xs sm:text-sm font-bold min-w-0 truncate group transition"
-                style={{ color: "#fbbf24" }}
-              >
-                <Mail className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
-                <span className="underline underline-offset-4 truncate">daryl.created@gmail.com</span>
-              </a>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText("daryl.created@gmail.com");
-                  setEmailCopied(true);
-                  setTimeout(() => setEmailCopied(false), 2500);
-                }}
-                className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                title="Copy Email Address"
-              >
-                {emailCopied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400 text-[11px]">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    <span className="text-[11px]">Copy</span>
-                  </>
-                )}
-              </button>
-            </div>
           </div>
+        </div>
+
+        {/* Email placeholder shifted to line up under the heart icon */}
+        <div className="p-3 bg-slate-950/90 border border-amber-500/40 rounded-xl flex items-center justify-between gap-2 overflow-hidden shadow-inner w-full">
+          <a 
+            href="mailto:daryl.created@gmail.com"
+            className="flex items-center gap-2 text-xs sm:text-sm font-bold min-w-0 truncate group transition"
+            style={{ color: "#fbbf24" }}
+          >
+            <Mail className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
+            <span className="underline underline-offset-4 truncate">daryl.created@gmail.com</span>
+          </a>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText("daryl.created@gmail.com");
+              setEmailCopied(true);
+              setTimeout(() => setEmailCopied(false), 2500);
+            }}
+            className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+            title="Copy Email Address"
+          >
+            {emailCopied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-400 text-[11px]">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span className="text-[11px]">Copy</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
