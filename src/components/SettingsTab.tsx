@@ -7,9 +7,11 @@ export default function SettingsTab() {
   const [lottoStats, setLottoStats] = useState<any>(null);
   const [playWheStats, setPlayWheStats] = useState<any>(null);
   const [winForLifeStats, setWinForLifeStats] = useState<any>(null);
+  const [cashPotStats, setCashPotStats] = useState<any>(null);
+  const [pick4Stats, setPick4Stats] = useState<any>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   
-  const [syncingGame, setSyncingGame] = useState<"lotto" | "playwhe" | "winforlife" | "all" | null>(null);
+  const [syncingGame, setSyncingGame] = useState<"lotto" | "playwhe" | "winforlife" | "cashpot" | "pick4" | "all" | null>(null);
   const [syncType, setSyncType] = useState<"recent" | "full" | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [syncSuccess, setSyncSuccess] = useState<boolean | null>(null);
@@ -50,6 +52,14 @@ export default function SettingsTab() {
       // 3. Fetch Win for Life stats
       const wflRes = await fetch("/api/winforlife/stats?limit=1");
       const wflData = await wflRes.json();
+
+      // 4. Fetch Cash Pot stats
+      const cpRes = await fetch("/api/cashpot/stats");
+      const cpData = await cpRes.json();
+
+      // 5. Fetch Pick 4 stats
+      const p4Res = await fetch("/api/pick4/stats");
+      const p4Data = await p4Res.json();
       
       if (lottoData.success) {
         setLottoStats({
@@ -69,6 +79,20 @@ export default function SettingsTab() {
         setWinForLifeStats({
           count: wflData.totalDraws || 0,
           latest: wflData.latestDraw || null
+        });
+      }
+
+      if (cpData.success) {
+        setCashPotStats({
+          count: cpData.totalDraws || 0,
+          latest: cpData.latestDraw || null
+        });
+      }
+
+      if (p4Data.success) {
+        setPick4Stats({
+          count: p4Data.totalDraws || 0,
+          latest: p4Data.latestDraw || null
         });
       }
     } catch (err) {
@@ -92,8 +116,8 @@ export default function SettingsTab() {
     setSyncType("recent");
     setSyncSuccess(null);
     setLogs([]);
-    setActiveStep("Syncing All 3 Games in Parallel from NLCB...");
-    addLog("Connecting to NLCB for Lotto Plus, Play Whe, and Win For Life...");
+    setActiveStep("Syncing All 5 Games in Parallel from NLCB...");
+    addLog("Connecting to NLCB for Play Whe, Lotto Plus, Win For Life, Cash Pot, and Pick 4...");
 
     try {
       const res = await fetch("/api/cron/sync-all", {
@@ -106,14 +130,16 @@ export default function SettingsTab() {
         addLog(`Play Whe: ${data.results?.playWhe?.details || "Synced"}`);
         addLog(`Lotto Plus: ${data.results?.lottoPlus?.details || "Synced"}`);
         addLog(`Win For Life: ${data.results?.winForLife?.details || "Synced"}`);
+        addLog(`Cash Pot: ${data.results?.cashPot?.details || "Synced"}`);
+        addLog(`Pick 4: ${data.results?.pick4?.details || "Synced"}`);
         setSyncSuccess(true);
-        setActiveStep("All Games Synchronized!");
+        setActiveStep("All 5 Games Synchronized!");
         fetchDBStatus();
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
           if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("All Games Synced!", {
-              body: `Updated latest draws across all games!`,
+            new Notification("All 5 Games Synced!", {
+              body: `Updated latest draws across all 5 games!`,
               icon: "/pwa-192x192.png"
             });
           }
@@ -448,6 +474,216 @@ export default function SettingsTab() {
     }
   };
 
+  const handleCashPotSync = async (full: boolean = false) => {
+    if (syncingGame) return;
+    
+    let pwd = "";
+    if (full) {
+      const input = prompt("Please enter the Full Sync password to continue:");
+      if (!input) {
+        addLog("Sync cancelled by user.");
+        return;
+      }
+      pwd = input;
+    }
+
+    setSyncingGame("cashpot");
+    setSyncType(full ? "full" : "recent");
+    setSyncSuccess(null);
+    setLogs([]);
+    setActiveStep(full ? "Initializing Cash Pot Full Sync..." : "Syncing Cash Pot Recent Draws...");
+
+    if (full) {
+      addLog("Initializing Cash Pot FULL history sync (Year by Year)...");
+      try {
+        const currentYear = new Date().getFullYear();
+        const startYear = 2022;
+        let totalAdded = 0;
+        
+        for (let y = currentYear; y >= startYear; y--) {
+          setActiveStep(`Syncing Cash Pot Year ${y} (2022 to Present)...`);
+          addLog(`Syncing Cash Pot Year ${y}...`);
+          
+          const res = await fetch("/api/cashpot/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ year: y, fullSecret: pwd })
+          });
+          const data = await res.json();
+          if (data.success) {
+            totalAdded += data.drawsAdded || 0;
+            addLog(`Year ${y} complete: Added ${data.drawsAdded || 0} draws.`);
+            if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+              new Notification("Cash Pot Synced!", {
+                body: `Year ${y} complete: Added ${data.drawsAdded} historical draws!`,
+                icon: "/pwa-192x192.png"
+              });
+            }
+          } else {
+            addLog(`Year ${y} failed: ${data.error || data.details}`);
+          }
+          await new Promise(r => setTimeout(r, 600));
+        }
+        addLog(`Full Sync Completed Successfully! Total draws added: ${totalAdded}`);
+        setSyncSuccess(true);
+        setActiveStep("Sync Completed!");
+        fetchDBStatus();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: {} }));
+        }
+      } catch (err: any) {
+        addLog(`Full Sync Error: ${err.message}`);
+        setSyncSuccess(false);
+        setActiveStep("Sync Error!");
+      } finally {
+        setSyncingGame(null);
+        setSyncType(null);
+      }
+    } else {
+      addLog("Starting Cash Pot sync (Recent)...");
+      try {
+        const res = await fetch("/api/cashpot/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ full: false })
+        });
+        const data = await res.json();
+        if (data.success) {
+          addLog(`Sync Success! Added/Updated ${data.drawsAdded || 0} draws.`);
+          addLog(`Details: ${data.details}`);
+          setSyncSuccess(true);
+          setActiveStep("Sync Completed!");
+          fetchDBStatus();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
+          }
+          if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+            new Notification("Cash Pot Synced!", {
+              body: `Added/Updated ${data.drawsAdded} draws successfully!`,
+              icon: "/pwa-192x192.png"
+            });
+          }
+        } else {
+          addLog(`Sync Failed: ${data.error || data.details}`);
+          setSyncSuccess(false);
+          setActiveStep("Sync Failed!");
+        }
+      } catch (err: any) {
+        addLog(`Sync Error: ${err.message}`);
+        setSyncSuccess(false);
+        setActiveStep("Sync Error!");
+      } finally {
+        setSyncingGame(null);
+        setSyncType(null);
+      }
+    }
+  };
+
+  const handlePick4Sync = async (full: boolean = false) => {
+    if (syncingGame) return;
+    
+    let pwd = "";
+    if (full) {
+      const input = prompt("Please enter the Full Sync password to continue:");
+      if (!input) {
+        addLog("Sync cancelled by user.");
+        return;
+      }
+      pwd = input;
+    }
+
+    setSyncingGame("pick4");
+    setSyncType(full ? "full" : "recent");
+    setSyncSuccess(null);
+    setLogs([]);
+    setActiveStep(full ? "Initializing Pick 4 Full Sync..." : "Syncing Pick 4 Recent Draws...");
+
+    if (full) {
+      addLog("Initializing Pick 4 FULL history sync (Year by Year)...");
+      try {
+        const currentYear = new Date().getFullYear();
+        const startYear = 2022;
+        let totalAdded = 0;
+        
+        for (let y = currentYear; y >= startYear; y--) {
+          setActiveStep(`Syncing Pick 4 Year ${y} (2022 to Present)...`);
+          addLog(`Syncing Pick 4 Year ${y}...`);
+          
+          const res = await fetch("/api/pick4/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ year: y, fullSecret: pwd })
+          });
+          const data = await res.json();
+          if (data.success) {
+            totalAdded += data.drawsAdded || 0;
+            addLog(`Year ${y} complete: Added ${data.drawsAdded || 0} draws.`);
+            if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+              new Notification("Pick 4 Synced!", {
+                body: `Year ${y} complete: Added ${data.drawsAdded} historical draws!`,
+                icon: "/pwa-192x192.png"
+              });
+            }
+          } else {
+            addLog(`Year ${y} failed: ${data.error || data.details}`);
+          }
+          await new Promise(r => setTimeout(r, 600));
+        }
+        addLog(`Full Sync Completed Successfully! Total draws added: ${totalAdded}`);
+        setSyncSuccess(true);
+        setActiveStep("Sync Completed!");
+        fetchDBStatus();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: {} }));
+        }
+      } catch (err: any) {
+        addLog(`Full Sync Error: ${err.message}`);
+        setSyncSuccess(false);
+        setActiveStep("Sync Error!");
+      } finally {
+        setSyncingGame(null);
+        setSyncType(null);
+      }
+    } else {
+      addLog("Starting Pick 4 sync (Recent)...");
+      try {
+        const res = await fetch("/api/pick4/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ full: false })
+        });
+        const data = await res.json();
+        if (data.success) {
+          addLog(`Sync Success! Added/Updated ${data.drawsAdded || 0} draws.`);
+          addLog(`Details: ${data.details}`);
+          setSyncSuccess(true);
+          setActiveStep("Sync Completed!");
+          fetchDBStatus();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
+          }
+          if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+            new Notification("Pick 4 Synced!", {
+              body: `Added/Updated ${data.drawsAdded} draws successfully!`,
+              icon: "/pwa-192x192.png"
+            });
+          }
+        } else {
+          addLog(`Sync Failed: ${data.error || data.details}`);
+          setSyncSuccess(false);
+          setActiveStep("Sync Failed!");
+        }
+      } catch (err: any) {
+        addLog(`Sync Error: ${err.message}`);
+        setSyncSuccess(false);
+        setActiveStep("Sync Error!");
+      } finally {
+        setSyncingGame(null);
+        setSyncType(null);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Title Header */}
@@ -543,10 +779,10 @@ export default function SettingsTab() {
               </div>
               <div>
                 <h4 className="text-sm font-black text-white font-mono uppercase tracking-wider">
-                  Master 3-in-1 Auto-Sync
+                  Master 5-in-1 Auto-Sync
                 </h4>
                 <p className="text-xs text-gray-400">
-                  Instantly scrapes the latest live draws for <strong>Play Whe</strong>, <strong>Lotto Plus</strong>, and <strong>Win For Life</strong> in parallel (~2.3s).
+                  Instantly scrapes the latest live draws for <strong>Play Whe</strong>, <strong>Lotto Plus</strong>, <strong>Win For Life</strong>, <strong>Cash Pot</strong>, and <strong>Pick 4</strong> in parallel (~2.5s).
                 </p>
               </div>
             </div>
@@ -746,6 +982,128 @@ export default function SettingsTab() {
                   }`}
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${syncingGame === "winforlife" && syncType === "full" ? "animate-spin" : ""}`} />
+                  SYNC FULL (2022+)
+                </button>
+              </div>
+            </div>
+
+            {/* Cash Pot Card */}
+            <div className="glass-panel border border-yellow-500/20 p-5 rounded-xl bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold font-mono tracking-widest text-yellow-400 uppercase">
+                    CASH POT DATA
+                  </span>
+                  <Database className="w-4 h-4 text-yellow-400/50" />
+                </div>
+                
+                {loadingStats ? (
+                  <div className="space-y-2 animate-pulse py-2">
+                    <div className="h-6 w-32 bg-white/5 rounded" />
+                    <div className="h-4 w-48 bg-white/5 rounded" />
+                  </div>
+                ) : (
+                  <div className="space-y-3 font-mono">
+                    <div className="text-2xl font-black text-white">
+                      {cashPotStats?.count?.toLocaleString() || "0"} <span className="text-xs font-bold text-gray-500">Draws</span>
+                    </div>
+                    {cashPotStats?.latest && (
+                      <div className="text-xs text-gray-400 space-y-1">
+                        <div>Latest Draw: <span className="text-white font-bold">#{cashPotStats.latest.draw_number}</span></div>
+                        <div>Winning: <span className="text-yellow-400 font-bold">
+                          {[cashPotStats.latest.num1, cashPotStats.latest.num2, cashPotStats.latest.num3, cashPotStats.latest.num4, cashPotStats.latest.num5].join("-")}
+                        </span> {cashPotStats.latest.multiplier && (<>+ Mult <span className="text-amber-400 font-bold">{cashPotStats.latest.multiplier}X</span></>)}</div>
+                        <div>Date: <span className="text-white">{cashPotStats.latest.draw_date}</span></div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => handleCashPotSync(false)}
+                  disabled={syncingGame !== null}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border text-xs font-bold font-mono tracking-wider transition ${
+                    syncingGame === "cashpot" && syncType === "recent"
+                      ? "bg-yellow-500/20 border-yellow-400 text-yellow-300 animate-pulse"
+                      : "bg-slate-950 border-white/5 text-gray-300 hover:bg-slate-900 hover:border-white/10"
+                  }`}
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncingGame === "cashpot" && syncType === "recent" ? "animate-spin" : ""}`} />
+                  SYNC RECENT
+                </button>
+                <button
+                  onClick={() => handleCashPotSync(true)}
+                  disabled={syncingGame !== null}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border text-xs font-bold font-mono tracking-wider transition ${
+                    syncingGame === "cashpot" && syncType === "full"
+                      ? "bg-amber-500/20 border-amber-500 text-amber-400 animate-pulse"
+                      : "bg-slate-950 border-white/5 text-gray-400 hover:bg-slate-900 hover:border-white/10"
+                  }`}
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncingGame === "cashpot" && syncType === "full" ? "animate-spin" : ""}`} />
+                  SYNC FULL (2022+)
+                </button>
+              </div>
+            </div>
+
+            {/* Pick 4 Card */}
+            <div className="glass-panel border border-purple-500/20 p-5 rounded-xl bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold font-mono tracking-widest text-purple-400 uppercase">
+                    PICK 4 DATA
+                  </span>
+                  <Database className="w-4 h-4 text-purple-400/50" />
+                </div>
+                
+                {loadingStats ? (
+                  <div className="space-y-2 animate-pulse py-2">
+                    <div className="h-6 w-32 bg-white/5 rounded" />
+                    <div className="h-4 w-48 bg-white/5 rounded" />
+                  </div>
+                ) : (
+                  <div className="space-y-3 font-mono">
+                    <div className="text-2xl font-black text-white">
+                      {pick4Stats?.count?.toLocaleString() || "0"} <span className="text-xs font-bold text-gray-500">Draws</span>
+                    </div>
+                    {pick4Stats?.latest && (
+                      <div className="text-xs text-gray-400 space-y-1">
+                        <div>Latest Draw: <span className="text-white font-bold">#{pick4Stats.latest.draw_number}</span></div>
+                        <div>Digits: <span className="text-purple-400 font-bold font-mono">
+                          {[pick4Stats.latest.digit1, pick4Stats.latest.digit2, pick4Stats.latest.digit3, pick4Stats.latest.digit4].join("-")}
+                        </span> ({pick4Stats.latest.draw_time_slot})</div>
+                        <div>Date: <span className="text-white">{pick4Stats.latest.draw_date}</span></div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => handlePick4Sync(false)}
+                  disabled={syncingGame !== null}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border text-xs font-bold font-mono tracking-wider transition ${
+                    syncingGame === "pick4" && syncType === "recent"
+                      ? "bg-purple-500/20 border-purple-400 text-purple-300 animate-pulse"
+                      : "bg-slate-950 border-white/5 text-gray-300 hover:bg-slate-900 hover:border-white/10"
+                  }`}
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncingGame === "pick4" && syncType === "recent" ? "animate-spin" : ""}`} />
+                  SYNC RECENT
+                </button>
+                <button
+                  onClick={() => handlePick4Sync(true)}
+                  disabled={syncingGame !== null}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border text-xs font-bold font-mono tracking-wider transition ${
+                    syncingGame === "pick4" && syncType === "full"
+                      ? "bg-amber-500/20 border-amber-500 text-amber-400 animate-pulse"
+                      : "bg-slate-950 border-white/5 text-gray-400 hover:bg-slate-900 hover:border-white/10"
+                  }`}
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncingGame === "pick4" && syncType === "full" ? "animate-spin" : ""}`} />
                   SYNC FULL (2022+)
                 </button>
               </div>
