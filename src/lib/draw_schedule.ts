@@ -35,32 +35,26 @@ export function calculateNextDrawCountdown(
     let times: [number, number, string][] = [];
 
     if (game === "play-whe") {
-      if (dayOfWeek >= 1 && dayOfWeek <= 6) {
-        times = [
-          [10, 30, "Morning (10:30 AM)"],
-          [13, 0, "Midday (1:00 PM)"],
-          [16, 0, "Afternoon (4:00 PM)"],
-          [19, 0, "Evening (7:00 PM)"]
-        ];
-      } else if (dayOfWeek === 0) {
-        times = [
-          [10, 30, "Morning (10:30 AM)"],
-          [13, 0, "Midday (1:00 PM)"]
-        ];
-      }
+      // Monday to Sunday (Daily 4 draws: Morning, Midday, Afternoon, Evening)
+      times = [
+        [10, 30, "Morning (10:30 AM)"],
+        [13, 0, "Midday (1:00 PM)"],
+        [16, 0, "Afternoon (4:00 PM)"],
+        [19, 0, "Evening (7:00 PM)"]
+      ];
     } else if (game === "pick4") {
-      if (dayOfWeek >= 1 && dayOfWeek <= 6) {
-        times = [
-          [13, 0, "Midday (1:00 PM)"],
-          [19, 0, "Evening (7:00 PM)"]
-        ];
-      }
+      // Monday to Sunday (Daily 4 draws: Morning, Midday, Afternoon, Evening)
+      times = [
+        [10, 30, "Morning (10:30 AM)"],
+        [13, 0, "Midday (1:00 PM)"],
+        [16, 0, "Afternoon (4:00 PM)"],
+        [19, 0, "Evening (7:00 PM)"]
+      ];
     } else if (game === "cashpot") {
-      if (dayOfWeek >= 1 && dayOfWeek <= 6) {
-        times = [
-          [19, 0, "Evening (7:00 PM)"]
-        ];
-      }
+      // Monday to Sunday (Daily Evening Draw at 7:00 PM)
+      times = [
+        [19, 0, "Evening (7:00 PM)"]
+      ];
     } else if (game === "lotto-plus") {
       // Wednesday & Saturday
       if (dayOfWeek === 3 || dayOfWeek === 6) {
