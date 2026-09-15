@@ -811,7 +811,86 @@ export async function syncCashPot(full: boolean = false, targetYear?: number): P
   }
 }
 
-// === PICK 4 SCRAPING & REST API ENGINE ===
+// Helper for official Pick 4 HTML scraping
+const PICK4_OFFICIAL_URL = "https://www.nlcbplaywhelotto.com/nlcb-pick-4-results/";
+
+export async function scrapePick4Sid(): Promise<string | null> {
+  try {
+    const res = await fetchWithRetry(getScrapeUrl(PICK4_OFFICIAL_URL));
+    if (!res.ok) throw new Error(`Failed to load Pick 4 page: ${res.statusText}`);
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    return $('input[name="sid"]').val() as string || null;
+  } catch (error) {
+    console.error("Error fetching Pick 4 sid:", error);
+    return null;
+  }
+}
+
+export async function scrapePick4MonthOfficial(monthStr: string, yearVal: number, sid: string | null): Promise<any[]> {
+  try {
+    const formData = new URLSearchParams();
+    formData.append("search_month", monthStr);
+    formData.append("search_year", yearVal.toString());
+    formData.append("date_btn", "SEARCH");
+    if (sid) {
+      formData.append("sid", sid);
+    }
+
+    const res = await fetchWithRetry(getScrapeUrl(PICK4_OFFICIAL_URL), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData.toString(),
+    });
+
+    if (!res.ok) return [];
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const table = $("table");
+    if (!table.length) return [];
+
+    const draws: any[] = [];
+    const rows = table.find("tr");
+
+    rows.each((_, row) => {
+      const tds = $(row).find("td, th");
+      if (tds.length < 7) return;
+
+      const firstText = $(tds[0]).text().trim();
+      if (firstText.toLowerCase().includes("draw")) return;
+
+      try {
+        const drawNum = parseInt(firstText);
+        const rawDate = $(tds[1]).text().trim();
+        const drawDate = parseDate(rawDate);
+        const drawTimeSlot = $(tds[2]).text().trim().toUpperCase();
+        const d1 = parseInt($(tds[3]).text().trim());
+        const d2 = parseInt($(tds[4]).text().trim());
+        const d3 = parseInt($(tds[5]).text().trim());
+        const d4 = parseInt($(tds[6]).text().trim());
+
+        if (isNaN(drawNum) || isNaN(d1) || isNaN(d2) || isNaN(d3) || isNaN(d4)) return;
+
+        draws.push({
+          draw_number: drawNum,
+          draw_date: drawDate,
+          draw_time_slot: drawTimeSlot,
+          digit1: d1,
+          digit2: d2,
+          digit3: d3,
+          digit4: d4
+        });
+      } catch (e) {}
+    });
+
+    return draws;
+  } catch (error) {
+    console.error(`Error scraping official Pick 4 month ${monthStr} ${yearVal}:`, error);
+    return [];
+  }
+}
 
 export async function syncPick4(full: boolean = false, targetYear?: number): Promise<{ success: boolean; drawsAdded: number; details: string }> {
   let drawsAdded = 0;
@@ -829,7 +908,25 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
       )
     `);
 
-    // 1. If not full sync, first fetch latest draw via fast REST endpoint
+    // 1. Primary Scrape: Direct from official NLCB portal (nlcbplaywhelotto.com) for real-time results
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentYear = new Date().getFullYear();
+    const currentMonthIdx = new Date().getMonth();
+
+    const sid = await scrapePick4Sid();
+    const currentMonthStr = months[currentMonthIdx];
+    const officialDraws = await scrapePick4MonthOfficial(currentMonthStr, currentYear, sid);
+
+    if (officialDraws && officialDraws.length > 0) {
+      const batch = officialDraws.map(d => ({
+        sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        args: [d.draw_number, d.draw_date, d.draw_time_slot, d.digit1, d.digit2, d.digit3, d.digit4]
+      }));
+      await db.batch(batch);
+      drawsAdded += officialDraws.length;
+    }
+
+    // 2. Secondary Scrape: Fast REST endpoint fallback
     if (!full && !targetYear) {
       try {
         const res = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/pick4/results/latest-date");
@@ -853,37 +950,38 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
       }
     }
 
-    // 2. Fetch monthly archive (current month or historical range)
-    const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth() + 1; // 1-12
-    const startYear = targetYear ? targetYear : (full ? 2022 : currentYear);
-    const endYear = targetYear ? targetYear : currentYear;
+    // 3. Historical Archive Scrape (for full sync or multi-month historical backfills)
+    if (full || targetYear) {
+      const currentMonth = new Date().getMonth() + 1; // 1-12
+      const startYear = targetYear ? targetYear : 2022;
+      const endYear = targetYear ? targetYear : currentYear;
 
-    for (let y = endYear; y >= startYear; y--) {
-      const maxMonth = (y === currentYear) ? currentMonth : 12;
-      const minMonth = (!full && !targetYear && y === currentYear) ? Math.max(1, currentMonth - 1) : 1;
+      for (let y = endYear; y >= startYear; y--) {
+        const maxMonth = (y === currentYear) ? currentMonth : 12;
+        const minMonth = 1;
 
-      for (let m = maxMonth; m >= minMonth; m--) {
-        const mStr = String(m).padStart(2, "0");
-        try {
-          const res = await fetchWithRetry(`https://backend-production-412b.up.railway.app/api/pick4/results/by-month-year/${y}/${mStr}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
-              const batch = data.map((d: any) => {
-                const dDate = d.draw_date ? d.draw_date.split("T")[0] : "";
-                const slot = (d.draw_period || d.draw_time || "MORNING").toUpperCase();
-                return {
-                  sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                  args: [d.draw_number, dDate, slot, d.number1, d.number2, d.number3, d.number4]
-                };
-              });
-              await db.batch(batch);
-              drawsAdded += data.length;
+        for (let m = maxMonth; m >= minMonth; m--) {
+          const mStr = String(m).padStart(2, "0");
+          try {
+            const res = await fetchWithRetry(`https://backend-production-412b.up.railway.app/api/pick4/results/by-month-year/${y}/${mStr}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (Array.isArray(data) && data.length > 0) {
+                const batch = data.map((d: any) => {
+                  const dDate = d.draw_date ? d.draw_date.split("T")[0] : "";
+                  const slot = (d.draw_period || d.draw_time || "MORNING").toUpperCase();
+                  return {
+                    sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    args: [d.draw_number, dDate, slot, d.number1, d.number2, d.number3, d.number4]
+                  };
+                });
+                await db.batch(batch);
+                drawsAdded += data.length;
+              }
             }
+          } catch (e) {
+            console.warn(`[Pick4] Month ${y}-${mStr} sync notice:`, e);
           }
-        } catch (e) {
-          console.warn(`[Pick4] Month ${y}-${mStr} sync notice:`, e);
         }
       }
     }
@@ -894,4 +992,5 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
     return { success: false, drawsAdded, details: error.message };
   }
 }
+
 
