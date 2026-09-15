@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { analyzeDeltas, DeltaAnalysis } from "@/lib/deltas";
-import { generateWheel } from "@/lib/wheeling";
+import { generateWheel, generateWheelAsync } from "@/lib/wheeling";
 import { generateAbbreviatedWheel, WHEEL_DESIGNS } from "@/lib/wheeling_matrix";
 import { evaluateTicketQuality } from "@/lib/quality_scorer";
 import { runGeneticOptimization, AlphaSlipResult } from "@/lib/geneticOptimizer";
+import { triggerHaptic } from "@/lib/haptics";
 import InteractiveTumbler from "@/components/InteractiveTumbler";
 import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Sparkles, Play, Award, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
 
@@ -122,21 +123,25 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
     setMinFreq(Math.min(...slice));
   }, [historicalDraws]);
 
-  // Handle number selection toggle
+  // Handle number selection toggle with haptic feedback
   const toggleNumber = (num: number) => {
     if (selectedNums.includes(num)) {
+      triggerHaptic("selection");
       setSelectedNums(selectedNums.filter(n => n !== num));
     } else {
       if (selectedNums.length >= 12) {
+        triggerHaptic("warning");
         alert("You can select a maximum of 12 numbers for the Wheeling pool.");
         return;
       }
+      triggerHaptic("selection");
       setSelectedNums([...selectedNums, num].sort((a, b) => a - b));
     }
   };
 
   // Clear selections
   const handleClear = () => {
+    triggerHaptic("light");
     setSelectedNums([]);
     setSelectedPb(null);
     setDeltaAnalysis(null);
@@ -256,9 +261,10 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
     setGeneratedTickets([]);
   }, [selectedNums, historicalDraws]);
 
-  // Generate wheel tickets
-  const handleGenerateWheel = () => {
+  // Generate wheel tickets using background Web Worker
+  const handleGenerateWheel = async () => {
     if (selectedNums.length < 5) {
+      triggerHaptic("warning");
       alert("Please select at least 5 numbers to generate tickets.");
       return;
     }
@@ -267,9 +273,11 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
     if (WHEEL_DESIGNS[wheelStrategy]) {
       const wheelRes = generateAbbreviatedWheel(selectedNums, wheelStrategy, selectedPb || 2);
       if (!wheelRes.isComplete) {
+        triggerHaptic("warning");
         alert(`This covering matrix requires a pool of ${wheelRes.design.poolSize} numbers. Please select ${wheelRes.missingCount} more number(s).`);
         return;
       }
+      triggerHaptic("success");
       setGeneratedTickets(wheelRes.tickets.map(t => t.numbers));
       return;
     }
@@ -277,27 +285,17 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
     setWheelingLoading(true);
     setGeneratedTickets([]);
     
-    // Spawn Web Worker for background nCr wheeling calculations
-    const worker = new Worker(new URL("../lib/wheeling.worker.ts", import.meta.url));
-    worker.postMessage({ pool: selectedNums, strategy: wheelStrategy });
-    
-    worker.onmessage = (e) => {
-      const { success, result, error } = e.data;
+    try {
+      const tickets = await generateWheelAsync(selectedNums, wheelStrategy as any, 5);
+      setGeneratedTickets(tickets);
+      triggerHaptic("success");
+    } catch (err: any) {
+      console.error("Wheeling calculation error:", err);
+      triggerHaptic("warning");
+      alert(err.message || "Failed to generate wheel");
+    } finally {
       setWheelingLoading(false);
-      if (success) {
-        setGeneratedTickets(result);
-      } else {
-        alert(error || "Failed to generate wheel");
-      }
-      worker.terminate();
-    };
-    
-    worker.onerror = (err) => {
-      console.error("Web Worker error:", err);
-      setWheelingLoading(false);
-      alert("An unexpected background processing error occurred.");
-      worker.terminate();
-    };
+    }
   };
 
   // Export tickets to TXT file

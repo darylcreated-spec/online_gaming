@@ -42,3 +42,5 @@ next-env.d.ts
 
 # agent scratch files
 /scratch/
+__pycache__/
+*.pyc

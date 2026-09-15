@@ -17,6 +17,8 @@ import AppSplashScreen from "@/components/AppSplashScreen";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain } from "lucide-react";
+import { triggerHaptic } from "@/lib/haptics";
+import { getCacheItem, setCacheItem } from "@/lib/idb_cache";
 
 const TumblerIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -94,7 +96,10 @@ export default function Home() {
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
-  
+  const handleTabChange = (tab: "welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings") => {
+    triggerHaptic("selection");
+    setActiveTab(tab);
+  };
   
   // Dashboard Stats States
   const [timeframe, setTimeframe] = useState("alltime");
@@ -111,22 +116,28 @@ export default function Home() {
   // Prediction Builder Cached Draws (for live delta calculations)
   const [allDraws, setAllDraws] = useState<any[]>([]);
 
-  // 1. Fetch dashboard statistics
+  // 1. Fetch dashboard statistics with IndexedDB + localStorage fallback
   const fetchStats = async () => {
     setStatsLoading(true);
+    const cacheKey = `win_concept_stats_${timeframe}`;
     try {
       const res = await fetch(`/api/stats?timeframe=${timeframe}`);
       const data = await res.json();
       if (data.success) {
         setStats(data);
+        await setCacheItem(cacheKey, data);
         if (typeof window !== "undefined") {
-          localStorage.setItem(`win_concept_stats_${timeframe}`, JSON.stringify(data));
+          try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch (e) {}
         }
       }
     } catch (err) {
       console.error("Error fetching stats:", err);
-      if (typeof window !== "undefined") {
-        const cached = localStorage.getItem(`win_concept_stats_${timeframe}`);
+      const idbData = await getCacheItem(cacheKey);
+      if (idbData) {
+        setStats(idbData);
+        console.log(`[IndexedDB Cache] Loaded stats for timeframe: ${timeframe}`);
+      } else if (typeof window !== "undefined") {
+        const cached = localStorage.getItem(cacheKey);
         if (cached) {
           try {
             setStats(JSON.parse(cached));
@@ -141,7 +152,7 @@ export default function Home() {
     }
   };
 
-  // 2. Fetch history draws
+  // 2. Fetch history draws with IndexedDB + localStorage fallback
   const fetchHistoryDraws = async (page: number = 1) => {
     setHistoryLoading(true);
     const queryParams = new URLSearchParams({
@@ -157,13 +168,19 @@ export default function Home() {
       if (data.success) {
         setDraws(data.draws);
         setPagination(data.pagination);
+        await setCacheItem(cacheKey, data);
         if (typeof window !== "undefined") {
-          localStorage.setItem(cacheKey, JSON.stringify(data));
+          try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch (e) {}
         }
       }
     } catch (err) {
       console.error("Error fetching history draws:", err);
-      if (typeof window !== "undefined") {
+      const idbDrawsData = await getCacheItem(cacheKey);
+      if (idbDrawsData) {
+        setDraws(idbDrawsData.draws);
+        setPagination(idbDrawsData.pagination);
+        console.log(`[IndexedDB Cache] Loaded history page ${page}`);
+      } else if (typeof window !== "undefined") {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
           try {
@@ -181,7 +198,7 @@ export default function Home() {
     }
   };
 
-  // 3. Fetch all draws for client-side delta analysis
+  // 3. Fetch all draws for client-side delta analysis with IndexedDB
   const fetchAllDraws = async () => {
     const cacheKey = "win_concept_all_draws";
     try {
@@ -189,13 +206,18 @@ export default function Home() {
       const data = await res.json();
       if (data.success) {
         setAllDraws(data.draws);
+        await setCacheItem(cacheKey, data.draws);
         if (typeof window !== "undefined") {
-          localStorage.setItem(cacheKey, JSON.stringify(data.draws));
+          try { localStorage.setItem(cacheKey, JSON.stringify(data.draws)); } catch (e) {}
         }
       }
     } catch (err) {
       console.error("Error fetching all draws:", err);
-      if (typeof window !== "undefined") {
+      const idbAllDraws = await getCacheItem<any[]>(cacheKey);
+      if (idbAllDraws && idbAllDraws.length > 0) {
+        setAllDraws(idbAllDraws);
+        console.log("[IndexedDB Cache] Loaded all draws for wheeling analysis");
+      } else if (typeof window !== "undefined") {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
           try {
@@ -302,8 +324,11 @@ export default function Home() {
 
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col selection:bg-primary/30 selection:text-white">
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col selection:bg-primary/30 selection:text-white relative overflow-x-hidden">
       
+      {/* Dynamic Ambient Reactive Aura */}
+      <div className={`ambient-aura aura-${activeTab}`} aria-hidden="true" />
+
       {/* Pre-Landing Initial Loading & Splash Screen */}
       <AppSplashScreen isLoading={statsLoading} />
 
@@ -328,7 +353,7 @@ export default function Home() {
           <nav className="flex items-center gap-2 p-1.5 bg-slate-900/80 rounded-xl border border-white/10 overflow-x-auto scrollbar-none sleek-scrollbar scroll-smooth w-full">
           {/* HOME */}
           <button
-            onClick={() => setActiveTab("welcome")}
+            onClick={() => handleTabChange("welcome")}
             className={`min-w-[115px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "welcome"
                 ? "bg-sky-500/20 border border-sky-400 text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]"
@@ -345,7 +370,7 @@ export default function Home() {
 
           {/* LOTTO PLUS */}
           <button
-            onClick={() => setActiveTab("lotto-plus")}
+            onClick={() => handleTabChange("lotto-plus")}
             className={`min-w-[125px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "lotto-plus"
                 ? "bg-sky-500/20 border border-sky-400 text-sky-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]"
@@ -362,7 +387,7 @@ export default function Home() {
           
           {/* PLAY WHE */}
           <button
-            onClick={() => setActiveTab("play-whe")}
+            onClick={() => handleTabChange("play-whe")}
             className={`min-w-[120px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "play-whe"
                 ? "bg-amber-500/20 border border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.25)]"
@@ -379,7 +404,7 @@ export default function Home() {
           
           {/* WIN FOR LIFE */}
           <button
-            onClick={() => setActiveTab("win-for-life")}
+            onClick={() => handleTabChange("win-for-life")}
             className={`min-w-[130px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "win-for-life"
                 ? "bg-emerald-500/20 border border-emerald-400 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.25)]"
@@ -396,7 +421,7 @@ export default function Home() {
 
           {/* CASHPOT */}
           <button
-            onClick={() => setActiveTab("cashpot")}
+            onClick={() => handleTabChange("cashpot")}
             className={`min-w-[120px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "cashpot"
                 ? "bg-yellow-500/20 border border-yellow-400 text-yellow-300 shadow-[0_0_15px_rgba(250,204,21,0.25)]"
@@ -413,7 +438,7 @@ export default function Home() {
 
           {/* PICK 4 */}
           <button
-            onClick={() => setActiveTab("pick4")}
+            onClick={() => handleTabChange("pick4")}
             className={`min-w-[115px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "pick4"
                 ? "bg-purple-500/20 border border-purple-400 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.25)]"
@@ -430,7 +455,7 @@ export default function Home() {
 
           {/* SYNDICATES */}
           <button
-            onClick={() => setActiveTab("syndicate")}
+            onClick={() => handleTabChange("syndicate")}
             className={`min-w-[125px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "syndicate"
                 ? "bg-violet-500/20 border border-violet-400 text-violet-300 shadow-[0_0_15px_rgba(167,139,250,0.25)]"
@@ -447,7 +472,7 @@ export default function Home() {
           
           {/* TICKET SCANNER */}
           <button
-            onClick={() => setActiveTab("scanner")}
+            onClick={() => handleTabChange("scanner")}
             className={`min-w-[140px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "scanner"
                 ? "bg-emerald-500/20 border border-emerald-400 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.25)]"
@@ -464,7 +489,7 @@ export default function Home() {
 
           {/* SETTINGS */}
           <button
-            onClick={() => setActiveTab("settings")}
+            onClick={() => handleTabChange("settings")}
             className={`min-w-[115px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "settings"
                 ? "bg-slate-700/40 border border-slate-400 text-slate-200 shadow-[0_0_15px_rgba(148,163,184,0.25)]"
@@ -815,7 +840,7 @@ export default function Home() {
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070b19]/95 backdrop-blur-xl border-t border-white/10 px-3 py-2 flex items-center gap-2 overflow-x-auto scroll-smooth sleek-scrollbar shadow-[0_-5px_25px_rgba(0,0,0,0.6)]">
         {/* HOME */}
         <button
-          onClick={() => setActiveTab("welcome")}
+          onClick={() => handleTabChange("welcome")}
           className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "welcome"
               ? "bg-sky-500/20 border-sky-400 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.25)] font-bold"
@@ -832,7 +857,7 @@ export default function Home() {
 
         {/* LOTTO PLUS */}
         <button
-          onClick={() => { setActiveTab("lotto-plus"); setLottoSubTab("dashboard"); }}
+          onClick={() => { handleTabChange("lotto-plus"); setLottoSubTab("dashboard"); }}
           className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "lotto-plus"
               ? "bg-sky-500/20 border-sky-400 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.25)] font-bold"
@@ -849,7 +874,7 @@ export default function Home() {
 
         {/* PLAY WHE */}
         <button
-          onClick={() => { setActiveTab("play-whe"); setPlayWheSubTab("dashboard"); }}
+          onClick={() => { handleTabChange("play-whe"); setPlayWheSubTab("dashboard"); }}
           className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "play-whe"
               ? "bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.25)] font-bold"
@@ -866,7 +891,7 @@ export default function Home() {
 
         {/* WIN FOR LIFE */}
         <button
-          onClick={() => setActiveTab("win-for-life")}
+          onClick={() => handleTabChange("win-for-life")}
           className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "win-for-life"
               ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.25)] font-bold"
@@ -883,7 +908,7 @@ export default function Home() {
 
         {/* CASHPOT */}
         <button
-          onClick={() => setActiveTab("cashpot")}
+          onClick={() => handleTabChange("cashpot")}
           className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "cashpot"
               ? "bg-yellow-500/20 border-yellow-400 text-yellow-300 shadow-[0_0_12px_rgba(234,179,8,0.25)] font-bold"
@@ -900,7 +925,7 @@ export default function Home() {
 
         {/* PICK 4 */}
         <button
-          onClick={() => setActiveTab("pick4")}
+          onClick={() => handleTabChange("pick4")}
           className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "pick4"
               ? "bg-purple-500/20 border-purple-400 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.25)] font-bold"
@@ -917,7 +942,7 @@ export default function Home() {
 
         {/* SYNDICATES / POOLS */}
         <button
-          onClick={() => setActiveTab("syndicate")}
+          onClick={() => handleTabChange("syndicate")}
           className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "syndicate"
               ? "bg-violet-500/20 border-violet-400 text-violet-300 shadow-[0_0_12px_rgba(167,139,250,0.25)] font-bold"
@@ -934,7 +959,7 @@ export default function Home() {
 
         {/* SCANNER */}
         <button
-          onClick={() => setActiveTab("scanner")}
+          onClick={() => handleTabChange("scanner")}
           className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "scanner"
               ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.25)] font-bold"
@@ -951,7 +976,7 @@ export default function Home() {
 
         {/* SETTINGS */}
         <button
-          onClick={() => setActiveTab("settings")}
+          onClick={() => handleTabChange("settings")}
           className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "settings"
               ? "bg-slate-700/40 border-slate-400 text-slate-200 shadow-[0_0_12px_rgba(148,163,184,0.25)] font-bold"

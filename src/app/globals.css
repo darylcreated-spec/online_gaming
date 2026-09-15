@@ -348,3 +348,125 @@ body {
   animation: drop-pick4 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* ─── 3D LACQUERED RESIN BALL SHADING ───────────────────────────────── */
+.ball-3d {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  box-shadow: 
+    inset -3px -3px 6px rgba(0, 0, 0, 0.55),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.45),
+    0 4px 10px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.ball-3d:hover {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.ball-3d::after {
+  content: '';
+  position: absolute;
+  top: 12%;
+  left: 18%;
+  width: 32%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0) 80%);
+  pointer-events: none;
+}
+
+.ball-3d-amber {
+  background: radial-gradient(circle at 35% 35%, #fef08a 0%, #f59e0b 55%, #b45309 100%);
+  color: #451a03;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.ball-3d-sky {
+  background: radial-gradient(circle at 35% 35%, #e0f2fe 0%, #0284c7 55%, #0369a1 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.ball-3d-emerald {
+  background: radial-gradient(circle at 35% 35%, #d1fae5 0%, #059669 55%, #064e3b 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.ball-3d-yellow {
+  background: radial-gradient(circle at 35% 35%, #fef9c3 0%, #eab308 55%, #a16207 100%);
+  color: #422006;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.ball-3d-purple {
+  background: radial-gradient(circle at 35% 35%, #f3e8ff 0%, #9333ea 55%, #581c87 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.ball-3d-red {
+  background: radial-gradient(circle at 35% 35%, #ffe4e6 0%, #e11d48 55%, #881337 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── DYNAMIC REACTIVE GAME AURA ─────────────────────────────────────── */
+.ambient-aura {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  max-width: 100vw;
+  height: 480px;
+  pointer-events: none;
+  filter: blur(120px);
+  opacity: 0.18;
+  border-radius: 50%;
+  transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease;
+  z-index: 0;
+}
+
+.aura-welcome {
+  background: radial-gradient(ellipse at center, #38bdf8 0%, #6366f1 50%, transparent 80%);
+}
+
+.aura-lotto-plus {
+  background: radial-gradient(ellipse at center, #0284c7 0%, #0369a1 50%, transparent 80%);
+}
+
+.aura-play-whe {
+  background: radial-gradient(ellipse at center, #f59e0b 0%, #d97706 50%, transparent 80%);
+}
+
+.aura-win-for-life {
+  background: radial-gradient(ellipse at center, #10b981 0%, #059669 50%, transparent 80%);
+}
+
+.aura-cashpot {
+  background: radial-gradient(ellipse at center, #eab308 0%, #ca8a04 50%, transparent 80%);
+}
+
+.aura-pick4 {
+  background: radial-gradient(ellipse at center, #a855f7 0%, #7c3aed 50%, transparent 80%);
+}
+
+.aura-syndicate {
+  background: radial-gradient(ellipse at center, #8b5cf6 0%, #6366f1 50%, transparent 80%);
+}
+
+.aura-scanner {
+  background: radial-gradient(ellipse at center, #06b6d4 0%, #10b981 50%, transparent 80%);
+}
+
+.aura-settings {
+  background: radial-gradient(ellipse at center, #64748b 0%, #475569 50%, transparent 80%);
+}
+
+

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, RotateCcw, Volume2, VolumeX, Dices, Shuffle, ArrowRight, Layers, Award } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
+import { triggerHaptic } from "@/lib/haptics";
 
 interface BallPhysics {
   id: number;
@@ -255,15 +256,6 @@ export default function InteractiveTumbler({
         osc.stop(ctx.currentTime + idx * 0.08 + 0.35);
       });
     } catch (e) {}
-  };
-
-  // Trigger mobile haptic feedback
-  const triggerHaptic = (pattern: number | number[]) => {
-    if (typeof window !== "undefined" && "navigator" in window && "vibrate" in navigator) {
-      try {
-        navigator.vibrate(pattern);
-      } catch (e) {}
-    }
   };
 
   // Helper to generate the official numbered balls with actual official colors for each game
@@ -839,7 +831,7 @@ export default function InteractiveTumbler({
     setIsSpinning(true);
     setDrawnNumbers([]);
     setDrawnBonus(null);
-    triggerHaptic([40, 30, 40]);
+    triggerHaptic("heavy");
 
     // Initial agitation spin duration
     await new Promise(r => setTimeout(r, 1300));
@@ -854,7 +846,7 @@ export default function InteractiveTumbler({
         selectedPicks.push(digit);
         setDrawnNumbers([...selectedPicks]);
         playDrawDropSound(selectedGame, i);
-        triggerHaptic(50);
+        triggerHaptic("medium");
       }
     } else {
       // Pool-based games (Play Whe, Lotto Plus, Win For Life, Cash Pot)
@@ -870,7 +862,7 @@ export default function InteractiveTumbler({
         }
         setDrawnNumbers([...selectedPicks]);
         playDrawDropSound(selectedGame, i);
-        triggerHaptic(50);
+        triggerHaptic("medium");
       }
     }
 
@@ -881,12 +873,12 @@ export default function InteractiveTumbler({
       bonus = Math.floor(Math.random() * currentConfig.bonusMax) + 1;
       setDrawnBonus(bonus);
       playDrawDropSound(selectedGame, currentConfig.pickCount);
-      triggerHaptic([60, 40, 60]);
+      triggerHaptic("heavy");
     }
 
     setIsSpinning(false);
     playVictoryChime();
-    triggerHaptic([50, 50, 100, 50, 150]);
+    triggerHaptic("success");
 
     if (onTicketGenerated) {
       onTicketGenerated(selectedGame, selectedPicks, bonus);
@@ -952,6 +944,7 @@ export default function InteractiveTumbler({
                   key={g}
                   onClick={() => {
                     if (!isSpinning) {
+                      triggerHaptic("selection");
                       setSelectedGame(g);
                     }
                   }}
@@ -1043,8 +1036,7 @@ export default function InteractiveTumbler({
                     {selectedGame === "play-whe" && drawnNumbers.length > 0 && (
                       <div className="flex items-center gap-4 flex-wrap justify-center">
                         <div
-                          className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-xl text-slate-950 font-mono shadow-[0_0_20px_rgba(251,191,36,0.6)] ${currentConfig.dropAnimationClass}`}
-                          style={{ backgroundColor: currentConfig.accentColor }}
+                          className={`w-14 h-14 ball-3d ball-3d-amber text-xl shadow-[0_0_20px_rgba(251,191,36,0.6)] ${currentConfig.dropAnimationClass}`}
                         >
                           {drawnNumbers[0]}
                         </div>
@@ -1065,9 +1057,8 @@ export default function InteractiveTumbler({
                         {drawnNumbers.map((num, i) => (
                           <div
                             key={i}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm text-slate-950 font-mono shadow-[0_0_12px_rgba(56,189,248,0.5)] ${currentConfig.dropAnimationClass}`}
+                            className={`w-10 h-10 ball-3d ball-3d-sky text-sm shadow-[0_0_12px_rgba(56,189,248,0.5)] ${currentConfig.dropAnimationClass}`}
                             style={{ 
-                              backgroundColor: currentConfig.accentColor,
                               animationDelay: `${i * 120}ms`
                             }}
                           >
@@ -1078,7 +1069,7 @@ export default function InteractiveTumbler({
                         {drawnBonus !== null && (
                           <>
                             <span className="text-gray-500 font-bold mx-1 text-sm">+</span>
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm text-white bg-purple-600 border border-purple-400 shadow-[0_0_16px_rgba(168,85,247,0.6)] ${currentConfig.dropAnimationClass}`}>
+                            <div className={`w-10 h-10 ball-3d ball-3d-purple text-sm shadow-[0_0_16px_rgba(168,85,247,0.6)] ${currentConfig.dropAnimationClass}`}>
                               {drawnBonus}
                             </div>
                           </>
@@ -1092,9 +1083,8 @@ export default function InteractiveTumbler({
                         {drawnNumbers.map((num, i) => (
                           <div
                             key={i}
-                            className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs text-slate-950 font-mono shadow-[0_0_12px_rgba(52,211,153,0.5)] ${currentConfig.dropAnimationClass}`}
+                            className={`w-9 h-9 ball-3d ball-3d-emerald text-xs shadow-[0_0_12px_rgba(52,211,153,0.5)] ${currentConfig.dropAnimationClass}`}
                             style={{ 
-                              backgroundColor: currentConfig.accentColor,
                               animationDelay: `${i * 100}ms`
                             }}
                           >
@@ -1105,7 +1095,7 @@ export default function InteractiveTumbler({
                         {drawnBonus !== null && (
                           <>
                             <span className="text-gray-500 font-bold mx-1 text-sm">+</span>
-                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-xs text-white bg-emerald-600 border border-emerald-400 shadow-[0_0_16px_rgba(16,185,129,0.6)] ${currentConfig.dropAnimationClass}`}>
+                            <div className={`w-9 h-9 ball-3d ball-3d-amber text-xs shadow-[0_0_16px_rgba(245,158,11,0.6)] ${currentConfig.dropAnimationClass}`}>
                               {drawnBonus}
                             </div>
                           </>
@@ -1119,9 +1109,8 @@ export default function InteractiveTumbler({
                         {drawnNumbers.map((num, i) => (
                           <div
                             key={i}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm text-slate-950 font-mono shadow-[0_0_12px_rgba(234,179,8,0.5)] ${currentConfig.dropAnimationClass}`}
+                            className={`w-10 h-10 ball-3d ball-3d-yellow text-sm shadow-[0_0_12px_rgba(234,179,8,0.5)] ${currentConfig.dropAnimationClass}`}
                             style={{ 
-                              backgroundColor: currentConfig.accentColor,
                               animationDelay: `${i * 110}ms`
                             }}
                           >
@@ -1132,7 +1121,7 @@ export default function InteractiveTumbler({
                         {drawnBonus !== null && (
                           <>
                             <span className="text-gray-500 font-bold mx-1 text-sm">×</span>
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs text-white bg-amber-600 border border-amber-400 shadow-[0_0_16px_rgba(245,158,11,0.6)] ${currentConfig.dropAnimationClass}`}>
+                            <div className={`w-10 h-10 ball-3d ball-3d-red text-xs shadow-[0_0_16px_rgba(225,29,72,0.6)] ${currentConfig.dropAnimationClass}`}>
                               {drawnBonus}X
                             </div>
                           </>
@@ -1146,11 +1135,11 @@ export default function InteractiveTumbler({
                         {drawnNumbers.map((digit, i) => (
                           <div
                             key={i}
-                            className={`w-11 h-12 rounded-xl flex flex-col items-center justify-center font-black text-base text-purple-200 bg-purple-950/60 border-2 border-purple-400 font-mono shadow-[0_0_15px_rgba(168,85,247,0.4)] ${currentConfig.dropAnimationClass}`}
+                            className={`w-11 h-12 rounded-xl ball-3d ball-3d-purple flex flex-col items-center justify-center font-black text-base font-mono shadow-[0_0_15px_rgba(168,85,247,0.4)] ${currentConfig.dropAnimationClass}`}
                             style={{ animationDelay: `${i * 140}ms` }}
                           >
                             <span>{digit}</span>
-                            <span className="text-[7px] text-purple-400/80 uppercase">POS {i + 1}</span>
+                            <span className="text-[7px] text-white/80 uppercase">POS {i + 1}</span>
                           </div>
                         ))}
                       </div>

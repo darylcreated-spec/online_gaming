@@ -170,12 +170,14 @@ export function generateAbbreviatedWheel(
   return selectedTickets;
 }
 
+export type WheelingStrategy = "full" | "abbreviated-4-4" | "abbreviated-3-3" | "abbreviated-5-5";
+
 /**
  * Main interface for generating wheels
  */
 export function generateWheel(
   pool: number[],
-  strategy: "full" | "abbreviated-4-4" | "abbreviated-3-3" | "abbreviated-5-5",
+  strategy: WheelingStrategy,
   ticketSize: number = 5
 ): number[][] {
   if (pool.length < ticketSize) {
@@ -202,5 +204,77 @@ export function generateWheel(
       
     default:
       throw new Error(`Unknown wheeling strategy: ${strategy}`);
+  }
+}
+
+/**
+ * Non-blocking Web Worker async wrapper for Stefan Mandel abbreviated wheeling.
+ * Prevents UI stutter and maintains 60fps frame rates on mobile browsers.
+ */
+export function generateAbbreviatedWheelAsync(
+  pool: number[],
+  t: number,
+  m: number,
+  ticketSize: number = 5
+): Promise<number[][]> {
+  return new Promise((resolve) => {
+    if (typeof window !== "undefined" && typeof Worker !== "undefined") {
+      try {
+        const worker = new Worker("/workers/wheeling_worker.js");
+        const id = Math.random().toString(36).substring(7);
+
+        worker.onmessage = (e) => {
+          if (e.data && e.data.id === id && e.data.success) {
+            worker.terminate();
+            resolve(e.data.tickets);
+          } else {
+            worker.terminate();
+            resolve(generateAbbreviatedWheel(pool, t, m, ticketSize));
+          }
+        };
+
+        worker.onerror = () => {
+          worker.terminate();
+          resolve(generateAbbreviatedWheel(pool, t, m, ticketSize));
+        };
+
+        worker.postMessage({
+          id,
+          type: "ABBREVIATED_WHEEL",
+          pool,
+          t,
+          m,
+          ticketSize
+        });
+        return;
+      } catch {
+        // Fall through to synchronous fallback
+      }
+    }
+
+    resolve(generateAbbreviatedWheel(pool, t, m, ticketSize));
+  });
+}
+
+/**
+ * Non-blocking async wrapper for all wheeling strategies.
+ */
+export async function generateWheelAsync(
+  pool: number[],
+  strategy: WheelingStrategy,
+  ticketSize: number = 5
+): Promise<number[][]> {
+  const sortedPool = [...pool].sort((a, b) => a - b);
+  switch (strategy) {
+    case "full":
+      return getCombinations(sortedPool, ticketSize);
+    case "abbreviated-5-5":
+      return generateAbbreviatedWheelAsync(sortedPool, 5, 5, ticketSize);
+    case "abbreviated-4-4":
+      return generateAbbreviatedWheelAsync(sortedPool, 4, 4, ticketSize);
+    case "abbreviated-3-3":
+      return generateAbbreviatedWheelAsync(sortedPool, 3, 3, ticketSize);
+    default:
+      return generateWheel(pool, strategy, ticketSize);
   }
 }
