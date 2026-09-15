@@ -927,26 +927,28 @@ export default function PlayWheTab({
               </p>
             </div>
 
-            <div className="grid grid-cols-6 sm:grid-cols-12 gap-2 pt-2">
-              {Array.from({ length: 36 }, (_, i) => i + 1).map(num => {
-                const isSelected = (transitionFromNumber ?? transitionData?.currentMark?.number) === num;
-                return (
-                  <button
-                    key={num}
-                    onClick={() => setTransitionFromNumber(num)}
-                    className={`py-2 rounded-lg font-bold text-xs border transition cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
-                      isSelected
-                        ? "bg-primary text-slate-950 border-primary shadow-[0_0_12px_rgba(56,189,248,0.4)]"
-                        : "bg-slate-900/60 border-white/5 text-gray-300 hover:border-white/20 hover:text-white"
-                    }`}
-                  >
-                    <span className="text-xs font-black">{num}</span>
-                    <span className="text-[8px] opacity-70 truncate max-w-[36px]">
-                      {CHINAPOO_CHART[num as keyof typeof CHINAPOO_CHART]?.mark.split(" ")[0] || ""}
-                    </span>
-                  </button>
-                );
-              })}
+            <div className="overflow-x-auto sleek-scrollbar pb-1">
+              <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5 sm:gap-2 pt-2 min-w-[340px]">
+                {Array.from({ length: 36 }, (_, i) => i + 1).map(num => {
+                  const isSelected = (transitionFromNumber ?? transitionData?.currentMark?.number) === num;
+                  return (
+                    <button
+                      key={num}
+                      onClick={() => setTransitionFromNumber(num)}
+                      className={`py-2 rounded-lg font-bold text-xs border transition cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                        isSelected
+                          ? "bg-primary text-slate-950 border-primary shadow-[0_0_12px_rgba(56,189,248,0.4)]"
+                          : "bg-slate-900/60 border-white/5 text-gray-300 hover:border-white/20 hover:text-white"
+                      }`}
+                    >
+                      <span className="text-xs font-black">{num}</span>
+                      <span className="text-[8px] opacity-70 truncate max-w-[36px]">
+                        {CHINAPOO_CHART[num as keyof typeof CHINAPOO_CHART]?.mark.split(" ")[0] || ""}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -1202,8 +1204,8 @@ export default function PlayWheTab({
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left font-mono text-xs border-collapse">
+                  <div className="overflow-x-auto sleek-scrollbar">
+                    <table className="w-full text-left font-mono text-xs border-collapse min-w-[650px]">
                       <thead>
                         <tr className="border-b border-white/5 text-gray-400 uppercase text-[9px]">
                           <th className="pb-2.5 px-3">Rank</th>
@@ -2342,7 +2344,7 @@ export default function PlayWheTab({
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-4">
               {/* Graphic Node Circle SVG (7 cols on large screens) */}
-              <div className="lg:col-span-7 flex justify-center">
+              <div className="lg:col-span-7 flex justify-center overflow-x-auto sleek-scrollbar w-full">
                 <svg viewBox="0 0 780 780" className="w-full max-w-[620px] overflow-visible select-none">
                   {/* Arrow Marker Definitions */}
                   <defs>
@@ -2637,8 +2639,8 @@ export default function PlayWheTab({
           </div>
 
           {/* Table Container */}
-          <div className="overflow-x-auto border border-white/5 rounded-lg">
-            <table className="w-full text-left border-collapse text-xs font-mono">
+          <div className="overflow-x-auto sleek-scrollbar border border-white/5 rounded-lg">
+            <table className="w-full text-left border-collapse text-xs font-mono min-w-[520px]">
               <thead>
                 <tr className="bg-slate-950 border-b border-white/5 text-[10px] uppercase text-gray-400 tracking-wider">
                   <th className="py-3 px-4 font-semibold">Draw #</th>
@@ -2772,8 +2774,8 @@ export default function PlayWheTab({
               </p>
             </div>
 
-            <div className="overflow-x-auto">
-               <table className="w-full text-left font-mono text-xs border-collapse">
+            <div className="overflow-x-auto sleek-scrollbar">
+               <table className="w-full text-left font-mono text-xs border-collapse min-w-[600px]">
                 <thead>
                   <tr className="border-b border-white/5 text-gray-500 uppercase text-[10px]">
                     <th className="pb-3 px-4">Target Draw</th>

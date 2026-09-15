@@ -277,6 +277,15 @@ body {
 .sleek-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(56, 189, 248, 0.3) rgba(15, 23, 42, 0.4);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Enhanced mobile scroll container for tables, cards, and wide matrices */
+.mobile-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 /* ============================================================

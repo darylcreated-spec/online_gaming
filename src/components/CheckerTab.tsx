@@ -1719,7 +1719,7 @@ export default function CheckerTab() {
 
       {/* CAMERA SCANNER MODAL */}
       {showScannerModal && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-950/95 z-[999] flex flex-col justify-between p-6 font-mono">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-950/95 z-[999] flex flex-col justify-between p-3 sm:p-6 overflow-y-auto sleek-scrollbar font-mono">
           <div className="flex justify-between items-center border-b border-white/5 pb-3">
             <div className="space-y-0.5">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">Ticket Scanner Camera</h3>

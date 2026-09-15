@@ -120,8 +120,8 @@ export default function HistoryTab({
 
       {/* Paginated Draws List */}
       <div className="glass-panel rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto sleek-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[580px]">
             <thead>
               <tr className="border-b border-white/5 bg-slate-950/50 text-xs font-semibold text-gray-400 uppercase tracking-wider font-mono">
                 <th className="py-4 px-6">Draw #</th>

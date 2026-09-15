@@ -1044,8 +1044,8 @@ export default function WinForLifeTab() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs font-mono">
+          <div className="overflow-x-auto sleek-scrollbar">
+            <table className="w-full text-left border-collapse text-xs font-mono min-w-[550px]">
               <thead>
                 <tr className="border-b border-white/10 text-gray-500 uppercase tracking-widest text-[10px]">
                   <th className="py-3 px-4">Draw #</th>
@@ -1511,8 +1511,8 @@ export default function WinForLifeTab() {
             )}
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs font-mono">
+          <div className="overflow-x-auto sleek-scrollbar">
+            <table className="w-full text-left border-collapse text-xs font-mono min-w-[620px]">
               <thead>
                 <tr className="border-b border-white/10 text-gray-500 uppercase tracking-widest text-[10px]">
                   <th className="py-3 px-4">Prediction Date</th>

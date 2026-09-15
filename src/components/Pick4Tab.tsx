@@ -506,8 +506,8 @@ export default function Pick4Tab() {
                   <TrendingUp className="w-4 h-4 text-purple-400" />
                   Positional Posterior Probabilities Heatmap (Dirichlet-Markov Matrix)
                 </h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-center text-xs">
+                <div className="overflow-x-auto sleek-scrollbar">
+                  <table className="w-full text-center text-xs min-w-[580px]">
                     <thead>
                       <tr className="border-b border-white/10 text-gray-400 text-[11px]">
                         <th className="py-2 px-3 text-left">Position</th>
@@ -630,8 +630,8 @@ export default function Pick4Tab() {
             </div>
           </div>
 
-          <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs">
+          <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-x-auto sleek-scrollbar">
+            <table className="w-full text-left text-xs min-w-[480px]">
               <thead className="bg-black/50 text-gray-400 border-b border-white/5 uppercase text-[10px]">
                 <tr>
                   <th className="py-3 px-4">Draw #</th>

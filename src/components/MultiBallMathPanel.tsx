@@ -373,8 +373,8 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                 </div>
 
                 {/* Match Tiers Table */}
-                <div className="overflow-x-auto rounded-xl border border-white/5">
-                  <table className="w-full text-left font-mono text-xs border-collapse">
+                <div className="overflow-x-auto sleek-scrollbar rounded-xl border border-white/5">
+                  <table className="w-full text-left font-mono text-xs border-collapse min-w-[580px]">
                     <thead>
                       <tr className="border-b border-white/5 bg-slate-900/60 text-gray-400 uppercase text-[10px]">
                         <th className="py-2.5 px-4">Exact Numbers Matched</th>
@@ -488,8 +488,8 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
               </h3>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+            <div className="overflow-x-auto sleek-scrollbar">
+              <table className="w-full text-left text-xs border-collapse min-w-[700px]">
                 <thead>
                   <tr className="border-b border-white/5 text-gray-500 uppercase text-[10px]">
                     <th className="py-2.5 px-3">Rank</th>

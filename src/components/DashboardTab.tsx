@@ -798,8 +798,8 @@ export default function DashboardTab({
             No saved slips found in your workspace. Build slips in the builder tab and click 'Save to Workspace' to track them.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs font-mono">
+          <div className="overflow-x-auto sleek-scrollbar">
+            <table className="w-full text-left border-collapse text-xs font-mono min-w-[580px]">
               <thead>
                 <tr className="border-b border-white/5 text-gray-400">
                   <th className="py-2">Label</th>

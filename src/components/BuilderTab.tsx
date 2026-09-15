@@ -1058,7 +1058,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         <div className="bg-[#121418] border border-[#1F232B] p-6 rounded-none space-y-6">
           
           {/* Section Header */}
-          <div className="flex justify-between items-center border-b border-[#1F232B] pb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#1F232B] pb-4">
             <div className="space-y-1">
               <span className="text-xs text-amber-500 uppercase tracking-widest font-bold">Betting slips</span>
               <h3 className="text-md font-bold text-white uppercase flex items-center gap-2">
@@ -1067,7 +1067,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
               </h3>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <button
                 onClick={handleSaveSlips}
                 className="flex items-center gap-1.5 border border-[#1F232B] hover:border-amber-400 hover:text-amber-400 text-slate-400 px-4 py-2 rounded-none text-xs font-semibold font-mono tracking-wider transition-all duration-200 cursor-pointer bg-[#0B0C0E]"
@@ -1086,7 +1086,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
           </div>
 
           {/* Staggered Stacked Ticket Slips */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[480px] overflow-y-auto pr-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[480px] overflow-y-auto sleek-scrollbar pr-2">
             {generatedTickets.map((ticket, idx) => (
               <div
                 key={idx}

@@ -308,7 +308,7 @@ export default function Home() {
       <AppSplashScreen isLoading={statsLoading} />
 
       {/* Global Terminal Header */}
-      <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-4 px-6 md:px-12 flex justify-between items-center bg-slate-950/70 backdrop-blur-md w-full">
+      <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-3 sm:py-4 px-3 sm:px-6 md:px-12 flex justify-between items-center bg-slate-950/70 backdrop-blur-md w-full">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 border border-primary/20 text-primary rounded-lg shadow-[0_0_15px_rgba(56,189,248,0.25)]">
             <TumblerIcon className="w-6 h-6 animate-pulse" />
@@ -488,7 +488,7 @@ export default function Home() {
       <LiveDrawTicker onSelectGame={setActiveTab} />
 
       {/* Main Viewport Container */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 py-8 pb-24 md:pb-8">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 md:px-12 py-4 sm:py-8 pb-28 md:pb-8 overflow-x-hidden">
         
         {/* Lotto Plus Hero Header & Sub-Navigation */}
         {activeTab === "lotto-plus" && (
@@ -536,7 +536,7 @@ export default function Home() {
               }
             />
 
-            <div className="flex bg-slate-900/60 p-1 rounded-xl border border-sky-500/20 w-full md:w-fit overflow-x-auto flex-nowrap scrollbar-none gap-1">
+            <div className="flex bg-slate-900/60 p-1 rounded-xl border border-sky-500/20 w-full md:w-fit overflow-x-auto flex-nowrap sleek-scrollbar gap-1">
               <button
                 onClick={() => setLottoSubTab("dashboard")}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
@@ -812,7 +812,7 @@ export default function Home() {
       </footer>
 
       {/* Mobile Sticky Bottom Tab Bar (Horizontally Scrollable & Uniform) */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070b19]/95 backdrop-blur-xl border-t border-white/10 px-3 py-2 flex items-center gap-2 overflow-x-auto scroll-smooth scrollbar-none shadow-[0_-5px_25px_rgba(0,0,0,0.6)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070b19]/95 backdrop-blur-xl border-t border-white/10 px-3 py-2 flex items-center gap-2 overflow-x-auto scroll-smooth sleek-scrollbar shadow-[0_-5px_25px_rgba(0,0,0,0.6)]">
         {/* HOME */}
         <button
           onClick={() => setActiveTab("welcome")}

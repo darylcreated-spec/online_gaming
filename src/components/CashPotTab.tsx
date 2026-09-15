@@ -502,8 +502,8 @@ export default function CashPotTab() {
             </div>
           </div>
 
-          <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs">
+          <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-x-auto sleek-scrollbar">
+            <table className="w-full text-left text-xs min-w-[480px]">
               <thead className="bg-black/50 text-gray-400 border-b border-white/5 uppercase text-[10px]">
                 <tr>
                   <th className="py-3 px-4">Draw #</th>

@@ -159,8 +159,8 @@ export default function GameHeaderBanner({
 
         {/* Winning ball / mark visualization */}
         {latestDraw?.winning_display && (
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Result:</span>
+          <div className="flex items-center gap-2 flex-wrap max-w-full">
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider shrink-0">Result:</span>
             {latestDraw.winning_display}
           </div>
         )}
