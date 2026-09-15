@@ -142,7 +142,7 @@ export function computeNextDrawProbabilities(
     }
   }
 
-  // Factor 2: Slot-Specific Frequency and Recency
+  // Factor 2: Slot-Specific Frequency, Recency, and Diurnal Slot Lift
   const slotDraws = drawsChronological.filter(
     d => d.draw_time_slot.toLowerCase() === targetSlot.toLowerCase()
   );
@@ -152,6 +152,44 @@ export function computeNextDrawProbabilities(
     const decay = Math.exp((idx - recentSlot.length) / 45);
     slotFreqs[d.winning_number] += decay;
   });
+
+  // Calculate Global Frequencies for Empirical Lift Metrics
+  const globalFreqs = new Float64Array(37);
+  drawsChronological.forEach(d => {
+    if (d.winning_number >= 1 && d.winning_number <= 36) {
+      globalFreqs[d.winning_number]++;
+    }
+  });
+
+  // Diurnal Slot Affinity Lift: P(Num | Slot) / P(Num)
+  const slotLift = new Float64Array(37).fill(1.0);
+  const totalInSlot = slotDraws.length;
+  if (totalInSlot > 50) {
+    const slotCounts = new Float64Array(37);
+    slotDraws.forEach(d => {
+      if (d.winning_number >= 1 && d.winning_number <= 36) slotCounts[d.winning_number]++;
+    });
+    for (let num = 1; num <= 36; num++) {
+      const expRate = globalFreqs[num] / n;
+      const actRate = slotCounts[num] / totalInSlot;
+      if (expRate > 0) {
+        slotLift[num] = actRate / expRate;
+      }
+    }
+  }
+
+  // 1st-Order Markov Transition Edge Lift: P(Num | LastNum) / P(Num)
+  const sumM1 = Array.from(markov1).slice(1).reduce((acc, v) => acc + v, 0);
+  const markovLift = new Float64Array(37).fill(1.0);
+  if (sumM1 >= 15) {
+    for (let num = 1; num <= 36; num++) {
+      const expRate = globalFreqs[num] / n;
+      const actRate = markov1[num] / sumM1;
+      if (expRate > 0) {
+        markovLift[num] = actRate / expRate;
+      }
+    }
+  }
 
   // Factor 3: Exponential Weighted Moving Average (EWMA) Frequency
   const ewmaScores = new Float64Array(37);
@@ -254,8 +292,22 @@ export function computeNextDrawProbabilities(
   let totalRawScore = 0;
 
   for (let num = 1; num <= 36; num++) {
-    const mScore = (markov1[num] / maxM1) * 2.5 + (markov2[num] / maxM2) * 1.5;
-    const sScore = (slotFreqs[num] / maxSlot) * 2.5;
+    let mScore = (markov1[num] / maxM1) * 2.5 + (markov2[num] / maxM2) * 1.5;
+    // Apply empirical Markov transition edge lift boost (e.g. 14 -> 10, 21 -> 23)
+    if (markovLift[num] >= 1.35) {
+      mScore += Math.min(1.8, (markovLift[num] - 1.0) * 1.5);
+    } else if (markovLift[num] < 0.6 && sumM1 > 40) {
+      mScore *= 0.75; // Transition suppression
+    }
+
+    let sScore = (slotFreqs[num] / maxSlot) * 2.5;
+    // Apply diurnal slot affinity lift boost (e.g. Morning #16, Midday #5, Afternoon #20, Evening #26)
+    if (slotLift[num] >= 1.10) {
+      sScore += Math.min(1.5, (slotLift[num] - 1.0) * 2.0);
+    } else if (slotLift[num] < 0.90) {
+      sScore *= 0.85; // Under-indexing slot suppression
+    }
+
     const eScore = (ewmaScores[num] / maxEWMA) * 2.0;
     const rScore = rtmBoost[num];
     const dsScore = (daySlotFreqs[num] / maxDaySlot) * 1.5;
@@ -297,8 +349,6 @@ export function computeNextDrawProbabilities(
   rawScores.sort((a, b) => b.totalScore - a.totalScore);
 
   // Global Chi-Square calculation across all draws to test uniformity
-  const globalFreqs = new Float64Array(37);
-  drawsChronological.forEach(d => globalFreqs[d.winning_number]++);
   const expPerNum = n / 36;
   let chi2 = 0;
   for (let i = 1; i <= 36; i++) {

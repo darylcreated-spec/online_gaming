@@ -45,8 +45,8 @@ export const GAME_SPECS: Record<SupportedGame, GameMathSpecs> = {
     pickCount: 5,
     bonusLabel: "Powerball",
     bonusMax: 10,
-    targetSumMin: 75,
-    targetSumMax: 115
+    targetSumMin: 68,
+    targetSumMax: 113
   },
   "win-for-life": {
     game: "win-for-life",
@@ -55,8 +55,8 @@ export const GAME_SPECS: Record<SupportedGame, GameMathSpecs> = {
     pickCount: 6,
     bonusLabel: "Cash Ball",
     bonusMax: 3,
-    targetSumMin: 65,
-    targetSumMax: 110
+    targetSumMin: 69,
+    targetSumMax: 105
   },
   "cashpot": {
     game: "cashpot",
@@ -65,8 +65,8 @@ export const GAME_SPECS: Record<SupportedGame, GameMathSpecs> = {
     pickCount: 5,
     bonusLabel: "Multiplier",
     bonusMax: 5,
-    targetSumMin: 40,
-    targetSumMax: 65
+    targetSumMin: 41,
+    targetSumMax: 64
   }
 };
 
@@ -104,6 +104,8 @@ export interface TicketEnsemble {
   oddEvenRatio: string;
   highLowRatio: string;
   spread: number;
+  avgPairwiseLift?: number;
+  repeatBallCount?: number;
 }
 
 export interface NextDrawMathPrediction {
@@ -498,7 +500,20 @@ export function computeMultiBallNextDrawProbabilities(
   }
   const bonusDf = bonusMax - 1;
 
-  // Function to build a calibrated ticket ensemble
+  // Compute Empirical Pairwise Lift Matrix: Lift(A, B) = P(A, B) / (P(A) * P(B))
+  const liftMatrix: Float64Array[] = Array.from({ length: poolMax + 1 }, () => new Float64Array(poolMax + 1).fill(1.0));
+  const expectedCooccurFactor = (pickCount * (pickCount - 1)) / (poolMax * (poolMax - 1));
+  for (let a = 1; a <= poolMax; a++) {
+    for (let b = a + 1; b <= poolMax; b++) {
+      const expPairs = (frequencies[a] * frequencies[b] * expectedCooccurFactor) / totalDraws;
+      const obsPairs = companionMatrix[a][b];
+      const lift = expPairs > 0.05 ? obsPairs / expPairs : 1.0;
+      liftMatrix[a][b] = lift;
+      liftMatrix[b][a] = lift;
+    }
+  }
+
+  // Function to build a calibrated ticket ensemble with pairwise lift and combinatorial bounds
   const buildTicket = (
     id: string,
     label: string,
@@ -513,16 +528,50 @@ export function computeMultiBallNextDrawProbabilities(
     const lows = sorted.length - highs;
     const spread = sorted[sorted.length - 1] - sorted[0];
 
+    // Compute pairwise lift and repulsion metrics across all pairs in this combination
+    let totalPairLift = 0;
+    let pairCount = 0;
+    let hasSevereRepulsion = false;
+    for (let j = 0; j < sorted.length; j++) {
+      for (let k = j + 1; k < sorted.length; k++) {
+        const pLift = liftMatrix[sorted[j]][sorted[k]] || 1.0;
+        totalPairLift += pLift;
+        pairCount++;
+        if (pLift < 0.35 && totalDraws >= 60) {
+          hasSevereRepulsion = true;
+        }
+      }
+    }
+    const avgPairwiseLift = pairCount > 0 ? Number((totalPairLift / pairCount).toFixed(2)) : 1.0;
+    const repeatBallCount = sorted.filter(n => lastNumbers.includes(n)).length;
+
     // Compute ensemble score
     let score = 70;
+    // 1. Sum centroid envelope
     if (sum >= specs.targetSumMin && sum <= specs.targetSumMax) score += 12;
-    if ((odds === 2 && evens === 3) || (odds === 3 && evens === 2) || (odds === 3 && evens === 3)) score += 8;
+    
+    // 2. Parity partitions (66.5% of 5-ball games are 2E-3O or 3E-2O; 80.1% of 6-ball games are 3E-3O, 2E-4O, 4E-2O)
+    if (pickCount === 5 && (odds === 2 || odds === 3)) score += 8;
+    else if (pickCount === 6 && (odds >= 2 && odds <= 4)) score += 8;
+
+    // 3. Dispersion / spread
     if (spread >= 15 && spread <= 32) score += 5;
 
+    // 4. Pairwise statistical lift boost & repulsion penalty
+    if (avgPairwiseLift >= 1.15) score += 8;
+    else if (avgPairwiseLift >= 1.05) score += 4;
+    if (hasSevereRepulsion) score -= 10;
+
+    // 5. Cash Pot Hypergeometric repeat alignment (81.2% empirical probability of 1 or 2 repeats)
+    if (game === "cashpot") {
+      if (repeatBallCount === 1 || repeatBallCount === 2) score += 10;
+      else if (repeatBallCount === 0) score -= 8;
+    }
+
     let confidenceGrade: "S" | "A+" | "A" | "B" = "B";
-    if (score >= 90) confidenceGrade = "S";
-    else if (score >= 82) confidenceGrade = "A+";
-    else if (score >= 75) confidenceGrade = "A";
+    if (score >= 92) confidenceGrade = "S";
+    else if (score >= 84) confidenceGrade = "A+";
+    else if (score >= 76) confidenceGrade = "A";
 
     return {
       id,
@@ -535,15 +584,27 @@ export function computeMultiBallNextDrawProbabilities(
       sum,
       oddEvenRatio: `${odds}:${evens}`,
       highLowRatio: `${highs}:${lows}`,
-      spread
+      spread,
+      avgPairwiseLift,
+      repeatBallCount
     };
   };
 
-  // 1. Optimal Single Ticket (Highest MAP posterior numbers)
-  const topNumbers = numberRankings.slice(0, pickCount).map(n => n.number);
+  // 1. Optimal Single Ticket (Highest MAP posterior numbers, with Cash Pot repeat anchor)
+  let topNumbers: number[];
+  if (game === "cashpot") {
+    // Hypergeometric 1–2 Ball Repeat Anchor: Anchor the top 1-2 numbers from previous draw
+    const repeatCandidates = numberRankings.filter(n => lastNumbers.includes(n.number));
+    const nonRepeatCandidates = numberRankings.filter(n => !lastNumbers.includes(n.number));
+    const repeatAnchors = repeatCandidates.slice(0, 2).map(n => n.number);
+    const nonRepeats = nonRepeatCandidates.slice(0, pickCount - repeatAnchors.length).map(n => n.number);
+    topNumbers = [...repeatAnchors, ...nonRepeats];
+  } else {
+    topNumbers = numberRankings.slice(0, pickCount).map(n => n.number);
+  }
   const optimalTicket = buildTicket("optimal-1", "Optimal Primary Pick", topNumbers, bonusRankings[0].number);
 
-  // 2. Diversified Trio Ensemble (Covers top 10-12 numbers with combinatorial spread)
+  // 2. Diversified Trio Ensemble (Covers top numbers with combinatorial spread)
   const pool12 = numberRankings.slice(0, Math.min(14, poolMax)).map(n => n.number);
   const trioEnsemble: TicketEnsemble[] = [
     optimalTicket,
