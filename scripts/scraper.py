@@ -14,9 +14,12 @@ BASE_URL = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/"
 PLAYWHE_URL = "https://www.nlcbplaywhelotto.com/nlcb-play-whe-results/"
 WINFORLIFE_URL = "https://www.nlcbplaywhelotto.com/nlcb-win-for-life-results/"
 
+SCRAPER_API_EXHAUSTED = False
+
 def get_scrape_url(url):
+    global SCRAPER_API_EXHAUSTED
     api_key = os.environ.get("SCRAPER_API_KEY", "")
-    if api_key:
+    if api_key and not SCRAPER_API_EXHAUSTED:
         return f"https://api.scraperapi.com?api_key={api_key}&url={urllib.parse.quote(url)}"
     return url
 
@@ -39,26 +42,44 @@ HEADERS = {
     "Referer": "https://www.nlcbplaywhelotto.com/",
 }
 
-# Helper: HTTP Request with exponential backoff retries
+# Helper: HTTP Request with exponential backoff retries & proxy fallback
 def make_request(session, method, url, **kwargs):
+    global SCRAPER_API_EXHAUSTED
+    headers = kwargs.pop("headers", HEADERS)
+    timeout = kwargs.pop("timeout", 20)
+    api_key = os.environ.get("SCRAPER_API_KEY", "")
+
+    # Tier 1: Try ScraperAPI if configured and not exhausted
+    if api_key and not SCRAPER_API_EXHAUSTED:
+        proxy_url = f"https://api.scraperapi.com?api_key={api_key}&url={urllib.parse.quote(url)}"
+        try:
+            if method.upper() == "POST":
+                resp = session.post(proxy_url, headers=headers, timeout=timeout, **kwargs)
+            else:
+                resp = session.get(proxy_url, headers=headers, timeout=timeout, **kwargs)
+            if resp.status_code in (401, 403, 429):
+                print(f"[Proxy] ScraperAPI returned HTTP {resp.status_code} (exhausted/limited). Disabling proxy and falling back to direct fetch.")
+                SCRAPER_API_EXHAUSTED = True
+            elif resp.status_code < 400:
+                return resp
+        except Exception as e:
+            print(f"[Proxy] ScraperAPI error: {e}. Falling back to direct fetch.")
+
+    # Tier 2: Direct Fetch from raw target URL with native browser headers
     retries = 3
     last_err = None
-    headers = kwargs.pop("headers", HEADERS)
-    timeout = kwargs.pop("timeout", 30)
-    target_url = get_scrape_url(url)
-    
     for i in range(retries):
         try:
             if method.upper() == "POST":
-                resp = session.post(target_url, headers=headers, timeout=timeout, **kwargs)
+                resp = session.post(url, headers=headers, timeout=timeout, **kwargs)
             else:
-                resp = session.get(target_url, headers=headers, timeout=timeout, **kwargs)
+                resp = session.get(url, headers=headers, timeout=timeout, **kwargs)
             resp.raise_for_status()
             return resp
         except Exception as e:
             last_err = e
-            time.sleep(1 * (2 ** i))
-    print(f"WARNING: Request failed after {retries} retries for {url}: {last_err}")
+            time.sleep(0.5 * (2 ** i))
+    print(f"WARNING: Direct request failed after {retries} retries for {url}: {last_err}")
     return None
 
 # Standardize date format: "11-Jul-26" -> "2026-07-11"

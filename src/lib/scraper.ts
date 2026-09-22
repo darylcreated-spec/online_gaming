@@ -3,9 +3,25 @@ import { db } from "./db";
 
 const BASE_URL = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/";
 
-function getScrapeUrl(url: string): string {
+let isScraperApiExhausted = false;
+let scraperApiCooldownUntil = 0;
+
+export function markScraperApiExhausted(reason: string) {
+  isScraperApiExhausted = true;
+  scraperApiCooldownUntil = Date.now() + 1000 * 60 * 60; // 1 hour cooldown
+  console.warn(`[ScraperAPI] Credit limit reached or proxy error (${reason}). Automatically falling back to DIRECT scraping and secondary REST API tiers.`);
+}
+
+export function canUseScraperApi(): boolean {
   const apiKey = process.env.SCRAPER_API_KEY;
-  if (apiKey) {
+  if (!apiKey) return false;
+  if (isScraperApiExhausted && Date.now() < scraperApiCooldownUntil) return false;
+  return true;
+}
+
+export function getScrapeUrl(url: string): string {
+  if (canUseScraperApi()) {
+    const apiKey = process.env.SCRAPER_API_KEY;
     return `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
   }
   return url;
@@ -18,26 +34,68 @@ const HEADERS = {
   "Referer": "https://www.nlcbplaywhelotto.com/",
 };
 
-// Helper: fetch with exponential backoff retries for resilient scraping
-export async function fetchWithRetry(url: string, options: RequestInit = {}, retries: number = 2): Promise<Response> {
+// Helper: fetch with exponential backoff retries and multi-tier fallback (ScraperAPI -> Direct Fetch)
+export async function fetchWithRetry(targetUrl: string, options: RequestInit = {}, retries: number = 2): Promise<Response> {
+  // If targetUrl contains ScraperAPI proxy, extract raw target URL for fallback
+  let rawUrl = targetUrl;
+  let isProxy = false;
+  if (targetUrl.includes("api.scraperapi.com")) {
+    isProxy = true;
+    try {
+      const parsed = new URL(targetUrl);
+      rawUrl = parsed.searchParams.get("url") || targetUrl;
+    } catch {
+      rawUrl = targetUrl;
+    }
+  }
+
+  // Tier 1: Try ScraperAPI if requested and not exhausted
+  if (isProxy && canUseScraperApi()) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const res = await fetch(targetUrl, {
+          ...options,
+          headers: { ...HEADERS, ...(options.headers || {}) },
+          signal: AbortSignal.timeout(8000)
+        });
+
+        // 401 Unauthorized, 403 Forbidden (Credits exhausted), or 429 Rate limited
+        if (res.status === 401 || res.status === 403 || res.status === 429) {
+          markScraperApiExhausted(`HTTP ${res.status}`);
+          break; // Break out immediately to fall back to direct fetch without waiting
+        }
+
+        if (res.ok) return res;
+      } catch (err: any) {
+        if (i === retries - 1) {
+          console.warn(`[Proxy] ScraperAPI attempt failed: ${err.message}. Falling back to direct fetch.`);
+        }
+      }
+      if (i < retries - 1) {
+        await new Promise(r => setTimeout(r, 400 * Math.pow(2, i)));
+      }
+    }
+  }
+
+  // Tier 2: Direct Fetch from raw target URL with native browser headers
   let lastError: any = null;
   for (let i = 0; i < retries; i++) {
     try {
-      const res = await fetch(url, {
+      const res = await fetch(rawUrl, {
         ...options,
         headers: { ...HEADERS, ...(options.headers || {}) },
-        signal: AbortSignal.timeout(7000)
+        signal: AbortSignal.timeout(9000)
       });
       if (res.ok) return res;
-      lastError = new Error(`HTTP ${res.status}: ${res.statusText}`);
+      lastError = new Error(`Direct fetch HTTP ${res.status}: ${res.statusText}`);
     } catch (err) {
       lastError = err;
     }
     if (i < retries - 1) {
-      await new Promise(r => setTimeout(r, 400 * Math.pow(2, i))); // 400ms, 800ms
+      await new Promise(r => setTimeout(r, 400 * Math.pow(2, i)));
     }
   }
-  throw lastError || new Error(`Fetch failed after ${retries} attempts for ${url}`);
+  throw lastError || new Error(`Fetch failed after ${retries} direct attempts for ${rawUrl}`);
 }
 
 // Standardize date: "11-Jul-26" -> "2026-07-11"
@@ -269,70 +327,106 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
     `);
     
     // 2. Fetch homepage (only do this for recent syncs, skip for specific historical years to speed up)
-    let sid = null;
-    if (!targetYear) {
-      const homeRes = await scrapeHomepage();
-      sid = homeRes.sid;
-      if (homeRes.latestDraw) {
-        // Save live next estimated jackpot to settings
-        if (homeRes.latestDraw.jackpot && homeRes.latestDraw.jackpot !== "Unknown") {
-          await db.execute({
-            sql: "INSERT OR REPLACE INTO settings (key, value) VALUES ('lotto_next_jackpot', ?)",
-            args: [homeRes.latestDraw.jackpot]
+    try {
+      let sid = null;
+      if (!targetYear) {
+        const homeRes = await scrapeHomepage();
+        sid = homeRes.sid;
+        if (homeRes.latestDraw) {
+          // Save live next estimated jackpot to settings
+          if (homeRes.latestDraw.jackpot && homeRes.latestDraw.jackpot !== "Unknown") {
+            await db.execute({
+              sql: "INSERT OR REPLACE INTO settings (key, value) VALUES ('lotto_next_jackpot', ?)",
+              args: [homeRes.latestDraw.jackpot]
+            });
+          }
+          
+          const check = await db.execute({
+            sql: "SELECT 1 FROM draws WHERE draw_number = ?",
+            args: [homeRes.latestDraw.draw_number]
           });
-        }
-        
-        const check = await db.execute({
-          sql: "SELECT 1 FROM draws WHERE draw_number = ?",
-          args: [homeRes.latestDraw.draw_number]
-        });
-        if (check.rows.length === 0) {
-          await saveDraw(homeRes.latestDraw);
-          drawsAdded++;
-          details += `Added Draw #${homeRes.latestDraw.draw_number} (${homeRes.latestDraw.draw_date}) from homepage. `;
-        }
-      }
-    } else {
-      sid = await scrapeHomepage().then(r => r.sid);
-    }
-    
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const currentYear = new Date().getFullYear();
-    const currentMonthIdx = new Date().getMonth();
-    
-    // If it's January (index 0), allow startYear to go back to previous year to check December
-    const startYear = targetYear ? targetYear : (full ? 2001 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
-    const endYear = targetYear ? targetYear : currentYear;
-    
-    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-    for (let y = endYear; y >= startYear; y--) {
-      for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
-        // If not full sync, only scrape current month (or previous month if in the first 3 days of month)
-        if (!full && !targetYear) {
-          const nowDay = new Date().getDate();
-          if (y === currentYear) {
-            if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
-              continue;
-            }
-          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
-            // Allow Dec of previous year on first 3 days of Jan
-          } else {
-            continue;
+          if (check.rows.length === 0) {
+            await saveDraw(homeRes.latestDraw);
+            drawsAdded++;
+            details += `Added Draw #${homeRes.latestDraw.draw_number} (${homeRes.latestDraw.draw_date}) from homepage. `;
           }
         }
-        const month = months[mIdx];
-        const monthDraws = await scrapeMonth(month, y, sid);
-        
-        if (monthDraws.length > 0) {
-          const batchStmts = monthDraws.map(d => ({
-            sql: `INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.powerball, d.multiplier || "", d.jackpot || ""]
-          }));
-          await db.batch(batchStmts);
-          drawsAdded += monthDraws.length;
+      } else {
+        sid = await scrapeHomepage().then(r => r.sid);
+      }
+      
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const currentYear = new Date().getFullYear();
+      const currentMonthIdx = new Date().getMonth();
+      
+      // If it's January (index 0), allow startYear to go back to previous year to check December
+      const startYear = targetYear ? targetYear : (full ? 2001 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
+      const endYear = targetYear ? targetYear : currentYear;
+      
+      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+      for (let y = endYear; y >= startYear; y--) {
+        for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+          // If not full sync, only scrape current month (or previous month if in the first 3 days of month)
+          if (!full && !targetYear) {
+            const nowDay = new Date().getDate();
+            if (y === currentYear) {
+              if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
+                continue;
+              }
+            } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
+              // Allow Dec of previous year on first 3 days of Jan
+            } else {
+              continue;
+            }
+          }
+          const month = months[mIdx];
+          const monthDraws = await scrapeMonth(month, y, sid);
+          
+          if (monthDraws.length > 0) {
+            const batchStmts = monthDraws.map(d => ({
+              sql: `INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.powerball, d.multiplier || "", d.jackpot || ""]
+            }));
+            await db.batch(batchStmts);
+            drawsAdded += monthDraws.length;
+          }
         }
       }
+    } catch (lottoScrapeErr: any) {
+      console.warn("[LottoPlus] Official scrape notice (falling back to REST API):", lottoScrapeErr.message);
+    }
+
+    // 3. High-Speed Secondary REST API Fallback (Railway)
+    try {
+      const restRes = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/lottoplus/results/latest-date");
+      if (restRes.ok) {
+        const items = await restRes.json();
+        const list = Array.isArray(items) ? items : [items];
+        for (const item of list) {
+          if (item && item.draw_number) {
+            const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
+            const nums = [item.number1, item.number2, item.number3, item.number4, item.number5].sort((a: number, b: number) => a - b);
+            const mult = item.multiplier ? `${item.multiplier}x` : "1x";
+            const res = await db.execute({
+              sql: `INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [item.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], item.powerball, mult, item.next_estimated_jackpot || ""]
+            });
+            if (res.rowsAffected > 0) {
+              drawsAdded++;
+              details += `Added Lotto Plus Draw #${item.draw_number} (${dDate}) from REST fallback. `;
+            }
+            if (item.next_estimated_jackpot) {
+              await db.execute({
+                sql: "INSERT OR REPLACE INTO settings (key, value) VALUES ('lotto_next_jackpot', ?)",
+                args: [item.next_estimated_jackpot]
+              });
+            }
+          }
+        }
+      }
+    } catch (e: any) {
+      console.warn("[LottoPlus] REST API fallback notice:", e.message);
     }
     
     return { success: true, drawsAdded, details: details || `Sync complete. ${drawsAdded} draws added/updated.` };
@@ -488,48 +582,76 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
       )
     `);
 
-    const sid = await scrapePlayWheSid();
-    if (!sid) {
-      console.warn("WARNING: Could not retrieve CSRF sid token for Play Whe. Sync might fail but proceeding...");
-    }
-    
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const currentYear = new Date().getFullYear();
-    const currentMonthIdx = new Date().getMonth();
-    
-    // If it's January (index 0), allow startYear to go back to previous year to check December
-    const startYear = targetYear ? targetYear : (full ? 2001 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
-    const endYear = targetYear ? targetYear : currentYear;
-    
-    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-    
-    for (let y = endYear; y >= startYear; y--) {
-      for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
-        // If not full sync, only scrape current month (or previous month if in first 3 days of month)
-        if (!full && !targetYear) {
-          const nowDay = new Date().getDate();
-          if (y === currentYear) {
-            if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
+    try {
+      const sid = await scrapePlayWheSid();
+      if (!sid) {
+        console.warn("WARNING: Could not retrieve CSRF sid token for Play Whe. Sync might fail but proceeding...");
+      }
+      
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const currentYear = new Date().getFullYear();
+      const currentMonthIdx = new Date().getMonth();
+      
+      // If it's January (index 0), allow startYear to go back to previous year to check December
+      const startYear = targetYear ? targetYear : (full ? 2001 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
+      const endYear = targetYear ? targetYear : currentYear;
+      
+      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      
+      for (let y = endYear; y >= startYear; y--) {
+        for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+          // If not full sync, only scrape current month (or previous month if in first 3 days of month)
+          if (!full && !targetYear) {
+            const nowDay = new Date().getDate();
+            if (y === currentYear) {
+              if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
+                continue;
+              }
+            } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
+              // Allow Dec of previous year on first 3 days of Jan
+            } else {
               continue;
             }
-          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
-            // Allow Dec of previous year on first 3 days of Jan
-          } else {
-            continue;
+          }
+          const month = months[mIdx];
+          const monthDraws = await scrapePlayWheMonth(month, y, sid);
+          
+          if (monthDraws.length > 0) {
+            const batchStmts = monthDraws.map(d => ({
+              sql: `INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)`,
+              args: [d.draw_number, d.draw_date, d.draw_time_slot, d.winning_number]
+            }));
+            await db.batch(batchStmts);
+            drawsAdded += monthDraws.length;
           }
         }
-        const month = months[mIdx];
-        const monthDraws = await scrapePlayWheMonth(month, y, sid);
-        
-        if (monthDraws.length > 0) {
-          const batchStmts = monthDraws.map(d => ({
-            sql: `INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)`,
-            args: [d.draw_number, d.draw_date, d.draw_time_slot, d.winning_number]
-          }));
-          await db.batch(batchStmts);
-          drawsAdded += monthDraws.length;
+      }
+    } catch (playWheScrapeErr: any) {
+      console.warn("[PlayWhe] Official scrape error (falling back to REST API):", playWheScrapeErr.message);
+    }
+
+    // 2. High-Speed Secondary REST API Fallback (Railway)
+    try {
+      const restRes = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/playwhe/results/latest-date");
+      if (restRes.ok) {
+        const items = await restRes.json();
+        const list = Array.isArray(items) ? items : [items];
+        for (const item of list) {
+          if (item && item.draw_number && item.main_number !== undefined) {
+            const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
+            const slot = (item.draw_period || item.draw_time || "MORNING").trim();
+            const res = await db.execute({
+              sql: `INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)`,
+              args: [item.draw_number, dDate, slot, item.main_number]
+            });
+            if (res.rowsAffected > 0) {
+              drawsAdded++;
+            }
+          }
         }
       }
+    } catch (e: any) {
+      console.warn("[PlayWhe] REST API fallback notice:", e.message);
     }
     
     return { success: true, drawsAdded, details: `Play Whe sync complete. ${drawsAdded} draws added/updated.` };
@@ -676,47 +798,76 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
       )
     `);
 
-    const sid = await scrapeWinForLifeSid();
-    if (!sid) {
-      console.warn("WARNING: Could not retrieve CSRF sid token for Win for Life. Sync proceeding...");
-    }
-    
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const currentYear = new Date().getFullYear();
-    const currentMonthIdx = new Date().getMonth();
-    
-    const startYear = targetYear ? targetYear : (full ? 2022 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
-    const endYear = targetYear ? targetYear : currentYear;
-    
-    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-    
-    for (let y = endYear; y >= startYear; y--) {
-      for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
-        // If not full sync, only scrape current month (or previous month if in first 3 days of month)
-        if (!full && !targetYear) {
-          const nowDay = new Date().getDate();
-          if (y === currentYear) {
-            if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
+    // 1. Official HTML Scrape
+    try {
+      const sid = await scrapeWinForLifeSid();
+      if (!sid) {
+        console.warn("WARNING: Could not retrieve CSRF sid token for Win for Life. Sync proceeding...");
+      }
+      
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const currentYear = new Date().getFullYear();
+      const currentMonthIdx = new Date().getMonth();
+      
+      const startYear = targetYear ? targetYear : (full ? 2022 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
+      const endYear = targetYear ? targetYear : currentYear;
+      
+      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      
+      for (let y = endYear; y >= startYear; y--) {
+        for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+          // If not full sync, only scrape current month (or previous month if in first 3 days of month)
+          if (!full && !targetYear) {
+            const nowDay = new Date().getDate();
+            if (y === currentYear) {
+              if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
+                continue;
+              }
+            } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
+              // Allow Dec of previous year on first 3 days of Jan
+            } else {
               continue;
             }
-          } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
-            // Allow Dec of previous year on first 3 days of Jan
-          } else {
-            continue;
+          }
+          const month = months[mIdx];
+          const monthDraws = await scrapeWinForLifeMonth(month, y, sid);
+          
+          if (monthDraws.length > 0) {
+            const batchStmts = monthDraws.map(d => ({
+              sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.num6, d.cash_ball, d.jackpot || ""]
+            }));
+            await db.batch(batchStmts);
+            drawsAdded += monthDraws.length;
           }
         }
-        const month = months[mIdx];
-        const monthDraws = await scrapeWinForLifeMonth(month, y, sid);
-        
-        if (monthDraws.length > 0) {
-          const batchStmts = monthDraws.map(d => ({
-            sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.num6, d.cash_ball, d.jackpot || ""]
-          }));
-          await db.batch(batchStmts);
-          drawsAdded += monthDraws.length;
+      }
+    } catch (winForLifeScrapeErr: any) {
+      console.warn("[WinForLife] Official scrape error (falling back to REST API):", winForLifeScrapeErr.message);
+    }
+
+    // 2. High-Speed Secondary REST API Fallback (Railway)
+    try {
+      const restRes = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/winforlife/results/latest-date");
+      if (restRes.ok) {
+        const items = await restRes.json();
+        const list = Array.isArray(items) ? items : [items];
+        for (const item of list) {
+          if (item && item.draw_number) {
+            const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
+            const nums = [item.number1, item.number2, item.number3, item.number4, item.number5, item.number6].sort((a: number, b: number) => a - b);
+            const res = await db.execute({
+              sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              args: [item.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], nums[5], item.cash_ball || 0, ""]
+            });
+            if (res.rowsAffected > 0) {
+              drawsAdded++;
+            }
+          }
         }
       }
+    } catch (e: any) {
+      console.warn("[WinForLife] REST API fallback notice:", e.message);
     }
     
     return { success: true, drawsAdded, details: `Win for Life sync complete. ${drawsAdded} draws added.` };
@@ -909,21 +1060,25 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
     `);
 
     // 1. Primary Scrape: Direct from official NLCB portal (nlcbplaywhelotto.com) for real-time results
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const currentYear = new Date().getFullYear();
-    const currentMonthIdx = new Date().getMonth();
+    try {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const currentYear = new Date().getFullYear();
+      const currentMonthIdx = new Date().getMonth();
 
-    const sid = await scrapePick4Sid();
-    const currentMonthStr = months[currentMonthIdx];
-    const officialDraws = await scrapePick4MonthOfficial(currentMonthStr, currentYear, sid);
+      const sid = await scrapePick4Sid();
+      const currentMonthStr = months[currentMonthIdx];
+      const officialDraws = await scrapePick4MonthOfficial(currentMonthStr, currentYear, sid);
 
-    if (officialDraws && officialDraws.length > 0) {
-      const batch = officialDraws.map(d => ({
-        sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        args: [d.draw_number, d.draw_date, d.draw_time_slot, d.digit1, d.digit2, d.digit3, d.digit4]
-      }));
-      await db.batch(batch);
-      drawsAdded += officialDraws.length;
+      if (officialDraws && officialDraws.length > 0) {
+        const batch = officialDraws.map(d => ({
+          sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          args: [d.draw_number, d.draw_date, d.draw_time_slot, d.digit1, d.digit2, d.digit3, d.digit4]
+        }));
+        await db.batch(batch);
+        drawsAdded += officialDraws.length;
+      }
+    } catch (officialErr: any) {
+      console.warn("[Pick4] Official scrape notice (falling back to REST API):", officialErr.message);
     }
 
     // 2. Secondary Scrape: Fast REST endpoint fallback
@@ -952,6 +1107,7 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
 
     // 3. Historical Archive Scrape (for full sync or multi-month historical backfills)
     if (full || targetYear) {
+      const currentYear = new Date().getFullYear();
       const currentMonth = new Date().getMonth() + 1; // 1-12
       const startYear = targetYear ? targetYear : 2022;
       const endYear = targetYear ? targetYear : currentYear;

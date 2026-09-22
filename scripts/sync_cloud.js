@@ -57,23 +57,67 @@ const HEADERS = {
   "Cache-Control": "max-age=0"
 };
 
-function getScrapeUrl(url) {
+let scraperApiExhausted = false;
+
+function canUseScraperApi() {
   const apiKey = process.env.SCRAPER_API_KEY || env.SCRAPER_API_KEY;
-  if (apiKey) {
-    return `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
+  return Boolean(apiKey && !scraperApiExhausted);
+}
+
+function getScraperApiUrl(url) {
+  const apiKey = process.env.SCRAPER_API_KEY || env.SCRAPER_API_KEY;
+  return `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
+}
+
+async function fetchWithRetry(rawUrl, options = {}, retries = 3) {
+  // Tier 1: ScraperAPI Proxy (if available and not exhausted)
+  if (canUseScraperApi()) {
+    try {
+      const proxyUrl = getScraperApiUrl(rawUrl);
+      const res = await fetch(proxyUrl, {
+        ...options,
+        headers: { ...HEADERS, ...(options.headers || {}) }
+      });
+      if (res.status === 401 || res.status === 403 || res.status === 429) {
+        console.warn(`[Proxy] ScraperAPI returned HTTP ${res.status} (exhausted/limited). Disabling proxy.`);
+        scraperApiExhausted = true;
+      } else if (res.ok) {
+        return res;
+      }
+    } catch (err) {
+      console.warn(`[Proxy] ScraperAPI attempt failed: ${err.message}. Falling back to direct fetch.`);
+    }
   }
-  return url;
+
+  // Tier 2: Direct Fetch from raw target URL with native browser headers
+  let lastError = null;
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(rawUrl, {
+        ...options,
+        headers: { ...HEADERS, ...(options.headers || {}) }
+      });
+      if (res.ok) return res;
+      lastError = new Error(`Direct fetch HTTP ${res.status}: ${res.statusText}`);
+    } catch (err) {
+      lastError = err;
+    }
+    if (i < retries - 1) {
+      await new Promise(r => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+  throw lastError || new Error(`Fetch failed after ${retries} direct attempts for ${rawUrl}`);
 }
 
 async function scrapeSid(url) {
   try {
-    const res = await fetch(getScrapeUrl(url), { headers: HEADERS });
+    const res = await fetchWithRetry(url);
     if (!res.ok) return null;
     const html = await res.text();
     const $ = cheerio.load(html);
     return $('input[name="sid"]').val() || null;
   } catch (e) {
-    console.error("[Proxy] Error scraping sid token:", e);
+    console.error("[Proxy] Error scraping sid token:", e.message);
     return null;
   }
 }
@@ -81,13 +125,13 @@ async function scrapeSid(url) {
 async function scrapeLiveJackpot() {
   const url = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/";
   try {
-    const res = await fetch(getScrapeUrl(url), { headers: HEADERS });
+    const res = await fetchWithRetry(url);
     if (!res.ok) return null;
     const html = await res.text();
     const $ = cheerio.load(html);
     return $("#jackpot").text().trim() || null;
   } catch (e) {
-    console.error("[Proxy] Error scraping live jackpot:", e);
+    console.error("[Proxy] Error scraping live jackpot:", e.message);
     return null;
   }
 }
@@ -123,10 +167,9 @@ async function scrapePlayWheMonth(month, year, sid) {
       formData.append("sid", sid);
     }
     
-    const res = await fetch(getScrapeUrl(url), {
+    const res = await fetchWithRetry(url, {
       method: "POST",
       headers: {
-        ...HEADERS,
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body: formData.toString()
@@ -175,10 +218,9 @@ async function scrapeLottoMonth(month, year, sid) {
       formData.append("sid", sid);
     }
     
-    const res = await fetch(getScrapeUrl(url), {
+    const res = await fetchWithRetry(url, {
       method: "POST",
       headers: {
-        ...HEADERS,
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body: formData.toString()
