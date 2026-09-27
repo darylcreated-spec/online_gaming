@@ -1,6 +1,7 @@
 import { syncLatest, syncPlayWhe, syncWinForLife, syncCashPot, syncPick4, reconcileRecentDrawGaps } from "@/lib/scraper";
 import { verifyPlayWhePredictions } from "@/lib/predictions";
 import { reviseAndAuditAfterDraw } from "@/lib/winning_formula_engine";
+import { broadcastDrawNotification } from "@/lib/pushNotifications";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -101,6 +102,27 @@ async function handleSync(request: Request) {
 
     console.log(`[Auto-Sync] Sync complete. Total new draws added across all games: ${totalAdded}`);
     const responsePayload = { success: true, results, totalDrawsAdded: totalAdded };
+
+    // Broadcast push notification to all subscribers if new draws landed
+    if (totalAdded > 0) {
+      try {
+        const gameUpdates: string[] = [];
+        if (results.playWhe?.drawsAdded > 0) gameUpdates.push(`Play Whe (+${results.playWhe.drawsAdded})`);
+        if (results.lottoPlus?.drawsAdded > 0) gameUpdates.push(`Lotto Plus (+${results.lottoPlus.drawsAdded})`);
+        if (results.cashPot?.drawsAdded > 0) gameUpdates.push(`Cash Pot (+${results.cashPot.drawsAdded})`);
+        if (results.winForLife?.drawsAdded > 0) gameUpdates.push(`Win For Life (+${results.winForLife.drawsAdded})`);
+        if (results.pick4?.drawsAdded > 0) gameUpdates.push(`Pick 4 (+${results.pick4.drawsAdded})`);
+
+        const summary = gameUpdates.join(", ") || `${totalAdded} new draws`;
+        await broadcastDrawNotification({
+          title: "🎉 New NLCB Results Drawn!",
+          body: `Fresh official results verified: ${summary}. Tap to check winning numbers and your tickets!`,
+          url: "/"
+        });
+      } catch (pushErr: any) {
+        console.warn("[Auto-Sync] Push notification broadcast warning:", pushErr.message);
+      }
+    }
     
     // Save to in-memory cache and update timestamp
     lastSyncTimestamp = nowMs;

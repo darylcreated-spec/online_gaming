@@ -25,9 +25,12 @@ import {
   CheckCheck,
   Activity,
   Layers,
-  Database
+  Database,
+  Camera
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
+import CoveringWheelBuilderModal from "@/components/CoveringWheelBuilderModal";
+import TicketScannerModal from "@/components/TicketScannerModal";
 
 export interface GameBacktestMetrics {
   sampleDraws: number;
@@ -170,6 +173,27 @@ export default function HotPicksTab() {
   const [auditGameFilter, setAuditGameFilter] = useState<string>("all");
   const [auditStatusFilter, setAuditStatusFilter] = useState<string>("all");
   const [auditSearchQuery, setAuditSearchQuery] = useState<string>("");
+
+  // Modals for Features 1 & 2
+  const [isWheelModalOpen, setIsWheelModalOpen] = useState(false);
+  const [wheelModalGame, setWheelModalGame] = useState<"cashpot" | "lotto-plus" | "win-for-life">("cashpot");
+  const [wheelModalPool, setWheelModalPool] = useState<number[]>([]);
+
+  const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
+  const [scannerDefaultGame, setScannerDefaultGame] = useState<string>("cashpot");
+
+  const handleOpenWheelBuilder = (gameKey?: "cashpot" | "lotto-plus" | "win-for-life", pool?: number[]) => {
+    setWheelModalGame(gameKey || "cashpot");
+    setWheelModalPool(pool || []);
+    setIsWheelModalOpen(true);
+    triggerHaptic("selection");
+  };
+
+  const handleOpenScanner = (gameKey?: string) => {
+    setScannerDefaultGame(gameKey || "cashpot");
+    setIsScannerModalOpen(true);
+    triggerHaptic("selection");
+  };
 
   const fetchPicks = async () => {
     try {
@@ -390,6 +414,24 @@ export default function HotPicksTab() {
 
           {/* Action Buttons Cluster */}
           <div className="flex items-center flex-wrap gap-3 shrink-0">
+            {/* WHEEL BUILDER BUTTON */}
+            <button
+              onClick={() => handleOpenWheelBuilder("cashpot")}
+              className="inline-flex items-center space-x-2 text-xs font-mono font-bold text-cyan-300 hover:text-white bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/40 hover:border-cyan-400 px-3.5 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.2)]"
+            >
+              <Layers className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <span>Covering Wheel Builder</span>
+            </button>
+
+            {/* SCAN TICKET BUTTON */}
+            <button
+              onClick={() => handleOpenScanner("cashpot")}
+              className="inline-flex items-center space-x-2 text-xs font-mono font-bold text-emerald-300 hover:text-white bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/40 hover:border-emerald-400 px-3.5 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+            >
+              <Camera className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Scan Ticket</span>
+            </button>
+
             <button
               onClick={handleExportAuditCsv}
               className="inline-flex items-center space-x-2 text-xs font-mono text-gray-300 hover:text-white bg-black/40 hover:bg-white/10 border border-white/10 hover:border-white/30 px-3.5 py-2.5 rounded-xl transition-all active:scale-95 cursor-pointer shadow-sm"
@@ -706,10 +748,31 @@ export default function HotPicksTab() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-mono text-gray-400">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-mono text-gray-400 hidden sm:inline">
                         Official Ticket: <strong className="text-white">${game.ticketPriceTT.toFixed(2)} TT</strong>
                       </span>
+                      {["cashpot", "lotto-plus", "win-for-life"].includes(game.gameKey) && (
+                        <button
+                          onClick={() => handleOpenWheelBuilder(
+                            game.gameKey as any,
+                            game.coveringWheel?.tickets?.[0] || game.optimalPick.numbers
+                          )}
+                          className="flex items-center gap-1 px-2.5 py-1 bg-cyan-950/60 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 rounded-lg text-[11px] font-mono font-bold transition-all cursor-pointer shadow-sm"
+                          title="Open minimal covering wheel builder for this game"
+                        >
+                          <Layers className="w-3 h-3 text-cyan-400" />
+                          <span>WHEEL</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleOpenScanner(game.gameKey)}
+                        className="flex items-center gap-1 px-2.5 py-1 bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 rounded-lg text-[11px] font-mono font-bold transition-all cursor-pointer shadow-sm"
+                        title="Scan or check paper tickets against official draw"
+                      >
+                        <Camera className="w-3 h-3 text-emerald-400" />
+                        <span>VERIFY</span>
+                      </button>
                       <button
                         onClick={() => handleExportTxt(game)}
                         className="flex items-center gap-1.5 px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 text-gray-300 hover:text-white rounded-lg text-[11px] font-mono font-bold transition-all cursor-pointer"
@@ -1278,6 +1341,21 @@ export default function HotPicksTab() {
           )}
         </div>
       )}
+
+      {/* Feature 1: Interactive Minimal Covering Wheel Builder */}
+      <CoveringWheelBuilderModal
+        isOpen={isWheelModalOpen}
+        onClose={() => setIsWheelModalOpen(false)}
+        initialGame={wheelModalGame}
+        initialPool={wheelModalPool}
+      />
+
+      {/* Feature 2: Camera Ticket Scanner & Live Prize Auditor */}
+      <TicketScannerModal
+        isOpen={isScannerModalOpen}
+        onClose={() => setIsScannerModalOpen(false)}
+        defaultGame={scannerDefaultGame}
+      />
     </div>
   );
 }

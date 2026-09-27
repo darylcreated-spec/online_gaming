@@ -56,3 +56,52 @@ self.addEventListener("fetch", (event) => {
   // Default fallback
   event.respondWith(fetch(event.request));
 });
+
+// === WEB PUSH NOTIFICATIONS ===
+self.addEventListener("push", (event) => {
+  let data = {
+    title: "NLCB Live Draw Alert",
+    body: "New official winning numbers have just dropped!",
+    url: "/"
+  };
+
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || "/favicon.ico",
+    badge: data.badge || "/favicon.ico",
+    vibrate: [200, 100, 200],
+    tag: "nlcb-live-draw",
+    renotify: true,
+    data: {
+      url: data.url || "/"
+    }
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});

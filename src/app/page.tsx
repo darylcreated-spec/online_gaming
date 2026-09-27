@@ -17,6 +17,7 @@ import AppSplashScreen from "@/components/AppSplashScreen";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import HotPicksTab from "@/components/HotPicksTab";
+import PushNotificationBell from "@/components/PushNotificationBell";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { getCacheItem, setCacheItem } from "@/lib/idb_cache";
@@ -347,6 +348,14 @@ export default function Home() {
               Your Online Gaming Resource
             </p>
           </div>
+          <div className="hidden sm:block ml-2">
+            <PushNotificationBell />
+          </div>
+        </div>
+
+        {/* Mobile Push Notification Bell */}
+        <div className="sm:hidden flex items-center">
+          <PushNotificationBell />
         </div>
 
         {/* Desktop Global Navigation Ribbon (Hidden on mobile, bottom bar used on mobile) */}
