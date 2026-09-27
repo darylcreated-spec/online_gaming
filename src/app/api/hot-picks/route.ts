@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { recordHotPickPrediction, reconcilePredictionAudits } from "@/lib/prediction_audit_engine";
 
 export const dynamic = "force-dynamic";
 
@@ -428,6 +429,70 @@ export async function GET() {
         keyFinding: "12-Number Candidate Pool captured 4+ winners in 24.7% of draws. LJCR 6-Ticket Wheel hit prize tiers in 40.7% of draws (almost double random expectation) at 99.4% savings."
       }
     };
+
+    // Automatically record predictions into the prediction audit database for target draws
+    try {
+      await Promise.allSettled([
+        recordHotPickPrediction({
+          gameKey: "play-whe",
+          predictionType: "optimal-mark",
+          targetDrawNumber: Number(latestPW.draw_number) + 1,
+          targetPeriod: "NEXT",
+          predictedNumbers: playWheResult.optimalPick.numbers,
+          confidenceScore: playWheResult.optimalPick.confidenceScore,
+          rationale: playWheResult.optimalPick.rationale
+        }),
+        recordHotPickPrediction({
+          gameKey: "pick4",
+          predictionType: "24-way-box",
+          targetDrawNumber: Number(latestP4.draw_number) + 1,
+          targetPeriod: "NEXT",
+          predictedNumbers: pick4Result.optimalPick.numbers,
+          predictedSum: pick4Result.optimalPick.sum,
+          predictedParity: pick4Result.optimalPick.parity,
+          confidenceScore: pick4Result.optimalPick.confidenceScore,
+          rationale: pick4Result.optimalPick.rationale
+        }),
+        recordHotPickPrediction({
+          gameKey: "cashpot",
+          predictionType: "covering-wheel-4",
+          targetDrawNumber: Number(latestCP.draw_number) + 1,
+          predictedNumbers: cashPotResult.optimalPick.numbers,
+          wheelLines: cashPotResult.coveringWheel?.tickets,
+          predictedSum: cashPotResult.optimalPick.sum,
+          predictedParity: cashPotResult.optimalPick.parity,
+          confidenceScore: cashPotResult.optimalPick.confidenceScore,
+          rationale: cashPotResult.optimalPick.rationale
+        }),
+        recordHotPickPrediction({
+          gameKey: "lotto-plus",
+          predictionType: "covering-wheel-6",
+          targetDrawNumber: Number(latestLotto.draw_number) + 1,
+          predictedNumbers: lottoPlusResult.optimalPick.numbers,
+          wheelLines: lottoPlusResult.coveringWheel?.tickets,
+          predictedSum: lottoPlusResult.optimalPick.sum,
+          predictedParity: lottoPlusResult.optimalPick.parity,
+          confidenceScore: lottoPlusResult.optimalPick.confidenceScore,
+          rationale: lottoPlusResult.optimalPick.rationale
+        }),
+        recordHotPickPrediction({
+          gameKey: "win-for-life",
+          predictionType: "covering-wheel-6",
+          targetDrawNumber: Number(latestWFL.draw_number) + 1,
+          predictedNumbers: winForLifeResult.optimalPick.numbers,
+          wheelLines: winForLifeResult.coveringWheel?.tickets,
+          predictedSum: winForLifeResult.optimalPick.sum,
+          predictedParity: winForLifeResult.optimalPick.parity,
+          confidenceScore: winForLifeResult.optimalPick.confidenceScore,
+          rationale: winForLifeResult.optimalPick.rationale
+        })
+      ]);
+
+      // Reconcile any prior pending audits against newly arrived database draws
+      await reconcilePredictionAudits();
+    } catch (auditErr) {
+      console.warn("[Audit Auto-Logger] Non-fatal logging warning:", auditErr);
+    }
 
     return NextResponse.json({
       success: true,
