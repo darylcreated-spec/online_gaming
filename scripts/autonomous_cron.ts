@@ -1,5 +1,6 @@
-import { syncLatest, syncPlayWhe, syncWinForLife } from "../src/lib/scraper";
+import { syncLatest, syncPlayWhe, syncWinForLife, syncCashPot, syncPick4 } from "../src/lib/scraper";
 import { verifyPlayWhePredictions, generatePlayWhePredictions, getLocalDateString } from "../src/lib/predictions";
+import { reviseAndAuditAfterDraw } from "../src/lib/winning_formula_engine";
 
 async function main() {
   console.log("=================================================");
@@ -8,10 +9,12 @@ async function main() {
   console.log("=================================================");
 
   const startTime = Date.now();
-  const [playWheResult, lottoResult, winForLifeResult] = await Promise.allSettled([
+  const [playWheResult, lottoResult, winForLifeResult, cashPotResult, pick4Result] = await Promise.allSettled([
     syncPlayWhe(false),
     syncLatest(false),
-    syncWinForLife(false)
+    syncWinForLife(false),
+    syncCashPot(false),
+    syncPick4(false)
   ]);
 
   const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
@@ -19,6 +22,8 @@ async function main() {
   console.log("Play Whe:", playWheResult.status === "fulfilled" ? playWheResult.value : playWheResult.reason);
   console.log("Lotto Plus:", lottoResult.status === "fulfilled" ? lottoResult.value : lottoResult.reason);
   console.log("Win For Life:", winForLifeResult.status === "fulfilled" ? winForLifeResult.value : winForLifeResult.reason);
+  console.log("Cash Pot:", cashPotResult.status === "fulfilled" ? cashPotResult.value : cashPotResult.reason);
+  console.log("Pick 4:", pick4Result.status === "fulfilled" ? pick4Result.value : pick4Result.reason);
 
   // Auto-verify predictions and prepare next slot
   try {
@@ -33,6 +38,14 @@ async function main() {
     console.log("✅ Next Play Whe predictions prepared and ready.");
   } catch (err) {
     console.warn("⚠️ Post-sync prediction update notice:", err);
+  }
+
+  // Auto-audit Hot Picks and revised invariants
+  try {
+    const auditRes = await reviseAndAuditAfterDraw();
+    console.log(`\n🔥 Hot Picks Revision & Live Audit Completed:`, auditRes);
+  } catch (err) {
+    console.warn("⚠️ Post-draw audit notice:", err);
   }
 }
 
