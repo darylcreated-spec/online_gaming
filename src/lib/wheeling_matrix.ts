@@ -101,8 +101,8 @@ export const WHEEL_DESIGNS: Record<string, WheelDesign> = {
     poolSize: 8,
     ticketCount: 4,
     guarantee: "Guarantees at least a 3-Match if 4 winning numbers are in your 8 numbers.",
-    standardSystemCost: 112, // 56 lines * $2
-    abbreviatedCost: 8,      // 4 lines * $2
+    standardSystemCost: 280, // 56 lines * $5
+    abbreviatedCost: 20,     // 4 lines * $5
     savingsPercentage: 93,
     templateIndices: [
       [0, 1, 2, 3, 4],
@@ -117,8 +117,8 @@ export const WHEEL_DESIGNS: Record<string, WheelDesign> = {
     poolSize: 10,
     ticketCount: 8,
     guarantee: "Guarantees multiple 3-Matches and high 4-Match hit probability if 5 winners in 10 numbers.",
-    standardSystemCost: 504, // 252 lines * $2
-    abbreviatedCost: 16,     // 8 lines * $2
+    standardSystemCost: 1260, // 252 lines * $5
+    abbreviatedCost: 40,      // 8 lines * $5
     savingsPercentage: 97,
     templateIndices: [
       [0, 1, 2, 3, 4],
@@ -137,8 +137,8 @@ export const WHEEL_DESIGNS: Record<string, WheelDesign> = {
     poolSize: 8,
     ticketCount: 4,
     guarantee: "Guarantees at least a 4-Match if 6 winning numbers are in your 8 numbers.",
-    standardSystemCost: 56, // 28 lines * $2
-    abbreviatedCost: 8,     // 4 lines * $2
+    standardSystemCost: 280, // 28 lines * $10
+    abbreviatedCost: 40,     // 4 lines * $10
     savingsPercentage: 86,
     templateIndices: [
       [0, 1, 2, 3, 4, 5],
@@ -153,8 +153,8 @@ export const WHEEL_DESIGNS: Record<string, WheelDesign> = {
     poolSize: 10,
     ticketCount: 5,
     guarantee: "Guarantees at least a 4-Match if 6 winning numbers are in your 10 numbers.",
-    standardSystemCost: 420, // 210 lines * $2
-    abbreviatedCost: 10,     // 5 lines * $2
+    standardSystemCost: 2100, // 210 lines * $10
+    abbreviatedCost: 50,      // 5 lines * $10
     savingsPercentage: 98,
     templateIndices: [
       [0, 1, 2, 3, 4, 5],
@@ -170,8 +170,8 @@ export const WHEEL_DESIGNS: Record<string, WheelDesign> = {
     poolSize: 12,
     ticketCount: 6,
     guarantee: "Mathematical C(12,6,4,6) design guaranteeing a 4-Match at 99.4% savings.",
-    standardSystemCost: 1848, // 924 lines * $2
-    abbreviatedCost: 12,      // 6 lines * $2
+    standardSystemCost: 9240, // 924 lines * $10
+    abbreviatedCost: 60,      // 6 lines * $10
     savingsPercentage: 99.4,
     templateIndices: [
       [0, 1, 2, 3, 4, 5],

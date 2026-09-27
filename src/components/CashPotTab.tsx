@@ -462,6 +462,9 @@ export default function CashPotTab() {
               <div className="space-y-3 pt-4 border-t border-white/10">
                 <div className="flex justify-between items-center text-xs font-bold text-white">
                   <span>Generated Tickets ({generatedTickets.length} lines):</span>
+                  <span className="text-yellow-400 font-mono text-[11px]">
+                    Total Stake: ${generatedTickets.length * 5} TT ($5/ticket)
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   {generatedTickets.map((ticket, idx) => (

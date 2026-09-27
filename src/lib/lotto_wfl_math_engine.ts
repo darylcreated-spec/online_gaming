@@ -31,6 +31,7 @@ export interface GameMathSpecs {
   title: string;
   poolMax: number;
   pickCount: number;
+  ticketPrice: number;
   bonusLabel: "Powerball" | "Cash Ball" | "Multiplier";
   bonusMax: number;
   targetSumMin: number;
@@ -43,6 +44,7 @@ export const GAME_SPECS: Record<SupportedGame, GameMathSpecs> = {
     title: "Lotto Plus",
     poolMax: 36,
     pickCount: 5,
+    ticketPrice: 5,
     bonusLabel: "Powerball",
     bonusMax: 10,
     targetSumMin: 68,
@@ -53,6 +55,7 @@ export const GAME_SPECS: Record<SupportedGame, GameMathSpecs> = {
     title: "Win For Life",
     poolMax: 28,
     pickCount: 6,
+    ticketPrice: 10,
     bonusLabel: "Cash Ball",
     bonusMax: 3,
     targetSumMin: 69,
@@ -63,6 +66,7 @@ export const GAME_SPECS: Record<SupportedGame, GameMathSpecs> = {
     title: "Cash Pot",
     poolMax: 20,
     pickCount: 5,
+    ticketPrice: 5,
     bonusLabel: "Multiplier",
     bonusMax: 5,
     targetSumMin: 41,

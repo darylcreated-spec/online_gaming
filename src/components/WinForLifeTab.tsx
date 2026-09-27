@@ -686,16 +686,16 @@ export default function WinForLifeTab() {
 
               <div className="flex items-center gap-3 shrink-0">
                 <div className="flex items-center gap-2 bg-slate-900/80 border border-white/10 px-3 py-1.5 rounded-lg">
-                  <span className="text-[10px] text-gray-400 font-mono uppercase">Lines:</span>
+                  <span className="text-[10px] text-gray-400 font-mono uppercase">Lines ($10/ticket):</span>
                   <select
                     value={mevTicketCount}
                     onChange={(e) => setMevTicketCount(parseInt(e.target.value))}
                     className="bg-transparent border-none text-white font-bold text-xs font-mono cursor-pointer focus:outline-none"
                   >
-                    <option value="3">3</option>
-                    <option value="5">5</option>
-                    <option value="8">8</option>
-                    <option value="10">10</option>
+                    <option value="3">3 ($30 TT)</option>
+                    <option value="5">5 ($50 TT)</option>
+                    <option value="8">8 ($80 TT)</option>
+                    <option value="10">10 ($100 TT)</option>
                   </select>
                 </div>
 
@@ -1442,7 +1442,12 @@ export default function WinForLifeTab() {
           {generatedTickets.length > 0 && (
             <div className="glass-panel p-6 rounded-xl space-y-4">
               <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider">Compiled Combos ({generatedTickets.length})</h4>
+                <div className="flex items-center gap-3">
+                  <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider">Compiled Combos ({generatedTickets.length})</h4>
+                  <span className="text-emerald-400 font-mono text-[11px] bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/20 rounded">
+                    Total Stake: ${generatedTickets.length * 10} TT ($10/ticket)
+                  </span>
+                </div>
                 <div className="flex gap-2">
                   <button onClick={handleSaveSlips} disabled={isSavingSlips} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 disabled:opacity-50 px-3 py-1.5 text-[10px] font-bold font-mono transition cursor-pointer"><Save className="w-3 h-3" /> {isSavingSlips ? "SAVING..." : "SAVE SLIPS"}</button>
                   <button onClick={handleExportTxt} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 px-3 py-1.5 text-[10px] font-bold font-mono transition cursor-pointer"><Download className="w-3 h-3" /> EXPORT (.TXT)</button>
