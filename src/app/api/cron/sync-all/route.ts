@@ -1,6 +1,6 @@
 import { syncLatest, syncPlayWhe, syncWinForLife, syncCashPot, syncPick4, reconcileRecentDrawGaps } from "@/lib/scraper";
 import { verifyPlayWhePredictions } from "@/lib/predictions";
-import { reconcilePredictionAudits } from "@/lib/prediction_audit_engine";
+import { reviseAndAuditAfterDraw } from "@/lib/winning_formula_engine";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -84,11 +84,11 @@ async function handleSync(request: Request) {
       results.reconciliation = { gapsDetected: 0, drawsHealed: 0, error: e.message };
     }
 
-    // 5. Automated Prediction Audit & Efficiency Verification Reconciliation
+    // 5. Automated Post-Draw Invariant Revision & Audit Reconciliation
     try {
-      results.predictionAudit = await reconcilePredictionAudits();
+      results.predictionRevision = await reviseAndAuditAfterDraw();
     } catch (e: any) {
-      results.predictionAudit = { verifiedCount: 0, error: e.message };
+      results.predictionRevision = { error: e.message };
     }
 
     const totalAdded = (results.playWhe?.drawsAdded || 0) + 

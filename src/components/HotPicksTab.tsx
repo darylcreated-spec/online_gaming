@@ -21,7 +21,8 @@ import {
   Search,
   Award,
   AlertCircle,
-  Filter
+  Filter,
+  CheckCheck
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 
@@ -128,6 +129,26 @@ export interface PredictionAuditSummary {
   }>;
 }
 
+export interface LiveStatistics {
+  totalAudited: number;
+  totalVerified: number;
+  totalPending: number;
+  prizeWinningHits: number;
+  prizeWinRatePct: number;
+  partialMatchHits: number;
+  combinedHitRatePct: number;
+  averageBallsMatched: number;
+  activeStreak: number;
+  lastVerifiedWinner: {
+    gameKey: string;
+    drawNumber: number;
+    prizeTier: string;
+    matchingNumbers: number[];
+    matchCount: number;
+    verifiedAt: string;
+  } | null;
+}
+
 export default function HotPicksTab() {
   const [viewMode, setViewMode] = useState<"picks" | "audit">("picks");
   const [data, setData] = useState<HotPicksResponse | null>(null);
@@ -135,11 +156,12 @@ export default function HotPicksTab() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "play-whe" | "pick4" | "cashpot" | "lotto-plus" | "win-for-life">("all");
 
-  // Audit state
+  // Audit and Live Statistics State
   const [auditData, setAuditData] = useState<{
     summary: PredictionAuditSummary;
     records: PredictionAuditRecord[];
   } | null>(null);
+  const [liveStats, setLiveStats] = useState<LiveStatistics | null>(null);
   const [auditLoading, setAuditLoading] = useState(false);
   const [reconciling, setReconciling] = useState(false);
   const [auditGameFilter, setAuditGameFilter] = useState<string>("all");
@@ -174,6 +196,9 @@ export default function HotPicksTab() {
           summary: json.summary,
           records: json.records
         });
+        if (json.liveStatistics) {
+          setLiveStats(json.liveStatistics);
+        }
       }
     } catch (err) {
       console.error("Failed to load prediction audit ledger:", err);
@@ -182,7 +207,7 @@ export default function HotPicksTab() {
     }
   };
 
-  const handleReconcileNow = async () => {
+  const handleReconcileAndRevise = async () => {
     try {
       setReconciling(true);
       triggerHaptic("selection");
@@ -190,10 +215,13 @@ export default function HotPicksTab() {
       const json = await res.json();
       if (json.success) {
         triggerHaptic("success");
-        await fetchAuditData(auditGameFilter);
+        await Promise.all([
+          fetchPicks(),
+          fetchAuditData(auditGameFilter)
+        ]);
       }
     } catch (err) {
-      console.error("Failed to reconcile:", err);
+      console.error("Failed to revise and reconcile:", err);
     } finally {
       setReconciling(false);
     }
@@ -201,6 +229,7 @@ export default function HotPicksTab() {
 
   useEffect(() => {
     fetchPicks();
+    fetchAuditData("all");
   }, []);
 
   useEffect(() => {
@@ -321,7 +350,7 @@ export default function HotPicksTab() {
   });
 
   return (
-    <div className="space-y-8 animate-fadeIn pb-16">
+    <div className="space-y-6 animate-fadeIn pb-16">
       {/* Top Header Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#121418] via-[#16181E] to-[#0E1013] border border-white/10 p-6 sm:p-8 shadow-2xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-amber-500/10 via-rose-500/5 to-transparent blur-3xl pointer-events-none" />
@@ -337,50 +366,100 @@ export default function HotPicksTab() {
                   WIN CONCEPTS HOT PICKS
                 </h1>
                 <p className="text-xs text-amber-400 font-mono tracking-wide">
-                  Live Mathematical Invariant Engine & Auditing Verification System
+                  Mathematical Invariant Decomposition & Live Verification Engine
                 </p>
               </div>
             </div>
             
             <p className="text-xs text-gray-400 max-w-2xl leading-relaxed pt-1">
-              Grounded exclusively in authentic historical draw distributions from Turso DB. Automatically saves all generated predictions to the audit database and validates against official winning numbers as live draws occur.
-              <span className="text-gray-300 font-semibold ml-1">Zero AI spindles or simulated RNG.</span>
+              Grounded exclusively in authentic historical draw distributions from Turso DB. Automatically revises the selected numbers after every draw, logs target picks, and verifies efficiency against official winning numbers.
+              <span className="text-emerald-400 font-semibold ml-1">Order-independent for Win For Life, Lotto & Cash Pot. Cash Ball & Powerball excluded.</span>
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <div className="flex items-center gap-2 bg-black/40 border border-white/10 px-3.5 py-2 rounded-xl text-xs font-mono text-gray-300">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Turso Cloud Synced</span>
+              <span>Live Turso DB</span>
             </div>
 
-            {viewMode === "picks" ? (
-              <button
-                onClick={() => {
-                  triggerHaptic("selection");
-                  fetchPicks();
-                }}
-                disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/50 text-white rounded-xl text-xs font-mono font-bold transition-all cursor-pointer disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-amber-400" : ""}`} />
-                <span>{loading ? "CALCULATING..." : "RECALCULATE"}</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleReconcileNow}
-                disabled={reconciling}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-400 text-emerald-300 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer disabled:opacity-50"
-              >
-                <ShieldCheck className={`w-4 h-4 ${reconciling ? "animate-spin text-emerald-400" : "text-emerald-400"}`} />
-                <span>{reconciling ? "RECONCILING..." : "RECONCILE NOW"}</span>
-              </button>
-            )}
+            <button
+              onClick={handleReconcileAndRevise}
+              disabled={reconciling}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-amber-500/20 hover:from-emerald-500/30 hover:to-amber-500/30 border border-emerald-500/40 hover:border-emerald-400 text-emerald-300 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer disabled:opacity-50 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${reconciling ? "animate-spin text-emerald-400" : "text-emerald-400"}`} />
+              <span>{reconciling ? "REVISING & AUDITING..." : "REVISE & RECONCILE NOW"}</span>
+            </button>
           </div>
         </div>
 
+        {/* Live Statistics & Verification Alert Banner */}
+        {liveStats && (
+          <div className="mt-5 pt-4 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+            <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Prize Win Rate</span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-lg sm:text-xl font-black text-emerald-400">
+                  {liveStats.prizeWinRatePct.toFixed(1)}%
+                </span>
+                <span className="text-[10px] text-emerald-300">({liveStats.prizeWinningHits} Prize Hits)</span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Combined Hit Rate</span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-lg sm:text-xl font-black text-amber-400">
+                  {liveStats.combinedHitRatePct.toFixed(1)}%
+                </span>
+                <span className="text-[10px] text-amber-300">(Prize + Partials)</span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Active Hit Streak</span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-lg sm:text-xl font-black text-white flex items-center gap-1">
+                  🔥 {liveStats.activeStreak}
+                </span>
+                <span className="text-[10px] text-gray-400">Consecutive Draws</span>
+              </div>
+            </div>
+
+            <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Total Audited</span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-lg sm:text-xl font-black text-cyan-400">
+                  {liveStats.totalAudited}
+                </span>
+                <span className="text-[10px] text-gray-400">({liveStats.totalVerified} verified)</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Latest Verified Winner Banner */}
+        {liveStats?.lastVerifiedWinner && (
+          <div className="mt-3 p-3 bg-gradient-to-r from-emerald-950/40 via-black to-emerald-950/20 border border-emerald-500/30 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-emerald-300">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <Award className="w-4 h-4 text-emerald-400" />
+              <span className="text-white font-bold">LATEST VERIFIED PRIZE HIT:</span>
+              <span className="uppercase text-amber-300 font-black">{liveStats.lastVerifiedWinner.gameKey}</span>
+              <span>Draw #{liveStats.lastVerifiedWinner.drawNumber}</span>
+              <span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/40 font-bold">
+                {liveStats.lastVerifiedWinner.prizeTier?.replace(/_/g, " ")}
+              </span>
+            </div>
+            <div className="text-[11px] text-emerald-400">
+              Matched Balls: <strong>[{liveStats.lastVerifiedWinner.matchingNumbers?.join(", ")}]</strong>
+            </div>
+          </div>
+        )}
+
         {/* View Mode Toggle: Hot Picks vs Audit Ledger */}
-        <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="mt-5 pt-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center p-1 bg-black/50 border border-white/10 rounded-xl w-fit">
             <button
               onClick={() => {
@@ -394,7 +473,7 @@ export default function HotPicksTab() {
               }`}
             >
               <Zap className="w-3.5 h-3.5" />
-              <span>LIVE HOT PICKS</span>
+              <span>LIVE REVISED HOT PICKS</span>
             </button>
 
             <button
@@ -459,7 +538,7 @@ export default function HotPicksTab() {
         </div>
       </div>
 
-      {/* VIEW 1: LIVE HOT PICKS */}
+      {/* VIEW 1: LIVE REVISED HOT PICKS */}
       {viewMode === "picks" && (
         <>
           {/* Loading Skeleton */}
@@ -519,6 +598,15 @@ export default function HotPicksTab() {
 
               const style = badgeStyles[game.badgeColor] || badgeStyles.amber;
 
+              // Discovered database invariants summary
+              const dbInvariants: Record<string, string> = {
+                "play-whe": "19,820 Draws • 1st-Order Markov State Prior • Chinapoo Harmonic",
+                "pick4": "768 Draws • 79.69% in [12, 25] Sum Band • 93.62% 24/12-Way Box Hedge",
+                "cashpot": "171 Draws • 80.59% Carryover Anchor • 67.84% Consecutive Bond • 4-Slip Wheel",
+                "lotto-plus": "865 Draws • 59.72% Carryover Anchor • 65.32% in [70, 110] Sum Band • Powerball Excluded",
+                "win-for-life": "467 Draws • 83.05% Dual Carryover • 71.95% Consecutive Bond • Cash Ball Excluded"
+              };
+
               return (
                 <div
                   key={game.gameKey}
@@ -526,7 +614,7 @@ export default function HotPicksTab() {
                 >
                   {/* Top Header Row */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <span className={`text-xs font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${style.ballBg} ${style.text}`}>
                         {game.gameTitle}
                       </span>
@@ -549,8 +637,14 @@ export default function HotPicksTab() {
                     </div>
                   </div>
 
+                  {/* Empirical Invariant Badge */}
+                  <div className="mt-2.5 flex items-center gap-2 text-[10px] font-mono text-gray-400">
+                    <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                    <span>Database Invariant: <strong className="text-gray-200">{dbInvariants[game.gameKey]}</strong></span>
+                  </div>
+
                   {/* Main Content Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-5">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-4">
                     {/* Left Column: Primary Optimal Pick (7 cols) */}
                     <div className="lg:col-span-7 space-y-5">
                       <div className="space-y-2">
@@ -558,7 +652,7 @@ export default function HotPicksTab() {
                           <div className="flex items-center gap-2">
                             <Zap className={`w-4 h-4 ${style.text}`} />
                             <h3 className="text-sm font-black text-white font-mono uppercase tracking-wider">
-                              Primary Calibrated Pick
+                              Revised Calibrated Pick (Draw #{game.latestDraw.drawNumber + 1})
                             </h3>
                           </div>
                           <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold text-emerald-400">
@@ -609,7 +703,7 @@ export default function HotPicksTab() {
                       {/* Mathematical Invariants Scorecard */}
                       <div className="p-4 bg-black/30 border border-white/5 rounded-xl space-y-3 font-mono text-xs">
                         <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold block">
-                          Mathematical Invariants & Centroid Metrics
+                          Verified Invariants & Centroid Metrics
                         </span>
                         
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -824,7 +918,7 @@ export default function HotPicksTab() {
                   </span>
                 </div>
                 <div className="mt-2 text-[10px] font-mono text-gray-400 truncate">
-                  <span>Turso DB zero-lookahead audit</span>
+                  <span>Auto-updates after every draw</span>
                 </div>
               </div>
             </div>
@@ -1068,7 +1162,7 @@ export default function HotPicksTab() {
                             </div>
                           ) : (
                             <div className="p-2 bg-black/40 border border-dashed border-amber-500/30 rounded-lg text-[11px] text-amber-300">
-                              Awaiting live draw #${record.target_draw_number} from NLCB...
+                              Awaiting live draw #{record.target_draw_number} from NLCB...
                             </div>
                           )}
                         </div>
