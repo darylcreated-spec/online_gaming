@@ -13,17 +13,11 @@ export function markScraperApiExhausted(reason: string) {
 }
 
 export function canUseScraperApi(): boolean {
-  const apiKey = process.env.SCRAPER_API_KEY;
-  if (!apiKey) return false;
-  if (isScraperApiExhausted && Date.now() < scraperApiCooldownUntil) return false;
-  return true;
+  // Free plan ScraperAPI credits are exhausted. Return false permanently to bypass dead proxy calls.
+  return false;
 }
 
 export function getScrapeUrl(url: string): string {
-  if (canUseScraperApi()) {
-    const apiKey = process.env.SCRAPER_API_KEY;
-    return `https://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}`;
-  }
   return url;
 }
 
@@ -101,6 +95,26 @@ export async function fetchWithRetry(targetUrl: string, options: RequestInit = {
 // Standardize date: "11-Jul-26" -> "2026-07-11"
 export function parseDate(dateStr: string): string {
   const cleanStr = dateStr.replace("DATE:", "").trim();
+
+  // Already ISO: 2026-09-23
+  if (/^\d{4}-\d{2}-\d{2}$/.test(cleanStr)) {
+    return cleanStr;
+  }
+
+  // Handle space-separated: "23 Sep 2026"
+  const spaceParts = cleanStr.split(/\s+/);
+  if (spaceParts.length === 3 && isNaN(Number(spaceParts[1]))) {
+    const day = spaceParts[0].padStart(2, "0");
+    const monthRaw = spaceParts[1].toLowerCase().slice(0, 3);
+    const year = spaceParts[2].length === 2 ? "20" + spaceParts[2] : spaceParts[2];
+    const months: Record<string, string> = {
+      jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+      jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12"
+    };
+    const month = months[monthRaw] || "01";
+    return `${year}-${month}-${day}`;
+  }
+
   const parts = cleanStr.split("-");
   if (parts.length !== 3) return cleanStr;
 
@@ -296,6 +310,44 @@ export async function saveDraw(draw: any): Promise<void> {
   await db.execute({ sql, args });
 }
 
+// Live HTML Portal Scraper for Lotto Plus (nlcblottoresult.com)
+export async function scrapeLottoLivePortal(): Promise<any[]> {
+  try {
+    const res = await fetchWithRetry("https://nlcblottoresult.com/nlcb-lotto-plus-results/");
+    if (!res.ok) return [];
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const draws: any[] = [];
+    $('table').eq(0).find('tr').slice(1).each((_, row) => {
+      const text = $(row).text().replace(/\s+/g, ' ').trim();
+      const m = text.match(/(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([\d,\s]+)\s*:\s*(\d+)\s+(\d+x)/i);
+      if (m) {
+        const dateStr = parseDate(m[1]);
+        const nums = m[2].split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n)).sort((a, b) => a - b);
+        const pb = parseInt(m[3]);
+        const mult = m[4];
+        if (nums.length === 5 && !isNaN(pb)) {
+          draws.push({
+            draw_date: dateStr,
+            num1: nums[0],
+            num2: nums[1],
+            num3: nums[2],
+            num4: nums[3],
+            num5: nums[4],
+            powerball: pb,
+            multiplier: mult,
+            jackpot: "X"
+          });
+        }
+      }
+    });
+    return draws;
+  } catch (err: any) {
+    console.warn("[LottoPlus] Live portal scrape notice:", err.message);
+    return [];
+  }
+}
+
 // Sync latest draws (runs homepage scrape + current/previous year, or specific targetYear)
 export async function syncLatest(full: boolean = false, targetYear?: number): Promise<{ success: boolean, drawsAdded: number, details: string }> {
   let drawsAdded = 0;
@@ -326,79 +378,9 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
       )
     `);
     
-    // 2. Fetch homepage (only do this for recent syncs, skip for specific historical years to speed up)
+    // 1. Primary Source: High-Speed Secondary REST API (Railway)
     try {
-      let sid = null;
-      if (!targetYear) {
-        const homeRes = await scrapeHomepage();
-        sid = homeRes.sid;
-        if (homeRes.latestDraw) {
-          // Save live next estimated jackpot to settings
-          if (homeRes.latestDraw.jackpot && homeRes.latestDraw.jackpot !== "Unknown") {
-            await db.execute({
-              sql: "INSERT OR REPLACE INTO settings (key, value) VALUES ('lotto_next_jackpot', ?)",
-              args: [homeRes.latestDraw.jackpot]
-            });
-          }
-          
-          const check = await db.execute({
-            sql: "SELECT 1 FROM draws WHERE draw_number = ?",
-            args: [homeRes.latestDraw.draw_number]
-          });
-          if (check.rows.length === 0) {
-            await saveDraw(homeRes.latestDraw);
-            drawsAdded++;
-            details += `Added Draw #${homeRes.latestDraw.draw_number} (${homeRes.latestDraw.draw_date}) from homepage. `;
-          }
-        }
-      } else {
-        sid = await scrapeHomepage().then(r => r.sid);
-      }
-      
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const currentYear = new Date().getFullYear();
-      const currentMonthIdx = new Date().getMonth();
-      
-      // If it's January (index 0), allow startYear to go back to previous year to check December
-      const startYear = targetYear ? targetYear : (full ? 2001 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
-      const endYear = targetYear ? targetYear : currentYear;
-      
-      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-      for (let y = endYear; y >= startYear; y--) {
-        for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
-          // If not full sync, only scrape current month (or previous month if in the first 3 days of month)
-          if (!full && !targetYear) {
-            const nowDay = new Date().getDate();
-            if (y === currentYear) {
-              if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
-                continue;
-              }
-            } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
-              // Allow Dec of previous year on first 3 days of Jan
-            } else {
-              continue;
-            }
-          }
-          const month = months[mIdx];
-          const monthDraws = await scrapeMonth(month, y, sid);
-          
-          if (monthDraws.length > 0) {
-            const batchStmts = monthDraws.map(d => ({
-              sql: `INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.powerball, d.multiplier || "", d.jackpot || ""]
-            }));
-            await db.batch(batchStmts);
-            drawsAdded += monthDraws.length;
-          }
-        }
-      }
-    } catch (lottoScrapeErr: any) {
-      console.warn("[LottoPlus] Official scrape notice (falling back to REST API):", lottoScrapeErr.message);
-    }
-
-    // 3. High-Speed Secondary REST API Fallback (Railway)
-    try {
+      // 1a. Latest Date
       const restRes = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/lottoplus/results/latest-date");
       if (restRes.ok) {
         const items = await restRes.json();
@@ -414,7 +396,7 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
             });
             if (res.rowsAffected > 0) {
               drawsAdded++;
-              details += `Added Lotto Plus Draw #${item.draw_number} (${dDate}) from REST fallback. `;
+              details += `Added Lotto Plus Draw #${item.draw_number} (${dDate}) from Railway. `;
             }
             if (item.next_estimated_jackpot) {
               await db.execute({
@@ -425,8 +407,79 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
           }
         }
       }
-    } catch (e: any) {
-      console.warn("[LottoPlus] REST API fallback notice:", e.message);
+
+      // 1b. By-Month Archive for recent months (current and previous)
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const startYear = targetYear ? targetYear : (full ? 2022 : currentYear);
+      const endYear = targetYear ? targetYear : currentYear;
+
+      for (let y = endYear; y >= startYear; y--) {
+        const maxMonth = (y === currentYear) ? currentMonth : 12;
+        const minMonth = (!full && !targetYear && y === currentYear) ? Math.max(1, currentMonth - 1) : 1;
+
+        for (let m = maxMonth; m >= minMonth; m--) {
+          const mStr = String(m).padStart(2, "0");
+          try {
+            const mRes = await fetchWithRetry(`https://backend-production-412b.up.railway.app/api/lottoplus/results/by-month-year/${y}/${mStr}`);
+            if (mRes.ok) {
+              const data = await mRes.json();
+              if (Array.isArray(data) && data.length > 0) {
+                const batch = data.map((d: any) => {
+                  const nums = [d.number1, d.number2, d.number3, d.number4, d.number5].sort((a: number, b: number) => a - b);
+                  const dDate = d.draw_date ? d.draw_date.split("T")[0] : "";
+                  const mult = d.multiplier ? `${d.multiplier}x` : "1x";
+                  return {
+                    sql: `INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    args: [d.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], d.powerball, mult, d.next_estimated_jackpot || ""]
+                  };
+                });
+                const batchRes = await db.batch(batch);
+                const inserted = batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
+                drawsAdded += inserted;
+              }
+            }
+          } catch (e: any) {
+            console.warn(`[LottoPlus] Railway month ${y}/${mStr} notice:`, e.message);
+          }
+        }
+      }
+    } catch (railwayErr: any) {
+      console.warn("[LottoPlus] Railway REST API notice:", railwayErr.message);
+    }
+
+    // 2. Secondary Source: Live HTML Portal (nlcblottoresult.com)
+    try {
+      const liveDraws = await scrapeLottoLivePortal();
+      for (const d of liveDraws) {
+        const check = await db.execute({
+          sql: "SELECT 1 FROM draws WHERE draw_date = ?",
+          args: [d.draw_date]
+        });
+        if (check.rows.length === 0) {
+          const maxRes = await db.execute("SELECT MAX(draw_number) as max_num FROM draws");
+          const nextDrawNum = (Number(maxRes.rows[0]?.max_num) || 2568) + 1;
+          const res = await db.execute({
+            sql: `INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [nextDrawNum, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.powerball, d.multiplier, d.jackpot]
+          });
+          if (res.rowsAffected > 0) drawsAdded++;
+        }
+      }
+    } catch (portalErr: any) {
+      console.warn("[LottoPlus] Live portal notice:", portalErr.message);
+    }
+
+    // 3. Optional Tertiary Source: Official HTML scrape (only if full or targetYear)
+    if (full || targetYear) {
+      try {
+        const homeRes = await scrapeHomepage();
+        if (homeRes.latestDraw) {
+          await saveDraw(homeRes.latestDraw);
+        }
+      } catch (officialErr: any) {
+        console.warn("[LottoPlus] Official scrape notice:", officialErr.message);
+      }
     }
     
     return { success: true, drawsAdded, details: details || `Sync complete. ${drawsAdded} draws added/updated.` };
@@ -550,33 +603,27 @@ export async function scrapePlayWheLivePortal(): Promise<any[]> {
     if (!res.ok) return [];
     const html = await res.text();
     const $ = cheerio.load(html);
-    const t0 = $('table').eq(0);
-    const text = t0.text();
+    const text = $('table').eq(0).text();
     const today = new Date().toISOString().split("T")[0];
 
-    const MARKS = [
-      'Centipede','Old Lady','Carriage','Dead Man','Parson Man','Belly','Hog','Tiger',
-      'Cattle','Monkey','Corbeau','King','Crapaud','Money','Sick Woman','Jamette',
-      'Pigeon','Water Boat','Horse','Dog','Mouth','Rat','House','Queen','Morocoy',
-      'Fowl','Little Snake','Red Fish','Opium Man','House Cat','Parson Wife','Shrimps',
-      'Spider','Blind Man','Big Snake','Donkey'
+    const slots = [
+      { name: 'Morning', re: /Morning\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d{1,2})/i },
+      { name: 'Midday', re: /(?:Midday|Middy)\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d{1,2})/i },
+      { name: 'Afternoon', re: /Afternoon\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d{1,2})/i },
+      { name: 'Evening', re: /Evening\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d{1,2})/i }
     ];
 
     const draws: any[] = [];
-    const slots = ['Morning', 'Midday', 'Afternoon', 'Evening'];
-    for (const slot of slots) {
-      const re = new RegExp(slot + '\\s+Draw\\s+#(\\d+)[\\s\\S]*?(\\d{1,2})\\s+([A-Za-z\\s]+?)(?:WB|MU|MX|MB|Pay|Mid|$)', 'i');
-      const m = text.match(re);
+    for (const s of slots) {
+      const m = text.match(s.re);
       if (m) {
         const drawNum = parseInt(m[1], 10);
         const winNum = parseInt(m[2], 10);
-        const markRaw = m[3].trim().toLowerCase();
-        const isValidMark = MARKS.some(mark => markRaw.includes(mark.toLowerCase()));
-        if (isValidMark && winNum >= 1 && winNum <= 36) {
+        if (!isNaN(drawNum) && !isNaN(winNum) && winNum >= 1 && winNum <= 36) {
           draws.push({
             draw_number: drawNum,
             draw_date: today,
-            draw_time_slot: slot,
+            draw_time_slot: s.name,
             winning_number: winNum
           });
         }
@@ -628,55 +675,7 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
       )
     `);
 
-    try {
-      const sid = await scrapePlayWheSid();
-      if (!sid) {
-        console.warn("WARNING: Could not retrieve CSRF sid token for Play Whe. Sync might fail but proceeding...");
-      }
-      
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const currentYear = new Date().getFullYear();
-      const currentMonthIdx = new Date().getMonth();
-      
-      // If it's January (index 0), allow startYear to go back to previous year to check December
-      const startYear = targetYear ? targetYear : (full ? 2001 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
-      const endYear = targetYear ? targetYear : currentYear;
-      
-      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-      
-      for (let y = endYear; y >= startYear; y--) {
-        for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
-          // If not full sync, only scrape current month (or previous month if in first 3 days of month)
-          if (!full && !targetYear) {
-            const nowDay = new Date().getDate();
-            if (y === currentYear) {
-              if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
-                continue;
-              }
-            } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
-              // Allow Dec of previous year on first 3 days of Jan
-            } else {
-              continue;
-            }
-          }
-          const month = months[mIdx];
-          const monthDraws = await scrapePlayWheMonth(month, y, sid);
-          
-          if (monthDraws.length > 0) {
-            const batchStmts = monthDraws.map(d => ({
-              sql: `INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)`,
-              args: [d.draw_number, d.draw_date, d.draw_time_slot, d.winning_number]
-            }));
-            await db.batch(batchStmts);
-            drawsAdded += monthDraws.length;
-          }
-        }
-      }
-    } catch (playWheScrapeErr: any) {
-      console.warn("[PlayWhe] Official scrape error (falling back to REST API):", playWheScrapeErr.message);
-    }
-
-    // 2. High-Speed Secondary REST API Fallback (Railway)
+    // 1. Primary Source: High-Speed Secondary REST API (Railway)
     try {
       const restRes = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/playwhe/results/latest-date");
       if (restRes.ok) {
@@ -696,11 +695,47 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
           }
         }
       }
+
+      // By-month archive for current and recent month
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const startYear = targetYear ? targetYear : (full ? 2022 : currentYear);
+      const endYear = targetYear ? targetYear : currentYear;
+
+      for (let y = endYear; y >= startYear; y--) {
+        const maxMonth = (y === currentYear) ? currentMonth : 12;
+        const minMonth = (!full && !targetYear && y === currentYear) ? Math.max(1, currentMonth - 1) : 1;
+
+        for (let m = maxMonth; m >= minMonth; m--) {
+          const mStr = String(m).padStart(2, "0");
+          try {
+            const mRes = await fetchWithRetry(`https://backend-production-412b.up.railway.app/api/playwhe/results/by-month-year/${y}/${mStr}`);
+            if (mRes.ok) {
+              const data = await mRes.json();
+              if (Array.isArray(data) && data.length > 0) {
+                const batch = data.map((d: any) => {
+                  const dDate = d.draw_date ? d.draw_date.split("T")[0] : "";
+                  const slot = (d.draw_period || d.draw_time || "MORNING").trim();
+                  return {
+                    sql: `INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)`,
+                    args: [d.draw_number, dDate, slot, d.main_number]
+                  };
+                });
+                const batchRes = await db.batch(batch);
+                const inserted = batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
+                drawsAdded += inserted;
+              }
+            }
+          } catch (e: any) {
+            console.warn(`[PlayWhe] Railway month ${y}/${mStr} notice:`, e.message);
+          }
+        }
+      }
     } catch (e: any) {
       console.warn("[PlayWhe] REST API fallback notice:", e.message);
     }
 
-    // 3. Live HTML Portal Fallback (nlcblottoresult.com)
+    // 2. Secondary Source: Live HTML Portal (nlcblottoresult.com)
     try {
       const liveDraws = await scrapePlayWheLivePortal();
       for (const item of liveDraws) {
@@ -716,6 +751,34 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
       }
     } catch (liveErr: any) {
       console.warn("[PlayWhe] Live Portal fallback notice:", liveErr.message);
+    }
+
+    // 3. Optional Tertiary Source: Official HTML scrape (only if full or targetYear)
+    if (full || targetYear) {
+      try {
+        const sid = await scrapePlayWheSid();
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const currentYear = new Date().getFullYear();
+        const startYear = targetYear || 2022;
+        const endYear = targetYear || currentYear;
+
+        for (let y = endYear; y >= startYear; y--) {
+          for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+            const month = months[mIdx];
+            const monthDraws = await scrapePlayWheMonth(month, y, sid);
+            if (monthDraws.length > 0) {
+              const batchStmts = monthDraws.map(d => ({
+                sql: `INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)`,
+                args: [d.draw_number, d.draw_date, d.draw_time_slot, d.winning_number]
+              }));
+              await db.batch(batchStmts);
+              drawsAdded += monthDraws.length;
+            }
+          }
+        }
+      } catch (playWheScrapeErr: any) {
+        console.warn("[PlayWhe] Official scrape notice:", playWheScrapeErr.message);
+      }
     }
     
     return { success: true, drawsAdded, details: `Play Whe sync complete. ${drawsAdded} draws added/updated.` };
@@ -842,6 +905,43 @@ export async function saveWinForLifeDraw(draw: any): Promise<void> {
   await db.execute({ sql, args });
 }
 
+// Live HTML Portal Scraper for Win For Life (nlcblottoresult.com)
+export async function scrapeWinForLifeLivePortal(): Promise<any[]> {
+  try {
+    const res = await fetchWithRetry("https://nlcblottoresult.com/nlcb-win-for-life-results/");
+    if (!res.ok) return [];
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const draws: any[] = [];
+    $('table').eq(0).find('tr').slice(1).each((_, row) => {
+      const text = $(row).text().replace(/\s+/g, ' ').trim();
+      const m = text.match(/(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([\d,\s]+)\s+(\d+)/i);
+      if (m) {
+        const dateStr = parseDate(m[1]);
+        const nums = m[2].split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n)).sort((a, b) => a - b);
+        const cb = parseInt(m[3]);
+        if (nums.length === 6 && !isNaN(cb)) {
+          draws.push({
+            draw_date: dateStr,
+            num1: nums[0],
+            num2: nums[1],
+            num3: nums[2],
+            num4: nums[3],
+            num5: nums[4],
+            num6: nums[5],
+            cash_ball: cb,
+            jackpot: "X"
+          });
+        }
+      }
+    });
+    return draws;
+  } catch (err: any) {
+    console.warn("[WinForLife] Live portal scrape notice:", err.message);
+    return [];
+  }
+}
+
 export async function syncWinForLife(full: boolean = false, targetYear?: number): Promise<{ success: boolean; drawsAdded: number; details: string }> {
   let drawsAdded = 0;
   try {
@@ -862,55 +962,7 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
       )
     `);
 
-    // 1. Official HTML Scrape
-    try {
-      const sid = await scrapeWinForLifeSid();
-      if (!sid) {
-        console.warn("WARNING: Could not retrieve CSRF sid token for Win for Life. Sync proceeding...");
-      }
-      
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const currentYear = new Date().getFullYear();
-      const currentMonthIdx = new Date().getMonth();
-      
-      const startYear = targetYear ? targetYear : (full ? 2022 : (currentMonthIdx === 0 ? currentYear - 1 : currentYear));
-      const endYear = targetYear ? targetYear : currentYear;
-      
-      const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-      
-      for (let y = endYear; y >= startYear; y--) {
-        for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
-          // If not full sync, only scrape current month (or previous month if in first 3 days of month)
-          if (!full && !targetYear) {
-            const nowDay = new Date().getDate();
-            if (y === currentYear) {
-              if (mIdx !== currentMonthIdx && !(nowDay <= 3 && mIdx === currentMonthIdx - 1)) {
-                continue;
-              }
-            } else if (y === currentYear - 1 && currentMonthIdx === 0 && mIdx === 11 && nowDay <= 3) {
-              // Allow Dec of previous year on first 3 days of Jan
-            } else {
-              continue;
-            }
-          }
-          const month = months[mIdx];
-          const monthDraws = await scrapeWinForLifeMonth(month, y, sid);
-          
-          if (monthDraws.length > 0) {
-            const batchStmts = monthDraws.map(d => ({
-              sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.num6, d.cash_ball, d.jackpot || ""]
-            }));
-            await db.batch(batchStmts);
-            drawsAdded += monthDraws.length;
-          }
-        }
-      }
-    } catch (winForLifeScrapeErr: any) {
-      console.warn("[WinForLife] Official scrape error (falling back to REST API):", winForLifeScrapeErr.message);
-    }
-
-    // 2. High-Speed Secondary REST API Fallback (Railway)
+    // 1. Primary Source: High-Speed Secondary REST API (Railway)
     try {
       const restRes = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/winforlife/results/latest-date");
       if (restRes.ok) {
@@ -930,8 +982,94 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
           }
         }
       }
+
+      // By-month archive for current and recent month
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const startYear = targetYear ? targetYear : (full ? 2022 : currentYear);
+      const endYear = targetYear ? targetYear : currentYear;
+
+      for (let y = endYear; y >= startYear; y--) {
+        const maxMonth = (y === currentYear) ? currentMonth : 12;
+        const minMonth = (!full && !targetYear && y === currentYear) ? Math.max(1, currentMonth - 1) : 1;
+
+        for (let m = maxMonth; m >= minMonth; m--) {
+          const mStr = String(m).padStart(2, "0");
+          try {
+            const mRes = await fetchWithRetry(`https://backend-production-412b.up.railway.app/api/winforlife/results/by-month-year/${y}/${mStr}`);
+            if (mRes.ok) {
+              const data = await mRes.json();
+              if (Array.isArray(data) && data.length > 0) {
+                const batch = data.map((d: any) => {
+                  const nums = [d.number1, d.number2, d.number3, d.number4, d.number5, d.number6].sort((a: number, b: number) => a - b);
+                  const dDate = d.draw_date ? d.draw_date.split("T")[0] : "";
+                  return {
+                    sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    args: [d.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], nums[5], d.cash_ball || 0, ""]
+                  };
+                });
+                const batchRes = await db.batch(batch);
+                const inserted = batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
+                drawsAdded += inserted;
+              }
+            }
+          } catch (e: any) {
+            console.warn(`[WinForLife] Railway month ${y}/${mStr} notice:`, e.message);
+          }
+        }
+      }
     } catch (e: any) {
       console.warn("[WinForLife] REST API fallback notice:", e.message);
+    }
+
+    // 2. Secondary Source: Live HTML Portal (nlcblottoresult.com)
+    try {
+      const liveDraws = await scrapeWinForLifeLivePortal();
+      for (const d of liveDraws) {
+        const check = await db.execute({
+          sql: "SELECT 1 FROM winforlife_draws WHERE draw_date = ?",
+          args: [d.draw_date]
+        });
+        if (check.rows.length === 0) {
+          const maxRes = await db.execute("SELECT MAX(draw_number) as max_num FROM winforlife_draws");
+          const nextDrawNum = (Number(maxRes.rows[0]?.max_num) || 460) + 1;
+          const res = await db.execute({
+            sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [nextDrawNum, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.num6, d.cash_ball, d.jackpot]
+          });
+          if (res.rowsAffected > 0) drawsAdded++;
+        }
+      }
+    } catch (portalErr: any) {
+      console.warn("[WinForLife] Live portal notice:", portalErr.message);
+    }
+
+    // 3. Optional Tertiary Source: Official HTML scrape (only if full or targetYear)
+    if (full || targetYear) {
+      try {
+        const sid = await scrapeWinForLifeSid();
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const currentYear = new Date().getFullYear();
+        const startYear = targetYear || 2022;
+        const endYear = targetYear || currentYear;
+
+        for (let y = endYear; y >= startYear; y--) {
+          for (let mIdx = months.length - 1; mIdx >= 0; mIdx--) {
+            const month = months[mIdx];
+            const monthDraws = await scrapeWinForLifeMonth(month, y, sid);
+            if (monthDraws.length > 0) {
+              const batchStmts = monthDraws.map(d => ({
+                sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.num6, d.cash_ball, d.jackpot || ""]
+              }));
+              await db.batch(batchStmts);
+              drawsAdded += monthDraws.length;
+            }
+          }
+        }
+      } catch (winForLifeScrapeErr: any) {
+        console.warn("[WinForLife] Official scrape notice:", winForLifeScrapeErr.message);
+      }
     }
     
     return { success: true, drawsAdded, details: `Win for Life sync complete. ${drawsAdded} draws added.` };
@@ -1036,20 +1174,24 @@ export async function scrapePick4LivePortal(): Promise<any[]> {
     if (!res.ok) return [];
     const html = await res.text();
     const $ = cheerio.load(html);
-    const t0 = $('table').eq(0);
-    const text = t0.text();
+    const text = $('table').eq(0).text();
     const today = new Date().toISOString().split("T")[0];
 
+    const slots = [
+      { name: 'Morning', re: /Morning\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d)\s*(\d)\s*(\d)\s*(\d)/i },
+      { name: 'Midday', re: /(?:Midday|Middy)\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d)\s*(\d)\s*(\d)\s*(\d)/i },
+      { name: 'Afternoon', re: /Afternoon\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d)\s*(\d)\s*(\d)\s*(\d)/i },
+      { name: 'Evening', re: /Evening\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d)\s*(\d)\s*(\d)\s*(\d)/i }
+    ];
+
     const draws: any[] = [];
-    const slots = ['Morning', 'Midday', 'Afternoon', 'Evening'];
-    for (const slot of slots) {
-      const re = new RegExp(slot + '\\s+Draw\\s+#(\\d+)[\\s\\S]*?Verified[\\s\\S]*?(\\d)\\s+(\\d)\\s+(\\d)\\s+(\\d)', 'i');
-      const m = text.match(re);
+    for (const s of slots) {
+      const m = text.match(s.re);
       if (m) {
         draws.push({
           draw_number: parseInt(m[1], 10),
           draw_date: today,
-          draw_time_slot: slot.toUpperCase(),
+          draw_time_slot: s.name.toUpperCase(),
           digit1: parseInt(m[2], 10),
           digit2: parseInt(m[3], 10),
           digit3: parseInt(m[4], 10),
@@ -1158,67 +1300,100 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
       )
     `);
 
-    // 1. Primary Scrape: Direct from official NLCB portal (nlcbplaywhelotto.com) for real-time results
+    // 1. Primary Source: High-Speed Secondary REST API (Railway)
     try {
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const currentYear = new Date().getFullYear();
-      const currentMonthIdx = new Date().getMonth();
-
-      const sid = await scrapePick4Sid();
-      const currentMonthStr = months[currentMonthIdx];
-      const officialDraws = await scrapePick4MonthOfficial(currentMonthStr, currentYear, sid);
-
-      if (officialDraws && officialDraws.length > 0) {
-        const batch = officialDraws.map(d => ({
-          sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          args: [d.draw_number, d.draw_date, d.draw_time_slot, d.digit1, d.digit2, d.digit3, d.digit4]
-        }));
-        await db.batch(batch);
-        drawsAdded += officialDraws.length;
+      const res = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/pick4/results/latest-date");
+      if (res.ok) {
+        const items = await res.json();
+        const list = Array.isArray(items) ? items : [items];
+        for (const item of list) {
+          if (item && item.draw_number) {
+            const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
+            const slot = (item.draw_period || item.draw_time || "MORNING").toUpperCase();
+            const insRes = await db.execute({
+              sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              args: [item.draw_number, dDate, slot, item.number1, item.number2, item.number3, item.number4]
+            });
+            if (insRes.rowsAffected > 0) drawsAdded++;
+          }
+        }
       }
-    } catch (officialErr: any) {
-      console.warn("[Pick4] Official scrape notice (falling back to REST API):", officialErr.message);
+
+      // By-month archive for current and recent month
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      const startYear = targetYear ? targetYear : (full ? 2022 : currentYear);
+      const endYear = targetYear ? targetYear : currentYear;
+
+      for (let y = endYear; y >= startYear; y--) {
+        const maxMonth = (y === currentYear) ? currentMonth : 12;
+        const minMonth = (!full && !targetYear && y === currentYear) ? Math.max(1, currentMonth - 1) : 1;
+
+        for (let m = maxMonth; m >= minMonth; m--) {
+          const mStr = String(m).padStart(2, "0");
+          try {
+            const mRes = await fetchWithRetry(`https://backend-production-412b.up.railway.app/api/pick4/results/by-month-year/${y}/${mStr}`);
+            if (mRes.ok) {
+              const data = await mRes.json();
+              if (Array.isArray(data) && data.length > 0) {
+                const batch = data.map((d: any) => {
+                  const dDate = d.draw_date ? d.draw_date.split("T")[0] : "";
+                  const slot = (d.draw_period || d.draw_time || "MORNING").toUpperCase();
+                  return {
+                    sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    args: [d.draw_number, dDate, slot, d.number1, d.number2, d.number3, d.number4]
+                  };
+                });
+                const batchRes = await db.batch(batch);
+                const inserted = batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
+                drawsAdded += inserted;
+              }
+            }
+          } catch (e: any) {
+            console.warn(`[Pick4] Railway month ${y}/${mStr} notice:`, e.message);
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn("[Pick4] REST API notice:", err.message);
     }
 
-    // 2. Secondary Scrape: Fast REST endpoint fallback
-    if (!full && !targetYear) {
-      try {
-        const res = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/pick4/results/latest-date");
-        if (res.ok) {
-          const items = await res.json();
-          const list = Array.isArray(items) ? items : [items];
-          for (const item of list) {
-            if (item && item.draw_number) {
-              const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
-              const slot = (item.draw_period || item.draw_time || "MORNING").toUpperCase();
-              await db.execute({
-                sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                args: [item.draw_number, dDate, slot, item.number1, item.number2, item.number3, item.number4]
-              });
-              drawsAdded++;
-            }
-          }
+    // 2. Secondary Source: Live HTML Portal (nlcblottoresult.com)
+    try {
+      const liveDraws = await scrapePick4LivePortal();
+      for (const item of liveDraws) {
+        if (item && item.draw_number) {
+          const insRes = await db.execute({
+            sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            args: [item.draw_number, item.draw_date, item.draw_time_slot, item.digit1, item.digit2, item.digit3, item.digit4]
+          });
+          if (insRes.rowsAffected > 0) drawsAdded++;
         }
-      } catch (err) {
-        console.warn("[Pick4] Latest-date fetch warning:", err);
       }
+    } catch (liveErr: any) {
+      console.warn("[Pick4] Live portal notice:", liveErr.message);
+    }
 
-      // 2.5. Live HTML Portal Fallback (nlcblottoresult.com)
+    // 3. Optional Tertiary Source: Official HTML scrape (only if full or targetYear)
+    if (full || targetYear) {
       try {
-        const liveDraws = await scrapePick4LivePortal();
-        for (const item of liveDraws) {
-          if (item && item.draw_number) {
-            const res = await db.execute({
-              sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-              args: [item.draw_number, item.draw_date, item.draw_time_slot, item.digit1, item.digit2, item.digit3, item.digit4]
-            });
-            if (res.rowsAffected > 0) {
-              drawsAdded++;
-            }
-          }
+        const sid = await scrapePick4Sid();
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const currentYear = new Date().getFullYear();
+        const currentMonthIdx = new Date().getMonth();
+        const currentMonthStr = months[currentMonthIdx];
+        const officialDraws = await scrapePick4MonthOfficial(currentMonthStr, currentYear, sid);
+
+        if (officialDraws && officialDraws.length > 0) {
+          const batch = officialDraws.map(d => ({
+            sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            args: [d.draw_number, d.draw_date, d.draw_time_slot, d.digit1, d.digit2, d.digit3, d.digit4]
+          }));
+          await db.batch(batch);
+          drawsAdded += officialDraws.length;
         }
-      } catch (liveErr: any) {
-        console.warn("[Pick4] Live portal fallback notice:", liveErr.message);
+      } catch (officialErr: any) {
+        console.warn("[Pick4] Official scrape notice:", officialErr.message);
       }
     }
 

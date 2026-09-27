@@ -3,20 +3,12 @@ const path = require("path");
 const cheerio = require("cheerio");
 const { createClient } = require("@libsql/client");
 
-// 1. Load Environment Variables from .env files
 function loadEnv() {
-  const envPaths = [
-    ".env.production.local",
-    ".env.local",
-    ".env.production",
-    ".env"
-  ];
+  const envPaths = [".env.production.local", ".env.local", ".env.production", ".env"];
   const envVars = {};
-  
   for (const file of envPaths) {
     const fullPath = path.join(process.cwd(), file);
     if (fs.existsSync(fullPath)) {
-      console.log(`[Env] Loading variables from: ${file}`);
       const content = fs.readFileSync(fullPath, "utf8");
       content.split(/\r?\n/).forEach(line => {
         if (line.trim().startsWith("#") || !line.includes("=")) return;
@@ -37,13 +29,6 @@ const env = loadEnv();
 const dbUrl = process.env.TURSO_DATABASE_URL || env.TURSO_DATABASE_URL;
 const dbToken = process.env.TURSO_AUTH_TOKEN || env.TURSO_AUTH_TOKEN;
 
-if (!dbUrl) {
-  console.error("\n[Error] TURSO_DATABASE_URL is not set!");
-  console.error("Please ensure you have configured it in your .env.local file.");
-  process.exit(1);
-}
-
-console.log(`[Database] Connecting to: ${dbUrl.startsWith("file:") ? "local file" : "Turso Cloud (" + dbUrl + ")"}`);
 const db = createClient({
   url: dbUrl,
   authToken: dbToken
@@ -99,88 +84,18 @@ function parseDate(dateStr) {
   return cleanStr;
 }
 
-async function main() {
-  console.log("\n=================================================");
-  console.log("⚡ HIGH-SPEED ZERO-CREDIT CLOUD SYNC ENGINE");
+async function runZeroCreditSync() {
+  console.log("=================================================");
+  console.log("🚀 STARTING ZERO-CREDIT MULTI-GAME SYNC ENGINE");
+  console.log("Database target:", dbUrl);
   console.log("=================================================\n");
-
-  // Initialize DB tables
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS draws (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      draw_number INTEGER UNIQUE,
-      draw_date TEXT NOT NULL,
-      num1 INTEGER NOT NULL,
-      num2 INTEGER NOT NULL,
-      num3 INTEGER NOT NULL,
-      num4 INTEGER NOT NULL,
-      num5 INTEGER NOT NULL,
-      powerball INTEGER NOT NULL,
-      multiplier TEXT,
-      jackpot TEXT
-    )
-  `);
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS playwhe_draws (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      draw_number INTEGER UNIQUE,
-      draw_date TEXT NOT NULL,
-      draw_time_slot TEXT NOT NULL,
-      winning_number INTEGER NOT NULL
-    )
-  `);
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS pick4_draws (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      draw_number INTEGER UNIQUE,
-      draw_date TEXT NOT NULL,
-      draw_time_slot TEXT NOT NULL,
-      digit1 INTEGER NOT NULL,
-      digit2 INTEGER NOT NULL,
-      digit3 INTEGER NOT NULL,
-      digit4 INTEGER NOT NULL
-    )
-  `);
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS cashpot_draws (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      draw_number INTEGER UNIQUE,
-      draw_date TEXT NOT NULL,
-      num1 INTEGER NOT NULL,
-      num2 INTEGER NOT NULL,
-      num3 INTEGER NOT NULL,
-      num4 INTEGER NOT NULL,
-      num5 INTEGER NOT NULL,
-      multiplier INTEGER
-    )
-  `);
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS winforlife_draws (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      draw_number INTEGER UNIQUE,
-      draw_date TEXT NOT NULL,
-      num1 INTEGER NOT NULL,
-      num2 INTEGER NOT NULL,
-      num3 INTEGER NOT NULL,
-      num4 INTEGER NOT NULL,
-      num5 INTEGER NOT NULL,
-      num6 INTEGER NOT NULL,
-      cash_ball INTEGER NOT NULL,
-      jackpot TEXT
-    )
-  `);
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS settings (
-      key TEXT PRIMARY KEY,
-      value TEXT
-    )
-  `);
 
   let totalAdded = 0;
 
   // 1. PLAY WHE
-  console.log("[Play Whe] Syncing latest and monthly archive...");
+  console.log("--- 1. SYNCING PLAY WHE ---");
   let pwAdded = 0;
+  // 1a. Railway REST API latest-date
   const pwLatest = await fetchJson("https://backend-production-412b.up.railway.app/api/playwhe/results/latest-date");
   if (pwLatest) {
     const list = Array.isArray(pwLatest) ? pwLatest : [pwLatest];
@@ -197,6 +112,7 @@ async function main() {
     }
   }
 
+  // 1b. Railway REST API September 2026
   const pwMonth = await fetchJson("https://backend-production-412b.up.railway.app/api/playwhe/results/by-month-year/2026/09");
   if (Array.isArray(pwMonth)) {
     for (const d of pwMonth) {
@@ -212,6 +128,7 @@ async function main() {
     }
   }
 
+  // 1c. Live Portal Table 0 (Today)
   const pwHtml = await fetchHtml("https://nlcblottoresult.com/");
   if (pwHtml) {
     const $ = cheerio.load(pwHtml);
@@ -233,17 +150,21 @@ async function main() {
             sql: "INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)",
             args: [drawNum, today, s.name, winNum]
           });
-          if (r.rowsAffected > 0) pwAdded++;
+          if (r.rowsAffected > 0) {
+            pwAdded++;
+            console.log(`[Play Whe Live] Added #${drawNum} (${s.name}): ${winNum}`);
+          }
         }
       }
     }
   }
-  console.log(`[Play Whe] Complete (+${pwAdded} draws).`);
+  console.log(`Play Whe Sync Result: +${pwAdded} new draws.`);
   totalAdded += pwAdded;
 
   // 2. PICK 4
-  console.log("[Pick 4] Syncing latest and monthly archive...");
+  console.log("\n--- 2. SYNCING PICK 4 ---");
   let p4Added = 0;
+  // 2a. Railway latest-date
   const p4Latest = await fetchJson("https://backend-production-412b.up.railway.app/api/pick4/results/latest-date");
   if (p4Latest) {
     const list = Array.isArray(p4Latest) ? p4Latest : [p4Latest];
@@ -260,6 +181,7 @@ async function main() {
     }
   }
 
+  // 2b. Railway September 2026
   const p4Month = await fetchJson("https://backend-production-412b.up.railway.app/api/pick4/results/by-month-year/2026/09");
   if (Array.isArray(p4Month)) {
     for (const d of p4Month) {
@@ -275,6 +197,7 @@ async function main() {
     }
   }
 
+  // 2c. Live Portal Pick 4
   const p4Html = await fetchHtml("https://nlcblottoresult.com/nlcb-pick-4-results/");
   if (p4Html) {
     const $ = cheerio.load(p4Html);
@@ -294,15 +217,18 @@ async function main() {
           sql: "INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)",
           args: [drawNum, today, s.name, parseInt(m[2], 10), parseInt(m[3], 10), parseInt(m[4], 10), parseInt(m[5], 10)]
         });
-        if (r.rowsAffected > 0) p4Added++;
+        if (r.rowsAffected > 0) {
+          p4Added++;
+          console.log(`[Pick 4 Live] Added #${drawNum} (${s.name}): ${m[2]}-${m[3]}-${m[4]}-${m[5]}`);
+        }
       }
     }
   }
-  console.log(`[Pick 4] Complete (+${p4Added} draws).`);
+  console.log(`Pick 4 Sync Result: +${p4Added} new draws.`);
   totalAdded += p4Added;
 
   // 3. CASH POT
-  console.log("[Cash Pot] Syncing latest and monthly archive...");
+  console.log("\n--- 3. SYNCING CASH POT ---");
   let cpAdded = 0;
   const cpLatest = await fetchJson("https://backend-production-412b.up.railway.app/api/cashpot/results/latest-date");
   if (cpLatest) {
@@ -334,11 +260,11 @@ async function main() {
       }
     }
   }
-  console.log(`[Cash Pot] Complete (+${cpAdded} draws).`);
+  console.log(`Cash Pot Sync Result: +${cpAdded} new draws.`);
   totalAdded += cpAdded;
 
   // 4. LOTTO PLUS
-  console.log("[Lotto Plus] Syncing latest and monthly archive...");
+  console.log("\n--- 4. SYNCING LOTTO PLUS ---");
   let lpAdded = 0;
   const lpLatest = await fetchJson("https://backend-production-412b.up.railway.app/api/lottoplus/results/latest-date");
   if (lpLatest) {
@@ -353,12 +279,6 @@ async function main() {
           args: [d.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], d.powerball, mult, d.next_estimated_jackpot || ""]
         });
         if (r.rowsAffected > 0) lpAdded++;
-        if (d.next_estimated_jackpot) {
-          await db.execute({
-            sql: "INSERT OR REPLACE INTO settings (key, value) VALUES ('lotto_next_jackpot', ?)",
-            args: [d.next_estimated_jackpot]
-          });
-        }
       }
     }
   }
@@ -378,11 +298,38 @@ async function main() {
       }
     }
   }
-  console.log(`[Lotto Plus] Complete (+${lpAdded} draws).`);
+
+  const lpHtml = await fetchHtml("https://nlcblottoresult.com/nlcb-lotto-plus-results/");
+  if (lpHtml) {
+    const $ = cheerio.load(lpHtml);
+    $('table').eq(0).find('tr').slice(1).each(async (_, row) => {
+      const text = $(row).text().replace(/\s+/g, ' ').trim();
+      const m = text.match(/(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+([\d,\s]+)\s*:\s*(\d+)\s+(\d+x)/i);
+      if (m) {
+        const dDate = parseDate(m[1]);
+        const nums = m[2].split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n)).sort((a, b) => a - b);
+        const pb = parseInt(m[3]);
+        const mult = m[4];
+        if (nums.length === 5) {
+          const check = await db.execute({ sql: "SELECT 1 FROM draws WHERE draw_date = ?", args: [dDate] });
+          if (check.rows.length === 0) {
+            const maxRes = await db.execute("SELECT MAX(draw_number) as max_num FROM draws");
+            const nextDrawNum = (Number(maxRes.rows[0]?.max_num) || 2568) + 1;
+            const r = await db.execute({
+              sql: "INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              args: [nextDrawNum, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], pb, mult, ""]
+            });
+            if (r.rowsAffected > 0) lpAdded++;
+          }
+        }
+      }
+    });
+  }
+  console.log(`Lotto Plus Sync Result: +${lpAdded} new draws.`);
   totalAdded += lpAdded;
 
   // 5. WIN FOR LIFE
-  console.log("[Win For Life] Syncing latest and monthly archive...");
+  console.log("\n--- 5. SYNCING WIN FOR LIFE ---");
   let wflAdded = 0;
   const wflLatest = await fetchJson("https://backend-production-412b.up.railway.app/api/winforlife/results/latest-date");
   if (wflLatest) {
@@ -414,16 +361,16 @@ async function main() {
       }
     }
   }
-  console.log(`[Win For Life] Complete (+${wflAdded} draws).`);
+
+  console.log(`Win For Life Sync Result: +${wflAdded} new draws.`);
   totalAdded += wflAdded;
 
   console.log("\n=================================================");
-  console.log(`✅ SYNC COMPLETE! Total new draws: ${totalAdded}`);
+  console.log(`✅ SYNC COMPLETE! Total new draws inserted: ${totalAdded}`);
   console.log("=================================================\n");
-  process.exit(0);
 }
 
-main().catch(err => {
-  console.error("\n[Error] Sync process failed:", err);
+runZeroCreditSync().catch(err => {
+  console.error("Fatal sync error:", err);
   process.exit(1);
 });
