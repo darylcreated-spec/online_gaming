@@ -1,4 +1,4 @@
-import { syncLatest, syncPlayWhe, syncWinForLife, syncCashPot, syncPick4 } from "@/lib/scraper";
+import { syncLatest, syncPlayWhe, syncWinForLife, syncCashPot, syncPick4, reconcileRecentDrawGaps } from "@/lib/scraper";
 import { verifyPlayWhePredictions } from "@/lib/predictions";
 import { NextResponse } from "next/server";
 
@@ -76,11 +76,19 @@ async function handleSync(request: Request) {
       }
     }
 
+    // 4. Automated Sequence Gap Reconciliation Daemon
+    try {
+      results.reconciliation = await reconcileRecentDrawGaps();
+    } catch (e: any) {
+      results.reconciliation = { gapsDetected: 0, drawsHealed: 0, error: e.message };
+    }
+
     const totalAdded = (results.playWhe?.drawsAdded || 0) + 
       (results.lottoPlus?.drawsAdded || 0) + 
       (results.winForLife?.drawsAdded || 0) + 
       (results.cashPot?.drawsAdded || 0) + 
-      (results.pick4?.drawsAdded || 0);
+      (results.pick4?.drawsAdded || 0) +
+      (results.reconciliation?.drawsHealed || 0);
     results.totalDrawsAdded = totalAdded;
 
     console.log(`[Auto-Sync] Sync complete. Total new draws added across all games: ${totalAdded}`);

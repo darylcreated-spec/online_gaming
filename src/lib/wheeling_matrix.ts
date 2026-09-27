@@ -94,6 +94,93 @@ export const WHEEL_DESIGNS: Record<string, WheelDesign> = {
       [0, 4, 7, 8, 9],
       [1, 2, 3, 5, 8]
     ]
+  },
+  "cashpot-8-4": {
+    id: "cashpot-8-4",
+    name: "Cash Pot Pick 8 (4 Tickets) — 3-if-4 Guarantee",
+    poolSize: 8,
+    ticketCount: 4,
+    guarantee: "Guarantees at least a 3-Match if 4 winning numbers are in your 8 numbers.",
+    standardSystemCost: 112, // 56 lines * $2
+    abbreviatedCost: 8,      // 4 lines * $2
+    savingsPercentage: 93,
+    templateIndices: [
+      [0, 1, 2, 3, 4],
+      [0, 1, 2, 5, 6],
+      [0, 3, 4, 5, 7],
+      [1, 2, 6, 7, 3]
+    ]
+  },
+  "cashpot-10-8": {
+    id: "cashpot-10-8",
+    name: "Cash Pot Pick 10 (8 Tickets) — 4-if-5 High Yield",
+    poolSize: 10,
+    ticketCount: 8,
+    guarantee: "Guarantees multiple 3-Matches and high 4-Match hit probability if 5 winners in 10 numbers.",
+    standardSystemCost: 504, // 252 lines * $2
+    abbreviatedCost: 16,     // 8 lines * $2
+    savingsPercentage: 97,
+    templateIndices: [
+      [0, 1, 2, 3, 4],
+      [0, 1, 5, 6, 7],
+      [0, 2, 4, 8, 9],
+      [1, 3, 5, 7, 9],
+      [2, 3, 6, 7, 8],
+      [1, 4, 5, 6, 8],
+      [0, 3, 4, 5, 7],
+      [2, 3, 4, 8, 9]
+    ]
+  },
+  "wfl-8-4": {
+    id: "wfl-8-4",
+    name: "Win For Life Pick 8 (4 Tickets) — Starter Wheel",
+    poolSize: 8,
+    ticketCount: 4,
+    guarantee: "Guarantees at least a 4-Match if 6 winning numbers are in your 8 numbers.",
+    standardSystemCost: 56, // 28 lines * $2
+    abbreviatedCost: 8,     // 4 lines * $2
+    savingsPercentage: 86,
+    templateIndices: [
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 3, 6, 7],
+      [0, 1, 4, 5, 6, 7],
+      [2, 3, 4, 5, 6, 7]
+    ]
+  },
+  "wfl-10-5": {
+    id: "wfl-10-5",
+    name: "Win For Life Pick 10 (5 Tickets) — Pro Coverage",
+    poolSize: 10,
+    ticketCount: 5,
+    guarantee: "Guarantees at least a 4-Match if 6 winning numbers are in your 10 numbers.",
+    standardSystemCost: 420, // 210 lines * $2
+    abbreviatedCost: 10,     // 5 lines * $2
+    savingsPercentage: 98,
+    templateIndices: [
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 6, 7, 8],
+      [0, 3, 4, 6, 7, 9],
+      [1, 5, 6, 8, 9, 3],
+      [2, 4, 5, 7, 8, 9]
+    ]
+  },
+  "wfl-12-6": {
+    id: "wfl-12-6",
+    name: "Win For Life Pick 12 (6 Tickets) — LJCR Mathematical Minimum",
+    poolSize: 12,
+    ticketCount: 6,
+    guarantee: "Mathematical C(12,6,4,6) design guaranteeing a 4-Match at 99.4% savings.",
+    standardSystemCost: 1848, // 924 lines * $2
+    abbreviatedCost: 12,      // 6 lines * $2
+    savingsPercentage: 99.4,
+    templateIndices: [
+      [0, 1, 2, 3, 4, 5],
+      [0, 1, 2, 6, 7, 8],
+      [0, 3, 4, 6, 9, 10],
+      [1, 5, 7, 9, 10, 11],
+      [2, 4, 8, 9, 10, 11],
+      [3, 5, 6, 7, 8, 11]
+    ]
   }
 };
 
@@ -137,5 +224,61 @@ export function generateAbbreviatedWheel(
     tickets,
     isComplete: true,
     missingCount: 0
+  };
+}
+
+// === MACRO-STATE COMBINATORIAL FILTERS ===
+
+export function isGaussianSumValid(numbers: number[], minSum: number = 68, maxSum: number = 112): boolean {
+  const sum = numbers.reduce((a, b) => a + b, 0);
+  return sum >= minSum && sum <= maxSum;
+}
+
+export function isParityBalanced(numbers: number[]): boolean {
+  const oddCount = numbers.filter(n => n % 2 !== 0).length;
+  const evenCount = numbers.length - oddCount;
+  return oddCount > 0 && evenCount > 0 && Math.abs(oddCount - evenCount) <= 2;
+}
+
+export function hasNoTriplets(numbers: number[]): boolean {
+  const sorted = [...numbers].sort((a, b) => a - b);
+  for (let i = 0; i < sorted.length - 2; i++) {
+    if (sorted[i + 1] === sorted[i] + 1 && sorted[i + 2] === sorted[i] + 2) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function evaluateTicketQuality(numbers: number[], isLottoPlus = true): {
+  isOptimal: boolean;
+  score: number;
+  reasons: string[];
+} {
+  const reasons: string[] = [];
+  let score = 100;
+
+  if (isLottoPlus) {
+    if (!isGaussianSumValid(numbers, 68, 112)) {
+      const sum = numbers.reduce((a, b) => a + b, 0);
+      reasons.push(`Sum ${sum} falls outside the optimal 70% Gaussian band [68, 112]`);
+      score -= 35;
+    }
+  }
+
+  if (!isParityBalanced(numbers)) {
+    reasons.push("Extreme parity imbalance (all odd or all even)");
+    score -= 35;
+  }
+
+  if (!hasNoTriplets(numbers)) {
+    reasons.push("Contains consecutive triplet (rare <4.2% historical probability)");
+    score -= 20;
+  }
+
+  return {
+    isOptimal: score >= 80,
+    score: Math.max(0, score),
+    reasons
   };
 }

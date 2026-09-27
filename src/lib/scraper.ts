@@ -1266,4 +1266,78 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
   }
 }
 
+// === AUTOMATED DRAW GAP RECONCILIATION DAEMON ===
+export async function reconcileRecentDrawGaps(): Promise<{
+  gapsDetected: number;
+  drawsHealed: number;
+  report: string[];
+}> {
+  const report: string[] = [];
+  let gapsDetected = 0;
+  let drawsHealed = 0;
+
+  try {
+    // 1. Audit Play Whe recent draws
+    const pwRows = await db.execute("SELECT draw_number FROM playwhe_draws ORDER BY draw_number DESC LIMIT 30");
+    const pwNums = pwRows.rows.map(r => Number(r.draw_number)).sort((a, b) => a - b);
+    for (let i = 0; i < pwNums.length - 1; i++) {
+      if (pwNums[i + 1] - pwNums[i] > 1) {
+        gapsDetected++;
+        report.push(`Play Whe gap detected between #${pwNums[i]} and #${pwNums[i + 1]}`);
+      }
+    }
+
+    // 2. Audit Pick 4 recent draws
+    const p4Rows = await db.execute("SELECT draw_number FROM pick4_draws ORDER BY draw_number DESC LIMIT 30");
+    const p4Nums = p4Rows.rows.map(r => Number(r.draw_number)).sort((a, b) => a - b);
+    for (let i = 0; i < p4Nums.length - 1; i++) {
+      if (p4Nums[i + 1] - p4Nums[i] > 1) {
+        gapsDetected++;
+        report.push(`Pick 4 gap detected between #${p4Nums[i]} and #${p4Nums[i + 1]}`);
+      }
+    }
+
+    // 3. Audit Cash Pot recent draws
+    const cpRows = await db.execute("SELECT draw_number FROM cashpot_draws ORDER BY draw_number DESC LIMIT 30");
+    const cpNums = cpRows.rows.map(r => Number(r.draw_number)).sort((a, b) => a - b);
+    for (let i = 0; i < cpNums.length - 1; i++) {
+      if (cpNums[i + 1] - cpNums[i] > 1) {
+        gapsDetected++;
+        report.push(`Cash Pot gap detected between #${cpNums[i]} and #${cpNums[i + 1]}`);
+      }
+    }
+
+    // If gaps exist, trigger portal sweeps
+    if (gapsDetected > 0) {
+      console.log(`[Reconciliation] Detected ${gapsDetected} draw sequence gap(s). Initiating automatic healing...`);
+      const pwLive = await scrapePlayWheLivePortal();
+      for (const d of pwLive) {
+        if (d.draw_number) {
+          const res = await db.execute({
+            sql: `INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)`,
+            args: [d.draw_number, d.draw_date, d.draw_time_slot, d.winning_number]
+          });
+          if (res.rowsAffected > 0) drawsHealed++;
+        }
+      }
+
+      const p4Live = await scrapePick4LivePortal();
+      for (const d of p4Live) {
+        if (d.draw_number) {
+          const res = await db.execute({
+            sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            args: [d.draw_number, d.draw_date, d.draw_time_slot, d.digit1, d.digit2, d.digit3, d.digit4]
+          });
+          if (res.rowsAffected > 0) drawsHealed++;
+        }
+      }
+    }
+  } catch (err: any) {
+    console.warn("[Reconciliation] Daemon notice:", err.message);
+  }
+
+  return { gapsDetected, drawsHealed, report };
+}
+
+
 
