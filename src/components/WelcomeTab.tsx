@@ -24,13 +24,14 @@ import {
   Layers, 
   RefreshCw,
   Compass,
-  DollarSign
+  DollarSign,
+  Flame
 } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 import InteractiveTumbler from "@/components/InteractiveTumbler";
 import { calculateNextDrawCountdown, DrawCountdown } from "@/lib/draw_schedule";
 
-export type GameKey = "welcome" | "lotto-plus" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "scanner" | "settings";
+export type GameKey = "welcome" | "hot-picks" | "lotto-plus" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "scanner" | "settings";
 
 interface WelcomeTabProps {
   onSelectGame?: (game: GameKey) => void;
@@ -197,6 +198,36 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-4xl">
           Real-time statistical tracking and combinatorial optimization across all official National Lotteries Control Board (NLCB) games. Powered by Markov state-transitions, Bayesian priors, Gaussian digit sums, and minimum-covering wheeling mathematics.
         </p>
+      </div>
+
+      {/* WIN CONCEPTS HOT PICKS CALLOUT BANNER */}
+      <div 
+        onClick={() => onSelectGame && onSelectGame("hot-picks")}
+        className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-purple-500/15 border border-amber-500/40 hover:border-amber-400 transition-all duration-300 cursor-pointer group shadow-xl hover:shadow-[0_0_25px_rgba(245,158,11,0.25)] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-slate-950 font-black shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.4)] group-hover:scale-105 transition-transform">
+            <Flame className="w-7 h-7 fill-current" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-black text-white font-mono uppercase tracking-wider">
+                WIN CONCEPTS HOT PICKS
+              </h2>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-mono">
+                LIVE
+              </span>
+            </div>
+            <p className="text-xs text-gray-300 font-sans mt-0.5">
+              Instant calibrated picks & guaranteed covering wheels updated automatically after each draw.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs font-mono font-bold text-amber-400 group-hover:text-amber-300 shrink-0">
+          <span>VIEW CALIBRATED PICKS</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </div>
       </div>
 
       {/* 2. THE 5-GAME COMMAND CENTER GRID */}
