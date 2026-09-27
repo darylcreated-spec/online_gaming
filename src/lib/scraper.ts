@@ -543,6 +543,52 @@ export async function scrapePlayWheMonth(monthStr: string, yearVal: number, sid:
   }
 }
 
+// === PLAY WHE LIVE PORTAL SCRAPER (nlcblottoresult.com) ===
+export async function scrapePlayWheLivePortal(): Promise<any[]> {
+  try {
+    const res = await fetchWithRetry("https://nlcblottoresult.com/");
+    if (!res.ok) return [];
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const t0 = $('table').eq(0);
+    const text = t0.text();
+    const today = new Date().toISOString().split("T")[0];
+
+    const MARKS = [
+      'Centipede','Old Lady','Carriage','Dead Man','Parson Man','Belly','Hog','Tiger',
+      'Cattle','Monkey','Corbeau','King','Crapaud','Money','Sick Woman','Jamette',
+      'Pigeon','Water Boat','Horse','Dog','Mouth','Rat','House','Queen','Morocoy',
+      'Fowl','Little Snake','Red Fish','Opium Man','House Cat','Parson Wife','Shrimps',
+      'Spider','Blind Man','Big Snake','Donkey'
+    ];
+
+    const draws: any[] = [];
+    const slots = ['Morning', 'Midday', 'Afternoon', 'Evening'];
+    for (const slot of slots) {
+      const re = new RegExp(slot + '\\s+Draw\\s+#(\\d+)[\\s\\S]*?(\\d{1,2})\\s+([A-Za-z\\s]+?)(?:WB|MU|MX|MB|Pay|Mid|$)', 'i');
+      const m = text.match(re);
+      if (m) {
+        const drawNum = parseInt(m[1], 10);
+        const winNum = parseInt(m[2], 10);
+        const markRaw = m[3].trim().toLowerCase();
+        const isValidMark = MARKS.some(mark => markRaw.includes(mark.toLowerCase()));
+        if (isValidMark && winNum >= 1 && winNum <= 36) {
+          draws.push({
+            draw_number: drawNum,
+            draw_date: today,
+            draw_time_slot: slot,
+            winning_number: winNum
+          });
+        }
+      }
+    }
+    return draws;
+  } catch (err: any) {
+    console.warn("[PlayWhe] Live portal scrape notice:", err.message);
+    return [];
+  }
+}
+
 export async function savePlayWheDraw(draw: any): Promise<void> {
   const sql = `
     INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number)
@@ -652,6 +698,24 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
       }
     } catch (e: any) {
       console.warn("[PlayWhe] REST API fallback notice:", e.message);
+    }
+
+    // 3. Live HTML Portal Fallback (nlcblottoresult.com)
+    try {
+      const liveDraws = await scrapePlayWheLivePortal();
+      for (const item of liveDraws) {
+        if (item && item.draw_number) {
+          const res = await db.execute({
+            sql: `INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)`,
+            args: [item.draw_number, item.draw_date, item.draw_time_slot, item.winning_number]
+          });
+          if (res.rowsAffected > 0) {
+            drawsAdded++;
+          }
+        }
+      }
+    } catch (liveErr: any) {
+      console.warn("[PlayWhe] Live Portal fallback notice:", liveErr.message);
     }
     
     return { success: true, drawsAdded, details: `Play Whe sync complete. ${drawsAdded} draws added/updated.` };
@@ -965,6 +1029,41 @@ export async function syncCashPot(full: boolean = false, targetYear?: number): P
 // Helper for official Pick 4 HTML scraping
 const PICK4_OFFICIAL_URL = "https://www.nlcbplaywhelotto.com/nlcb-pick-4-results/";
 
+// === PICK 4 LIVE PORTAL SCRAPER (nlcblottoresult.com) ===
+export async function scrapePick4LivePortal(): Promise<any[]> {
+  try {
+    const res = await fetchWithRetry("https://nlcblottoresult.com/nlcb-pick-4-results/");
+    if (!res.ok) return [];
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const t0 = $('table').eq(0);
+    const text = t0.text();
+    const today = new Date().toISOString().split("T")[0];
+
+    const draws: any[] = [];
+    const slots = ['Morning', 'Midday', 'Afternoon', 'Evening'];
+    for (const slot of slots) {
+      const re = new RegExp(slot + '\\s+Draw\\s+#(\\d+)[\\s\\S]*?Verified[\\s\\S]*?(\\d)\\s+(\\d)\\s+(\\d)\\s+(\\d)', 'i');
+      const m = text.match(re);
+      if (m) {
+        draws.push({
+          draw_number: parseInt(m[1], 10),
+          draw_date: today,
+          draw_time_slot: slot.toUpperCase(),
+          digit1: parseInt(m[2], 10),
+          digit2: parseInt(m[3], 10),
+          digit3: parseInt(m[4], 10),
+          digit4: parseInt(m[5], 10)
+        });
+      }
+    }
+    return draws;
+  } catch (err: any) {
+    console.warn("[Pick4] Live portal scrape notice:", err.message);
+    return [];
+  }
+}
+
 export async function scrapePick4Sid(): Promise<string | null> {
   try {
     const res = await fetchWithRetry(getScrapeUrl(PICK4_OFFICIAL_URL));
@@ -1102,6 +1201,24 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
         }
       } catch (err) {
         console.warn("[Pick4] Latest-date fetch warning:", err);
+      }
+
+      // 2.5. Live HTML Portal Fallback (nlcblottoresult.com)
+      try {
+        const liveDraws = await scrapePick4LivePortal();
+        for (const item of liveDraws) {
+          if (item && item.draw_number) {
+            const res = await db.execute({
+              sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              args: [item.draw_number, item.draw_date, item.draw_time_slot, item.digit1, item.digit2, item.digit3, item.digit4]
+            });
+            if (res.rowsAffected > 0) {
+              drawsAdded++;
+            }
+          }
+        }
+      } catch (liveErr: any) {
+        console.warn("[Pick4] Live portal fallback notice:", liveErr.message);
       }
     }
 
