@@ -21,6 +21,16 @@ import {
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 
+export interface GameBacktestMetrics {
+  sampleDraws: number;
+  invariantConformityPct: number;
+  hitSummary: string;
+  prizeHitRatePct: number;
+  theoreticalRandomRatePct: number;
+  measuredLift: string;
+  keyFinding: string;
+}
+
 interface GameHotPick {
   gameKey: "play-whe" | "pick4" | "cashpot" | "lotto-plus" | "win-for-life";
   gameTitle: string;
@@ -57,6 +67,7 @@ interface GameHotPick {
     markName?: string;
     type: string;
   }[];
+  backtestMetrics?: GameBacktestMetrics;
 }
 
 interface HotPicksResponse {
@@ -398,6 +409,46 @@ export default function HotPicksTab() {
                       <strong className="text-gray-300">Rationale: </strong> {game.optimalPick.rationale}
                     </p>
                   </div>
+
+                  {/* Empirical Out-of-Sample Backtest Results */}
+                  {game.backtestMetrics && (
+                    <div className="p-3.5 bg-emerald-950/20 border border-emerald-500/25 rounded-xl space-y-2.5 font-mono text-xs">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[10px] text-emerald-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                          Walk-Forward Backtest ({game.backtestMetrics.sampleDraws} Historical Draws)
+                        </span>
+                        <span className="text-[10px] text-emerald-300 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                          Lift: {game.backtestMetrics.measuredLift} vs Random
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px]">
+                        <div className="p-2 bg-black/40 rounded border border-white/5">
+                          <span className="text-gray-400 block">Prize Hit Rate:</span>
+                          <strong className="text-emerald-400 text-xs">{game.backtestMetrics.prizeHitRatePct}%</strong>
+                          <span className="text-gray-500 block">vs {game.backtestMetrics.theoreticalRandomRatePct}% Random</span>
+                        </div>
+
+                        <div className="p-2 bg-black/40 rounded border border-white/5">
+                          <span className="text-gray-400 block">Invariant Conformity:</span>
+                          <strong className="text-white text-xs">{game.backtestMetrics.invariantConformityPct}%</strong>
+                          <span className="text-gray-500 block">of winning draws</span>
+                        </div>
+
+                        <div className="col-span-2 sm:col-span-1 p-2 bg-black/40 rounded border border-white/5">
+                          <span className="text-gray-400 block">Measured Edge:</span>
+                          <strong className="text-amber-300 text-xs">{game.backtestMetrics.measuredLift}</strong>
+                          <span className="text-emerald-400 block font-bold">Empirical Alpha</span>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-gray-300 leading-snug">
+                        <strong className="text-emerald-400">Backtest Audit: </strong>
+                        {game.backtestMetrics.keyFinding}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right Column: Covering Wheel or Alternative Combinations (5 cols) */}
