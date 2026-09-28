@@ -28,7 +28,17 @@ const HEADERS = {
   "Referer": "https://www.nlcbplaywhelotto.com/",
 };
 
-// Helper: fetch with exponential backoff retries and multi-tier fallback (ScraperAPI -> Direct Fetch)
+export const CLOUDFLARE_WORKER_PROXY_URL = process.env.CLOUDFLARE_WORKER_PROXY_URL || process.env.CF_PROXY_URL || "";
+
+export function getCloudflareProxyUrl(targetUrl: string): string {
+  if (!CLOUDFLARE_WORKER_PROXY_URL) return targetUrl;
+  const baseUrl = CLOUDFLARE_WORKER_PROXY_URL.endsWith("/") 
+    ? CLOUDFLARE_WORKER_PROXY_URL.slice(0, -1) 
+    : CLOUDFLARE_WORKER_PROXY_URL;
+  return `${baseUrl}/?url=${encodeURIComponent(targetUrl)}`;
+}
+
+// Helper: fetch with exponential backoff retries and multi-tier fallback (Direct Fetch -> Cloudflare Worker Plan C)
 export async function fetchWithRetry(targetUrl: string, options: RequestInit = {}, retries: number = 2): Promise<Response> {
   // If targetUrl contains ScraperAPI proxy, extract raw target URL for fallback
   let rawUrl = targetUrl;
@@ -53,16 +63,15 @@ export async function fetchWithRetry(targetUrl: string, options: RequestInit = {
           signal: AbortSignal.timeout(8000)
         });
 
-        // 401 Unauthorized, 403 Forbidden (Credits exhausted), or 429 Rate limited
         if (res.status === 401 || res.status === 403 || res.status === 429) {
           markScraperApiExhausted(`HTTP ${res.status}`);
-          break; // Break out immediately to fall back to direct fetch without waiting
+          break;
         }
 
         if (res.ok) return res;
       } catch (err: any) {
         if (i === retries - 1) {
-          console.warn(`[Proxy] ScraperAPI attempt failed: ${err.message}. Falling back to direct fetch.`);
+          console.warn(`[Proxy] ScraperAPI attempt failed: ${err.message}. Falling back.`);
         }
       }
       if (i < retries - 1) {
@@ -71,16 +80,41 @@ export async function fetchWithRetry(targetUrl: string, options: RequestInit = {
     }
   }
 
-  // Tier 2: Direct Fetch from raw target URL with native browser headers
+  // Tier 2: Plan C Cloudflare Worker Edge Relay (if configured and target is official WAF-protected site)
+  if (CLOUDFLARE_WORKER_PROXY_URL && rawUrl.includes("nlcbplaywhelotto.com")) {
+    try {
+      const cfProxyUrl = getCloudflareProxyUrl(rawUrl);
+      const res = await fetch(cfProxyUrl, {
+        ...options,
+        signal: AbortSignal.timeout(7000)
+      });
+      if (res.ok) {
+        return res;
+      }
+      console.warn(`[Plan C] Cloudflare Worker returned HTTP ${res.status}. Falling back to direct fetch.`);
+    } catch (cfErr: any) {
+      console.warn(`[Plan C] Cloudflare Worker relay notice: ${cfErr.message}. Falling back to direct fetch.`);
+    }
+  }
+
+  // Tier 3: Direct Fetch from raw target URL with native browser headers
   let lastError: any = null;
   for (let i = 0; i < retries; i++) {
     try {
       const res = await fetch(rawUrl, {
         ...options,
         headers: { ...HEADERS, ...(options.headers || {}) },
-        signal: AbortSignal.timeout(9000)
+        signal: AbortSignal.timeout(7000)
       });
       if (res.ok) return res;
+
+      // If direct fetch is blocked by Cloudflare (403), try Plan C Cloudflare Worker as fallback if not already tried
+      if (res.status === 403 && CLOUDFLARE_WORKER_PROXY_URL) {
+        const cfProxyUrl = getCloudflareProxyUrl(rawUrl);
+        const cfRes = await fetch(cfProxyUrl, { ...options, signal: AbortSignal.timeout(7000) });
+        if (cfRes.ok) return cfRes;
+      }
+
       lastError = new Error(`Direct fetch HTTP ${res.status}: ${res.statusText}`);
     } catch (err) {
       lastError = err;

@@ -39,6 +39,8 @@ const HEADERS = {
   "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
 };
 
+const cfProxyUrl = process.env.CLOUDFLARE_WORKER_PROXY_URL || env.CLOUDFLARE_WORKER_PROXY_URL || "";
+
 async function fetchJson(url) {
   try {
     const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(6000) });
@@ -51,7 +53,10 @@ async function fetchJson(url) {
 
 async function fetchHtml(url) {
   try {
-    const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(6000) });
+    const target = (cfProxyUrl && url.includes("nlcbplaywhelotto.com")) 
+      ? `${cfProxyUrl.replace(/\/$/, "")}/?url=${encodeURIComponent(url)}`
+      : url;
+    const res = await fetch(target, { headers: HEADERS, signal: AbortSignal.timeout(6000) });
     if (res.ok) return await res.text();
   } catch (e) {
     console.warn(`[HTML Scrape] Notice for ${url}:`, e.message);

@@ -1,0 +1,6 @@
+name = "nlcb-edge-proxy"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# Free tier settings (100,000 requests/day free forever)
+workers_dev = true
