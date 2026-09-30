@@ -142,7 +142,7 @@ export function countMultisetMatches(pred: number[], actual: number[]): number {
   actual.forEach(x => { actCount[x] = (actCount[x] || 0) + 1; });
   let matches = 0;
   pred.forEach(x => {
-    if (actCount[x] && actCount[x] > 0) {
+    if ((actCount[x] ?? 0) > 0) {
       matches++;
       actCount[x]--;
     }
