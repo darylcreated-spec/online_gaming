@@ -12,14 +12,22 @@
 }
 
 :root {
-  --background: #0f1418;
+  --background: #080c14;
   --foreground: #dee3e8;
 }
 
 body {
-  background: var(--background);
+  background-color: #080c14;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 0% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 40%),
+    radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px;
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-inter), sans-serif;
+  min-height: 100vh;
 }
 
 /* ============================================================
@@ -414,6 +422,20 @@ body {
   background: radial-gradient(circle at 35% 35%, #ffe4e6 0%, #e11d48 55%, #881337 100%);
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.ball-3d-cyan {
+  background: radial-gradient(circle at 35% 35%, #e0f2fe 0%, #06b6d4 55%, #0e7490 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.card-interactive {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
 /* ─── DYNAMIC REACTIVE GAME AURA ─────────────────────────────────────── */

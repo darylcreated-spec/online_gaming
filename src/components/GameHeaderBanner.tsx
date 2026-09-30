@@ -91,23 +91,32 @@ export default function GameHeaderBanner({
 
   return (
     <div
-      className={`rounded-2xl bg-gradient-to-br ${colorStyles.gradient} border ${colorStyles.border} ${colorStyles.glow} p-6 space-y-5 backdrop-blur-md relative overflow-hidden transition-all duration-300`}
+      className={`rounded-2xl bg-gradient-to-br ${colorStyles.gradient} border ${colorStyles.border} ${colorStyles.glow} p-6 space-y-5 backdrop-blur-md relative overflow-hidden transition-all duration-300 card-interactive`}
     >
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
         {/* Left: Game Identity */}
         <div className="flex items-center gap-4">
-          <img
-            src={iconSrc}
-            alt={title}
-            className={`w-14 h-14 rounded-2xl object-contain shrink-0 border ${colorStyles.iconGlow}`}
-          />
+          <div className="relative shrink-0 group">
+            <div className={`absolute -inset-1.5 rounded-2xl opacity-40 blur-md transition-all duration-500 group-hover:opacity-75 ${
+              themeColor === 'amber' ? 'bg-amber-500/50' :
+              themeColor === 'sky' ? 'bg-sky-500/50' :
+              themeColor === 'emerald' ? 'bg-emerald-500/50' :
+              themeColor === 'yellow' ? 'bg-yellow-400/50' :
+              'bg-purple-500/50'
+            }`} />
+            <img
+              src={iconSrc}
+              alt={title}
+              className={`relative w-14 h-14 rounded-2xl object-contain shrink-0 border ${colorStyles.iconGlow}`}
+            />
+          </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className={`text-2xl md:text-3xl font-black uppercase tracking-wider font-mono ${colorStyles.titleColor}`}>
                 {title}
               </h1>
               {totalDrawsCount && totalDrawsCount > 0 && (
-                <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-mono font-bold flex items-center gap-1 ${colorStyles.badge}`}>
+                <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-mono font-bold flex items-center gap-1.5 shadow-sm ${colorStyles.badge}`}>
                   <Database className="w-3 h-3" />
                   {totalDrawsCount.toLocaleString()} DRAWS (100% DATABASE)
                 </span>
@@ -118,27 +127,40 @@ export default function GameHeaderBanner({
         </div>
 
         {/* Right: Next Draw Countdown Card */}
-        <div className="flex items-center gap-3 bg-black/50 border border-white/10 px-4 py-3 rounded-xl font-mono shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+        <div className="flex items-center gap-3.5 bg-black/60 border border-white/10 px-4 py-3 rounded-xl font-mono shrink-0 w-full sm:w-auto justify-between sm:justify-start shadow-inner backdrop-blur-sm">
           <div className="space-y-0.5">
             <div className="text-[10px] uppercase font-bold tracking-wider text-gray-400 flex items-center gap-1.5">
-              <Clock className="w-3 h-3" />
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <Clock className="w-3 h-3 text-sky-400" />
               <span>Next Draw: {countdown.targetLabel}</span>
             </div>
             <div className="text-xs text-gray-300 font-bold">{countdown.targetDateStr}</div>
           </div>
 
           <div className="flex items-center gap-1 ml-2">
-            <span className={`px-2 py-1 rounded-md text-sm font-black border font-mono ${colorStyles.timeBg}`}>
-              {countdown.hours}
-            </span>
-            <span className="text-xs font-bold text-gray-400">:</span>
-            <span className={`px-2 py-1 rounded-md text-sm font-black border font-mono ${colorStyles.timeBg}`}>
-              {countdown.minutes}
-            </span>
-            <span className="text-xs font-bold text-gray-400">:</span>
-            <span className={`px-2 py-1 rounded-md text-sm font-black border font-mono ${colorStyles.timeBg}`}>
-              {countdown.seconds}
-            </span>
+            <div className="flex flex-col items-center">
+              <span className={`px-2.5 py-1 rounded-lg text-sm font-black border font-mono shadow-sm ${colorStyles.timeBg}`}>
+                {countdown.hours}
+              </span>
+              <span className="text-[8px] uppercase tracking-tighter text-gray-500 font-sans mt-0.5 font-bold">hrs</span>
+            </div>
+            <span className="text-xs font-bold text-gray-400 pb-3">:</span>
+            <div className="flex flex-col items-center">
+              <span className={`px-2.5 py-1 rounded-lg text-sm font-black border font-mono shadow-sm ${colorStyles.timeBg}`}>
+                {countdown.minutes}
+              </span>
+              <span className="text-[8px] uppercase tracking-tighter text-gray-500 font-sans mt-0.5 font-bold">min</span>
+            </div>
+            <span className="text-xs font-bold text-gray-400 pb-3">:</span>
+            <div className="flex flex-col items-center">
+              <span className={`px-2.5 py-1 rounded-lg text-sm font-black border font-mono shadow-sm ${colorStyles.timeBg}`}>
+                {countdown.seconds}
+              </span>
+              <span className="text-[8px] uppercase tracking-tighter text-gray-500 font-sans mt-0.5 font-bold">sec</span>
+            </div>
           </div>
         </div>
       </div>
