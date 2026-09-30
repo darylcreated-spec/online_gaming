@@ -15,10 +15,11 @@ import Pick4Tab from "@/components/Pick4Tab";
 import LiveDrawTicker from "@/components/LiveDrawTicker";
 import AppSplashScreen from "@/components/AppSplashScreen";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
+import LottoDiff35Panel from "@/components/LottoDiff35Panel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import HotPicksTab from "@/components/HotPicksTab";
 import PushNotificationBell from "@/components/PushNotificationBell";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame } from "lucide-react";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { getCacheItem, setCacheItem } from "@/lib/idb_cache";
 
@@ -95,7 +96,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "hot-picks" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings">("welcome");
-  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "history" | "builder" | "explain">("dashboard");
+  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
   const handleTabChange = (tab: "welcome" | "hot-picks" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings") => {
@@ -610,6 +611,17 @@ export default function Home() {
                 MATHEMATICAL ENGINE
               </button>
               <button
+                onClick={() => setLottoSubTab("diff-35")}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  lottoSubTab === "diff-35"
+                    ? "bg-cyan-400 text-slate-950 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                    : "text-cyan-400/90 hover:text-cyan-300 hover:bg-cyan-500/10"
+                }`}
+              >
+                <Binary className="w-3.5 h-3.5" />
+                SUM-35 QUANT ENGINE
+              </button>
+              <button
                 onClick={() => setLottoSubTab("builder")}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                   lottoSubTab === "builder"
@@ -674,6 +686,12 @@ export default function Home() {
         {activeTab === "lotto-plus" && lottoSubTab === "math-engine" && (
           <div className="tab-content-enter">
             <MultiBallMathPanel game="lotto-plus" />
+          </div>
+        )}
+
+        {activeTab === "lotto-plus" && lottoSubTab === "diff-35" && (
+          <div className="tab-content-enter">
+            <LottoDiff35Panel />
           </div>
         )}
         
