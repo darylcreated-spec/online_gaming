@@ -504,6 +504,10 @@ export async function GET() {
         lottoPlus: lottoPlusResult,
         winForLife: winForLifeResult
       }
+    }, {
+      headers: {
+        "Cache-Control": "public, s-maxage=45, stale-while-revalidate=180"
+      }
     });
   } catch (error: any) {
     console.error("Hot picks API error:", error);
