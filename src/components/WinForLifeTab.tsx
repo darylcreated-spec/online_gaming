@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield } from "lucide-react";
+import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary } from "lucide-react";
 import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
+import WinForLifeDiff28Panel from "@/components/WinForLifeDiff28Panel";
 
 // Helper to generate all combinations of size k from an array
 function getCombinations(arr: number[], k: number): number[][] {
@@ -128,7 +129,7 @@ const validateTicket = (ticket: number[]) => {
 };
 
 export default function WinForLifeTab() {
-  const [subTab, setSubTab] = useState<"dashboard" | "math-engine" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
+  const [subTab, setSubTab] = useState<"dashboard" | "math-engine" | "diff-28" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   
@@ -469,6 +470,17 @@ export default function WinForLifeTab() {
         >
           <Brain className="w-3.5 h-3.5" />
           MATHEMATICAL ENGINE
+        </button>
+        <button
+          onClick={() => setSubTab("diff-28")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "diff-28"
+              ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.4)]"
+              : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
+          }`}
+        >
+          <Binary className="w-3.5 h-3.5" />
+          SUM-28 QUANT ENGINE
         </button>
         <button
           onClick={() => setSubTab("builder")}
@@ -1015,6 +1027,13 @@ export default function WinForLifeTab() {
       {/* SUBTAB: MATHEMATICAL ENGINE */}
       {subTab === "math-engine" && (
         <MultiBallMathPanel game="win-for-life" />
+      )}
+
+      {/* SUBTAB: SUM-28 QUANTITATIVE ENGINE */}
+      {subTab === "diff-28" && (
+        <div className="tab-content-enter">
+          <WinForLifeDiff28Panel />
+        </div>
       )}
 
       {/* SUBTAB: HISTORY */}
