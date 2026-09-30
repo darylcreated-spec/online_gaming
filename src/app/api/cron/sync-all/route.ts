@@ -129,9 +129,9 @@ async function handleSync(request: Request) {
 
         // Check Pick 4 winning digits
         if (results.pick4?.drawsAdded > 0) {
-          const p4Row = await query<any>("SELECT draw_number, draw_time_slot, d1, d2, d3, d4 FROM pick4_draws ORDER BY draw_number DESC LIMIT 1");
+          const p4Row = await query<any>("SELECT draw_number, draw_time_slot, digit1, digit2, digit3, digit4 FROM pick4_draws ORDER BY draw_number DESC LIMIT 1");
           if (p4Row[0]) {
-            detailLines.push(`Pick 4 #${p4Row[0].draw_number}: [${p4Row[0].d1}-${p4Row[0].d2}-${p4Row[0].d3}-${p4Row[0].d4}]`);
+            detailLines.push(`Pick 4 #${p4Row[0].draw_number}: [${p4Row[0].digit1}-${p4Row[0].digit2}-${p4Row[0].digit3}-${p4Row[0].digit4}]`);
           }
         }
 
@@ -145,17 +145,17 @@ async function handleSync(request: Request) {
 
         // Check Win For Life winning numbers
         if (results.winForLife?.drawsAdded > 0) {
-          const wflRow = await query<any>("SELECT draw_number, ball1, ball2, ball3, ball4, ball5, ball6, cash_ball FROM winforlife_draws ORDER BY draw_number DESC LIMIT 1");
+          const wflRow = await query<any>("SELECT draw_number, num1, num2, num3, num4, num5, num6, cash_ball FROM winforlife_draws ORDER BY draw_number DESC LIMIT 1");
           if (wflRow[0]) {
-            detailLines.push(`Win For Life #${wflRow[0].draw_number}: ${wflRow[0].ball1}, ${wflRow[0].ball2}, ${wflRow[0].ball3}, ${wflRow[0].ball4}, ${wflRow[0].ball5}, ${wflRow[0].ball6}`);
+            detailLines.push(`Win For Life #${wflRow[0].draw_number}: ${wflRow[0].num1}, ${wflRow[0].num2}, ${wflRow[0].num3}, ${wflRow[0].num4}, ${wflRow[0].num5}, ${wflRow[0].num6}`);
           }
         }
 
         // Check Cash Pot winning numbers
         if (results.cashPot?.drawsAdded > 0) {
-          const cpRow = await query<any>("SELECT draw_number, ball1, ball2, ball3, ball4, ball5 FROM cashpot_draws ORDER BY draw_number DESC LIMIT 1");
+          const cpRow = await query<any>("SELECT draw_number, num1, num2, num3, num4, num5 FROM cashpot_draws ORDER BY draw_number DESC LIMIT 1");
           if (cpRow[0]) {
-            detailLines.push(`Cash Pot #${cpRow[0].draw_number}: ${cpRow[0].ball1}, ${cpRow[0].ball2}, ${cpRow[0].ball3}, ${cpRow[0].ball4}, ${cpRow[0].ball5}`);
+            detailLines.push(`Cash Pot #${cpRow[0].draw_number}: ${cpRow[0].num1}, ${cpRow[0].num2}, ${cpRow[0].num3}, ${cpRow[0].num4}, ${cpRow[0].num5}`);
           }
         }
 

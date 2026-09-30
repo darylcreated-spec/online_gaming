@@ -89,10 +89,10 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
     wflCount
   ] = await Promise.all([
     query<any>("SELECT draw_number, draw_date, draw_time_slot, winning_number FROM playwhe_draws ORDER BY draw_number DESC LIMIT 1"),
-    query<any>("SELECT draw_number, draw_date, draw_time_slot, d1, d2, d3, d4 FROM pick4_draws ORDER BY draw_number DESC LIMIT 1"),
-    query<any>("SELECT draw_number, draw_date, ball1, ball2, ball3, ball4, ball5, multiplier FROM cashpot_draws ORDER BY draw_number DESC LIMIT 1"),
+    query<any>("SELECT draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4 FROM pick4_draws ORDER BY draw_number DESC LIMIT 1"),
+    query<any>("SELECT draw_number, draw_date, num1, num2, num3, num4, num5, multiplier FROM cashpot_draws ORDER BY draw_number DESC LIMIT 1"),
     query<any>("SELECT draw_number, draw_date, num1, num2, num3, num4, num5, powerball FROM draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 1"),
-    query<any>("SELECT draw_number, draw_date, ball1, ball2, ball3, ball4, ball5, ball6, cash_ball FROM winforlife_draws ORDER BY draw_number DESC LIMIT 1"),
+    query<any>("SELECT draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball FROM winforlife_draws ORDER BY draw_number DESC LIMIT 1"),
     query<any>("SELECT COUNT(*) AS cnt FROM playwhe_draws"),
     query<any>("SELECT COUNT(*) AS cnt FROM pick4_draws"),
     query<any>("SELECT COUNT(*) AS cnt FROM cashpot_draws"),
