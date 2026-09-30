@@ -19,7 +19,8 @@ import {
   Activity,
   Layers,
   Brain,
-  HelpCircle
+  HelpCircle,
+  Binary
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -32,6 +33,7 @@ import {
 } from "recharts";
 import { Pick4MathPrediction, Pick4BacktestResult } from "@/lib/pick4_math_engine";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
+import Pick4Diff9Panel from "@/components/Pick4Diff9Panel";
 
 interface Pick4Draw {
   id: number;
@@ -45,7 +47,7 @@ interface Pick4Draw {
 }
 
 export default function Pick4Tab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "backtest" | "archive" | "explain">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "diff-9" | "backtest" | "archive" | "explain">("dashboard");
   const [draws, setDraws] = useState<Pick4Draw[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
@@ -218,6 +220,18 @@ export default function Pick4Tab() {
         >
           <Brain className="w-3.5 h-3.5" />
           MATHEMATICAL ENGINE
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("diff-9")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "diff-9"
+              ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+              : "text-purple-400/90 hover:text-purple-300 hover:bg-purple-500/10"
+          }`}
+        >
+          <Binary className="w-3.5 h-3.5" />
+          SUM-9 QUANT ENGINE
         </button>
 
         <button
@@ -547,6 +561,13 @@ export default function Pick4Tab() {
               </div>
             </>
           ) : null}
+        </div>
+      )}
+
+      {/* Subtab: Sum-9 Difference Quantitative Engine */}
+      {activeSubTab === "diff-9" && (
+        <div className="tab-content-enter">
+          <Pick4Diff9Panel />
         </div>
       )}
 
