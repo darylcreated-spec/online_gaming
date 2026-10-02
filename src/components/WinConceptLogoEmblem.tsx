@@ -60,15 +60,9 @@ export default function WinConceptLogoEmblem({
           aria-hidden="true"
         />
 
-        {/* Counter-Rotating Orbital Ring Light Track */}
+        {/* Static Precision Border Rim */}
         <div 
-          className="absolute -inset-0.5 rounded-full border border-sky-400/30 border-dashed animate-spin pointer-events-none"
-          style={{ animationDuration: "18s" }}
-          aria-hidden="true"
-        />
-        <div 
-          className="absolute -inset-1 rounded-full border border-amber-400/25 border-dotted animate-spin pointer-events-none"
-          style={{ animationDuration: "26s", animationDirection: "reverse" }}
+          className="absolute -inset-0.5 rounded-full border border-sky-400/30 pointer-events-none"
           aria-hidden="true"
         />
 

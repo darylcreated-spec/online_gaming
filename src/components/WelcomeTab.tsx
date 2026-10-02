@@ -29,7 +29,6 @@ import {
   Sparkles
 } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
-import MultiGameQuickMatrix from "@/components/MultiGameQuickMatrix";
 import QuantumSphereTumbler, { TumblerGame } from "@/components/QuantumSphereTumbler";
 import WinConceptLogoEmblem from "@/components/WinConceptLogoEmblem";
 import { calculateNextDrawCountdown, DrawCountdown } from "@/lib/draw_schedule";
@@ -46,7 +45,6 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
   const [clock, setClock] = useState<Date>(() => new Date());
 
   const [emailCopied, setEmailCopied] = useState(false);
-  const [tumblerMode, setTumblerMode] = useState<"sphere" | "matrix">("sphere");
 
   // Latest winning draws
   const [latestLotto, setLatestLotto] = useState<any>(null);
@@ -825,65 +823,14 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             </button>
           </div>
 
-          {/* UNIFIED QUANTUM DRAW & SLIP SUITE (Replaces Legacy Crank / Spindle) */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-3">
-            {/* View Mode Switcher */}
-            <div className="flex items-center justify-between bg-slate-900/80 p-2 rounded-xl border border-white/10">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase font-bold text-gray-400 font-mono pl-2">
-                  Interactive Draw Suite:
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => {
-                    setTumblerMode("sphere");
-                    triggerHaptic("light");
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all flex items-center gap-1.5 cursor-pointer ${
-                    tumblerMode === "sphere"
-                      ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.35)]"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Quantum Sphere 3D (Ball Animation)</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setTumblerMode("matrix");
-                    triggerHaptic("light");
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all flex items-center gap-1.5 cursor-pointer ${
-                    tumblerMode === "matrix"
-                      ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.35)]"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>Tactile Quant Matrix</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Display Selected Mode */}
-            {tumblerMode === "sphere" ? (
-              <QuantumSphereTumbler
-                initialGame="lotto-plus"
-                onSelectGameTab={(game) => {
-                  if (onSelectGame) onSelectGame(game as GameKey);
-                }}
-                onSendToBuilder={() => {
-                  if (onSelectGame) onSelectGame("lotto-plus");
-                }}
-              />
-            ) : (
-              <MultiGameQuickMatrix
-                onSelectGame={(game) => {
-                  if (onSelectGame) onSelectGame(game as GameKey);
-                }}
-              />
-            )}
+          {/* THE QUANTUM SPHERE TUMBLER */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-3">
+            <QuantumSphereTumbler
+              initialGame="lotto-plus"
+              onSendToBuilder={() => {
+                if (onSelectGame) onSelectGame("lotto-plus");
+              }}
+            />
           </div>
 
           {/* CARD 6: TICKET SCANNER & SYNDICATES SHORTCUT CARD */}

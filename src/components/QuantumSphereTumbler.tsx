@@ -7,11 +7,9 @@ import {
   Copy, 
   Check, 
   Sliders, 
-  Zap, 
-  ShieldCheck, 
-  ArrowRight, 
   Award,
-  Play
+  Play,
+  ArrowRight
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
@@ -43,11 +41,11 @@ const GAME_CONFIGS: Record<TumblerGame, {
   hasBonus?: boolean;
   bonusName?: string;
   bonusPoolSize?: number;
-  themeColor: string; // Tailwind color token
+  themeColor: string;
   accentHex: string;
   glowHex: string;
   borderClass: string;
-  bgGlowClass: string;
+  activeBtnClass: string;
 }> = {
   "lotto-plus": {
     name: "Lotto Plus",
@@ -60,7 +58,7 @@ const GAME_CONFIGS: Record<TumblerGame, {
     accentHex: "#38bdf8",
     glowHex: "rgba(56, 189, 248, 0.5)",
     borderClass: "border-sky-500/40",
-    bgGlowClass: "shadow-[0_0_30px_rgba(56,189,248,0.25)]"
+    activeBtnClass: "bg-sky-500/20 text-sky-300 border-sky-400 shadow-[0_0_15px_rgba(56,189,248,0.35)]"
   },
   "win-for-life": {
     name: "Win For Life",
@@ -71,7 +69,7 @@ const GAME_CONFIGS: Record<TumblerGame, {
     accentHex: "#10b981",
     glowHex: "rgba(16, 185, 129, 0.5)",
     borderClass: "border-emerald-500/40",
-    bgGlowClass: "shadow-[0_0_30px_rgba(16,185,129,0.25)]"
+    activeBtnClass: "bg-emerald-500/20 text-emerald-300 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.35)]"
   },
   "play-whe": {
     name: "Play Whe",
@@ -82,7 +80,7 @@ const GAME_CONFIGS: Record<TumblerGame, {
     accentHex: "#f59e0b",
     glowHex: "rgba(245, 158, 11, 0.5)",
     borderClass: "border-amber-500/40",
-    bgGlowClass: "shadow-[0_0_30px_rgba(245,158,11,0.25)]"
+    activeBtnClass: "bg-amber-500/20 text-amber-300 border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.35)]"
   },
   "cashpot": {
     name: "Cash Pot",
@@ -93,7 +91,7 @@ const GAME_CONFIGS: Record<TumblerGame, {
     accentHex: "#eab308",
     glowHex: "rgba(234, 179, 8, 0.5)",
     borderClass: "border-yellow-500/40",
-    bgGlowClass: "shadow-[0_0_30px_rgba(234,179,8,0.25)]"
+    activeBtnClass: "bg-yellow-500/20 text-yellow-300 border-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.35)]"
   },
   "pick4": {
     name: "Pick 4",
@@ -104,7 +102,7 @@ const GAME_CONFIGS: Record<TumblerGame, {
     accentHex: "#a855f7",
     glowHex: "rgba(168, 85, 247, 0.5)",
     borderClass: "border-purple-500/40",
-    bgGlowClass: "shadow-[0_0_30px_rgba(168,85,247,0.25)]"
+    activeBtnClass: "bg-purple-500/20 text-purple-300 border-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.35)]"
   }
 };
 
@@ -128,11 +126,23 @@ export default function QuantumSphereTumbler({
   // Floating Chamber Balls (Simulated in 2D projection)
   const [chamberBalls, setChamberBalls] = useState<InternalBall[]>([]);
   const [copied, setCopied] = useState(false);
+  
   const animFrameRef = useRef<number | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const config = GAME_CONFIGS[selectedGame];
 
-  // Initialize floating balls inside sphere
+  // Clean cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  // Initialize floating balls inside sphere whenever selectedGame changes
   useEffect(() => {
     const ballCount = selectedGame === "pick4" ? 10 : Math.min(config.poolSize, 14);
     const balls: InternalBall[] = [];
@@ -140,7 +150,7 @@ export default function QuantumSphereTumbler({
     for (let i = 0; i < ballCount; i++) {
       const num = selectedGame === "pick4" ? i : (i + 1);
       const angle = (i / ballCount) * Math.PI * 2;
-      const dist = 20 + Math.random() * 20; // percent from center
+      const dist = 18 + Math.random() * 20; // percent from center
       
       balls.push({
         id: i,
@@ -158,7 +168,25 @@ export default function QuantumSphereTumbler({
     setDrawnBalls([]);
     setDrawnBonus(null);
     setAnimState("idle");
+    setCurrentExtractionIdx(-1);
   }, [selectedGame]);
+
+  // Robust Game Switching Handler
+  const handleGameSwitch = (gKey: TumblerGame) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    triggerHaptic("light");
+    setSelectedGame(gKey);
+    setAnimState("idle");
+    setDrawnBalls([]);
+    setDrawnBonus(null);
+    setCurrentExtractionIdx(-1);
+
+    if (onSelectGameTab) {
+      onSelectGameTab(gKey);
+    }
+  };
 
   // Chamber Physics Loop
   useEffect(() => {
@@ -182,11 +210,11 @@ export default function QuantumSphereTumbler({
             const dist = Math.sqrt(dx * dx + dy * dy) || 1;
             
             // Tangential angular velocity (vortex rotation)
-            const speed = 110; // deg/sec
+            const speed = 120; // deg/sec
             const rad = Math.atan2(dy, dx) + (speed * dt * Math.PI / 180);
             
-            // Gentle centripetal oscillation
-            const targetDist = 18 + Math.sin(now * 0.005 + ball.id) * 12;
+            // Centripetal suction oscillation
+            const targetDist = 18 + Math.sin(now * 0.006 + ball.id) * 12;
             const newDist = dist + (targetDist - dist) * (dt * 3);
 
             x = centerX + Math.cos(rad) * newDist;
@@ -241,12 +269,10 @@ export default function QuantumSphereTumbler({
     const pool = Array.from({ length: config.poolSize }, (_, i) => i + 1);
 
     if (drawStrategy === "quant") {
-      // Filtered permutation adhering to optimal Gaussian centroid & odd/even balance
       const maxAttempts = 200;
       let bestSet: number[] = [];
 
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        // Shuffle pool
         const shuffled = [...pool].sort(() => Math.random() - 0.5);
         const candidate = shuffled.slice(0, config.pickCount).sort((a, b) => a - b);
         
@@ -254,21 +280,17 @@ export default function QuantumSphereTumbler({
         const oddCount = candidate.filter(n => n % 2 !== 0).length;
         const spread = candidate[candidate.length - 1] - candidate[0];
 
-        // Specific quant checks per game
         if (selectedGame === "lotto-plus") {
-          // Lotto Plus optimal sum: 75-105, spread >= 18, balanced parity
           if (sum >= 75 && sum <= 105 && (oddCount === 2 || oddCount === 3) && spread >= 18) {
             bestSet = candidate;
             break;
           }
         } else if (selectedGame === "win-for-life") {
-          // Win For Life optimal sum: 70-100, balanced parity
           if (sum >= 70 && sum <= 100 && (oddCount === 3 || oddCount === 2 || oddCount === 4)) {
             bestSet = candidate;
             break;
           }
         } else {
-          // Cash Pot optimal sum: 40-65
           if (sum >= 40 && sum <= 65) {
             bestSet = candidate;
             break;
@@ -287,7 +309,6 @@ export default function QuantumSphereTumbler({
 
       return { main: bestSet, bonus: bonusNum };
     } else {
-      // Pure Unbiased Pneumatic RNG
       const shuffled = [...pool].sort(() => Math.random() - 0.5);
       const chosen = shuffled.slice(0, config.pickCount).sort((a, b) => a - b);
       
@@ -304,6 +325,9 @@ export default function QuantumSphereTumbler({
   const handleTriggerDraw = () => {
     if (animState === "spinning" || animState === "extracting") return;
 
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
     triggerHaptic("heavy");
     setDrawnBalls([]);
     setDrawnBonus(null);
@@ -312,15 +336,14 @@ export default function QuantumSphereTumbler({
 
     const target = generateTargetNumbers();
 
-    // 1. Vortex acceleration period (1000ms)
-    setTimeout(() => {
+    // 1. Vortex acceleration period (850ms)
+    timeoutRef.current = setTimeout(() => {
       setAnimState("extracting");
 
       // 2. Sequential Bernoulli suction ball elevation
-      const totalPicks = target.main.length + (target.bonus ? 1 : 0);
       let step = 0;
 
-      const extractionInterval = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         if (step < target.main.length) {
           const nextBall = target.main[step];
           setDrawnBalls(prev => [...prev, nextBall]);
@@ -333,13 +356,13 @@ export default function QuantumSphereTumbler({
           triggerHaptic("heavy");
           step++;
         } else {
-          clearInterval(extractionInterval);
+          if (intervalRef.current) clearInterval(intervalRef.current);
           setAnimState("completed");
           triggerHaptic("light");
         }
       }, 550);
 
-    }, 900);
+    }, 850);
   };
 
   // Clipboard Copy
@@ -374,7 +397,7 @@ export default function QuantumSphereTumbler({
         aria-hidden="true"
       />
 
-      {/* HEADER: Title & Game Selector Ribbon */}
+      {/* HEADER: Title & Interactive Game Selector Ribbon */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div className="flex items-center gap-3.5">
           <div className="relative p-2.5 rounded-xl bg-slate-900/90 border border-sky-400/30 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
@@ -390,30 +413,26 @@ export default function QuantumSphereTumbler({
               </span>
             </div>
             <p className="text-xs text-gray-400">
-              Chamber Pneumatics & Bernoulli Optical Suction Draw Simulator
+              Pneumatic Chamber Vortex & Bernoulli Suction Extraction
             </p>
           </div>
         </div>
 
-        {/* Game Navigation Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-black/50 rounded-xl border border-white/10 overflow-x-auto sleek-scrollbar">
+        {/* Game Navigation Tabs - Fully Responsive & Interactive */}
+        <div className="flex items-center gap-1.5 p-1 bg-black/60 rounded-xl border border-white/10 overflow-x-auto sleek-scrollbar">
           {(Object.keys(GAME_CONFIGS) as TumblerGame[]).map(gKey => {
             const isSel = selectedGame === gKey;
             const gConf = GAME_CONFIGS[gKey];
             return (
               <button
                 key={gKey}
-                onClick={() => {
-                  setSelectedGame(gKey);
-                  triggerHaptic("light");
-                  if (onSelectGameTab) onSelectGameTab(gKey);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all whitespace-nowrap cursor-pointer ${
+                type="button"
+                onClick={() => handleGameSwitch(gKey)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all whitespace-nowrap cursor-pointer border ${
                   isSel
-                    ? "bg-slate-800 text-white shadow-md border border-white/20"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? gConf.activeBtnClass
+                    : "text-gray-400 hover:text-white hover:bg-white/5 border-transparent"
                 }`}
-                style={isSel ? { borderColor: gConf.accentHex, color: gConf.accentHex } : {}}
               >
                 {gConf.name}
               </button>
@@ -440,19 +459,9 @@ export default function QuantumSphereTumbler({
               />
             </div>
 
-            {/* Glowing Outer Kinetic Precision Rings */}
-            <div 
-              className={`absolute -inset-1 rounded-full border-2 border-dashed transition-all duration-700 pointer-events-none ${
-                animState === "spinning" || animState === "extracting"
-                  ? "animate-spin border-sky-400 opacity-90"
-                  : "border-sky-500/30 opacity-60"
-              }`}
-              style={{ animationDuration: animState === "spinning" ? "2s" : "20s" }}
-            />
-            <div 
-              className="absolute -inset-3 rounded-full border border-dotted border-amber-400/30 animate-spin pointer-events-none"
-              style={{ animationDuration: "28s", animationDirection: "reverse" }}
-            />
+            {/* Static High-Precision Metallic Bezel Rings (No AI Spindle / No Spinning Dashed Rings) */}
+            <div className="absolute -inset-1 rounded-full border border-sky-500/30 opacity-70 pointer-events-none" />
+            <div className="absolute -inset-2.5 rounded-full border border-white/10 pointer-events-none" />
 
             {/* Central Quartz Glass Containment Sphere Viewport */}
             <div className="relative w-[260px] h-[260px] sm:w-[310px] sm:h-[310px] rounded-full overflow-hidden bg-gradient-to-b from-slate-900/60 via-slate-950/90 to-black border-2 border-sky-400/50 shadow-[inset_0_0_50px_rgba(2,6,23,0.9),0_0_35px_rgba(56,189,248,0.3)] backdrop-blur-sm">
@@ -549,8 +558,9 @@ export default function QuantumSphereTumbler({
               </span>
               <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-white/10">
                 <button
+                  type="button"
                   onClick={() => setDrawStrategy("quant")}
-                  className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition ${
+                  className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition cursor-pointer ${
                     drawStrategy === "quant"
                       ? "bg-sky-500 text-slate-950 font-black shadow-sm"
                       : "text-gray-400 hover:text-white"
@@ -559,8 +569,9 @@ export default function QuantumSphereTumbler({
                   Quant +EV
                 </button>
                 <button
+                  type="button"
                   onClick={() => setDrawStrategy("rng")}
-                  className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition ${
+                  className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition cursor-pointer ${
                     drawStrategy === "rng"
                       ? "bg-amber-400 text-slate-950 font-black shadow-sm"
                       : "text-gray-400 hover:text-white"
@@ -573,6 +584,7 @@ export default function QuantumSphereTumbler({
 
             {/* BIG ENGAGE PNEUMATIC DRAW BUTTON */}
             <button
+              type="button"
               onClick={handleTriggerDraw}
               disabled={animState === "spinning" || animState === "extracting"}
               className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 transition-all shadow-xl cursor-pointer ${
@@ -581,7 +593,7 @@ export default function QuantumSphereTumbler({
                   : "bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-500 text-slate-950 hover:brightness-110 shadow-[0_0_25px_rgba(56,189,248,0.4)] hover:scale-[1.02] active:scale-95"
               }`}
             >
-              <RotateCw className={`w-4 h-4 ${animState === "spinning" || animState === "extracting" ? "animate-spin" : ""}`} />
+              <RotateCw className="w-4 h-4" />
               <span>
                 {animState === "spinning" ? "VORTEX ACCELERATING..." : animState === "extracting" ? "BERNOULLI EXTRACTING..." : `ENGAGE QUANTUM DRAW`}
               </span>
@@ -597,6 +609,7 @@ export default function QuantumSphereTumbler({
               </span>
               {drawnBalls.length > 0 && (
                 <button
+                  type="button"
                   onClick={handleCopyTicket}
                   className="flex items-center gap-1 text-[10px] font-bold text-sky-400 hover:text-sky-300 transition cursor-pointer"
                 >
@@ -682,6 +695,7 @@ export default function QuantumSphereTumbler({
             {/* Send to Wheel Builder CTA */}
             {onSendToBuilder && drawnBalls.length >= 5 && selectedGame === "lotto-plus" && (
               <button
+                type="button"
                 onClick={() => onSendToBuilder(drawnBalls, drawnBonus || undefined)}
                 className="w-full py-2.5 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
               >
