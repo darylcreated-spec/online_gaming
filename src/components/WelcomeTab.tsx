@@ -28,7 +28,7 @@ import {
   Flame
 } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
-import InteractiveTumbler from "@/components/InteractiveTumbler";
+import MultiGameQuickMatrix from "@/components/MultiGameQuickMatrix";
 import { calculateNextDrawCountdown, DrawCountdown } from "@/lib/draw_schedule";
 
 export type GameKey = "welcome" | "lotto-plus" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "scanner" | "settings";
@@ -816,11 +816,10 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             </button>
           </div>
 
-          {/* UNIFIED 3D BLENDER-GRADE TUMBLER QUICK PICK (Placed Between Pick 4 & Utility Suite) */}
+          {/* UNIFIED QUANTITATIVE MULTI-GAME SLIP MATRIX (Replaces Legacy 3D Spindle) */}
           <div className="col-span-1 md:col-span-2 lg:col-span-3">
-            <InteractiveTumbler
-              initialGame="lotto-plus"
-              onNavigateGame={(game) => {
+            <MultiGameQuickMatrix
+              onSelectGame={(game) => {
                 if (onSelectGame) onSelectGame(game as GameKey);
               }}
             />

@@ -7,7 +7,7 @@ import { generateAbbreviatedWheel, WHEEL_DESIGNS } from "@/lib/wheeling_matrix";
 import { evaluateTicketQuality } from "@/lib/quality_scorer";
 import { runGeneticOptimization, AlphaSlipResult } from "@/lib/geneticOptimizer";
 import { triggerHaptic } from "@/lib/haptics";
-import InteractiveTumbler from "@/components/InteractiveTumbler";
+import TactileQuantMatrix from "@/components/TactileQuantMatrix";
 import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Sparkles, Play, Award, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
 
 interface BuilderTabProps {
@@ -670,13 +670,19 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         </div>
       )}
 
-      {/* MODE 3: 3D PHYSICS TUMBLER */}
+      {/* MODE 3: QUANT NUMBER MATRIX & SMART GENERATOR */}
       {activeMode === "tumbler" && (
-        <InteractiveTumbler
-          initialGame="lotto-plus"
-          onTicketGenerated={(_game, numbers, bonus) => {
+        <TactileQuantMatrix
+          game="lotto-plus"
+          poolSize={35}
+          pickCount={5}
+          hasBonus={true}
+          bonusPoolSize={10}
+          bonusName="Powerball"
+          onApplyTicket={(numbers, bonus) => {
             setSelectedNums(numbers);
             if (bonus) setSelectedPb(bonus);
+            setActiveMode("wheel");
           }}
         />
       )}
