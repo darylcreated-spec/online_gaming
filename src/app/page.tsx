@@ -18,7 +18,6 @@ import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import LottoDiff35Panel from "@/components/LottoDiff35Panel";
 import LottoQuant100Panel from "@/components/LottoQuant100Panel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
-import HotPicksTab from "@/components/HotPicksTab";
 import PushNotificationBell from "@/components/PushNotificationBell";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
@@ -96,11 +95,11 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"welcome" | "hot-picks" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings">("welcome");
+  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings">("welcome");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "quant-100" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
-  const handleTabChange = (tab: "welcome" | "hot-picks" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings") => {
+  const handleTabChange = (tab: "welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings") => {
     triggerHaptic("selection");
     setActiveTab(tab);
   };
@@ -378,21 +377,6 @@ export default function Home() {
               className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(56,189,248,0.4)] shrink-0" 
             />
             <span>HOME</span>
-          </button>
-
-          {/* WIN CONCEPTS HOT PICKS */}
-          <button
-            onClick={() => handleTabChange("hot-picks")}
-            className={`min-w-[130px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
-              activeTab === "hot-picks"
-                ? "bg-gradient-to-r from-amber-500/20 to-rose-500/20 border border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
-                : "text-gray-400 hover:text-amber-300 border border-transparent hover:border-amber-500/30 hover:bg-amber-500/10"
-            }`}
-          >
-            <div className="w-5 h-5 rounded bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-slate-950 shrink-0 shadow-[0_0_8px_rgba(245,158,11,0.4)]">
-              <Flame className="w-3.5 h-3.5 fill-current" />
-            </div>
-            <span>HOT PICKS</span>
           </button>
 
           {/* LOTTO PLUS */}
@@ -677,13 +661,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* WIN CONCEPTS HOT PICKS TAB */}
-        {activeTab === "hot-picks" && (
-          <div className="tab-content-enter">
-            <HotPicksTab />
-          </div>
-        )}
-
         {activeTab === "lotto-plus" && lottoSubTab === "dashboard" && (
           <div className="tab-content-enter">
             <DashboardTab
@@ -921,21 +898,6 @@ export default function Home() {
             className="w-6 h-6 object-contain rounded-md shrink-0 drop-shadow-[0_0_6px_rgba(56,189,248,0.3)]" 
           />
           <span className="text-[9px] font-mono tracking-wider whitespace-nowrap">HOME</span>
-        </button>
-
-        {/* WIN CONCEPTS HOT PICKS */}
-        <button
-          onClick={() => handleTabChange("hot-picks")}
-          className={`min-w-[74px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
-            activeTab === "hot-picks"
-              ? "bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.25)] font-bold"
-              : "text-gray-400 hover:text-amber-300 border-transparent hover:border-white/10 hover:bg-white/5"
-          }`}
-        >
-          <div className="w-6 h-6 rounded-md bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-slate-950 shrink-0 drop-shadow-[0_0_6px_rgba(245,158,11,0.4)]">
-            <Flame className="w-4 h-4 fill-current" />
-          </div>
-          <span className="text-[9px] font-mono tracking-wider whitespace-nowrap">HOT PICKS</span>
         </button>
 
         {/* LOTTO PLUS */}
