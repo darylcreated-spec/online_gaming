@@ -22,6 +22,7 @@ import PushNotificationBell from "@/components/PushNotificationBell";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { getCacheItem, setCacheItem } from "@/lib/idb_cache";
+import WinConceptLogoEmblem from "@/components/WinConceptLogoEmblem";
 
 const QuantumLogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -337,9 +338,11 @@ export default function Home() {
       {/* Global Terminal Header */}
       <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-3 sm:py-4 px-3 sm:px-6 md:px-12 flex justify-between items-center bg-slate-950/70 backdrop-blur-md w-full">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 border border-primary/20 text-primary rounded-lg shadow-[0_0_15px_rgba(56,189,248,0.25)]">
-            <QuantumLogoIcon className="w-6 h-6 animate-pulse" />
-          </div>
+          <WinConceptLogoEmblem 
+            size="sm" 
+            onClick={() => handleTabChange("welcome")}
+            className="cursor-pointer"
+          />
           <div>
             <h1 className="text-xl font-black tracking-widest text-white uppercase font-mono">
               The Win Concept

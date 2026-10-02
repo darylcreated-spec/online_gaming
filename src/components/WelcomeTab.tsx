@@ -25,11 +25,15 @@ import {
   RefreshCw,
   Compass,
   DollarSign,
-  Flame
+  Flame,
+  Sparkles
 } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 import MultiGameQuickMatrix from "@/components/MultiGameQuickMatrix";
+import QuantumSphereTumbler, { TumblerGame } from "@/components/QuantumSphereTumbler";
+import WinConceptLogoEmblem from "@/components/WinConceptLogoEmblem";
 import { calculateNextDrawCountdown, DrawCountdown } from "@/lib/draw_schedule";
+import { triggerHaptic } from "@/lib/haptics";
 
 export type GameKey = "welcome" | "lotto-plus" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "scanner" | "settings";
 
@@ -42,6 +46,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
   const [clock, setClock] = useState<Date>(() => new Date());
 
   const [emailCopied, setEmailCopied] = useState(false);
+  const [tumblerMode, setTumblerMode] = useState<"sphere" | "matrix">("sphere");
 
   // Latest winning draws
   const [latestLotto, setLatestLotto] = useState<any>(null);
@@ -190,14 +195,18 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
     <div className="max-w-7xl mx-auto space-y-8 font-mono pb-8">
       
       {/* 1. Header Hero Banner */}
-      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 bg-slate-950/60 space-y-3 relative overflow-hidden shadow-2xl">
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight uppercase text-white drop-shadow-[0_0_20px_rgba(56,189,248,0.25)]">
-          THE WIN CONCEPT
-        </h1>
-
-        <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-4xl">
-          Real-time statistical tracking and combinatorial optimization across all official National Lotteries Control Board (NLCB) games. Powered by Markov state-transitions, Bayesian priors, Gaussian digit sums, and minimum-covering wheeling mathematics.
-        </p>
+      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 bg-slate-950/60 relative overflow-hidden shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-5">
+          <WinConceptLogoEmblem size="lg" className="shrink-0" />
+          <div className="space-y-1.5">
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight uppercase text-white drop-shadow-[0_0_20px_rgba(56,189,248,0.25)]">
+              THE WIN CONCEPT
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-3xl">
+              Real-time statistical tracking and combinatorial optimization across all official National Lotteries Control Board (NLCB) games. Powered by Markov state-transitions, Bayesian priors, Gaussian digit sums, and minimum-covering wheeling mathematics.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* 2. THE 5-GAME COMMAND CENTER GRID */}
@@ -816,13 +825,65 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             </button>
           </div>
 
-          {/* UNIFIED QUANTITATIVE MULTI-GAME SLIP MATRIX (Replaces Legacy 3D Spindle) */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-3">
-            <MultiGameQuickMatrix
-              onSelectGame={(game) => {
-                if (onSelectGame) onSelectGame(game as GameKey);
-              }}
-            />
+          {/* UNIFIED QUANTUM DRAW & SLIP SUITE (Replaces Legacy Crank / Spindle) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-3">
+            {/* View Mode Switcher */}
+            <div className="flex items-center justify-between bg-slate-900/80 p-2 rounded-xl border border-white/10">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400 font-mono pl-2">
+                  Interactive Draw Suite:
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    setTumblerMode("sphere");
+                    triggerHaptic("light");
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all flex items-center gap-1.5 cursor-pointer ${
+                    tumblerMode === "sphere"
+                      ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.35)]"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Quantum Sphere 3D (Ball Animation)</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setTumblerMode("matrix");
+                    triggerHaptic("light");
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all flex items-center gap-1.5 cursor-pointer ${
+                    tumblerMode === "matrix"
+                      ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.35)]"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Tactile Quant Matrix</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Display Selected Mode */}
+            {tumblerMode === "sphere" ? (
+              <QuantumSphereTumbler
+                initialGame="lotto-plus"
+                onSelectGameTab={(game) => {
+                  if (onSelectGame) onSelectGame(game as GameKey);
+                }}
+                onSendToBuilder={() => {
+                  if (onSelectGame) onSelectGame("lotto-plus");
+                }}
+              />
+            ) : (
+              <MultiGameQuickMatrix
+                onSelectGame={(game) => {
+                  if (onSelectGame) onSelectGame(game as GameKey);
+                }}
+              />
+            )}
           </div>
 
           {/* CARD 6: TICKET SCANNER & SYNDICATES SHORTCUT CARD */}

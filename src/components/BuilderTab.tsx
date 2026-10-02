@@ -8,7 +8,8 @@ import { evaluateTicketQuality } from "@/lib/quality_scorer";
 import { runGeneticOptimization, AlphaSlipResult } from "@/lib/geneticOptimizer";
 import { triggerHaptic } from "@/lib/haptics";
 import TactileQuantMatrix from "@/components/TactileQuantMatrix";
-import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Sparkles, Play, Award, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
+import QuantumSphereTumbler from "@/components/QuantumSphereTumbler";
+import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Sparkles, Play, Award, CheckCircle2, ShieldCheck, AlertTriangle, Layers } from "lucide-react";
 
 interface BuilderTabProps {
   historicalDraws: any[];
@@ -86,6 +87,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
   const [selectedPb, setSelectedPb] = useState<number | null>(null);
   const [wheelStrategy, setWheelStrategy] = useState<"full" | "abbreviated-4-4" | "abbreviated-3-3">("abbreviated-4-4");
   const [activeMode, setActiveMode] = useState<"wheel" | "genetic" | "tumbler">("wheel");
+  const [tumblerSubMode, setTumblerSubMode] = useState<"matrix" | "sphere">("sphere");
 
   // Genetic Algorithm States
   const [geneticResults, setGeneticResults] = useState<AlphaSlipResult[]>([]);
@@ -670,21 +672,72 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         </div>
       )}
 
-      {/* MODE 3: QUANT NUMBER MATRIX & SMART GENERATOR */}
+      {/* MODE 3: QUANTUM SPHERE 3D & QUANT NUMBER MATRIX */}
       {activeMode === "tumbler" && (
-        <TactileQuantMatrix
-          game="lotto-plus"
-          poolSize={35}
-          pickCount={5}
-          hasBonus={true}
-          bonusPoolSize={10}
-          bonusName="Powerball"
-          onApplyTicket={(numbers, bonus) => {
-            setSelectedNums(numbers);
-            if (bonus) setSelectedPb(bonus);
-            setActiveMode("wheel");
-          }}
-        />
+        <div className="space-y-4">
+          {/* Sub-mode Navigation Toggle */}
+          <div className="flex items-center justify-between bg-slate-900/80 p-2 rounded-xl border border-white/10">
+            <span className="text-[10px] uppercase font-bold text-gray-400 font-mono pl-2">
+              Draw Generator Mode:
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => {
+                  setTumblerSubMode("sphere");
+                  triggerHaptic("light");
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all flex items-center gap-1.5 cursor-pointer ${
+                  tumblerSubMode === "sphere"
+                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.35)]"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Quantum Sphere 3D (Ball Animation)</span>
+              </button>
+              <button
+                onClick={() => {
+                  setTumblerSubMode("matrix");
+                  triggerHaptic("light");
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all flex items-center gap-1.5 cursor-pointer ${
+                  tumblerSubMode === "matrix"
+                    ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.35)]"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Tactile Number Matrix</span>
+              </button>
+            </div>
+          </div>
+
+          {tumblerSubMode === "sphere" ? (
+            <QuantumSphereTumbler
+              initialGame="lotto-plus"
+              onSendToBuilder={(numbers, bonus) => {
+                setSelectedNums(numbers);
+                if (bonus) setSelectedPb(bonus);
+                setActiveMode("wheel");
+                triggerHaptic("medium");
+              }}
+            />
+          ) : (
+            <TactileQuantMatrix
+              game="lotto-plus"
+              poolSize={35}
+              pickCount={5}
+              hasBonus={true}
+              bonusPoolSize={10}
+              bonusName="Powerball"
+              onApplyTicket={(numbers, bonus) => {
+                setSelectedNums(numbers);
+                if (bonus) setSelectedPb(bonus);
+                setActiveMode("wheel");
+              }}
+            />
+          )}
+        </div>
       )}
 
       {/* MODE 1: COMBINATORIAL WHEELER */}
