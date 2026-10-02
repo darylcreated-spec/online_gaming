@@ -16,10 +16,11 @@ import LiveDrawTicker from "@/components/LiveDrawTicker";
 import AppSplashScreen from "@/components/AppSplashScreen";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import LottoDiff35Panel from "@/components/LottoDiff35Panel";
+import LottoQuant100Panel from "@/components/LottoQuant100Panel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import HotPicksTab from "@/components/HotPicksTab";
 import PushNotificationBell from "@/components/PushNotificationBell";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary } from "lucide-react";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { getCacheItem, setCacheItem } from "@/lib/idb_cache";
 
@@ -96,7 +97,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "hot-picks" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings">("welcome");
-  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "history" | "builder" | "explain">("dashboard");
+  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "quant-100" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
   const handleTabChange = (tab: "welcome" | "hot-picks" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings") => {
@@ -622,6 +623,17 @@ export default function Home() {
                 SUM-35 QUANT ENGINE
               </button>
               <button
+                onClick={() => setLottoSubTab("quant-100")}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  lottoSubTab === "quant-100"
+                    ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.4)]"
+                    : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                100% QUANT ENGINE
+              </button>
+              <button
                 onClick={() => setLottoSubTab("builder")}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                   lottoSubTab === "builder"
@@ -692,6 +704,12 @@ export default function Home() {
         {activeTab === "lotto-plus" && lottoSubTab === "diff-35" && (
           <div className="tab-content-enter">
             <LottoDiff35Panel />
+          </div>
+        )}
+
+        {activeTab === "lotto-plus" && lottoSubTab === "quant-100" && (
+          <div className="tab-content-enter">
+            <LottoQuant100Panel />
           </div>
         )}
         
