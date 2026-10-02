@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary } from "lucide-react";
+import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary, ShieldCheck } from "lucide-react";
 import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import WinForLifeDiff28Panel from "@/components/WinForLifeDiff28Panel";
+import WinForLifeQuant100Panel from "@/components/WinForLifeQuant100Panel";
 
 // Helper to generate all combinations of size k from an array
 function getCombinations(arr: number[], k: number): number[][] {
@@ -129,7 +130,7 @@ const validateTicket = (ticket: number[]) => {
 };
 
 export default function WinForLifeTab() {
-  const [subTab, setSubTab] = useState<"dashboard" | "math-engine" | "diff-28" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
+  const [subTab, setSubTab] = useState<"dashboard" | "math-engine" | "diff-28" | "quant-100" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   
@@ -481,6 +482,17 @@ export default function WinForLifeTab() {
         >
           <Binary className="w-3.5 h-3.5" />
           SUM-28 QUANT ENGINE
+        </button>
+        <button
+          onClick={() => setSubTab("quant-100")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "quant-100"
+              ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.4)]"
+              : "text-emerald-300 hover:text-white hover:bg-emerald-500/20 border border-emerald-500/30"
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          100% QUANT ENGINE
         </button>
         <button
           onClick={() => setSubTab("builder")}
@@ -1033,6 +1045,13 @@ export default function WinForLifeTab() {
       {subTab === "diff-28" && (
         <div className="tab-content-enter">
           <WinForLifeDiff28Panel />
+        </div>
+      )}
+
+      {/* SUBTAB: 100% INVARIANT QUANTITATIVE ENGINE */}
+      {subTab === "quant-100" && (
+        <div className="tab-content-enter">
+          <WinForLifeQuant100Panel />
         </div>
       )}
 
