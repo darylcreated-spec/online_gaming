@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { 
-  Sparkles, 
-  RotateCw, 
+  Zap, 
   Copy, 
   Check, 
   Sliders, 
@@ -399,23 +398,18 @@ export default function QuantumSphereTumbler({
 
       {/* HEADER: Title & Interactive Game Selector Ribbon */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-5">
-        <div className="flex items-center gap-3.5">
-          <div className="relative p-2.5 rounded-xl bg-slate-900/90 border border-sky-400/30 shadow-[0_0_15px_rgba(56,189,248,0.25)] shrink-0">
-            <Sparkles className="w-5 h-5 text-sky-400 animate-pulse" />
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-white">
+              The Quantum Sphere Tumbler
+            </h2>
+            <span className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest bg-sky-500/20 text-sky-300 border border-sky-400/30">
+              Option A Live
+            </span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-white">
-                The Quantum Sphere Tumbler
-              </h2>
-              <span className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest bg-sky-500/20 text-sky-300 border border-sky-400/30">
-                Option A Live
-              </span>
-            </div>
-            <p className="text-xs text-gray-400">
-              Pneumatic Chamber Vortex & Bernoulli Suction Extraction
-            </p>
-          </div>
+          <p className="text-xs text-gray-400">
+            Pneumatic Chamber Vortex & Bernoulli Suction Extraction
+          </p>
         </div>
 
         {/* Game Navigation Tabs - Fully Responsive & Interactive */}
@@ -459,32 +453,21 @@ export default function QuantumSphereTumbler({
               />
             </div>
 
-            {/* Static High-Precision Metallic Bezel Rings (No AI Spindle / No Spinning Dashed Rings) */}
+            {/* Static High-Precision Metallic Bezel Rings */}
             <div className="absolute -inset-1 rounded-full border border-sky-500/30 opacity-70 pointer-events-none" />
             <div className="absolute -inset-2.5 rounded-full border border-white/10 pointer-events-none" />
 
             {/* Central Quartz Glass Containment Sphere Viewport */}
             <div className="relative w-[260px] h-[260px] sm:w-[310px] sm:h-[310px] rounded-full overflow-hidden bg-gradient-to-b from-slate-900/60 via-slate-950/90 to-black border-2 border-sky-400/50 shadow-[inset_0_0_50px_rgba(2,6,23,0.9),0_0_35px_rgba(56,189,248,0.3)] backdrop-blur-sm">
               
-              {/* Central Bernoulli Optical Suction Vacuum Column */}
-              <div 
-                className={`absolute top-0 left-1/2 -translate-x-1/2 w-12 sm:w-16 h-full transition-all duration-500 pointer-events-none z-10 flex flex-col items-center justify-between py-2 ${
-                  animState === "extracting" || animState === "spinning"
-                    ? "bg-gradient-to-r from-transparent via-sky-400/35 to-transparent shadow-[0_0_30px_rgba(56,189,248,0.8)]"
-                    : "bg-gradient-to-r from-transparent via-white/5 to-transparent"
-                }`}
-              >
-                {/* Upper Suction Funnel Aperture */}
-                <div className="w-10 h-3 rounded-full border border-sky-400/60 bg-sky-400/20 shadow-[0_0_10px_rgba(56,189,248,0.6)]" />
-                
-                {/* Suction Flow Beam Particles */}
-                {(animState === "spinning" || animState === "extracting") && (
+              {/* Optical Suction Glow Beam (Only visible during active extraction/spin) */}
+              {(animState === "spinning" || animState === "extracting") && (
+                <div 
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-full pointer-events-none z-10 flex flex-col items-center justify-center bg-gradient-to-r from-transparent via-sky-400/30 to-transparent shadow-[0_0_30px_rgba(56,189,248,0.8)]"
+                >
                   <div className="w-1 h-3/4 bg-gradient-to-b from-sky-300 via-white to-transparent animate-pulse rounded-full" />
-                )}
-
-                {/* Lower Exhaust Core */}
-                <div className="w-8 h-2 rounded-full border border-sky-400/40 bg-black/60" />
-              </div>
+                </div>
+              )}
 
               {/* Dynamic Floating / Vortex Chamber Balls */}
               <div className="relative w-full h-full">
@@ -593,7 +576,7 @@ export default function QuantumSphereTumbler({
                   : "bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-500 text-slate-950 hover:brightness-110 shadow-[0_0_25px_rgba(56,189,248,0.4)] hover:scale-[1.02] active:scale-95"
               }`}
             >
-              <RotateCw className="w-4 h-4" />
+              <Zap className="w-4 h-4" />
               <span>
                 {animState === "spinning" ? "VORTEX ACCELERATING..." : animState === "extracting" ? "BERNOULLI EXTRACTING..." : `ENGAGE QUANTUM DRAW`}
               </span>
