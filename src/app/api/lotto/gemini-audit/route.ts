@@ -84,20 +84,36 @@ Please provide:
 3. Evaluation of the 5 Candidate Sets for Draw #${targetDrawNumber}, ranking them by mathematical resonance.
 4. Precise Quantitative Edge & Recommendations. Format with clear Markdown headings, bullet points, and KaTeX math where appropriate.`;
 
-      const interaction = await client.interactions.create({
-        model: "gemini-3.8-flash",
-        input: systemContext,
-      });
+      let textOutput = "";
+      let usedModel = "gemini-2.5-flash";
 
-      return NextResponse.json({
-        success: true,
-        source: "gemini-live",
-        model: "gemini-3.8-flash",
-        targetDrawNumber,
-        latestDraw,
-        analysisText: interaction.output_text,
-        quantAnalysis,
-      });
+      try {
+        const response = await client.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: systemContext,
+        });
+        textOutput = response.text || "";
+      } catch (mErr) {
+        console.warn("[gemini-2.5-flash unavailable, trying gemini-3.8-flash]:", mErr);
+        const fallbackResp = await client.models.generateContent({
+          model: "gemini-3.8-flash",
+          contents: systemContext,
+        });
+        textOutput = fallbackResp.text || "";
+        usedModel = "gemini-3.8-flash";
+      }
+
+      if (textOutput) {
+        return NextResponse.json({
+          success: true,
+          source: "gemini-live",
+          model: usedModel,
+          targetDrawNumber,
+          latestDraw,
+          analysisText: textOutput,
+          quantAnalysis,
+        });
+      }
     } catch (apiErr: any) {
       console.warn("[Gemini API Call Failed, falling back to embedded quantitative engine]:", apiErr.message);
       // Fallback to built-in deep quantitative synthesis below

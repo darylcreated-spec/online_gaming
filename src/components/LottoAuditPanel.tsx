@@ -53,11 +53,15 @@ export default function LottoAuditPanel() {
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Load stored Gemini API key if available
+  // Load stored Gemini API key if available or default from env
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedKey = localStorage.getItem("WIN_CONCEPT_GEMINI_KEY");
-      if (storedKey) setGeminiApiKey(storedKey);
+      if (storedKey) {
+        setGeminiApiKey(storedKey);
+      } else if (process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
+        setGeminiApiKey(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
+      }
     }
   }, []);
 
