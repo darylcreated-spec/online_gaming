@@ -17,6 +17,7 @@ import AppSplashScreen from "@/components/AppSplashScreen";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import LottoDiff35Panel from "@/components/LottoDiff35Panel";
 import LottoQuant100Panel from "@/components/LottoQuant100Panel";
+import LottoAuditPanel from "@/components/LottoAuditPanel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PushNotificationBell from "@/components/PushNotificationBell";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck } from "lucide-react";
@@ -96,7 +97,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings">("welcome");
-  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "quant-100" | "history" | "builder" | "explain">("dashboard");
+  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "quant-100" | "audit" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
   const handleTabChange = (tab: "welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings") => {
@@ -620,6 +621,17 @@ export default function Home() {
                 100% QUANT ENGINE
               </button>
               <button
+                onClick={() => setLottoSubTab("audit")}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  lottoSubTab === "audit"
+                    ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                    : "text-purple-400/90 hover:text-purple-300 hover:bg-purple-500/10"
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                AUDIT & VERIFICATION SYSTEM
+              </button>
+              <button
                 onClick={() => setLottoSubTab("builder")}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                   lottoSubTab === "builder"
@@ -689,6 +701,12 @@ export default function Home() {
         {activeTab === "lotto-plus" && lottoSubTab === "quant-100" && (
           <div className="tab-content-enter">
             <LottoQuant100Panel />
+          </div>
+        )}
+
+        {activeTab === "lotto-plus" && lottoSubTab === "audit" && (
+          <div className="tab-content-enter">
+            <LottoAuditPanel />
           </div>
         )}
         
