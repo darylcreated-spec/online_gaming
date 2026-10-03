@@ -18,7 +18,8 @@ import {
   ClipboardList,
   CheckCircle2,
   TrendingUp,
-  Zap
+  Zap,
+  ShieldCheck
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -31,6 +32,7 @@ import {
 } from "recharts";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
+import CashPotAuditPanel from "@/components/CashPotAuditPanel";
 import { generateWheel } from "@/lib/wheeling";
 
 interface CashPotDraw {
@@ -46,7 +48,7 @@ interface CashPotDraw {
 }
 
 export default function CashPotTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "wheeling" | "archive" | "explain">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "audit" | "wheeling" | "archive" | "explain">("dashboard");
   const [draws, setDraws] = useState<CashPotDraw[]>([]);
   const [latestDraw, setLatestDraw] = useState<CashPotDraw | null>(null);
   const [loading, setLoading] = useState(true);
@@ -200,6 +202,18 @@ export default function CashPotTab() {
         >
           <Brain className="w-3.5 h-3.5" />
           MATHEMATICAL ENGINE
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("audit")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "audit"
+              ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+              : "text-purple-400/90 hover:text-purple-300 hover:bg-purple-500/10"
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          100% QUANT AUDIT &amp; VERIFICATION
         </button>
 
         <button
@@ -383,6 +397,11 @@ export default function CashPotTab() {
       {/* Subtab Content: Mathematical Engine */}
       {activeSubTab === "math" && (
         <MultiBallMathPanel game="cashpot" />
+      )}
+
+      {/* Subtab Content: 100% Invariant & Audit System */}
+      {activeSubTab === "audit" && (
+        <CashPotAuditPanel />
       )}
 
       {/* Subtab Content: Wheeling */}
