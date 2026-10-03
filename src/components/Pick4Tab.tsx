@@ -20,7 +20,8 @@ import {
   Layers,
   Brain,
   HelpCircle,
-  Binary
+  Binary,
+  ShieldCheck
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -34,6 +35,7 @@ import {
 import { Pick4MathPrediction, Pick4BacktestResult } from "@/lib/pick4_math_engine";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import Pick4Diff9Panel from "@/components/Pick4Diff9Panel";
+import Pick4AuditPanel from "@/components/Pick4AuditPanel";
 
 interface Pick4Draw {
   id: number;
@@ -47,7 +49,7 @@ interface Pick4Draw {
 }
 
 export default function Pick4Tab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "diff-9" | "backtest" | "archive" | "explain">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "diff-9" | "audit" | "backtest" | "archive" | "explain">("dashboard");
   const [draws, setDraws] = useState<Pick4Draw[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
@@ -232,6 +234,18 @@ export default function Pick4Tab() {
         >
           <Binary className="w-3.5 h-3.5" />
           SUM-9 QUANT ENGINE
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("audit")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "audit"
+              ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.4)]"
+              : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          100% QUANT AUDIT
         </button>
 
         <button
@@ -755,6 +769,9 @@ export default function Pick4Tab() {
           </div>
         </div>
       )}
+
+      {/* Subtab: 100% Quant Audit Panel */}
+      {activeSubTab === "audit" && <Pick4AuditPanel />}
     </div>
   );
 }

@@ -37,6 +37,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
+import PlayWheAuditPanel from "@/components/PlayWheAuditPanel";
 
 const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -94,12 +95,12 @@ export default function PlayWheTab({
   showExplainer,
   onShowExplainerChange
 }: {
-  activeSubTab?: "translator" | "dashboard" | "transition" | "math-engine" | "relationship" | "history" | "hits" | "explain" | "network";
-  onSubTabChange?: (tab: "translator" | "dashboard" | "transition" | "math-engine" | "relationship" | "history" | "hits" | "explain" | "network") => void;
+  activeSubTab?: "translator" | "dashboard" | "transition" | "math-engine" | "relationship" | "history" | "hits" | "explain" | "network" | "audit";
+  onSubTabChange?: (tab: "translator" | "dashboard" | "transition" | "math-engine" | "relationship" | "history" | "hits" | "explain" | "network" | "audit") => void;
   showExplainer?: boolean;
   onShowExplainerChange?: (show: boolean) => void;
 } = {}) {
-  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "transition" | "math-engine" | "relationship" | "history" | "hits" | "explain" | "network">("dashboard");
+  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "transition" | "math-engine" | "relationship" | "history" | "hits" | "explain" | "network" | "audit">("dashboard");
   const [localShowHelp, setLocalShowHelp] = useState(false);
 
   const subTab = activeSubTab !== undefined ? activeSubTab : localSubTab;
@@ -670,6 +671,18 @@ export default function PlayWheTab({
         >
           <Brain className="w-3.5 h-3.5" />
           MATHEMATICAL ENGINE
+        </button>
+
+        <button
+          onClick={() => setSubTab("audit")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "audit"
+              ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.4)]"
+              : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          100% QUANT AUDIT
         </button>
 
         <button
@@ -2928,6 +2941,9 @@ export default function PlayWheTab({
           </div>
         </div>
       )}
+
+      {/* 100% QUANT AUDIT PANEL */}
+      {subTab === "audit" && <PlayWheAuditPanel />}
     </div>
   );
 }
