@@ -11,7 +11,7 @@ import {
   Check, 
   Layers, 
   Binary, 
-  Sparkles, 
+  Sparkles,
   Calculator, 
   ArrowRight,
   Database,
@@ -20,11 +20,6 @@ import {
   ChevronRight,
   Activity,
   Award,
-  Bot,
-  Cpu,
-  Key,
-  Send,
-  Terminal,
   Flame
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
@@ -35,15 +30,6 @@ export default function LottoAuditPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
-  
-  // Gemini AI Quantitative Oracle States
-  const [geminiReport, setGeminiReport] = useState<string | null>(null);
-  const [geminiLoading, setGeminiLoading] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState<string>("");
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
-  const [geminiPrompt, setGeminiPrompt] = useState<string>("");
-  const [geminiSource, setGeminiSource] = useState<string>("gemini-3.8-flash");
-  const [geminiCopied, setGeminiCopied] = useState(false);
 
   // Table search & filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,18 +38,6 @@ export default function LottoAuditPanel() {
   const pageSize = 12;
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  // Load stored Gemini API key if available or default from env
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedKey = localStorage.getItem("WIN_CONCEPT_GEMINI_KEY");
-      if (storedKey) {
-        setGeminiApiKey(storedKey);
-      } else if (process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
-        setGeminiApiKey(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
-      }
-    }
-  }, []);
 
   // Fetch engine analysis & audit data
   const fetchAuditData = async () => {
@@ -86,52 +60,13 @@ export default function LottoAuditPanel() {
     }
   };
 
-  // Run Gemini AI Statistical Audit
-  const runGeminiAudit = async (customInstruction?: string) => {
-    try {
-      setGeminiLoading(true);
-      triggerHaptic("medium");
-      const res = await fetch("/api/lotto/gemini-audit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          apiKey: geminiApiKey.trim() || undefined,
-          prompt: customInstruction || geminiPrompt || "Perform deep mathematical invariant audit and candidate resonance ranking on modern draws"
-        })
-      });
-      const json = await res.json();
-      if (json.success && json.analysisText) {
-        setGeminiReport(json.analysisText);
-        setGeminiSource(json.source || "gemini-3.8-flash");
-      }
-    } catch (err) {
-      console.error("Gemini audit error:", err);
-    } finally {
-      setGeminiLoading(false);
-    }
-  };
-
-  const handleSaveApiKey = () => {
-    if (typeof window !== "undefined") {
-      if (geminiApiKey.trim()) {
-        localStorage.setItem("WIN_CONCEPT_GEMINI_KEY", geminiApiKey.trim());
-      } else {
-        localStorage.removeItem("WIN_CONCEPT_GEMINI_KEY");
-      }
-      setShowApiKeyInput(false);
-      triggerHaptic("success");
-    }
-  };
-
   useEffect(() => {
     fetchAuditData();
-    runGeminiAudit();
 
     // Automated Real-Time Updating on New Draws entering database
     const handleSyncEvent = () => {
-      console.log("[LottoAuditPanel] Database sync detected! Re-evaluating audit engine & Gemini Oracle...");
+      console.log("[LottoAuditPanel] Database sync detected! Re-evaluating audit engine...");
       fetchAuditData();
-      runGeminiAudit();
     };
 
     window.addEventListener("win_concept_sync_completed", handleSyncEvent);
@@ -144,14 +79,6 @@ export default function LottoAuditPanel() {
     setCopiedId(id);
     triggerHaptic("light");
     setTimeout(() => setCopiedId(null), 2500);
-  };
-
-  const handleCopyGemini = () => {
-    if (!geminiReport) return;
-    navigator.clipboard.writeText(geminiReport);
-    setGeminiCopied(true);
-    triggerHaptic("light");
-    setTimeout(() => setGeminiCopied(false), 2500);
   };
 
   // Filter & Search Audit Entries
@@ -302,133 +229,6 @@ export default function LottoAuditPanel() {
             <span className="text-[9px] text-gray-500">Recalculates on new draw</span>
           </div>
         </div>
-      </div>
-
-      {/* 2. Google Gemini 3.8 Statistical Auditor & Quantum Oracle */}
-      <div className="rounded-2xl border border-purple-500/30 bg-slate-950/90 p-5 sm:p-6 backdrop-blur-md space-y-4 shadow-[0_0_30px_rgba(168,85,247,0.12)]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-purple-500/20 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-purple-500/15 border border-purple-400/40 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.25)] shrink-0">
-              <Sparkles className="w-5 h-5 animate-pulse text-purple-300" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-black uppercase text-white tracking-wide flex items-center gap-2">
-                  <span>Google Gemini 3.8 Statistical Auditor</span>
-                </h3>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-400/30">
-                  {geminiSource}
-                </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-400/30">
-                  Neural + Discrete Quant
-                </span>
-              </div>
-              <p className="text-xs text-gray-400">
-                AI Invariant Synthesis, CRT Ring Congruences & Dynamical Attractor Forecasting
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-purple-500/30 hover:bg-slate-800 text-purple-300 text-xs font-bold transition cursor-pointer flex items-center gap-1.5"
-              title="Configure Custom Gemini API Key"
-            >
-              <Key className="w-3.5 h-3.5" />
-              <span>{geminiApiKey ? "API Key Set" : "Custom Key"}</span>
-            </button>
-
-            <button
-              onClick={() => runGeminiAudit()}
-              disabled={geminiLoading}
-              className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-1.5 shadow-[0_0_15px_rgba(168,85,247,0.3)] disabled:opacity-50"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${geminiLoading ? "animate-spin" : ""}`} />
-              <span>{geminiLoading ? "Auditing..." : "Run Gemini Audit"}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Optional Custom API Key Drawer */}
-        {showApiKeyInput && (
-          <div className="p-3 bg-purple-950/20 rounded-xl border border-purple-500/30 space-y-2">
-            <div className="flex items-center justify-between text-xs text-purple-300">
-              <span className="font-bold flex items-center gap-1.5">
-                <Key className="w-3.5 h-3.5 text-purple-400" />
-                <span>Google Gemini API Key (Optional)</span>
-              </span>
-              <span className="text-[10px] text-gray-400">Stored safely in browser localStorage</span>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="password"
-                value={geminiApiKey}
-                onChange={(e) => setGeminiApiKey(e.target.value)}
-                placeholder="AIzaSy... (leave blank to use built-in engine)"
-                className="flex-1 bg-black/60 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-purple-400"
-              />
-              <button
-                onClick={handleSaveApiKey}
-                className="px-3 py-1.5 bg-purple-500 text-white font-bold text-xs rounded-lg hover:bg-purple-400 transition cursor-pointer"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Interactive Query / Prompt Input */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Terminal className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-purple-400" />
-            <input
-              type="text"
-              value={geminiPrompt}
-              onChange={(e) => setGeminiPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !geminiLoading) {
-                  runGeminiAudit(geminiPrompt);
-                }
-              }}
-              placeholder="Ask Gemini: e.g., 'Analyze mod 7 residue clustering', 'Rank candidate sets for Draw #2572'..."
-              className="w-full bg-slate-900/90 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-purple-400/60 font-mono"
-            />
-          </div>
-          <button
-            onClick={() => runGeminiAudit(geminiPrompt)}
-            disabled={geminiLoading}
-            className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-purple-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Ask AI</span>
-          </button>
-        </div>
-
-        {/* Gemini Analysis Report Output Box */}
-        {geminiReport && (
-          <div className="relative p-4 rounded-xl bg-black/50 border border-purple-500/20 space-y-3">
-            <div className="flex items-center justify-between border-b border-white/5 pb-2">
-              <div className="flex items-center gap-2">
-                <Bot className="w-4 h-4 text-purple-400" />
-                <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">
-                  Gemini Quantitative Report
-                </span>
-              </div>
-              <button
-                onClick={handleCopyGemini}
-                className="text-[10px] text-gray-400 hover:text-purple-300 flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 transition cursor-pointer"
-              >
-                {geminiCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                <span>{geminiCopied ? "Copied!" : "Copy Report"}</span>
-              </button>
-            </div>
-
-            <div className="prose prose-invert max-w-none text-xs text-gray-300 leading-relaxed font-mono whitespace-pre-line">
-              {geminiReport}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 2. 100% Deterministic Invariant Sieve Verification */}
