@@ -97,6 +97,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings">("welcome");
+  const [utilitySubTool, setUtilitySubTool] = useState<"scanner" | "nl-query">("scanner");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "quant-100" | "audit" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "history" | "translator" | "relationship" | "hits" | "explain" | "network">("dashboard");
   
@@ -484,21 +485,21 @@ export default function Home() {
             <span>SYNDICATES</span>
           </button>
           
-          {/* TICKET SCANNER */}
+          {/* UTILITY SUITE */}
           <button
             onClick={() => handleTabChange("scanner")}
             className={`min-w-[140px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === "scanner"
-                ? "bg-emerald-500/20 border border-emerald-400 text-emerald-300 shadow-[0_0_15px_rgba(52,211,153,0.25)]"
-                : "text-gray-400 hover:text-emerald-300 border border-transparent hover:border-emerald-500/30 hover:bg-emerald-500/10"
+                ? "bg-purple-500/20 border border-purple-400 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+                : "text-gray-400 hover:text-purple-300 border border-transparent hover:border-purple-500/30 hover:bg-purple-500/10"
             }`}
           >
             <img 
               src="/images/scanner_icon.png" 
-              alt="Scanner" 
-              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(52,211,153,0.4)] shrink-0" 
+              alt="Utility Suite" 
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(168,85,247,0.4)] shrink-0" 
             />
-            <span>SCANNER</span>
+            <span>UTILITY SUITE</span>
           </button>
 
           {/* SETTINGS */}
@@ -671,7 +672,17 @@ export default function Home() {
         {/* Render Active View Tab */}
         {activeTab === "welcome" && (
           <div className="tab-content-enter">
-            <WelcomeTab onSelectGame={setActiveTab} />
+            <WelcomeTab 
+              onSelectGame={(game) => {
+                if ((game as string) === "scanner-query") {
+                  setUtilitySubTool("nl-query");
+                  setActiveTab("scanner");
+                } else {
+                  if (game === "scanner") setUtilitySubTool("scanner");
+                  setActiveTab(game);
+                }
+              }} 
+            />
           </div>
         )}
 
@@ -838,7 +849,7 @@ export default function Home() {
 
         {activeTab === "scanner" && (
           <div className="tab-content-enter">
-            <CheckerTab />
+            <CheckerTab initialTool={utilitySubTool} onToolChange={setUtilitySubTool} />
           </div>
         )}
 
@@ -1022,21 +1033,21 @@ export default function Home() {
           <span className="text-[9px] font-mono tracking-wider whitespace-nowrap">POOLS</span>
         </button>
 
-        {/* SCANNER */}
+        {/* UTILITY SUITE */}
         <button
           onClick={() => handleTabChange("scanner")}
           className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "scanner"
-              ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.25)] font-bold"
-              : "text-gray-400 hover:text-emerald-300 border-transparent hover:border-white/10 hover:bg-white/5"
+              ? "bg-purple-500/20 border-purple-400 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.25)] font-bold"
+              : "text-gray-400 hover:text-purple-300 border-transparent hover:border-white/10 hover:bg-white/5"
           }`}
         >
           <img 
             src="/images/scanner_icon.png" 
-            alt="Scanner" 
-            className="w-6 h-6 object-contain rounded-md shrink-0 drop-shadow-[0_0_6px_rgba(52,211,153,0.3)]" 
+            alt="Utility Suite" 
+            className="w-6 h-6 object-contain rounded-md shrink-0 drop-shadow-[0_0_6px_rgba(168,85,247,0.3)]" 
           />
-          <span className="text-[9px] font-mono tracking-wider whitespace-nowrap">SCAN</span>
+          <span className="text-[9px] font-mono tracking-wider whitespace-nowrap">UTILITY</span>
         </button>
 
         {/* SETTINGS */}

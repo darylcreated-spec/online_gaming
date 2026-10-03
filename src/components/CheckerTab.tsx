@@ -4,9 +4,27 @@ import React, { useState, useRef, useEffect } from "react";
 import Tesseract from "tesseract.js";
 import { parseTicketText, checkTicket, CheckResult, parsePlayWheTicketText, checkPlayWheTicket, parseWinForLifeTicketText, checkWinForLifeTicket, checkCashPotTicket, checkPick4Ticket, parseMultiPlays } from "@/lib/checker";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
-import { Upload, Camera, CheckCircle2, AlertTriangle, RefreshCw, HelpCircle, Zap } from "lucide-react";
+import { Upload, Camera, CheckCircle2, AlertTriangle, RefreshCw, HelpCircle, Zap, Database, ScanLine } from "lucide-react";
+import NaturalLanguageQueryPanel from "@/components/NaturalLanguageQueryPanel";
 
-export default function CheckerTab() {
+interface CheckerTabProps {
+  initialTool?: "scanner" | "nl-query";
+  onToolChange?: (tool: "scanner" | "nl-query") => void;
+}
+
+export default function CheckerTab({ initialTool = "scanner", onToolChange }: CheckerTabProps) {
+  const [activeTool, setActiveTool] = useState<"scanner" | "nl-query">(initialTool);
+
+  useEffect(() => {
+    if (initialTool) {
+      setActiveTool(initialTool);
+    }
+  }, [initialTool]);
+
+  const handleToolSwitch = (tool: "scanner" | "nl-query") => {
+    setActiveTool(tool);
+    if (onToolChange) onToolChange(tool);
+  };
   // File upload / capture states
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -697,23 +715,66 @@ export default function CheckerTab() {
 
   return (
     <div className="space-y-6">
-      {/* Tab Header */}
+      {/* Utility Suite Header & Sub-Tool Switcher */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-white">Ticket Scanner & Checker</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold tracking-tight text-white">Utility Suite</h2>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase border ${
+              activeTool === "scanner" 
+                ? "bg-purple-500/20 text-purple-300 border-purple-400/30" 
+                : "bg-cyan-500/20 text-cyan-300 border-cyan-400/30"
+            }`}>
+              {activeTool === "scanner" ? "OCR Scanner Active" : "Natural Language Query Active"}
+            </span>
+          </div>
           <p className="text-sm text-gray-400">
-            {selectedGame === "play-whe"
-              ? "Scan or photograph your Play Whe receipt to verify wins instantly"
-              : selectedGame === "cashpot"
-              ? "Scan or enter your Cash Pot ticket (5/20) with Multiplier to verify wins instantly"
-              : selectedGame === "pick4"
-              ? "Scan or enter your Pick 4 4-digit ticket (Straight or Box) to verify wins instantly"
-              : selectedGame === "win-for-life"
-              ? "Scan or photograph your Win for Life ticket to verify wins instantly"
-              : "Scan or photograph your lotto ticket to verify wins instantly"}
+            {activeTool === "scanner" 
+              ? (selectedGame === "play-whe"
+                  ? "Scan or photograph your Play Whe receipt to verify wins instantly"
+                  : selectedGame === "cashpot"
+                  ? "Scan or enter your Cash Pot ticket (5/20) with Multiplier to verify wins instantly"
+                  : selectedGame === "pick4"
+                  ? "Scan or enter your Pick 4 4-digit ticket (Straight or Box) to verify wins instantly"
+                  : selectedGame === "win-for-life"
+                  ? "Scan or photograph your Win for Life ticket to verify wins instantly"
+                  : "Scan or photograph your lotto ticket to verify wins instantly")
+              : "Query the official lottery database using conversational English powered by Google Gemini"}
           </p>
         </div>
+
+        {/* Sub-Tool Switcher */}
+        <div className="flex bg-slate-900/90 p-1 rounded-xl border border-white/10 w-full sm:w-auto gap-1 font-mono shrink-0">
+          <button
+            onClick={() => handleToolSwitch("scanner")}
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wider transition-all cursor-pointer ${
+              activeTool === "scanner"
+                ? "bg-purple-600 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>Ticket Scanner</span>
+          </button>
+
+          <button
+            onClick={() => handleToolSwitch("nl-query")}
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wider transition-all cursor-pointer ${
+              activeTool === "nl-query"
+                ? "bg-cyan-500 text-slate-950 font-black shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                : "text-gray-400 hover:text-cyan-300 hover:bg-white/5"
+            }`}
+          >
+            <Database className="w-3.5 h-3.5" />
+            <span>Ask Database (NL Query)</span>
+          </button>
+        </div>
       </div>
+
+      {activeTool === "nl-query" ? (
+        <NaturalLanguageQueryPanel />
+      ) : (
+        <>
 
       {/* Game Selector Dropdown */}
       <div className="glass-panel p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -739,8 +800,7 @@ export default function CheckerTab() {
         </div>
       </div>
 
-      <>
-          {/* Upload/Capture & Preview Grid */}
+      {/* Upload/Capture & Preview Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         
         {/* Upload Container - Span 2 */}
@@ -1716,6 +1776,7 @@ export default function CheckerTab() {
         </div>
       )}
       </>
+      )}
 
       {/* CAMERA SCANNER MODAL */}
       {showScannerModal && (

@@ -26,7 +26,9 @@ import {
   Compass,
   DollarSign,
   Flame,
-  Sparkles
+  Sparkles,
+  Database,
+  Camera
 } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 import QuantumSphereTumbler, { TumblerGame } from "@/components/QuantumSphereTumbler";
@@ -849,16 +851,16 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                       Utility Suite
                     </h3>
                     <span className="text-xs text-gray-300 font-semibold block">
-                      Ticket Scanner & Syndicates
+                      Scanner, NL Query & Syndicates
                     </span>
                   </div>
                 </div>
                 <span className="text-[10px] px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-300 font-bold border border-indigo-500/30">
-                  OCR Engine
+                  OCR & AI SQL
                 </span>
               </div>
 
-              {/* Utility Info */}
+              {/* Utility Info: Scanner */}
               <div className="space-y-2 bg-black/40 p-3 rounded-xl border border-white/5">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-purple-400" />
@@ -867,7 +869,23 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                   </span>
                 </div>
                 <p className="text-[11px] text-gray-300 leading-relaxed">
-                  Scan printed physical bet slips with your phone camera across Play Whe, Lotto Plus, Win For Life, Cash Pot, and Pick 4 to automatically cross-reference against official winning database records and calculate payouts.
+                  Scan printed physical bet slips with your phone camera across Play Whe, Lotto Plus, Win For Life, Cash Pot, and Pick 4 to automatically cross-reference against official winning database records.
+                </p>
+              </div>
+
+              {/* Natural Language Query Info */}
+              <div className="space-y-1.5 bg-cyan-950/20 p-3 rounded-xl border border-cyan-500/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1">
+                    <Database className="w-3 h-3 text-cyan-400" />
+                    Natural Language Database Query
+                  </span>
+                  <span className="text-[9px] text-cyan-400 font-bold px-1.5 py-0.2 rounded bg-cyan-500/15 border border-cyan-500/30">
+                    Turso + Gemini
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-300 leading-normal">
+                  Ask complex statistical and historical questions in plain English with instant SQL verification across all 5 NLCB games.
                 </p>
               </div>
 
@@ -879,7 +897,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     Syndicate Pooling
                   </span>
                   <span className="text-[9px] text-purple-400 font-bold">
-                    WhatsApp Share Ready
+                    WhatsApp Ready
                   </span>
                 </div>
                 <p className="text-[10px] text-gray-400 leading-normal">
@@ -889,17 +907,26 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-2 mt-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
               <button
                 onClick={() => onSelectGame && onSelectGame("scanner")}
-                className="py-2.5 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 text-purple-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-lg group-hover:border-purple-400"
+                className="py-2.5 px-2 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 text-purple-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-lg group-hover:border-purple-400"
               >
-                <span>Launch Scanner</span>
+                <Camera className="w-3.5 h-3.5" />
+                <span>Scanner</span>
+              </button>
+              <button
+                onClick={() => onSelectGame && onSelectGame("scanner-query" as any)}
+                className="py-2.5 px-2 bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/35 text-cyan-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-lg hover:border-cyan-400"
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>Ask DB</span>
               </button>
               <button
                 onClick={() => onSelectGame && onSelectGame("syndicate")}
-                className="py-2.5 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 text-purple-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-lg group-hover:border-purple-400"
+                className="py-2.5 px-2 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/35 text-indigo-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-lg group-hover:border-indigo-400"
               >
+                <Layers className="w-3.5 h-3.5" />
                 <span>Syndicates</span>
               </button>
             </div>
