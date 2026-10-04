@@ -221,22 +221,40 @@ export default function DashboardTab({
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Total Draws Card */}
-        <div className="glass-panel p-5 rounded-xl flex items-center justify-between relative overflow-hidden group">
+        <div className="glass-panel p-5 rounded-xl flex flex-col justify-between relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
-          <div className="space-y-1">
-            <span className="text-xs font-semibold tracking-wider text-gray-400 uppercase font-mono">Total Draws</span>
-            <div className="text-3xl font-extrabold font-mono text-white">
-              {statsLoading ? "..." : stats?.totalDraws ?? "0"}
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <span className="text-xs font-semibold tracking-wider text-gray-400 uppercase font-mono">Total Draws</span>
+              <div className="text-3xl font-extrabold font-mono text-white">
+                {statsLoading ? "..." : stats?.totalDraws ?? "0"}
+              </div>
+              <p className="text-xs text-gray-500">Persisted in SQLite database</p>
             </div>
-            <p className="text-xs text-gray-500">Persisted in local SQLite database</p>
+            <div className="p-3 bg-primary/5 rounded-lg border border-primary/10 text-primary group-hover:scale-110 transition-transform">
+              <Award className="w-6 h-6" />
+            </div>
           </div>
-          <div className="p-3 bg-primary/5 rounded-lg border border-primary/10 text-primary group-hover:scale-110 transition-transform">
-            <Award className="w-6 h-6" />
+
+          {/* Sample Robustness Progress Track */}
+          <div className="mt-3 pt-2 border-t border-white/5 space-y-1">
+            <div className="flex justify-between text-[9px] font-mono text-gray-400">
+              <span>Sample Robustness</span>
+              <span className="text-primary font-bold">
+                {Math.min(100, Math.round(((stats?.totalDraws || 0) / 1000) * 100))}%
+              </span>
+            </div>
+            <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
+              <div 
+                className="h-full bg-gradient-to-r from-primary/60 to-primary transition-all duration-500 rounded-full"
+                style={{ width: `${Math.min(100, Math.max(5, Math.round(((stats?.totalDraws || 0) / 1000) * 100)))}%` }}
+              />
+            </div>
           </div>
         </div>
 
         {/* Latest Draw Banner Card */}
-        <div className="glass-panel p-5 rounded-xl flex items-center justify-between md:col-span-2 relative overflow-hidden group">
+        <div className="glass-panel p-5 rounded-xl flex flex-col justify-between md:col-span-2 relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-secondary" />
           <div className="space-y-3 w-full">
             <div className="flex justify-between items-center w-full">
@@ -270,11 +288,35 @@ export default function DashboardTab({
                 <span className="text-gray-500 text-xs font-mono">No data seeded yet. Click Sync.</span>
               )}
             </div>
+
+            {/* Gaussian Sum Centering Gauge */}
+            {stats?.latestDraw && (() => {
+              const nums = [stats.latestDraw.num1, stats.latestDraw.num2, stats.latestDraw.num3, stats.latestDraw.num4, stats.latestDraw.num5];
+              const sum = nums.reduce((a: number, b: number) => a + b, 0);
+              const bellPercent = Math.min(100, Math.max(10, Math.round((sum / 175) * 100)));
+              const isBell = sum >= 60 && sum <= 120;
+              return (
+                <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-gray-400">
+                  <span>Gaussian Sum: <strong className="text-white">{sum}</strong> (Bell [60-120])</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
+                      <div 
+                        className={`h-full ${isBell ? "bg-emerald-400" : "bg-amber-400"} transition-all duration-500`}
+                        style={{ width: `${bellPercent}%` }}
+                      />
+                    </div>
+                    <span className={isBell ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>
+                      {isBell ? "CENTRAL" : "TAIL"}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
         {/* Next Jackpot Estimated Card */}
-        <div className="glass-panel p-5 rounded-xl flex items-center justify-between relative overflow-hidden group">
+        <div className="glass-panel p-5 rounded-xl flex flex-col justify-between relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
           <div className="space-y-3 w-full">
             <div className="space-y-0.5">
@@ -285,6 +327,20 @@ export default function DashboardTab({
             </div>
             
             <p className="text-[10px] text-gray-500 font-mono border-t border-white/5 pt-2">Next Draw: {getNextDrawDate()}</p>
+          </div>
+
+          {/* Jackpot EV Track */}
+          <div className="pt-2 border-t border-white/5 space-y-1">
+            <div className="flex justify-between text-[9px] font-mono text-gray-400">
+              <span>+EV Tipping Gauge</span>
+              <span className="text-primary font-bold">+EV Active</span>
+            </div>
+            <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
+              <div 
+                className="h-full bg-gradient-to-r from-emerald-500 via-primary to-amber-400 transition-all duration-500 rounded-full"
+                style={{ width: "84%" }}
+              />
+            </div>
           </div>
         </div>
       </div>

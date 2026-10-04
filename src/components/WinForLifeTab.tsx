@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary, ShieldCheck } from "lucide-react";
+import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary, ShieldCheck, X } from "lucide-react";
+import { triggerHaptic } from "@/lib/haptics";
 import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
@@ -142,6 +143,7 @@ export default function WinForLifeTab() {
   const [historySearch, setHistorySearch] = useState("");
   const [historyFilterNum, setHistoryFilterNum] = useState("");
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [selectedWflDraw, setSelectedWflDraw] = useState<any | null>(null);
 
   // Predictions states
   const [predictions, setPredictions] = useState<any[]>([]);
@@ -1061,92 +1063,285 @@ export default function WinForLifeTab() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
             <div>
               <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">Win for Life Draw Log</h3>
-              <p className="text-xs text-gray-400 mt-1">Browse and filter NLCB Win for Life results history.</p>
+              <p className="text-xs text-gray-400 mt-1">Browse and filter NLCB Win for Life results history. Click any draw to inspect deep structural manifolds.</p>
             </div>
             
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex bg-slate-900/80 p-0.5 rounded-lg border border-white/5 text-[10px] font-mono">
+                {["All", "2025", "2024", "2023"].map((chip) => (
+                  <button
+                    key={chip}
+                    onClick={() => {
+                      setHistorySearch(chip === "All" ? "" : chip);
+                      setHistoryPage(1);
+                      triggerHaptic("selection");
+                    }}
+                    className={`px-2 py-1 rounded transition-all ${
+                      (chip === "All" && historySearch === "") || historySearch === chip
+                        ? "bg-emerald-500 text-slate-950 font-bold"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
               <input
                 type="text"
                 value={historySearch}
                 onChange={(e) => { setHistorySearch(e.target.value); setHistoryPage(1); }}
                 placeholder="Search date..."
-                className="bg-slate-950/70 border border-white/10 rounded px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono w-40"
+                className="bg-slate-950/70 border border-white/10 rounded px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono w-36"
               />
               <input
                 type="number"
                 value={historyFilterNum}
                 onChange={(e) => { setHistoryFilterNum(e.target.value); setHistoryPage(1); }}
-                placeholder="Filter number..."
-                className="bg-slate-950/70 border border-white/10 rounded px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono w-32"
+                placeholder="Filter ball..."
+                className="bg-slate-950/70 border border-white/10 rounded px-3 py-1.5 text-xs text-foreground focus:outline-none focus:border-primary font-mono w-28"
               />
             </div>
           </div>
 
-          <div className="overflow-x-auto sleek-scrollbar">
-            <table className="w-full text-left border-collapse text-xs font-mono min-w-[550px]">
-              <thead>
-                <tr className="border-b border-white/10 text-gray-500 uppercase tracking-widest text-[10px]">
-                  <th className="py-3 px-4">Draw #</th>
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Winning Numbers</th>
-                  <th className="py-3 px-4">Cash Ball</th>
-                  <th className="py-3 px-4">Jackpot</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {historyLoading ? (
-                  Array.from({ length: 5 }).map((_, idx) => (
-                    <tr key={idx} className="animate-pulse">
-                      <td colSpan={5} className="py-4 px-4 bg-slate-900/10 h-8"></td>
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            {/* Main Table Column (2/3 when drawer active, full when inactive) */}
+            <div className={`transition-all duration-300 ${selectedWflDraw ? "w-full lg:w-2/3" : "w-full"}`}>
+              <div className="overflow-x-auto sleek-scrollbar border border-white/5 rounded-xl">
+                <table className="w-full text-left border-collapse text-xs font-mono min-w-[520px]">
+                  <thead className="sticky top-0 bg-slate-950/95 backdrop-blur-md z-10">
+                    <tr className="border-b border-white/10 text-gray-500 uppercase tracking-widest text-[10px]">
+                      <th className="py-3 px-4">Draw #</th>
+                      <th className="py-3 px-4">Date</th>
+                      <th className="py-3 px-4 text-center">Winning Numbers (6 Balls)</th>
+                      <th className="py-3 px-4 text-center">Cash Ball</th>
+                      <th className="py-3 px-4 text-right">Action</th>
                     </tr>
-                  ))
-                ) : draws.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-gray-500 italic">No draws matched the query.</td>
-                  </tr>
-                ) : (
-                  draws.map((d) => (
-                    <tr key={d.draw_number} className="hover:bg-white/5 transition">
-                      <td className="py-3 px-4 font-bold text-white">#{d.draw_number}</td>
-                      <td className="py-3 px-4 text-gray-400">{d.draw_date}</td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-1.5">
-                          {[d.num1, d.num2, d.num3, d.num4, d.num5, d.num6].map((n, i) => (
-                            <span key={i} className="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-[10px] border border-white/5">
-                              {n}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
-                          {d.cash_ball}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-gray-400">{d.jackpot || "X"}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {historyLoading ? (
+                      Array.from({ length: 5 }).map((_, idx) => (
+                        <tr key={idx} className="animate-pulse">
+                          <td colSpan={5} className="py-4 px-4 bg-slate-900/10 h-8"></td>
+                        </tr>
+                      ))
+                    ) : draws.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-gray-500 italic">No draws matched the query.</td>
+                      </tr>
+                    ) : (
+                      draws.map((d) => {
+                        const isSelected = selectedWflDraw?.draw_number === d.draw_number;
+                        const nums = [d.num1, d.num2, d.num3, d.num4, d.num5, d.num6];
+                        return (
+                          <tr 
+                            key={d.draw_number}
+                            onClick={() => {
+                              setSelectedWflDraw(isSelected ? null : d);
+                              triggerHaptic("selection");
+                            }}
+                            className={`cursor-pointer transition-all duration-200 ${
+                              isSelected 
+                                ? "bg-emerald-500/15 border-l-4 border-l-emerald-400 text-white shadow-inner" 
+                                : "hover:bg-white/[0.03] text-gray-300"
+                            }`}
+                          >
+                            <td className="py-3 px-4 font-bold text-white">#{d.draw_number}</td>
+                            <td className="py-3 px-4 text-gray-400">{d.draw_date}</td>
+                            <td className="py-3 px-4">
+                              <div className="flex gap-1.5 justify-center">
+                                {nums.map((n, i) => (
+                                  <span 
+                                    key={i} 
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] transition-transform ${
+                                      isSelected 
+                                        ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_8px_rgba(52,211,153,0.5)] scale-105" 
+                                        : "bg-slate-800 text-white border border-white/5"
+                                    }`}
+                                  >
+                                    {n}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className="w-6 h-6 rounded-full inline-flex items-center justify-center font-bold text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                                {d.cash_ball}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded transition-colors ${
+                                isSelected ? "bg-emerald-400/20 text-emerald-300" : "text-gray-500 hover:text-white"
+                              }`}>
+                                {isSelected ? "Active" : "Inspect →"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-          <div className="flex justify-between items-center border-t border-white/5 pt-4 text-xs">
-            <button
-              disabled={historyPage === 1}
-              onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
-              className="px-3 py-1 bg-slate-900 border border-white/5 rounded text-white disabled:opacity-50 hover:bg-slate-800 transition cursor-pointer font-mono"
-            >
-              PREVIOUS
-            </button>
-            <span className="text-gray-500 font-mono">PAGE {historyPage} OF {historyPages}</span>
-            <button
-              disabled={historyPage === historyPages}
-              onClick={() => setHistoryPage(p => Math.min(historyPages, p + 1))}
-              className="px-3 py-1 bg-slate-900 border border-white/5 rounded text-white disabled:opacity-50 hover:bg-slate-800 transition cursor-pointer font-mono"
-            >
-              NEXT
-            </button>
+              {/* Pagination */}
+              <div className="flex justify-between items-center border-t border-white/5 pt-4 text-xs mt-4">
+                <button
+                  disabled={historyPage === 1}
+                  onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                  className="px-3 py-1 bg-slate-900 border border-white/5 rounded text-white disabled:opacity-50 hover:bg-slate-800 transition cursor-pointer font-mono"
+                >
+                  PREVIOUS
+                </button>
+                <span className="text-gray-500 font-mono">PAGE {historyPage} OF {historyPages}</span>
+                <button
+                  disabled={historyPage === historyPages}
+                  onClick={() => setHistoryPage(p => Math.min(historyPages, p + 1))}
+                  className="px-3 py-1 bg-slate-900 border border-white/5 rounded text-white disabled:opacity-50 hover:bg-slate-800 transition cursor-pointer font-mono"
+                >
+                  NEXT
+                </button>
+              </div>
+            </div>
+
+            {/* Split-View Investigation Panel (SaaS Drawer Pattern) */}
+            {selectedWflDraw && (
+              <div className="w-full lg:w-1/3 glass-panel p-5 rounded-2xl border border-emerald-500/30 bg-slate-950/95 space-y-4 animate-in fade-in slide-in-from-right-4 duration-300 relative shadow-2xl shrink-0 font-mono">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <div>
+                      <h4 className="text-xs font-black uppercase text-white tracking-wider">
+                        Win For Life Draw #{selectedWflDraw.draw_number}
+                      </h4>
+                      <span className="text-[10px] text-gray-400">
+                        {selectedWflDraw.draw_date} · {selectedWflDraw.jackpot || "$1,000/Month for Life"}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedWflDraw(null)}
+                    className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition text-xs"
+                    title="Close Investigation Panel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Quantitative Analysis */}
+                {(() => {
+                  const nums = [
+                    selectedWflDraw.num1,
+                    selectedWflDraw.num2,
+                    selectedWflDraw.num3,
+                    selectedWflDraw.num4,
+                    selectedWflDraw.num5,
+                    selectedWflDraw.num6
+                  ].map(Number).sort((a, b) => a - b);
+                  const sum = nums.reduce((a, b) => a + b, 0);
+                  const isManifoldPassed = sum >= 60 && sum <= 114;
+                  const oddsCount = nums.filter(n => n % 2 !== 0).length;
+                  const evensCount = 6 - oddsCount;
+                  const lowsCount = nums.filter(n => n <= 14).length;
+                  const highsCount = 6 - lowsCount;
+                  const spread = nums[5] - nums[0];
+                  let consecutivePairs = 0;
+                  for (let i = 0; i < 5; i++) {
+                    if (nums[i + 1] === nums[i] + 1) consecutivePairs++;
+                  }
+
+                  return (
+                    <div className="space-y-4">
+                      {/* Balls Cluster */}
+                      <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-2">
+                        <span className="text-[9px] text-gray-400 uppercase tracking-widest block">6 Winning Balls + Cash Ball</span>
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          {nums.map((n, i) => (
+                            <div key={i} className="w-8 h-8 rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-200 font-black text-xs flex items-center justify-center shadow-[0_0_8px_rgba(52,211,153,0.3)]">
+                              {n}
+                            </div>
+                          ))}
+                          <span className="text-gray-400 font-bold mx-0.5">+</span>
+                          <div className="w-8 h-8 rounded-full bg-emerald-600 border-2 border-emerald-300 text-white font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.5)]" title="Cash Ball">
+                            {selectedWflDraw.cash_ball}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Manifold Diagnostics Grid */}
+                      <div className="space-y-2">
+                        <span className="text-[9px] text-gray-400 uppercase tracking-widest block">Structural Invariants</span>
+                        <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                          <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
+                            <span className="text-[8px] text-gray-500 block uppercase">Ball Sum</span>
+                            <span className="text-base font-black text-emerald-300">{sum}</span>
+                            <span className={`text-[8px] block mt-0.5 font-bold ${isManifoldPassed ? "text-emerald-400" : "text-amber-400"}`}>
+                              {isManifoldPassed ? "✓ In Bell [60-114]" : "Tail Margin"}
+                            </span>
+                          </div>
+                          <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
+                            <span className="text-[8px] text-gray-500 block uppercase">Odd : Even</span>
+                            <span className="text-base font-black text-cyan-300">{oddsCount}O : {evensCount}E</span>
+                            <span className="text-[8px] text-gray-400 block mt-0.5">{oddsCount === 3 ? "Perfect 3:3 Split" : "Standard Split"}</span>
+                          </div>
+                          <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
+                            <span className="text-[8px] text-gray-500 block uppercase">High : Low</span>
+                            <span className="text-base font-black text-purple-300">{highsCount}H : {lowsCount}L</span>
+                            <span className="text-[8px] text-gray-400 block mt-0.5">Median Split at 14/15</span>
+                          </div>
+                          <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
+                            <span className="text-[8px] text-gray-500 block uppercase">Range Spread</span>
+                            <span className="text-base font-black text-emerald-300">{spread}</span>
+                            <span className="text-[8px] text-gray-400 block mt-0.5">Max ({nums[5]}) - Min ({nums[0]})</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Consecutive & Cash Ball Info */}
+                      <div className="p-3 rounded-xl bg-slate-900/80 border border-white/5 space-y-1.5 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400 uppercase text-[10px]">Consecutive Pairs:</span>
+                          <span className={`text-xs font-bold ${consecutivePairs > 0 ? "text-emerald-400" : "text-gray-300"}`}>
+                            {consecutivePairs === 0 ? "0 (Dispersed)" : `${consecutivePairs} Pair(s)`}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400 uppercase text-[10px]">Cash Ball Option:</span>
+                          <span className="text-xs font-bold text-emerald-300">
+                            Ball #{selectedWflDraw.cash_ball} (1 of 3)
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 1-Click Interactive Actions */}
+                      <div className="pt-2 border-t border-white/5 space-y-2">
+                        <button
+                          onClick={() => {
+                            setSelectedNums(nums);
+                            setSelectedCb(Number(selectedWflDraw.cash_ball) || 1);
+                            setSubTab("builder");
+                            triggerHaptic("success");
+                          }}
+                          className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 rounded-lg text-xs font-bold tracking-wider uppercase transition flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <span>⚡ Load Into Wheel Builder</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setHoveredNode(nums[0]);
+                            setSubTab("network");
+                            triggerHaptic("selection");
+                          }}
+                          className="w-full py-2 bg-slate-900 hover:bg-slate-800 border border-white/10 text-gray-300 rounded-lg text-xs font-bold tracking-wider uppercase transition flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <span>🕸 Explore Node #{nums[0]} In Network</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         </div>
       )}
