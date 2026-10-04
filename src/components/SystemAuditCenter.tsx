@@ -73,7 +73,7 @@ export default function SystemAuditCenter() {
           </span>
         </div>
         <p className="text-xs text-gray-400 max-w-xl mx-auto leading-relaxed">
-          Sequentially auditing Play Whe, Pick 4, Cash Pot, Lotto Plus, Win For Life, FastLotteryWheeler, Takens&apos; Attractor Radar, and Turso Cloud database.
+          Sequentially auditing Play Whe, Pick 4, Cash Pot, Lotto Plus, Win For Life, FastLotteryWheeler, Takens&apos; Dynamical Attractor, and Turso Cloud database.
         </p>
       </div>
     );

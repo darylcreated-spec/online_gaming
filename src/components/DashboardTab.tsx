@@ -15,7 +15,6 @@ import {
 } from "recharts";
 import { RefreshCw, TrendingUp, Calendar, Award, DollarSign, Database, HelpCircle, Zap, Brain, Shield, Compass } from "lucide-react";
 import { useState, useEffect } from "react";
-import PhaseSpaceAttractorModal from "@/components/PhaseSpaceAttractorModal";
 import { triggerHaptic } from "@/lib/haptics";
 
 interface DashboardTabProps {
@@ -45,7 +44,6 @@ export default function DashboardTab({
   setTimeframe
 }: DashboardTabProps) {
   const [showHelp, setShowHelp] = useState(false);
-  const [showAttractorModal, setShowAttractorModal] = useState(false);
 
   // MEV Engine States
   const [mevTickets, setMevTickets] = useState<any[]>([]);
@@ -170,18 +168,6 @@ export default function DashboardTab({
               </button>
             ))}
           </div>
-
-          {/* Attractor Radar Button */}
-          <button
-            onClick={() => {
-              setShowAttractorModal(true);
-              triggerHaptic("selection");
-            }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-xs font-semibold font-mono tracking-wider transition bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-          >
-            <Compass className="w-4 h-4 text-emerald-400 animate-spin-slow" />
-            ATTRACTOR RADAR
-          </button>
 
           {/* Help Toggle Button */}
           <button
@@ -984,13 +970,6 @@ export default function DashboardTab({
           </div>
         )}
       </div>
-
-      {/* Takens' Phase Space Attractor Modal */}
-      <PhaseSpaceAttractorModal
-        isOpen={showAttractorModal}
-        onClose={() => setShowAttractorModal(false)}
-        initialGame="lotto-plus"
-      />
     </div>
   );
 }

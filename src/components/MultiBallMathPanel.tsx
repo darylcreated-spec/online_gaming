@@ -18,7 +18,6 @@ import {
   Check,
   Compass
 } from "lucide-react";
-import PhaseSpaceAttractorModal from "@/components/PhaseSpaceAttractorModal";
 import { triggerHaptic } from "@/lib/haptics";
 
 interface MultiBallMathPanelProps {
@@ -37,7 +36,6 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
   const [backtestSampleSize, setBacktestSampleSize] = useState(100);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showTheory, setShowTheory] = useState(false);
-  const [showAttractorModal, setShowAttractorModal] = useState(false);
 
   const fetchMathData = async (runBacktest: boolean = false) => {
     try {
@@ -106,16 +104,6 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => {
-                setShowAttractorModal(true);
-                triggerHaptic("selection");
-              }}
-              className="px-3.5 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 font-mono font-bold hover:text-white hover:bg-emerald-500/20 transition flex items-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-            >
-              <Compass className="w-4 h-4 text-emerald-400 animate-spin-slow" />
-              ATTRACTOR RADAR
-            </button>
             <button
               onClick={() => setShowTheory(!showTheory)}
               className="px-3.5 py-2 rounded-lg bg-slate-900/80 border border-white/10 text-xs text-gray-300 font-mono font-bold hover:text-white hover:bg-slate-800 transition flex items-center gap-1.5 cursor-pointer"
@@ -541,13 +529,6 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
           </div>
         </>
       )}
-
-      {/* Takens' Phase Space Attractor Modal */}
-      <PhaseSpaceAttractorModal
-        isOpen={showAttractorModal}
-        onClose={() => setShowAttractorModal(false)}
-        initialGame={game}
-      />
     </div>
   );
 }

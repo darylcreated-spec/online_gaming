@@ -570,7 +570,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
               </div>
             )}
 
-            {/* Genetic Fitness Criteria Radar Grid */}
+            {/* Genetic Fitness Criteria Metric Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
               {[
                 { name: "Sum Bell Curve", weight: "20% Weight", desc: "75–115 sum range" },

@@ -498,7 +498,7 @@ export class SystemAuditVerifier {
     }
 
     // ============================================================
-    // 7. TAKENS' ATTRACTOR & DYNAMICAL SYSTEM RADAR AUDIT
+    // 7. TAKENS' ATTRACTOR & DYNAMICAL SYSTEM MANIFOLD AUDIT
     // ============================================================
     const attractorStart = performance.now();
     try {
@@ -514,7 +514,7 @@ export class SystemAuditVerifier {
       checks.push({
         id: "engine_attractor",
         category: "engine",
-        name: "Takens' Delay Embedding Phase-Space Radar Audit",
+        name: "Takens' Delay Embedding Phase-Space Manifold Audit",
         subsystem: "Discrete Dynamical Systems Engine",
         status: isValid ? "PASSED" : "WARNING",
         executionTimeMs: Number((performance.now() - attractorStart).toFixed(2)),
@@ -536,7 +536,7 @@ export class SystemAuditVerifier {
       checks.push({
         id: "engine_attractor",
         category: "engine",
-        name: "Takens' Delay Embedding Phase-Space Radar Audit",
+        name: "Takens' Delay Embedding Phase-Space Manifold Audit",
         subsystem: "Discrete Dynamical Systems Engine",
         status: "FAILED",
         executionTimeMs: Number((performance.now() - attractorStart).toFixed(2)),
