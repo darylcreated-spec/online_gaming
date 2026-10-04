@@ -54,6 +54,7 @@ export default function Pick4Tab() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [selectedPick4Draw, setSelectedPick4Draw] = useState<Pick4Draw | null>(null);
 
   // Math engine state
   const [mathData, setMathData] = useState<Pick4MathPrediction | null>(null);
@@ -665,67 +666,231 @@ export default function Pick4Tab() {
             </div>
           </div>
 
-          <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-x-auto sleek-scrollbar">
-            <table className="w-full text-left text-xs min-w-[480px]">
-              <thead className="bg-black/50 text-gray-400 border-b border-white/5 uppercase text-[10px]">
-                <tr>
-                  <th className="py-3 px-4">Draw #</th>
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Time Slot</th>
-                  <th className="py-3 px-4">Digits</th>
-                  <th className="py-3 px-4">Sum</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {loading ? (
-                  <tr><td colSpan={5} className="py-8 text-center text-gray-500">Loading draws...</td></tr>
-                ) : draws.length === 0 ? (
-                  <tr><td colSpan={5} className="py-8 text-center text-gray-500">No draws found.</td></tr>
-                ) : (
-                  draws.map(d => (
-                    <tr key={d.id} className="hover:bg-white/[0.02]">
-                      <td className="py-3 px-4 font-bold text-white">#{d.draw_number}</td>
-                      <td className="py-3 px-4 text-gray-400">{d.draw_date}</td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/5 border border-white/10 text-gray-300">
-                          {d.draw_time_slot}
+          {/* Main Content Split: Table on left, Investigation Drawer on right */}
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            {/* Table Container */}
+            <div className={`transition-all duration-300 ${selectedPick4Draw ? "w-full lg:w-2/3" : "w-full"}`}>
+              <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-x-auto sleek-scrollbar max-h-[600px] relative">
+                <table className="w-full text-left text-xs min-w-[480px]">
+                  <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md text-gray-400 border-b border-white/5 uppercase text-[10px]">
+                    <tr>
+                      <th className="py-3 px-4 bg-slate-950">Draw #</th>
+                      <th className="py-3 px-4 bg-slate-950">Date</th>
+                      <th className="py-3 px-4 bg-slate-950">Time Slot</th>
+                      <th className="py-3 px-4 bg-slate-950">Digits</th>
+                      <th className="py-3 px-4 bg-slate-950">Sum</th>
+                      <th className="py-3 px-3 bg-slate-950 text-right">Inspect</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {loading ? (
+                      <tr><td colSpan={6} className="py-8 text-center text-gray-500">Loading draws...</td></tr>
+                    ) : draws.length === 0 ? (
+                      <tr><td colSpan={6} className="py-8 text-center text-gray-500">No draws found.</td></tr>
+                    ) : (
+                      draws.map(d => {
+                        const isSelected = selectedPick4Draw?.id === d.id;
+                        const sum = Number(d.digit1) + Number(d.digit2) + Number(d.digit3) + Number(d.digit4);
+                        return (
+                          <tr 
+                            key={d.id} 
+                            onClick={() => setSelectedPick4Draw(isSelected ? null : d)}
+                            className={`cursor-pointer transition-all duration-200 ${
+                              isSelected 
+                                ? "bg-purple-500/15 border-l-4 border-l-purple-400 text-white shadow-inner" 
+                                : "hover:bg-white/[0.03] text-gray-300"
+                            }`}
+                          >
+                            <td className="py-3 px-4 font-bold text-white">#{d.draw_number}</td>
+                            <td className="py-3 px-4 text-gray-400">{d.draw_date}</td>
+                            <td className="py-3 px-4">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/5 border border-white/10 text-gray-300">
+                                {d.draw_time_slot}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-1.5">
+                                {[d.digit1, d.digit2, d.digit3, d.digit4].map((digit, i) => (
+                                  <span key={i} className={`w-6 h-6 rounded-md font-bold flex items-center justify-center text-[11px] transition-transform ${
+                                    isSelected 
+                                      ? "bg-purple-400 text-slate-950 scale-105 shadow-[0_0_8px_rgba(168,85,247,0.5)]" 
+                                      : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                  }`}>
+                                    {digit}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 font-bold text-purple-300">{sum}</td>
+                            <td className="py-3 px-3 text-right">
+                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded transition-colors ${
+                                isSelected ? "bg-purple-400/20 text-purple-300" : "text-gray-500 hover:text-white"
+                              }`}>
+                                {isSelected ? "Active" : "Inspect →"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-white/5 text-xs text-gray-400">
+                    <span>Page {page} of {totalPages}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-30 cursor-pointer"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                        className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-30 cursor-pointer"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Split-View Investigation Panel (SaaS Drawer Pattern) */}
+            {selectedPick4Draw && (
+              <div className="w-full lg:w-1/3 glass-panel p-5 rounded-2xl border border-purple-500/30 bg-slate-950/95 space-y-4 animate-in fade-in slide-in-from-right-4 duration-300 relative shadow-2xl shrink-0">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-purple-400" />
+                    <div>
+                      <h4 className="text-xs font-black uppercase text-white tracking-wider">
+                        Draw #{selectedPick4Draw.draw_number} Deep-Dive
+                      </h4>
+                      <span className="text-[10px] text-gray-400">
+                        {selectedPick4Draw.draw_date} • {selectedPick4Draw.draw_time_slot}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedPick4Draw(null)}
+                    className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition text-xs font-mono"
+                    title="Close Investigation Panel"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Digits Display */}
+                {(() => {
+                  const digits = [
+                    Number(selectedPick4Draw.digit1),
+                    Number(selectedPick4Draw.digit2),
+                    Number(selectedPick4Draw.digit3),
+                    Number(selectedPick4Draw.digit4),
+                  ];
+                  const sum = digits.reduce((a, b) => a + b, 0);
+                  const digitalRoot = 1 + ((sum - 1) % 9);
+                  const uniqueCount = new Set(digits).size;
+
+                  // Box classification
+                  let boxType = "24-Way Box";
+                  let boxPayout = "$200";
+                  let boxOdds = "1 in 416.6";
+
+                  if (uniqueCount === 1) {
+                    boxType = "Quad (Straight Only)";
+                    boxPayout = "$5,000";
+                    boxOdds = "1 in 10,000";
+                  } else if (uniqueCount === 2) {
+                    const counts = digits.reduce((acc: any, d) => { acc[d] = (acc[d] || 0) + 1; return acc; }, {});
+                    const maxCount = Math.max(...(Object.values(counts) as number[]));
+                    if (maxCount === 3) {
+                      boxType = "4-Way Box (3 Identical)";
+                      boxPayout = "$1,200";
+                      boxOdds = "1 in 2,500";
+                    } else {
+                      boxType = "6-Way Box (2 Pairs)";
+                      boxPayout = "$800";
+                      boxOdds = "1 in 1,666.6";
+                    }
+                  } else if (uniqueCount === 3) {
+                    boxType = "12-Way Box (1 Pair)";
+                    boxPayout = "$400";
+                    boxOdds = "1 in 833.3";
+                  }
+
+                  const isManifoldPassed = sum >= 6 && sum <= 30;
+
+                  return (
+                    <div className="space-y-4">
+                      {/* Digit Blocks */}
+                      <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 flex items-center justify-center gap-2">
+                        {digits.map((d, i) => (
+                          <div key={i} className="w-12 h-14 rounded-xl bg-purple-500/20 border-2 border-purple-400 text-purple-200 font-black text-2xl flex flex-col items-center justify-center shadow-[0_0_12px_rgba(168,85,247,0.3)]">
+                            <span>{d}</span>
+                            <span className="text-[7px] text-gray-400 uppercase font-normal">Pos {i + 1}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Invariant Coordinates */}
+                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-2.5">
+                        <span className="text-[9px] font-bold text-purple-400 uppercase tracking-widest block">
+                          Gaussian Sum & Digital Root Coordinates
                         </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-1.5">
-                          {[d.digit1, d.digit2, d.digit3, d.digit4].map((digit, i) => (
-                            <span key={i} className="w-6 h-6 rounded-md bg-purple-500/20 text-purple-300 font-bold flex items-center justify-center border border-purple-500/30 text-[11px]">
-                              {digit}
+                        <div className="grid grid-cols-2 gap-2 text-center">
+                          <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
+                            <span className="text-[8px] text-gray-500 block uppercase">Digit Sum (S)</span>
+                            <span className="text-base font-black text-purple-300">{sum}</span>
+                            <span className={`text-[8px] block mt-0.5 font-bold ${isManifoldPassed ? "text-emerald-400" : "text-rose-400"}`}>
+                              {isManifoldPassed ? "✓ In Manifold [6-30]" : "Outside Manifold"}
+                            </span>
+                          </div>
+                          <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
+                            <span className="text-[8px] text-gray-500 block uppercase">Digital Root R₉</span>
+                            <span className="text-base font-black text-cyan-300">{digitalRoot}</span>
+                            <span className="text-[8px] text-gray-400 block mt-0.5">Sum mod 9</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Box Permutation Details */}
+                      <div className="p-3.5 rounded-xl bg-slate-900/80 border border-white/5 space-y-2 text-xs">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                          <span className="text-[10px] text-gray-400 uppercase">Permutation Type</span>
+                          <span className="font-bold text-white text-[11px]">{boxType}</span>
+                        </div>
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                          <span className="text-[10px] text-gray-400 uppercase">Fixed Box Payout</span>
+                          <span className="font-bold text-emerald-400 font-mono">{boxPayout}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-gray-400 uppercase">Box Hit Odds</span>
+                          <span className="font-bold text-purple-300">{boxOdds}</span>
+                        </div>
+                      </div>
+
+                      {/* Parity Sequence */}
+                      <div className="p-3 rounded-xl bg-black/40 border border-white/5 text-[10px] flex items-center justify-between text-gray-400">
+                        <span>Parity Pattern:</span>
+                        <div className="flex items-center gap-1 font-bold">
+                          {digits.map((d, i) => (
+                            <span key={i} className={`px-1.5 py-0.5 rounded text-[9px] ${
+                              d % 2 === 0 ? "bg-sky-500/20 text-sky-300" : "bg-amber-500/20 text-amber-300"
+                            }`}>
+                              {d % 2 === 0 ? "E" : "O"}
                             </span>
                           ))}
                         </div>
-                      </td>
-                      <td className="py-3 px-4 text-gray-300">{d.digit1 + d.digit2 + d.digit3 + d.digit4}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-white/5 text-xs text-gray-400">
-                <span>Page {page} of {totalPages}</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-30 cursor-pointer"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-30 cursor-pointer"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>

@@ -52,17 +52,27 @@ interface QueryResult {
 const PRESET_QUERIES = [
   {
     category: "Lotto Plus",
-    label: "Top 5 most frequent Lotto Plus numbers",
+    label: "Top 5 most frequent numbers",
     prompt: "Show me the top 5 most frequent winning numbers in Lotto Plus history with their counts",
   },
   {
     category: "Lotto Plus",
-    label: "Lotto Plus draws with sum between 90 and 110",
+    label: "Draws with sum between 90 & 110",
     prompt: "Show the last 10 Lotto Plus draws where the sum of the main 5 balls was between 90 and 110",
   },
   {
+    category: "Lotto Plus",
+    label: "Powerball frequency ranking",
+    prompt: "Show all Powerball numbers 1 through 10 ordered by historical draw frequency",
+  },
+  {
+    category: "Lotto Plus",
+    label: "Draws with consecutive pairs",
+    prompt: "Show recent Lotto Plus draws where two consecutive numbers were drawn together (e.g. 14 and 15)",
+  },
+  {
     category: "Cash Pot",
-    label: "Top 5 most frequent Cash Pot numbers",
+    label: "Top 5 most frequent Cash Pot balls",
     prompt: "What are the 5 most frequently drawn winning numbers in Cash Pot 5/20?",
   },
   {
@@ -71,8 +81,13 @@ const PRESET_QUERIES = [
     prompt: "Show all Cash Pot draws that had a 5X multiplier",
   },
   {
+    category: "Cash Pot",
+    label: "Sum manifold distribution in Cash Pot",
+    prompt: "Show the last 10 Cash Pot draws with their sum calculated",
+  },
+  {
     category: "Play Whe",
-    label: "Play Whe marks drawn most on Morning",
+    label: "Morning slot top marks",
     prompt: "Show the top 5 Play Whe winning marks for the Morning time slot with their frequency",
   },
   {
@@ -81,14 +96,39 @@ const PRESET_QUERIES = [
     prompt: "Find the last 10 draws where Play Whe winning number was 14",
   },
   {
+    category: "Play Whe",
+    label: "Evening draw trends",
+    prompt: "What are the top 5 most frequent winning numbers drawn in the Evening slot (7:00 PM)?",
+  },
+  {
+    category: "Play Whe",
+    label: "Marks drawn in the last 7 days",
+    prompt: "Show all Play Whe draws from the last 7 calendar days ordered by draw date and slot",
+  },
+  {
     category: "Pick 4",
-    label: "Pick 4 straight draws with identical digits",
+    label: "Consecutive identical digits",
     prompt: "Show all Pick 4 draws where at least two consecutive digits were identical",
   },
   {
+    category: "Pick 4",
+    label: "Pick 4 sums equal to 18",
+    prompt: "Show all Pick 4 draws where the sum of the 4 digits equals exactly 18",
+  },
+  {
+    category: "Pick 4",
+    label: "Digit 7 frequency across all 4 positions",
+    prompt: "Show Pick 4 draws where digit 7 appeared in any position",
+  },
+  {
     category: "Win For Life",
-    label: "Win For Life draws where Cash Ball was 3",
+    label: "Draws where Cash Ball was 3",
     prompt: "Show the most recent 10 Win For Life draws where the Cash Ball was 3",
+  },
+  {
+    category: "Win For Life",
+    label: "Top 6 main balls in Win For Life",
+    prompt: "What are the top 6 most drawn main numbers in Win For Life 6/28?",
   },
 ];
 
@@ -375,9 +415,31 @@ export default function NaturalLanguageQueryPanel() {
                   Query Results Table
                 </h3>
               </div>
-              <span className="text-[10px] text-gray-400">
-                Displaying up to 50 records
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-gray-400 hidden sm:inline">
+                  Displaying {result.rows.length} records
+                </span>
+                <button
+                  onClick={() => {
+                    if (!result?.rows?.length) return;
+                    const headers = result.columns.join(",");
+                    const rows = result.rows.map(r => result.columns.map(c => JSON.stringify(r[c] ?? "")).join(","));
+                    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `nlcb_query_${Date.now()}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    triggerHaptic("success");
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] text-cyan-300 font-bold uppercase transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>Export CSV</span>
+                </button>
+              </div>
             </div>
 
             {result.rows.length === 0 ? (
@@ -385,12 +447,12 @@ export default function NaturalLanguageQueryPanel() {
                 No database records matched your specific criteria.
               </div>
             ) : (
-              <div className="overflow-x-auto sleek-scrollbar rounded-xl border border-white/10 bg-black/40">
+              <div className="overflow-x-auto max-h-[460px] sleek-scrollbar rounded-xl border border-white/10 bg-black/40 relative">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-slate-900/90 border-b border-white/10 text-[10px] text-gray-400 uppercase tracking-wider font-bold">
+                  <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md shadow-sm">
+                    <tr className="border-b border-white/10 text-[10px] text-gray-400 uppercase tracking-wider font-bold">
                       {result.columns.map((col, idx) => (
-                        <th key={idx} className="py-2.5 px-3.5 whitespace-nowrap">
+                        <th key={idx} className="py-2.5 px-3.5 whitespace-nowrap bg-slate-950">
                           {col.replace(/_/g, " ")}
                         </th>
                       ))}

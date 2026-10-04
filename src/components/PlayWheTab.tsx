@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PlayWheAuditPanel from "@/components/PlayWheAuditPanel";
+import { triggerHaptic } from "@/lib/haptics";
 
 const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -135,6 +136,7 @@ export default function PlayWheTab({
     total: 0,
     pages: 1
   });
+  const [selectedHistoricalDraw, setSelectedHistoricalDraw] = useState<any | null>(null);
 
   // Correlation States
   const [focusedNumber, setFocusedNumber] = useState<number>(1);
@@ -2651,54 +2653,188 @@ export default function PlayWheTab({
             </div>
           </div>
 
-          {/* Table Container */}
-          <div className="overflow-x-auto sleek-scrollbar border border-white/5 rounded-lg">
-            <table className="w-full text-left border-collapse text-xs font-mono min-w-[520px]">
-              <thead>
-                <tr className="bg-slate-950 border-b border-white/5 text-[10px] uppercase text-gray-400 tracking-wider">
-                  <th className="py-3 px-4 font-semibold">Draw #</th>
-                  <th className="py-3 px-4 font-semibold">Date</th>
-                  <th className="py-3 px-4 font-semibold">Time Slot</th>
-                  <th className="py-3 px-4 font-semibold text-center">Mark Number</th>
-                  <th className="py-3 px-4 font-semibold">Chinapoo Mark</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {historyLoading ? (
-                  Array.from({ length: 5 }).map((_, idx) => (
-                    <tr key={idx} className="animate-pulse bg-slate-900/10">
-                      <td colSpan={5} className="py-4 px-4 h-12 bg-slate-950/5" />
+          {/* Main Content Split: Table on left, Investigation Drawer on right */}
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            {/* Table Container */}
+            <div className={`transition-all duration-300 ${selectedHistoricalDraw ? "w-full lg:w-2/3" : "w-full"}`}>
+              <div className="overflow-x-auto sleek-scrollbar border border-white/5 rounded-lg max-h-[600px] relative">
+                <table className="w-full text-left border-collapse text-xs font-mono min-w-[500px]">
+                  <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md">
+                    <tr className="border-b border-white/10 text-[10px] uppercase text-gray-400 tracking-wider">
+                      <th className="py-3 px-4 font-semibold bg-slate-950">Draw #</th>
+                      <th className="py-3 px-4 font-semibold bg-slate-950">Date</th>
+                      <th className="py-3 px-4 font-semibold bg-slate-950">Time Slot</th>
+                      <th className="py-3 px-4 font-semibold text-center bg-slate-950">Mark Number</th>
+                      <th className="py-3 px-4 font-semibold bg-slate-950">Chinapoo Mark</th>
+                      <th className="py-3 px-3 font-semibold text-right bg-slate-950">Inspect</th>
                     </tr>
-                  ))
-                ) : draws.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-gray-500 font-mono">
-                      No matching draws found in the database. Try running a Sync.
-                    </td>
-                  </tr>
-                ) : (
-                  draws.map((draw) => (
-                    <tr key={draw.draw_number} className="hover:bg-white/[0.01] transition-all">
-                      <td className="py-3 px-4 text-white font-bold">#{draw.draw_number}</td>
-                      <td className="py-3 px-4 text-gray-400">{formatDateString(draw.draw_date)}</td>
-                      <td className="py-3 px-4 text-gray-400">
-                        <span className="px-2 py-0.5 border border-white/5 bg-slate-950/30 rounded text-[10px]">
-                          {draw.draw_time_slot}
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {historyLoading ? (
+                      Array.from({ length: 5 }).map((_, idx) => (
+                        <tr key={idx} className="animate-pulse bg-slate-900/10">
+                          <td colSpan={6} className="py-4 px-4 h-12 bg-slate-950/5" />
+                        </tr>
+                      ))
+                    ) : draws.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-gray-500 font-mono">
+                          No matching draws found in the database. Try running a Sync.
+                        </td>
+                      </tr>
+                    ) : (
+                      draws.map((draw) => {
+                        const isSelected = selectedHistoricalDraw?.draw_number === draw.draw_number;
+                        const num = Number(draw.winning_number);
+                        const markInfo = CHINAPOO_CHART[num];
+                        return (
+                          <tr 
+                            key={draw.draw_number} 
+                            onClick={() => {
+                              setSelectedHistoricalDraw(isSelected ? null : draw);
+                              triggerHaptic("selection");
+                            }}
+                            className={`cursor-pointer transition-all duration-200 ${
+                              isSelected 
+                                ? "bg-amber-500/15 border-l-4 border-l-amber-400 text-white shadow-inner" 
+                                : "hover:bg-white/[0.04] text-gray-300"
+                            }`}
+                          >
+                            <td className="py-3 px-4 font-bold text-white">#{draw.draw_number}</td>
+                            <td className="py-3 px-4 text-gray-400">{formatDateString(draw.draw_date)}</td>
+                            <td className="py-3 px-4">
+                              <span className="px-2 py-0.5 border border-white/5 bg-slate-950/40 rounded text-[10px] text-gray-300">
+                                {draw.draw_time_slot}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className={`w-7 h-7 rounded-full font-bold text-xs flex items-center justify-center mx-auto transition-transform ${
+                                isSelected
+                                  ? "bg-amber-400 text-slate-950 scale-110 shadow-[0_0_12px_rgba(251,191,36,0.5)]"
+                                  : "bg-primary/15 border border-primary/35 text-primary"
+                              }`}>
+                                {draw.winning_number}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 font-bold uppercase tracking-wider text-gray-200">
+                              {markInfo?.mark || "Unknown"}
+                            </td>
+                            <td className="py-3 px-3 text-right">
+                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded transition-colors ${
+                                isSelected ? "bg-amber-400/20 text-amber-300" : "text-gray-500 hover:text-white"
+                              }`}>
+                                {isSelected ? "Active" : "Inspect →"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Split-View Investigation Panel (SaaS Drawer Pattern) */}
+            {selectedHistoricalDraw && (
+              <div className="w-full lg:w-1/3 glass-panel p-5 rounded-xl border border-amber-500/30 bg-slate-950/95 space-y-4 animate-in fade-in slide-in-from-right-4 duration-300 relative shadow-2xl shrink-0">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                    <div>
+                      <h4 className="text-xs font-black uppercase text-white font-mono tracking-wider">
+                        Draw #{selectedHistoricalDraw.draw_number} Deep-Dive
+                      </h4>
+                      <span className="text-[10px] text-gray-400 font-mono">
+                        {formatDateString(selectedHistoricalDraw.draw_date)} • {selectedHistoricalDraw.draw_time_slot}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedHistoricalDraw(null)}
+                    className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition text-xs font-mono"
+                    title="Close Investigation Panel"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Mark Hero Card */}
+                {(() => {
+                  const num = Number(selectedHistoricalDraw.winning_number);
+                  const mark = CHINAPOO_CHART[num];
+                  const mod4 = num % 4;
+                  const mod9 = num % 9;
+                  const reflection = 37 - num;
+
+                  return (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 flex items-center gap-3.5">
+                        <div className="w-14 h-14 rounded-full bg-amber-400 text-slate-950 font-black text-2xl flex items-center justify-center font-mono shadow-[0_0_15px_rgba(251,191,36,0.4)] shrink-0">
+                          {num}
+                        </div>
+                        <div className="space-y-1">
+                          <h5 className="text-sm font-bold text-white uppercase font-mono tracking-wider">
+                            {mark?.mark || `Mark #${num}`}
+                          </h5>
+                          <p className="text-[10px] text-gray-400 font-mono line-clamp-2" title={mark?.keywords?.join(", ")}>
+                            {mark?.keywords ? mark.keywords.join(", ") : "Traditional Chinapoo Symbol"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Invariant Coordinate Box */}
+                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-2.5 font-mono">
+                        <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest block">
+                          Galois Ring & Centroid Coordinates
                         </span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="w-7 h-7 rounded-full bg-primary/15 border border-primary/35 text-primary font-bold flex items-center justify-center mx-auto">
-                          {draw.winning_number}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-gray-300 font-bold uppercase tracking-wider">
-                        {CHINAPOO_CHART[Number(draw.winning_number)]?.mark || "Unknown"}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div className="p-2 rounded-lg bg-slate-900 border border-white/5">
+                            <span className="text-[8px] text-gray-500 block uppercase">Residue mod 4</span>
+                            <span className="text-sm font-black text-amber-300">{mod4}</span>
+                          </div>
+                          <div className="p-2 rounded-lg bg-slate-900 border border-white/5">
+                            <span className="text-[8px] text-gray-500 block uppercase">Residue mod 9</span>
+                            <span className="text-sm font-black text-cyan-300">{mod9}</span>
+                          </div>
+                          <div className="p-2 rounded-lg bg-slate-900 border border-white/5">
+                            <span className="text-[8px] text-gray-500 block uppercase">Centroid σ₃₆</span>
+                            <span className="text-sm font-black text-emerald-300">{reflection}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Navigation Buttons */}
+                      <div className="pt-2 space-y-2">
+                        <button
+                          onClick={() => {
+                            setFocusedNumber(num);
+                            fetchCorrelation(num);
+                            setSubTab("relationship");
+                          }}
+                          className="w-full py-2 px-3 rounded-lg bg-slate-900 hover:bg-amber-500/20 border border-white/10 hover:border-amber-400/40 text-[11px] font-bold text-gray-200 hover:text-amber-300 uppercase transition flex items-center justify-between cursor-pointer font-mono"
+                        >
+                          <span>Explore Companions in Relationship Map</span>
+                          <span>→</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setTransitionFromNumber(num);
+                            fetchTransitions(num);
+                            setSubTab("transition");
+                          }}
+                          className="w-full py-2 px-3 rounded-lg bg-slate-900 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-400/40 text-[11px] font-bold text-gray-200 hover:text-cyan-300 uppercase transition flex items-center justify-between cursor-pointer font-mono"
+                        >
+                          <span>View Markov Successor Chain</span>
+                          <span>→</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
 
           {/* Pagination */}
