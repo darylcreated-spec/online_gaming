@@ -523,5 +523,53 @@ body {
   background-size: 100% 3px, 6px 100%;
 }
 
+/* ============================================================
+   BALL DROP QUICK PICK ENGINE ANIMATIONS
+   ============================================================ */
+@keyframes ball-drop {
+  0% {
+    transform: translateY(-110px) scale(0.65) rotate(-15deg);
+    opacity: 0;
+  }
+  55% {
+    transform: translateY(10px) scale(1.08) rotate(4deg);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(-5px) scale(0.97) rotate(-2deg);
+  }
+  90% {
+    transform: translateY(2px) scale(1.02) rotate(1deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-ball-drop {
+  animation: ball-drop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes chute-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scaleX(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+.animate-chute-pulse {
+  animation: chute-pulse 1.4s ease-in-out infinite;
+}
+
+.ball-3d-gloss {
+  background: radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.2) 25%, transparent 55%);
+}
+
+
 
 

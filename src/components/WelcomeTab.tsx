@@ -31,7 +31,7 @@ import {
   Camera
 } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
-import QuantumSphereTumbler, { TumblerGame } from "@/components/QuantumSphereTumbler";
+import QuickPickEngine, { QuickPickGame } from "@/components/QuickPickEngine";
 import WinConceptLogoEmblem from "@/components/WinConceptLogoEmblem";
 import { calculateNextDrawCountdown, DrawCountdown } from "@/lib/draw_schedule";
 import { triggerHaptic } from "@/lib/haptics";
@@ -825,12 +825,12 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             </button>
           </div>
 
-          {/* THE QUANTUM SPHERE TUMBLER */}
+          {/* UNIVERSAL TACTICAL BALL DROP QUICK PICK ENGINE */}
           <div className="col-span-1 md:col-span-2 lg:col-span-3">
-            <QuantumSphereTumbler
+            <QuickPickEngine
               initialGame="lotto-plus"
-              onSendToBuilder={() => {
-                if (onSelectGame) onSelectGame("lotto-plus");
+              onSelectGame={(gameKey) => {
+                if (onSelectGame) onSelectGame(gameKey);
               }}
             />
           </div>
