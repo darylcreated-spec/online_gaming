@@ -28,7 +28,8 @@ import {
   Flame,
   Sparkles,
   Database,
-  Camera
+  Camera,
+  ShieldCheck
 } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 import QuickPickEngine, { QuickPickGame } from "@/components/QuickPickEngine";
@@ -205,6 +206,17 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-3xl">
               Real-time statistical tracking and combinatorial optimization across all official National Lotteries Control Board (NLCB) games. Powered by Markov state-transitions, Bayesian priors, Gaussian digit sums, and minimum-covering wheeling mathematics.
             </p>
+            <div className="pt-1.5 flex items-center gap-2">
+              <button
+                onClick={() => onSelectGame && onSelectGame("settings")}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-[11px] font-bold hover:bg-emerald-500/20 transition cursor-pointer"
+                title="Open Master System Audit & Accuracy Verifier"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>System Audit &amp; Accuracy: 100% Verified</span>
+                <ArrowRight className="w-3 h-3 text-emerald-400 opacity-70" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

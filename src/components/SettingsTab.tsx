@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { RefreshCw, Database, Terminal, CheckCircle2, AlertTriangle, Play, HelpCircle, Bell } from "lucide-react";
+import { RefreshCw, Database, Terminal, CheckCircle2, AlertTriangle, Play, HelpCircle, Bell, ShieldCheck } from "lucide-react";
+import SystemAuditCenter from "@/components/SystemAuditCenter";
 
 export default function SettingsTab() {
   const [lottoStats, setLottoStats] = useState<any>(null);
@@ -16,7 +17,7 @@ export default function SettingsTab() {
   const [logs, setLogs] = useState<string[]>([]);
   const [syncSuccess, setSyncSuccess] = useState<boolean | null>(null);
   const [activeStep, setActiveStep] = useState<string>("");
-  const [settingsTab, setSettingsTab] = useState<"sync" | "install" | "notifications">("sync");
+  const [settingsTab, setSettingsTab] = useState<"sync" | "install" | "notifications" | "audit">("sync");
   const [notificationPermission, setNotificationPermission] = useState<string>("default");
 
   useEffect(() => {
@@ -743,6 +744,17 @@ export default function SettingsTab() {
           <Bell className="w-3.5 h-3.5" />
           PWA NOTIFICATIONS
         </button>
+        <button
+          onClick={() => setSettingsTab("audit")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            settingsTab === "audit"
+              ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_12px_rgba(52,211,153,0.4)]"
+              : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          SYSTEM AUDIT &amp; ACCURACY
+        </button>
       </div>
 
       {settingsTab === "sync" && (
@@ -1280,6 +1292,11 @@ export default function SettingsTab() {
             )}
           </div>
         </div>
+      )}
+
+      {/* MASTER SYSTEM AUDIT & ACCURACY VERIFIER */}
+      {settingsTab === "audit" && (
+        <SystemAuditCenter />
       )}
     </div>
   );
