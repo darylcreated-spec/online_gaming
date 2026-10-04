@@ -20,7 +20,8 @@ import {
   Filter,
   Search,
   Lock,
-  Compass
+  Compass,
+  Users
 } from "lucide-react";
 import { CashPotDiffAnalysisResult, CashPotFormulaSet, CashPotVerificationEntry } from "@/lib/cashpot_diff20_engine";
 import { triggerHaptic } from "@/lib/haptics";
@@ -33,6 +34,7 @@ export default function CashPotDiff20Panel() {
   const [selectedFilter, setSelectedFilter] = useState<"all" | "4plus" | "3plus" | "2plus" | "1plus">("all");
   const [showTheory, setShowTheory] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [syndicateSuccess, setSyndicateSuccess] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -71,6 +73,14 @@ export default function CashPotDiff20Panel() {
     setCopiedId(id);
     triggerHaptic("selection");
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleSendToSyndicate = (fSet: CashPotFormulaSet) => {
+    triggerHaptic("success");
+    const formattedNumbers = fSet.numbers.map(n => String(n).padStart(2, "0")).join(", ");
+    setSyndicateSuccess(`Set "${fSet.name}" (${formattedNumbers}) copied and queued for Syndicate slip!`);
+    navigator.clipboard.writeText(`Cash Pot Prediction: ${fSet.name} [${formattedNumbers}]`);
+    setTimeout(() => setSyndicateSuccess(null), 3500);
   };
 
   if (loading && !data) {
@@ -123,6 +133,19 @@ export default function CashPotDiff20Panel() {
 
   return (
     <div className="space-y-6 font-mono">
+      {/* Toast Notification */}
+      {syndicateSuccess && (
+        <div className="p-3.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold flex items-center justify-between shadow-[0_0_20px_rgba(16,185,129,0.3)] animate-in fade-in duration-200">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span>{syndicateSuccess}</span>
+          </div>
+          <button onClick={() => setSyndicateSuccess(null)} className="text-emerald-400 hover:text-white text-xs">
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Top Banner */}
       <div className="glass-panel p-6 rounded-2xl border border-yellow-500/30 bg-gradient-to-br from-yellow-950/20 via-slate-950/80 to-transparent relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -281,13 +304,22 @@ export default function CashPotDiff20Panel() {
                   <span className="text-[9px] font-bold uppercase tracking-widest text-yellow-400">
                     {fSet.badge}
                   </span>
-                  <button
-                    onClick={() => handleCopy(fSet.id, fSet.numbers)}
-                    className="p-1 rounded text-gray-400 hover:text-white hover:bg-white/10 transition text-[10px]"
-                    title="Copy numbers"
-                  >
-                    {copiedId === fSet.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleCopy(fSet.id, fSet.numbers)}
+                      className="p-1 rounded text-gray-400 hover:text-white hover:bg-white/10 transition text-[10px]"
+                      title="Copy numbers"
+                    >
+                      {copiedId === fSet.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => handleSendToSyndicate(fSet)}
+                      className="p-1 rounded text-gray-400 hover:text-yellow-400 hover:bg-white/10 transition text-[10px]"
+                      title="Send to Syndicate"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
                 <h4 className="text-xs font-bold text-white">{fSet.name}</h4>
                 <p className="text-[10px] text-gray-400 line-clamp-2 leading-relaxed">{fSet.description}</p>

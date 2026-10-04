@@ -34,10 +34,12 @@ import {
   Sparkles,
   Brain,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  Sigma
 } from "lucide-react";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PlayWheAuditPanel from "@/components/PlayWheAuditPanel";
+import PlayWheDiff37Panel from "@/components/PlayWheDiff37Panel";
 import { triggerHaptic } from "@/lib/haptics";
 
 const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -96,12 +98,12 @@ export default function PlayWheTab({
   showExplainer,
   onShowExplainerChange
 }: {
-  activeSubTab?: "translator" | "dashboard" | "transition" | "math-engine" | "relationship" | "history" | "hits" | "explain" | "network" | "audit";
-  onSubTabChange?: (tab: "translator" | "dashboard" | "transition" | "math-engine" | "relationship" | "history" | "hits" | "explain" | "network" | "audit") => void;
+  activeSubTab?: "translator" | "dashboard" | "transition" | "math-engine" | "diff" | "relationship" | "history" | "hits" | "explain" | "network" | "audit";
+  onSubTabChange?: (tab: "translator" | "dashboard" | "transition" | "math-engine" | "diff" | "relationship" | "history" | "hits" | "explain" | "network" | "audit") => void;
   showExplainer?: boolean;
   onShowExplainerChange?: (show: boolean) => void;
 } = {}) {
-  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "transition" | "math-engine" | "relationship" | "history" | "hits" | "explain" | "network" | "audit">("dashboard");
+  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "transition" | "math-engine" | "diff" | "relationship" | "history" | "hits" | "explain" | "network" | "audit">("dashboard");
   const [localShowHelp, setLocalShowHelp] = useState(false);
 
   const subTab = activeSubTab !== undefined ? activeSubTab : localSubTab;
@@ -673,6 +675,18 @@ export default function PlayWheTab({
         >
           <Brain className="w-3.5 h-3.5" />
           MATHEMATICAL ENGINE
+        </button>
+
+        <button
+          onClick={() => setSubTab("diff")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "diff"
+              ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.4)]"
+              : "text-amber-400/90 hover:text-amber-300 hover:bg-amber-400/10"
+          }`}
+        >
+          <Sigma className="w-3.5 h-3.5" />
+          SUM-37 / DIFF ENGINE
         </button>
 
         <button
@@ -3077,6 +3091,9 @@ export default function PlayWheTab({
           </div>
         </div>
       )}
+
+      {/* SUM-37 / DIFF-36 QUANTITATIVE SYMMETRY ENGINE */}
+      {subTab === "diff" && <PlayWheDiff37Panel />}
 
       {/* 100% QUANT AUDIT PANEL */}
       {subTab === "audit" && <PlayWheAuditPanel />}
