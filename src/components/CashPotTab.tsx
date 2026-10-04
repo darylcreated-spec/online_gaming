@@ -19,7 +19,8 @@ import {
   CheckCircle2,
   TrendingUp,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  Sigma
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -33,6 +34,7 @@ import {
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import CashPotAuditPanel from "@/components/CashPotAuditPanel";
+import CashPotDiff20Panel from "@/components/CashPotDiff20Panel";
 import { generateWheel } from "@/lib/wheeling";
 import { triggerHaptic } from "@/lib/haptics";
 
@@ -49,7 +51,7 @@ interface CashPotDraw {
 }
 
 export default function CashPotTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "audit" | "wheeling" | "archive" | "explain">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "diff" | "audit" | "wheeling" | "archive" | "explain">("dashboard");
   const [draws, setDraws] = useState<CashPotDraw[]>([]);
   const [latestDraw, setLatestDraw] = useState<CashPotDraw | null>(null);
   const [loading, setLoading] = useState(true);
@@ -204,6 +206,18 @@ export default function CashPotTab() {
         >
           <Brain className="w-3.5 h-3.5" />
           MATHEMATICAL ENGINE
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("diff")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "diff"
+              ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.4)]"
+              : "text-amber-400/90 hover:text-amber-300 hover:bg-amber-400/10"
+          }`}
+        >
+          <Sigma className="w-3.5 h-3.5" />
+          SUM-28 / DIFF ENGINE
         </button>
 
         <button
@@ -399,6 +413,11 @@ export default function CashPotTab() {
       {/* Subtab Content: Mathematical Engine */}
       {activeSubTab === "math" && (
         <MultiBallMathPanel game="cashpot" />
+      )}
+
+      {/* Subtab Content: Sum-28 / Diff-20 Quantitative Engine */}
+      {activeSubTab === "diff" && (
+        <CashPotDiff20Panel />
       )}
 
       {/* Subtab Content: 100% Invariant & Audit System */}
