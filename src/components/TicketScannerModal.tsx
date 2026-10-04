@@ -18,6 +18,7 @@ import {
   ShieldAlert
 } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
+import TicketAutopsyCard from "@/components/TicketAutopsyCard";
 
 interface TicketScannerModalProps {
   isOpen: boolean;
@@ -413,12 +414,14 @@ export default function TicketScannerModal({
             </div>
           )}
 
-          {/* Verification Results Panel */}
+          {/* Verification Results Panel & Forensic Ticket Autopsy */}
           {verificationResult && (
             <div className="pt-3 border-t border-slate-800 space-y-3 animate-in fade-in duration-300">
               {verificationResult.success ? (
-                verificationResult.isWinner ? (
-                  /* WINNER BANNER */
+                verificationResult.autopsy ? (
+                  <TicketAutopsyCard autopsy={verificationResult.autopsy} />
+                ) : verificationResult.isWinner ? (
+                  /* WINNER BANNER FALLBACK */
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-950/80 via-teal-950/50 to-slate-900 border border-emerald-400/60 shadow-[0_0_30px_rgba(16,185,129,0.3)]">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -436,75 +439,17 @@ export default function TicketScannerModal({
                         <div className="text-2xl font-black text-emerald-300 font-mono">
                           ${verificationResult.netPayoutTT.toLocaleString("en-US", { minimumFractionDigits: 2 })} <span className="text-xs font-normal text-emerald-400">TTD</span>
                         </div>
-                        {verificationResult.isTaxable && (
-                          <div className="text-[10px] text-amber-300/90 font-mono">
-                            Gross: ${verificationResult.grossPayoutTT} TT (10% Tax: -${verificationResult.taxDeductionTT} TT)
-                          </div>
-                        )}
                       </div>
-                    </div>
-
-                    {/* Ball comparison */}
-                    <div className="p-3 rounded-xl bg-slate-950/80 border border-emerald-500/30 space-y-2">
-                      <div className="flex items-center justify-between text-[11px] text-slate-400">
-                        <span>Draw #{verificationResult.drawNumber} ({verificationResult.drawDate})</span>
-                        <span className="text-emerald-400 font-mono">
-                          {verificationResult.matchCount} Winning Ball{verificationResult.matchCount > 1 ? "s" : ""} Matched
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {verificationResult.officialWinningNumbers.map((num: number) => {
-                          const isMatched = verificationResult.matchedNumbers.includes(num);
-                          return (
-                            <span
-                              key={num}
-                              className={`w-8 h-8 rounded-lg font-mono font-bold text-xs flex items-center justify-center ${
-                                isMatched
-                                  ? "bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 shadow-[0_0_12px_rgba(16,185,129,0.6)] ring-2 ring-emerald-300"
-                                  : "bg-slate-900 text-slate-500 border border-slate-800"
-                              }`}
-                            >
-                              {String(num).padStart(2, "0")}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-between text-[10px] text-slate-400">
-                      <span className="flex items-center gap-1">
-                        <ShieldAlert className="w-3.5 h-3.5 text-cyan-400" />
-                        Valid for {verificationResult.claimWindowDays} days from draw date
-                      </span>
-                      <span className="text-slate-500">Official NLCB Payout Rules</span>
                     </div>
                   </div>
                 ) : (
-                  /* NO PRIZE BANNER */
+                  /* NO PRIZE BANNER FALLBACK */
                   <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-center">
                     <div className="text-slate-400 text-xs font-medium mb-1">
                       No Prize Won for Draw #{verificationResult.drawNumber} ({verificationResult.drawDate})
                     </div>
                     <div className="text-sm font-semibold text-slate-300">
-                      Matched {verificationResult.matchCount} numbers • Official winning numbers:
-                    </div>
-                    <div className="flex items-center justify-center gap-1.5 mt-3 flex-wrap">
-                      {verificationResult.officialWinningNumbers.map((num: number) => {
-                        const isMatched = verificationResult.matchedNumbers.includes(num);
-                        return (
-                          <span
-                            key={num}
-                            className={`w-7 h-7 rounded-lg font-mono font-bold text-xs flex items-center justify-center ${
-                              isMatched
-                                ? "bg-cyan-950 border border-cyan-400 text-cyan-300"
-                                : "bg-slate-950 text-slate-500 border border-slate-800"
-                            }`}
-                          >
-                            {String(num).padStart(2, "0")}
-                          </span>
-                        );
-                      })}
+                      Matched {verificationResult.matchCount} numbers
                     </div>
                   </div>
                 )

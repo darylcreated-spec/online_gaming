@@ -4,8 +4,10 @@ import React, { useState, useRef, useEffect } from "react";
 import Tesseract from "tesseract.js";
 import { parseTicketText, checkTicket, CheckResult, parsePlayWheTicketText, checkPlayWheTicket, parseWinForLifeTicketText, checkWinForLifeTicket, checkCashPotTicket, checkPick4Ticket, parseMultiPlays } from "@/lib/checker";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
-import { Upload, Camera, CheckCircle2, AlertTriangle, RefreshCw, HelpCircle, Zap, Database, ScanLine } from "lucide-react";
+import { Upload, Camera, CheckCircle2, AlertTriangle, RefreshCw, HelpCircle, Zap, Database, ScanLine, Activity } from "lucide-react";
 import NaturalLanguageQueryPanel from "@/components/NaturalLanguageQueryPanel";
+import { performTicketAutopsy, TicketAutopsyReport } from "@/lib/ticket_autopsy";
+import TicketAutopsyCard from "@/components/TicketAutopsyCard";
 
 interface CheckerTabProps {
   initialTool?: "scanner" | "nl-query";
@@ -48,6 +50,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
   const [checkResult, setCheckResult] = useState<any | null>(null);
   const [winningDraw, setWinningDraw] = useState<any | null>(null);
   const [checkError, setCheckError] = useState<string | null>(null);
+  const [autopsyReport, setAutopsyReport] = useState<TicketAutopsyReport | null>(null);
   
   // Manual check fallback (if draw not found in DB)
   const [showManualWinningInput, setShowManualWinningInput] = useState(false);
@@ -500,6 +503,54 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
           grade: resGraded
         }]);
       }
+
+      // Compute Forensic Ticket Autopsy & Secondary Prize Audit
+      try {
+        let officialNums: number[] = [];
+        let offBonus: number | undefined;
+        let offMultiplier = 1;
+
+        if (selectedGame === "play-whe") {
+          officialNums = [Number(draw.winning_number)];
+        } else if (selectedGame === "pick4") {
+          officialNums = [Number(draw.digit1), Number(draw.digit2), Number(draw.digit3), Number(draw.digit4)];
+        } else if (selectedGame === "cashpot") {
+          officialNums = [Number(draw.num1), Number(draw.num2), Number(draw.num3), Number(draw.num4), Number(draw.num5)];
+          offMultiplier = Number(draw.multiplier) || 1;
+        } else if (selectedGame === "win-for-life") {
+          officialNums = [Number(draw.num1), Number(draw.num2), Number(draw.num3), Number(draw.num4), Number(draw.num5), Number(draw.num6)];
+          offBonus = Number(draw.cash_ball);
+        } else {
+          officialNums = [Number(draw.num1), Number(draw.num2), Number(draw.num3), Number(draw.num4), Number(draw.num5)];
+          offBonus = Number(draw.powerball);
+        }
+
+        const targetTicketNums = selectedGame === "play-whe"
+          ? [parseInt(playWheSelectedNumber)]
+          : (multiPlays.length > 0
+              ? multiPlays[0].numbers.map(Number).filter(n => !isNaN(n))
+              : ticketNumbers.map(Number).filter(n => !isNaN(n)));
+
+        const targetBonus = selectedGame === "play-whe"
+          ? undefined
+          : (multiPlays.length > 0
+              ? (parseInt(multiPlays[0].pb) || undefined)
+              : (parseInt(ticketPb) || undefined));
+
+        const rep = performTicketAutopsy({
+          game: selectedGame,
+          ticketNumbers: targetTicketNums,
+          ticketBonus: targetBonus,
+          officialNumbers: officialNums,
+          officialBonus: offBonus,
+          officialMultiplier: offMultiplier,
+          drawNumber: Number(draw.draw_number),
+          drawDate: draw.draw_date
+        });
+        setAutopsyReport(rep);
+      } catch (e) {
+        console.warn("Autopsy error:", e);
+      }
     } catch (error: any) {
       setCheckError(error.message || "Failed to connect to database.");
       setShowManualWinningInput(true);
@@ -683,6 +734,55 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
         grade: resGraded
       }]);
     }
+
+    // Compute Forensic Autopsy for Manual Check
+    try {
+      let officialNums: number[] = [];
+      let offBonus: number | undefined;
+      let offMultiplier = 1;
+
+      if (selectedGame === "play-whe") {
+        officialNums = [Number(draw.winning_number)];
+      } else if (selectedGame === "pick4") {
+        officialNums = [Number(draw.digit1), Number(draw.digit2), Number(draw.digit3), Number(draw.digit4)];
+      } else if (selectedGame === "cashpot") {
+        officialNums = [Number(draw.num1), Number(draw.num2), Number(draw.num3), Number(draw.num4), Number(draw.num5)];
+        offMultiplier = Number(draw.multiplier) || 1;
+      } else if (selectedGame === "win-for-life") {
+        officialNums = [Number(draw.num1), Number(draw.num2), Number(draw.num3), Number(draw.num4), Number(draw.num5), Number(draw.num6)];
+        offBonus = Number(draw.cash_ball);
+      } else {
+        officialNums = [Number(draw.num1), Number(draw.num2), Number(draw.num3), Number(draw.num4), Number(draw.num5)];
+        offBonus = Number(draw.powerball);
+      }
+
+      const targetTicketNums = selectedGame === "play-whe"
+        ? [parseInt(playWheSelectedNumber)]
+        : (multiPlays.length > 0
+            ? multiPlays[0].numbers.map(Number).filter(n => !isNaN(n))
+            : ticketNumbers.map(Number).filter(n => !isNaN(n)));
+
+      const targetBonus = selectedGame === "play-whe"
+        ? undefined
+        : (multiPlays.length > 0
+            ? (parseInt(multiPlays[0].pb) || undefined)
+            : (parseInt(ticketPb) || undefined));
+
+      const rep = performTicketAutopsy({
+        game: selectedGame,
+        ticketNumbers: targetTicketNums,
+        ticketBonus: targetBonus,
+        officialNumbers: officialNums,
+        officialBonus: offBonus,
+        officialMultiplier: offMultiplier,
+        drawNumber: Number(draw.draw_number),
+        drawDate: draw.draw_date
+      });
+      setAutopsyReport(rep);
+    } catch (e) {
+      console.warn("Autopsy error in manual check:", e);
+    }
+
     setCheckError(null);
   };
 
@@ -702,6 +802,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
     setMultiPlays([]);
     setWinningDraw(null);
     setCheckError(null);
+    setAutopsyReport(null);
     setShowManualWinningInput(false);
     setManualWinningNumbers(["", "", "", "", "", ""]);
     setManualWinningPb("");
@@ -1771,6 +1872,17 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                   ? `None of your plays matched. Review statistical pools!`
                   : `None of your plays matched. Keep playing and analyze deltas to build better pools!`}
               </p>
+            </div>
+          )}
+
+          {/* FORENSIC TICKET AUTOPSY & SECONDARY PRIZE REPORT */}
+          {autopsyReport && (
+            <div className="pt-3 border-t border-white/10 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 font-mono uppercase tracking-wider">
+                <Activity className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <span>Forensic Ticket Autopsy &amp; Machine Near-Miss Analysis</span>
+              </div>
+              <TicketAutopsyCard autopsy={autopsyReport} />
             </div>
           )}
         </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { performTicketAutopsy } from "@/lib/ticket_autopsy";
 
 export const dynamic = "force-dynamic";
 
@@ -203,6 +204,28 @@ export async function POST(request: NextRequest) {
     const taxDeductionTT = isTaxable ? Math.round(grossPayoutTT * 0.10 * 100) / 100 : 0;
     const netPayoutTT = Math.max(0, grossPayoutTT - taxDeductionTT);
 
+    const officialBonusBall = (gameKey === "lotto" || gameKey === "lotto-plus")
+      ? Number(draw.powerball || 0)
+      : (gameKey === "winforlife" || gameKey === "win-for-life")
+      ? Number(draw.cash_ball || 0)
+      : undefined;
+
+    const userBonusBall = parsedNumbers.length > officialWinningNumbers.length
+      ? parsedNumbers[parsedNumbers.length - 1]
+      : undefined;
+
+    const autopsy = performTicketAutopsy({
+      game: gameKey,
+      ticketNumbers: parsedNumbers.slice(0, officialWinningNumbers.length || parsedNumbers.length),
+      ticketBonus: userBonusBall,
+      officialNumbers: officialWinningNumbers,
+      officialBonus: officialBonusBall,
+      officialMultiplier: multiplier,
+      drawNumber: Number(draw.draw_number),
+      drawDate: draw.draw_date,
+      betAmount
+    });
+
     return NextResponse.json({
       success: true,
       game: gameKey,
@@ -219,7 +242,9 @@ export async function POST(request: NextRequest) {
       isTaxable,
       taxDeductionTT,
       netPayoutTT,
-      claimWindowDays: 180,
+      claimWindowDays: autopsy.daysRemainingToClaim,
+      claimDeadlineDate: autopsy.claimDeadlineDate,
+      autopsy,
       scannedRaw: scannedRaw || null
     });
   } catch (error: any) {
