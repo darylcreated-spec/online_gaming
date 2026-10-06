@@ -33,13 +33,14 @@ export default function WinForLifeForensicPanel() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copiedSlipIdx, setCopiedSlipIdx] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterTier, setFilterTier] = useState<"ALL" | "WINS_ONLY" | "HIGH_HITS">("ALL");
+  const [filterTier, setFilterTier] = useState<"ALL" | "WINS_ONLY" | "HIGH_HITS" | "MATCH_5">("ALL");
+  const [auditDepth, setAuditDepth] = useState<"50" | "100" | "200" | "all">("100");
 
-  const fetchData = async () => {
+  const fetchData = async (depth: "50" | "100" | "200" | "all" = auditDepth) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/winforlife/forensic-engine", { cache: "no-store" });
+      const res = await fetch(`/api/winforlife/forensic-engine?depth=${depth}`, { cache: "no-store" });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to load forensic engine data.");
       setData(json);
@@ -53,8 +54,14 @@ export default function WinForLifeForensicPanel() {
     }
   };
 
+  const handleDepthChange = (newDepth: "50" | "100" | "200" | "all") => {
+    setAuditDepth(newDepth);
+    fetchData(newDepth);
+    triggerHaptic("selection");
+  };
+
   useEffect(() => {
-    fetchData();
+    fetchData(auditDepth);
   }, []);
 
   const handleCopySet = (set: ForensicCandidateSet, index: number) => {
@@ -113,7 +120,7 @@ export default function WinForLifeForensicPanel() {
         </div>
         <p className="text-xs">{error || "Failed to load forensic data."}</p>
         <button
-          onClick={fetchData}
+          onClick={() => fetchData(auditDepth)}
           className="px-4 py-2 bg-rose-500 text-slate-950 rounded-lg text-xs font-bold hover:bg-rose-400 transition cursor-pointer"
         >
           RETRY QUERY
@@ -129,6 +136,7 @@ export default function WinForLifeForensicPanel() {
       entry.drawDate.includes(searchQuery);
     if (!matchesSearch) return false;
     if (filterTier === "WINS_ONLY") return entry.isWinningTier;
+    if (filterTier === "MATCH_5") return entry.bestPortfolioHitCount >= 5;
     if (filterTier === "HIGH_HITS") return entry.bestPortfolioHitCount >= 4 || entry.invariantPoolCapturedCount >= 5;
     return true;
   });
@@ -173,7 +181,7 @@ export default function WinForLifeForensicPanel() {
               {showTheory ? "Hide Discovery Laws" : "View Discovery Laws"}
             </button>
             <button
-              onClick={fetchData}
+              onClick={() => fetchData(auditDepth)}
               disabled={loading}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-mono font-black shadow-lg transition cursor-pointer disabled:opacity-50"
             >
@@ -497,23 +505,70 @@ export default function WinForLifeForensicPanel() {
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-amber-400" />
               <h3 className="text-sm font-black uppercase text-white tracking-wider">
-                Walk-Forward Hit & Miss Empirical Audit (Last 50 Draws)
+                Walk-Forward Hit &amp; Miss Empirical Audit
               </h3>
+              <span className="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
+                {data.audit.testedDrawsCount} Draws
+              </span>
             </div>
             <p className="text-xs text-gray-400 mt-0.5">
-              Strict out-of-sample backtest: every historical draw is evaluated strictly with prior knowledge.
+              Strict out-of-sample backtest: every historical draw is simulated strictly with prior knowledge and verified against official payouts.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Horizon Depth Selector */}
+            <div className="flex items-center p-1 rounded-xl bg-slate-900 border border-white/10">
+              <button
+                onClick={() => handleDepthChange("50")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  auditDepth === "50"
+                    ? "bg-emerald-500 text-slate-950 shadow-sm"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                Last 50
+              </button>
+              <button
+                onClick={() => handleDepthChange("100")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  auditDepth === "100"
+                    ? "bg-emerald-500 text-slate-950 shadow-sm"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                Last 100
+              </button>
+              <button
+                onClick={() => handleDepthChange("200")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  auditDepth === "200"
+                    ? "bg-emerald-500 text-slate-950 shadow-sm"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                Last 200
+              </button>
+              <button
+                onClick={() => handleDepthChange("all")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  auditDepth === "all"
+                    ? "bg-cyan-500 text-slate-950 shadow-sm"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                Full Archive ({data.totalDrawsInDb - 15})
+              </button>
+            </div>
+
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-gray-500" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search draw # or date..."
-                className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono w-44"
+                placeholder="Search draw #..."
+                className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono w-36"
               />
             </div>
             <select
@@ -521,45 +576,56 @@ export default function WinForLifeForensicPanel() {
               onChange={e => setFilterTier(e.target.value as any)}
               className="py-1.5 px-2 rounded-lg bg-slate-900 border border-white/10 text-xs text-gray-300 font-mono focus:outline-none focus:border-emerald-500 cursor-pointer"
             >
-              <option value="ALL">All Draws (50)</option>
-              <option value="WINS_ONLY">Prize Winners Only</option>
+              <option value="ALL">All Draws ({data.audit.testedDrawsCount})</option>
+              <option value="WINS_ONLY">Prize Winners Only ({data.audit.threeHitsCount + data.audit.fourHitsCount + data.audit.fiveHitsCount + data.audit.sixHitsCount})</option>
+              <option value="MATCH_5">Match 5+ Major Winners ($1,000 TT) ({data.audit.fiveHitsCount + data.audit.sixHitsCount})</option>
               <option value="HIGH_HITS">High Hits (4+ or Pool 5+)</option>
             </select>
           </div>
         </div>
 
         {/* AUDIT METRICS BANNER */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-2.5">
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Tested Draws</span>
-            <div className="text-lg font-black text-white">{data.audit.testedDrawsCount}</div>
-            <span className="text-[10px] text-emerald-400">100% Out-of-Sample</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Audit Depth</span>
+            <div className="text-lg font-black text-white">{data.audit.testedDrawsCount} Draws</div>
+            <span className="text-[10px] text-emerald-400">Strict Walk-Forward</span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 5+ Major Hits</span>
+            <div className="text-lg font-black text-amber-400">
+              {data.audit.fiveHitsCount + data.audit.sixHitsCount} Draws
+            </div>
+            <span className="text-[10px] text-amber-300 font-bold">$1,000 TT Payouts</span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 4+ Cash Hits</span>
+            <div className="text-lg font-black text-cyan-400">{data.audit.fourHitsCount} Draws</div>
+            <span className="text-[10px] text-cyan-300">{data.audit.atLeastFourHitsRatePercent}% Cash Rate</span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
             <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 3+ Prize Rate</span>
             <div className="text-lg font-black text-emerald-400">{data.audit.atLeastThreeHitsRatePercent}%</div>
-            <span className="text-[10px] text-gray-400">{data.audit.threeHitsCount} Official Free Slips</span>
+            <span className="text-[10px] text-gray-400">{data.audit.threeHitsCount} Free Slips</span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 4+ Cash Rate</span>
-            <div className="text-lg font-black text-cyan-400">{data.audit.atLeastFourHitsRatePercent}%</div>
-            <span className="text-[10px] text-gray-400">{data.audit.fourHitsCount} Cash Wins</span>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">14-Ball Pool Captures</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">16-Ball Pool 6/6</span>
             <div className="text-lg font-black text-indigo-400">
-              {data.audit.drawByDrawLog.filter(e => e.invariantPoolCapturedCount >= 5).length} Draws
+              {data.audit.drawByDrawLog.filter(e => e.invariantPoolCapturedCount === 6).length} Perfect
             </div>
-            <span className="text-[10px] text-indigo-300">5+ of 6 in Invariant Core</span>
+            <span className="text-[10px] text-indigo-300">
+              {data.audit.drawByDrawLog.filter(e => e.invariantPoolCapturedCount >= 5).length} Draws 5+ Hits
+            </span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
             <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Simulated Payout</span>
-            <div className="text-lg font-black text-amber-400">${data.audit.totalSimulatedPayoutTT.toLocaleString()} TT</div>
-            <span className="text-[10px] text-gray-400">Official NLCB Tiers</span>
+            <div className="text-lg font-black text-emerald-400">${data.audit.totalSimulatedPayoutTT.toLocaleString()} TT</div>
+            <span className="text-[10px] text-gray-400">NLCB Cash &amp; Slips</span>
           </div>
         </div>
 
@@ -573,7 +639,7 @@ export default function WinForLifeForensicPanel() {
                 <th className="py-2.5 px-3">Official Drawn Numbers</th>
                 <th className="py-2.5 px-3">Primary Prediction</th>
                 <th className="py-2.5 px-3">Portfolio Best Hit</th>
-                <th className="py-2.5 px-3">14-Ball Pool Capture</th>
+                <th className="py-2.5 px-3">16-Ball Pool Capture</th>
                 <th className="py-2.5 px-3">Prize Tier Won</th>
               </tr>
             </thead>

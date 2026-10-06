@@ -33,7 +33,15 @@ export async function GET(request: NextRequest) {
       cash_ball: Number(r.cash_ball || 1)
     }));
 
-    const result = executeWinForLifeForensicEngine(draws);
+    const url = new URL(request.url);
+    const depthParam = url.searchParams.get("depth");
+    let sampleSize = 100;
+    if (depthParam === "50") sampleSize = 50;
+    else if (depthParam === "100") sampleSize = 100;
+    else if (depthParam === "200") sampleSize = 200;
+    else if (depthParam === "all" || depthParam === "full") sampleSize = draws.length - 15;
+
+    const result = executeWinForLifeForensicEngine(draws, sampleSize);
 
     return NextResponse.json({
       success: true,

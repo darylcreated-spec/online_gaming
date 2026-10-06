@@ -635,7 +635,7 @@ export function runWalkForwardHitMissAudit(
 /**
  * Executes the complete Win For Life Unified Master Synthesis Engine.
  */
-export function executeWinForLifeForensicEngine(draws: WFLDraw[]): ForensicEngineOutput {
+export function executeWinForLifeForensicEngine(draws: WFLDraw[], auditSampleSize: number = 100): ForensicEngineOutput {
   if (!draws || draws.length === 0) {
     throw new Error("Cannot execute forensic engine with empty draws array.");
   }
@@ -705,8 +705,8 @@ export function executeWinForLifeForensicEngine(draws: WFLDraw[]): ForensicEngin
     coveringTickets
   };
 
-  // 3. Walk-Forward Hit & Miss Audit over 50 draws
-  const audit = runWalkForwardHitMissAudit(sortedDraws, 50);
+  // 3. Walk-Forward Hit & Miss Audit
+  const audit = runWalkForwardHitMissAudit(sortedDraws, auditSampleSize);
 
   // 4. Empirical Affinity & Tension Telemetry
   const topAffinityPairs: { pair: string; count: number }[] = [
