@@ -209,13 +209,16 @@ export function executePlayWheForensicEngine(draws: PlayWheDraw[], auditSampleSi
   let totalPayout = 0;
 
   for (let i = startIdx; i < N; i++) {
-    const historicalSlice = sortedDraws.slice(0, i);
     const targetDraw = sortedDraws[i];
     const targetMark = targetDraw.winning_number;
 
-    // Fast top 5 prediction from slice
+    // Fast top 5 prediction from rolling 30-draw window without copying array
+    const windowStart = Math.max(0, i - 30);
     const sliceCounts = Array(37).fill(0);
-    historicalSlice.slice(-30).forEach(d => sliceCounts[d.winning_number]++);
+    for (let w = windowStart; w < i; w++) {
+      const wn = sortedDraws[w].winning_number;
+      if (wn >= 1 && wn <= 36) sliceCounts[wn]++;
+    }
     const predicted = Array.from({ length: 36 }, (_, idx) => idx + 1)
       .sort((a, b) => sliceCounts[b] - sliceCounts[a])
       .slice(0, 5);

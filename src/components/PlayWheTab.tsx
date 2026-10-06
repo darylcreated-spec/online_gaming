@@ -34,11 +34,13 @@ import {
   Brain,
   Zap,
   ShieldCheck,
-  Sigma
+  Sigma,
+  Binary
 } from "lucide-react";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PlayWheAuditPanel from "@/components/PlayWheAuditPanel";
 import PlayWheDiff37Panel from "@/components/PlayWheDiff37Panel";
+import PlayWheForensicPanel from "@/components/PlayWheForensicPanel";
 import { triggerHaptic } from "@/lib/haptics";
 
 const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -97,12 +99,12 @@ export default function PlayWheTab({
   showExplainer,
   onShowExplainerChange
 }: {
-  activeSubTab?: "translator" | "dashboard" | "transition" | "math-engine" | "diff" | "relationship" | "history" | "hits" | "explain" | "network" | "audit";
-  onSubTabChange?: (tab: "translator" | "dashboard" | "transition" | "math-engine" | "diff" | "relationship" | "history" | "hits" | "explain" | "network" | "audit") => void;
+  activeSubTab?: "translator" | "dashboard" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network";
+  onSubTabChange?: (tab: "translator" | "dashboard" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network") => void;
   showExplainer?: boolean;
   onShowExplainerChange?: (show: boolean) => void;
 } = {}) {
-  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "transition" | "math-engine" | "diff" | "relationship" | "history" | "hits" | "explain" | "network" | "audit">("dashboard");
+  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network">("dashboard");
   const [localShowHelp, setLocalShowHelp] = useState(false);
 
   const subTab = activeSubTab !== undefined ? activeSubTab : localSubTab;
@@ -698,6 +700,18 @@ export default function PlayWheTab({
         >
           <ShieldCheck className="w-3.5 h-3.5" />
           100% QUANT AUDIT
+        </button>
+
+        <button
+          onClick={() => setSubTab("forensic")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "forensic"
+              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+              : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
+          }`}
+        >
+          <Binary className="w-3.5 h-3.5" />
+          FORENSIC ENGINE
         </button>
 
         <button
@@ -3096,6 +3110,9 @@ export default function PlayWheTab({
 
       {/* 100% QUANT AUDIT PANEL */}
       {subTab === "audit" && <PlayWheAuditPanel />}
+
+      {/* FORENSIC ENGINE PANEL */}
+      {subTab === "forensic" && <PlayWheForensicPanel />}
     </div>
   );
 }

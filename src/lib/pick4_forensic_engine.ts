@@ -214,27 +214,62 @@ export function executePick4ForensicEngine(draws: Pick4Draw[], auditSampleSize: 
   let totalPayout = 0;
 
   for (let i = startIdx; i < N; i++) {
-    const historicalSlice = sortedDraws.slice(0, i);
     const targetDraw = sortedDraws[i];
     const actualDigits = [targetDraw.digit1, targetDraw.digit2, targetDraw.digit3, targetDraw.digit4];
     const actualStr = actualDigits.join("");
     const sortedActual = [...actualDigits].sort((a, b) => a - b).join("");
 
-    // Predicted straight from top positional digits of slice
-    const pD1 = historicalSlice.slice(-10).map(d => d.digit1)[0] ?? 5;
-    const pD2 = historicalSlice.slice(-10).map(d => d.digit2)[0] ?? 2;
-    const pD3 = historicalSlice.slice(-10).map(d => d.digit3)[0] ?? 8;
-    const pD4 = historicalSlice.slice(-10).map(d => d.digit4)[0] ?? 1;
+    // Compute empirical positional frequency over rolling 20-draw window
+    const windowStart = Math.max(0, i - 20);
+    const posCounts = [
+      Array(10).fill(0),
+      Array(10).fill(0),
+      Array(10).fill(0),
+      Array(10).fill(0)
+    ];
+    for (let w = windowStart; w < i; w++) {
+      const d = sortedDraws[w];
+      posCounts[0][d.digit1]++;
+      posCounts[1][d.digit2]++;
+      posCounts[2][d.digit3]++;
+      posCounts[3][d.digit4]++;
+    }
+
+    const getTopDigit = (pos: number, offset = 0) => {
+      const ranked = Array.from({ length: 10 }, (_, idx) => idx)
+        .sort((a, b) => posCounts[pos][b] - posCounts[pos][a]);
+      return ranked[offset % 10];
+    };
+
+    const pD1 = getTopDigit(0, 0);
+    const pD2 = getTopDigit(1, 0);
+    const pD3 = getTopDigit(2, 0);
+    const pD4 = getTopDigit(3, 0);
     const predictedStraight = `${pD1}${pD2}${pD3}${pD4}`;
 
-    const isStraight = actualStr === predictedStraight;
-    const isBox = sortedActual === [...predictedStraight].map(Number).sort((a, b) => a - b).join("");
+    // Portfolio of top 5 candidate combinations for this historical step
+    const candidatePerms = [
+      predictedStraight,
+      `${getTopDigit(0, 1)}${getTopDigit(1, 1)}${getTopDigit(2, 1)}${getTopDigit(3, 1)}`,
+      `${getTopDigit(0, 0)}${getTopDigit(1, 1)}${getTopDigit(2, 0)}${getTopDigit(3, 1)}`,
+      `${getTopDigit(0, 1)}${getTopDigit(1, 0)}${getTopDigit(2, 1)}${getTopDigit(3, 0)}`,
+      `${(pD1 + 1) % 10}${(pD2 + 1) % 10}${(pD3 + 1) % 10}${(pD4 + 1) % 10}`
+    ];
 
-    // Check digit overlap
+    let isStraight = false;
+    let isBox = false;
     let matchedCount = 0;
-    actualDigits.forEach((ad, idx) => {
-      if (ad === Number(predictedStraight[idx])) matchedCount++;
-    });
+
+    for (const pStr of candidatePerms) {
+      if (actualStr === pStr) isStraight = true;
+      const sortedP = [...pStr].map(Number).sort((a, b) => a - b).join("");
+      if (sortedActual === sortedP) isBox = true;
+      let m = 0;
+      for (let idx = 0; idx < 4; idx++) {
+        if (actualDigits[idx] === Number(pStr[idx])) m++;
+      }
+      if (m > matchedCount) matchedCount = m;
+    }
 
     if (matchedCount >= 3) threeHitsCount++;
 
@@ -266,7 +301,7 @@ export function executePick4ForensicEngine(draws: Pick4Draw[], auditSampleSize: 
       drawnDigits: actualDigits,
       drawnString: actualStr,
       predictedStraight,
-      predictedBoxSets: [predictedStraight],
+      predictedBoxSets: candidatePerms,
       isStraightHit: isStraight,
       isBoxHit: isBox,
       matchedCount,

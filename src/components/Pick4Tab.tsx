@@ -35,6 +35,7 @@ import { Pick4MathPrediction, Pick4BacktestResult } from "@/lib/pick4_math_engin
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import Pick4Diff9Panel from "@/components/Pick4Diff9Panel";
 import Pick4AuditPanel from "@/components/Pick4AuditPanel";
+import Pick4ForensicPanel from "@/components/Pick4ForensicPanel";
 
 interface Pick4Draw {
   id: number;
@@ -48,7 +49,7 @@ interface Pick4Draw {
 }
 
 export default function Pick4Tab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "diff-9" | "audit" | "backtest" | "archive" | "explain">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "diff-9" | "audit" | "forensic" | "backtest" | "archive" | "explain">("dashboard");
   const [draws, setDraws] = useState<Pick4Draw[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
@@ -246,6 +247,18 @@ export default function Pick4Tab() {
         >
           <ShieldCheck className="w-3.5 h-3.5" />
           100% QUANT AUDIT
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("forensic")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "forensic"
+              ? "bg-violet-500 text-slate-950 font-black shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+              : "text-violet-400/90 hover:text-violet-300 hover:bg-violet-500/10"
+          }`}
+        >
+          <Binary className="w-3.5 h-3.5" />
+          FORENSIC ENGINE
         </button>
 
         <button
@@ -936,6 +949,9 @@ export default function Pick4Tab() {
 
       {/* Subtab: 100% Quant Audit Panel */}
       {activeSubTab === "audit" && <Pick4AuditPanel />}
+
+      {/* Subtab: Forensic Engine Panel */}
+      {activeSubTab === "forensic" && <Pick4ForensicPanel />}
     </div>
   );
 }
