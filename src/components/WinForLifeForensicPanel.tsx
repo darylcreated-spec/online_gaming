@@ -358,10 +358,10 @@ export default function WinForLifeForensicPanel() {
         {/* Syndicate Covering Slips */}
         <div className="pt-3 border-t border-white/5 space-y-2">
           <div className="text-[11px] text-gray-400 uppercase font-bold tracking-wider flex items-center justify-between">
-            <span>Combinatorial Covering Slips (Abbreviated Invariant Wheel):</span>
-            <span className="text-[10px] text-indigo-400">6 Strategic Slips</span>
+            <span>Combinatorial Covering Slips (Stefan Mandel Invariant Wheel):</span>
+            <span className="text-[10px] text-indigo-400 font-bold">10 Strategic Slips</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
             {data.invariantSubspace.coveringTickets.map((tkt, idx) => (
               <div
                 key={idx}
@@ -722,7 +722,7 @@ export default function WinForLifeForensicPanel() {
                       </div>
                     </td>
 
-                    {/* 14-Ball Invariant Pool Capture */}
+                    {/* 16-Ball Invariant Pool Capture */}
                     <td className="py-2.5 px-3">
                       {entry.invariantPoolCapturedCount === 6 ? (
                         <span className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px] shadow-md animate-bounce">

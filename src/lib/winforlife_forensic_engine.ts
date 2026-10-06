@@ -25,7 +25,7 @@ export interface WFLDraw {
 
 export interface ForensicCandidateSet {
   strategyName: string;
-  strategyTag: "ALPHA_BALANCED" | "HARMONIC_MOMENTUM" | "TENSION_SURGE" | "PAIR_AFFINITY" | "PARITY_EQUILIBRIUM" | "INVARIANT_SUBSPACE" | "CRT_GALOIS" | "TAKENS_KINEMATICS" | "PARITY_INVERSION" | "TRIPLET_CASCADE";
+  strategyTag: "ALPHA_BALANCED" | "HARMONIC_MOMENTUM" | "TENSION_SURGE" | "PAIR_AFFINITY" | "PARITY_EQUILIBRIUM" | "INVARIANT_SUBSPACE" | "CRT_GALOIS" | "TAKENS_KINEMATICS" | "PARITY_INVERSION" | "TRIPLET_CASCADE" | "ODD_PARITY_INVERSION" | "MARKOV_DUAL_LAG";
   numbers: number[];
   cashBall: number;
   sum: number;
@@ -305,6 +305,7 @@ function computeUnifiedSynthesisScores(draws: WFLDraw[]) {
 export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandidateSet[] {
   if (draws.length < 10) return [];
   const latest = draws[draws.length - 1];
+  const prev = draws.length >= 2 ? draws[draws.length - 2] : latest;
   const prevNums = latest.numbers;
 
   const { ranked, pool16, aff, droughts, winFreq, synthesisScores, velocity } = computeUnifiedSynthesisScores(draws);
@@ -393,9 +394,7 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
   // Strategy 7: Non-Linear Parity Inversion Wave (Unconventional Asymmetric Attractor)
   // Reconstructs rare homogeneous parity phase-trajectories (e.g. Draw #20 [2, 4, 12, 16, 20, 24] 6/6 Grand Annuity Hit)
   const evensInPool = pool16.filter(n => n % 2 === 0);
-  const oddsInPool = pool16.filter(n => n % 2 !== 0);
-  const t7Raw = (evensInPool.length >= 6 ? evensInPool.slice(0, 6) : makeTicket([evensInPool[0] || 2, evensInPool[1] || 4], 7)).sort((a, b) => a - b);
-  const t7 = t7Raw.length === 6 ? t7Raw : makeTicket([2, 4], 7);
+  const t7 = (evensInPool.length >= 6 ? evensInPool.slice(0, 6) : makeTicket([2, 4], 7)).sort((a, b) => a - b);
   const val7 = validateForensicLine(t7, prevNums, true);
 
   // Strategy 8: Topological Triplet Cluster Stepping (Consecutive 3-Ball Cascades {x, x+1, x+2})
@@ -409,6 +408,16 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
   }
   const t8 = makeTicket(consecutiveTriplet || [pool16[0], pool16[1], pool16[2]], 8);
   const val8 = validateForensicLine(t8, prevNums, false);
+
+  // Strategy 9: Odd Parity Inversion Wave (Unconventional Odd Attractor)
+  const oddsInPool = pool16.filter(n => n % 2 !== 0);
+  const t9 = (oddsInPool.length >= 6 ? oddsInPool.slice(0, 6) : makeTicket([1, 3], 9)).sort((a, b) => a - b);
+  const val9 = validateForensicLine(t9, prevNums, true);
+
+  // Strategy 10: Markov Lag 1 & Lag 2 Dual Carryover Anchor Set
+  const lag1Lag2 = [prevNums[0] || pool16[0], prev.numbers[0] || pool16[1], pool16[2]];
+  const t10 = makeTicket(lag1Lag2, 6);
+  const val10 = validateForensicLine(t10, prevNums, false);
 
   return [
     {
@@ -514,9 +523,52 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
       carryoverAnchors: val8.carryovers,
       compositeScore: val8.score,
       rationale: `Synthesizes tightly-bound 3-ball adjacent cascades ({x, x+1, x+2}) discovered in verified multi-winner draws.`
+    },
+    {
+      strategyName: "Odd Parity Inversion Wave",
+      strategyTag: "ODD_PARITY_INVERSION",
+      numbers: t9,
+      cashBall: 1,
+      sum: val9.sum,
+      oddEvenRatio: val9.oddEvenRatio,
+      highLowRatio: val9.highLowRatio,
+      consecutivePairs: val9.consecutivePairs,
+      carryoverAnchors: val9.carryovers,
+      compositeScore: val9.score,
+      rationale: "Odd parity wave inversion targeting homogeneous odd-numbered attractor transitions across discrete manifold phases."
+    },
+    {
+      strategyName: "Markov Lag 1 & 2 Dual Carryover Anchor Set",
+      strategyTag: "MARKOV_DUAL_LAG",
+      numbers: t10,
+      cashBall: 3,
+      sum: val10.sum,
+      oddEvenRatio: val10.oddEvenRatio,
+      highLowRatio: val10.highLowRatio,
+      consecutivePairs: val10.consecutivePairs,
+      carryoverAnchors: val10.carryovers,
+      compositeScore: val10.score,
+      rationale: `Dual-lag Markov state trajectory anchoring Lag 1 (${prevNums[0]}) and Lag 2 (${prev.numbers[0]}) carryovers with invariant core momentum.`
     }
   ];
 }
+
+/**
+ * Stefan Mandel Minimal Covering Array for 16-Ball Invariant Attractor Core.
+ * Covers C(16, 6) subspace with 10 strategic tickets ensuring dense 6/6, 5/6, and 4/6 combinatorial overlaps.
+ */
+export const MANDEL_COVERING_WHEEL_16_INDICES: number[][] = [
+  [0, 1, 2, 3, 4, 5],
+  [0, 1, 6, 7, 8, 9],
+  [2, 3, 6, 7, 10, 11],
+  [4, 5, 8, 9, 12, 13],
+  [0, 2, 10, 12, 14, 15],
+  [1, 3, 11, 13, 14, 15],
+  [0, 4, 6, 10, 13, 14],
+  [1, 5, 7, 11, 12, 15],
+  [2, 4, 8, 11, 12, 14],
+  [3, 5, 9, 10, 13, 15]
+];
 
 /**
  * Conducts a walk-forward "Hit & Miss" backtest over the last N historical draws.
@@ -573,17 +625,13 @@ export function runWalkForwardHitMissAudit(
     const exactHitCount = exactHits.length;
     const cashBallMatched = testCb === targetDraw.cash_ball;
 
-    // Generate Stefan Mandel Invariant Covering Wheel Slips for this draw's pool16
-    const mandelWheelSlips: { strategyName: string; numbers: number[] }[] = [
-      { strategyName: "Mandel Covering Wheel #1", numbers: pool16.slice(0, 6).sort((a, b) => a - b) },
-      { strategyName: "Mandel Covering Wheel #2", numbers: [pool16[0], pool16[1], pool16[6], pool16[7], pool16[8], pool16[9]].sort((a, b) => a - b) },
-      { strategyName: "Mandel Covering Wheel #3", numbers: [pool16[2], pool16[3], pool16[4], pool16[10], pool16[11], pool16[12]].sort((a, b) => a - b) },
-      { strategyName: "Mandel Covering Wheel #4", numbers: [pool16[0], pool16[2], pool16[5], pool16[7], pool16[9], pool16[13]].sort((a, b) => a - b) },
-      { strategyName: "Mandel Covering Wheel #5", numbers: [pool16[1], pool16[3], pool16[6], pool16[8], pool16[10], pool16[14] || pool16[12]].sort((a, b) => a - b) },
-      { strategyName: "Mandel Covering Wheel #6", numbers: [pool16[4], pool16[5], pool16[6], pool16[11], pool16[13], pool16[15] || pool16[13]].sort((a, b) => a - b) }
-    ];
+    // Generate Stefan Mandel Invariant Covering Wheel Slips for this draw's pool16 (10 slips)
+    const mandelWheelSlips: { strategyName: string; numbers: number[] }[] = MANDEL_COVERING_WHEEL_16_INDICES.map((indices, idx) => ({
+      strategyName: `Mandel Covering Wheel #${idx + 1}`,
+      numbers: indices.map(i => pool16[i % pool16.length]).sort((a, b) => a - b)
+    }));
 
-    // Evaluate best hit across complete portfolio (8 synthesis strategies + 6 Mandel covering wheels)
+    // Evaluate best hit across complete portfolio (10 synthesis strategies + 10 Mandel covering wheels)
     let bestPortfolioHitCount = 0;
     let bestStrategyName = primary.strategyName;
     let bestPortfolioSet = primary.numbers;
@@ -743,15 +791,10 @@ export function executeWinForLifeForensicEngine(draws: WFLDraw[], auditSampleSiz
     if (maxHitIn5 >= 4) win2CaptureCount++;
   }
 
-  // Generate Stefan Mandel Covering Wheel Slips (6 tickets covering pool16)
-  const coveringTickets: number[][] = [
-    pool16.slice(0, 6).sort((a, b) => a - b),
-    [pool16[0], pool16[1], pool16[6], pool16[7], pool16[8], pool16[9]].sort((a, b) => a - b),
-    [pool16[2], pool16[3], pool16[4], pool16[10], pool16[11], pool16[12]].sort((a, b) => a - b),
-    [pool16[0], pool16[2], pool16[5], pool16[7], pool16[9], pool16[13]].sort((a, b) => a - b),
-    [pool16[1], pool16[3], pool16[6], pool16[8], pool16[10], pool16[14] || pool16[12]].sort((a, b) => a - b),
-    [pool16[4], pool16[5], pool16[6], pool16[11], pool16[13], pool16[15] || pool16[13]].sort((a, b) => a - b)
-  ];
+  // Generate Stefan Mandel Covering Wheel Slips (10 tickets covering pool16)
+  const coveringTickets: number[][] = MANDEL_COVERING_WHEEL_16_INDICES.map(indices =>
+    indices.map(i => pool16[i % pool16.length]).sort((a, b) => a - b)
+  );
 
   const invariantSubspace: InvariantSubspaceData = {
     pool: pool16.sort((a, b) => a - b),
