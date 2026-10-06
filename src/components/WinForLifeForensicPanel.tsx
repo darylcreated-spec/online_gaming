@@ -33,7 +33,7 @@ export default function WinForLifeForensicPanel() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copiedSlipIdx, setCopiedSlipIdx] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterTier, setFilterTier] = useState<"ALL" | "WINS_ONLY" | "HIGH_HITS" | "MATCH_5">("ALL");
+  const [filterTier, setFilterTier] = useState<"ALL" | "WINS_ONLY" | "HIGH_HITS" | "MATCH_5" | "MATCH_6">("ALL");
   const [auditDepth, setAuditDepth] = useState<"50" | "100" | "200" | "all">("100");
 
   const fetchData = async (depth: "50" | "100" | "200" | "all" = auditDepth) => {
@@ -136,6 +136,7 @@ export default function WinForLifeForensicPanel() {
       entry.drawDate.includes(searchQuery);
     if (!matchesSearch) return false;
     if (filterTier === "WINS_ONLY") return entry.isWinningTier;
+    if (filterTier === "MATCH_6") return entry.bestPortfolioHitCount === 6;
     if (filterTier === "MATCH_5") return entry.bestPortfolioHitCount >= 5;
     if (filterTier === "HIGH_HITS") return entry.bestPortfolioHitCount >= 4 || entry.invariantPoolCapturedCount >= 5;
     return true;
@@ -408,7 +409,7 @@ export default function WinForLifeForensicPanel() {
             </h3>
           </div>
           <span className="text-[11px] font-mono text-gray-400">
-            6 Distinct Quantitative Strategies
+            {data.nextCandidateSets.length} Synthesis &amp; Unconventional Strategies
           </span>
         </div>
 
@@ -578,6 +579,7 @@ export default function WinForLifeForensicPanel() {
             >
               <option value="ALL">All Draws ({data.audit.testedDrawsCount})</option>
               <option value="WINS_ONLY">Prize Winners Only ({data.audit.threeHitsCount + data.audit.fourHitsCount + data.audit.fiveHitsCount + data.audit.sixHitsCount})</option>
+              <option value="MATCH_6">Match 6 Grand Annuity Winners ($480k TT) ({data.audit.sixHitsCount})</option>
               <option value="MATCH_5">Match 5+ Major Winners ($1,000 TT) ({data.audit.fiveHitsCount + data.audit.sixHitsCount})</option>
               <option value="HIGH_HITS">High Hits (4+ or Pool 5+)</option>
             </select>
@@ -593,17 +595,19 @@ export default function WinForLifeForensicPanel() {
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 5+ Major Hits</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 6 Grand Annuity</span>
             <div className="text-lg font-black text-amber-400">
-              {data.audit.fiveHitsCount + data.audit.sixHitsCount} Draws
+              {data.audit.sixHitsCount} Hits
             </div>
-            <span className="text-[10px] text-amber-300 font-bold">$1,000 TT Payouts</span>
+            <span className="text-[10px] text-amber-300 font-bold">$480,000 TT Prize</span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 4+ Cash Hits</span>
-            <div className="text-lg font-black text-cyan-400">{data.audit.fourHitsCount} Draws</div>
-            <span className="text-[10px] text-cyan-300">{data.audit.atLeastFourHitsRatePercent}% Cash Rate</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 5 Major Hits</span>
+            <div className="text-lg font-black text-cyan-400">
+              {data.audit.fiveHitsCount} Draws
+            </div>
+            <span className="text-[10px] text-cyan-300 font-bold">$1,000 TT Payouts</span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">

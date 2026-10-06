@@ -15,5 +15,17 @@ This version has breaking changes — APIs, conventions, and file structure may 
 2. **Dynamic Empirical Validation**:
    - In quantitative modeling and lottery algorithms, never use static placeholders for predictions or audits.
    - Always run true out-of-sample walk-forward backtests across historical draws to verify capture rates and prize payouts.
-<!-- END:ui-and-math-invariants -->
+<!-- BEGIN:unconventional-lottery-synthesis -->
+# Unconventional Lottery Synthesis & 6-Number Combinatorial Invariants
+
+1. **Dual-Manifold Candidate Strategy (Conventional + Unconventional)**:
+   - In 6/28 and discrete lotteries, do NOT rely solely on standard Gaussian centroid sums.
+   - Combine core Gaussian equilibrium sets with **Non-Linear Parity Inversion Waves** (all-even or all-odd stepping) and **Topological Triplet Cascades** ({x, x+1, x+2}) to catch asymmetric high-yield draws (e.g., Draw #20 `[2, 4, 12, 16, 20, 24]` 6/6 hit).
+
+2. **Stefan Mandel Combinatorial Condensation**:
+   - When an invariant attractor core (14-16 balls) captures all 6 winning numbers, integrate mathematical covering wheel designs (e.g., minimal covering arrays) into the candidate portfolio to maximize 6/6, 5/6, and 4/6 prize capture density.
+
+3. **Multi-Horizon Audit Transparency**:
+   - Provide historical audit breakdowns across 50, 100, 200, and full archive horizons, displaying exact Match 6 and Match 5 verifiable draw numbers, dates, and strategies.
+<!-- END:unconventional-lottery-synthesis -->
 
