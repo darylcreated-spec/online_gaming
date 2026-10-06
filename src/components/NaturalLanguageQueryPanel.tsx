@@ -5,7 +5,7 @@ import {
   Database,
   Search,
   Terminal,
-  Sparkles,
+  TrendingUp,
   Table,
   Bot,
   Copy,
@@ -221,7 +221,7 @@ export default function NaturalLanguageQueryPanel() {
         <div className="space-y-2.5 pt-1">
           <div className="flex items-center justify-between text-xs">
             <span className="text-gray-400 font-bold flex items-center gap-1.5 uppercase text-[10px]">
-              <Sparkles className="w-3 h-3 text-cyan-400" />
+              <TrendingUp className="w-3 h-3 text-cyan-400" />
               Quick Query Templates:
             </span>
             <div className="flex items-center gap-1 overflow-x-auto sleek-scrollbar">

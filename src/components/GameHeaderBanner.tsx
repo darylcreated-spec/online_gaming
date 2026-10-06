@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, Calendar, Database, Sparkles, RefreshCw } from "lucide-react";
+import { Clock, Calendar, Database, TrendingUp, RefreshCw } from "lucide-react";
 import { calculateNextDrawCountdown, DrawCountdown, SupportedGameKey } from "@/lib/draw_schedule";
 
 export interface GameHeaderBannerProps {

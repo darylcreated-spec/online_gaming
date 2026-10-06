@@ -26,7 +26,7 @@ import {
   Compass,
   DollarSign,
   Flame,
-  Sparkles,
+  Cpu,
   Database,
   Camera,
   ShieldCheck

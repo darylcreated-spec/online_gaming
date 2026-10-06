@@ -8,7 +8,7 @@ import { evaluateTicketQuality } from "@/lib/quality_scorer";
 import { runGeneticOptimization, AlphaSlipResult } from "@/lib/geneticOptimizer";
 import { triggerHaptic } from "@/lib/haptics";
 import QuantumSphereTumbler from "@/components/QuantumSphereTumbler";
-import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Sparkles, Play, Award, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Target, Play, Award, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
 
 interface BuilderTabProps {
   historicalDraws: any[];
@@ -516,7 +516,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
               : "text-gray-400 hover:text-white hover:bg-white/5"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+          <Target className="w-3.5 h-3.5 text-sky-400" />
           QUICK PICK
         </button>
       </div>
@@ -548,7 +548,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                       : "bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 hover:opacity-90 shadow-[0_0_25px_rgba(52,211,153,0.35)] hover:scale-105"
                   }`}
                 >
-                  <Sparkles className={`w-4 h-4 ${isOptimizing ? "animate-spin" : ""}`} />
+                  <Target className={`w-4 h-4 ${isOptimizing ? "animate-spin" : ""}`} />
                   <span>{isOptimizing ? `EVOLVING GEN (${generationProgress}%)...` : "RUN GENETIC OPTIMIZATION"}</span>
                 </button>
               </div>

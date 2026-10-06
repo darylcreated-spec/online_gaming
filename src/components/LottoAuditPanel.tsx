@@ -11,7 +11,7 @@ import {
   Check, 
   Layers, 
   Binary, 
-  Sparkles,
+  Target,
   Calculator, 
   ArrowRight,
   Database,
@@ -366,7 +366,7 @@ export default function LottoAuditPanel() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-sky-400 animate-pulse" />
+              <Target className="w-5 h-5 text-sky-400 animate-pulse" />
               <h3 className="text-base font-black uppercase text-white tracking-wide">
                 Target Predictions for Upcoming Draw #{data.targetDrawNumber} ({data.targetDrawDate})
               </h3>

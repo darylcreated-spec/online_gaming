@@ -12,7 +12,7 @@ import {
   BarChart3, 
   Play, 
   CheckCircle2, 
-  Sparkles,
+  Binary,
   HelpCircle,
   Copy,
   Check,

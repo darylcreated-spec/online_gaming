@@ -10,7 +10,7 @@ import {
   Check,
   HelpCircle,
   Clock,
-  Sparkles,
+  Binary,
   ArrowRight,
   Filter,
   Search,

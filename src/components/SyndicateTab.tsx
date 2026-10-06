@@ -8,7 +8,7 @@ import {
   Plus, 
   DollarSign, 
   Send, 
-  Sparkles, 
+  Target, 
   Check, 
   Copy, 
   Ticket, 

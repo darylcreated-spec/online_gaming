@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import {
   Trophy,
   AlertTriangle,
-  Sparkles,
+  Crosshair,
   ShieldCheck,
   Clock,
   ArrowRight,
@@ -257,7 +257,7 @@ export default function TicketAutopsyCard({
       <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-cyan-950/40 via-slate-900 to-slate-950 border border-cyan-500/30 space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-300">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <Crosshair className="w-3.5 h-3.5 text-cyan-400" />
             <span>Next-Draw Smart Pivot Line</span>
           </div>
           <span className="text-[10px] text-slate-400 font-mono">

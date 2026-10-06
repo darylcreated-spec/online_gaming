@@ -9,7 +9,7 @@ import {
   Layers, 
   BarChart3, 
   CheckCircle2, 
-  Sparkles, 
+  Target, 
   Copy, 
   Check, 
   Filter, 
@@ -223,7 +223,7 @@ export default function LottoQuant100Panel() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 className="text-lg font-black font-mono text-white tracking-wide flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-emerald-400" />
+              <Target className="w-5 h-5 text-emerald-400" />
               <span>THE 5 UNCONVENTIONAL PREDICTION SETS (TARGET DRAW #{data.targetDrawNumber})</span>
             </h3>
             <p className="text-xs text-gray-400 font-mono">

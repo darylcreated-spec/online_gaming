@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, BarChart, Info, HelpCircle } from "lucide-react";
+import { Cpu, BarChart, Info, HelpCircle } from "lucide-react";
 
 // The 36 traditional Play Whe marks
 const PLAY_WHE_MARKS = [
@@ -69,7 +69,7 @@ export default function PlayWhePlaceholder() {
       <div className="glass-panel p-6 rounded-xl flex flex-col md:flex-row gap-4 items-center relative overflow-hidden bg-secondary/[0.02] border-secondary/20">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-secondary" />
         <div className="p-3 bg-secondary/10 border border-secondary/20 text-secondary rounded-lg">
-          <Sparkles className="w-6 h-6" />
+          <Cpu className="w-6 h-6" />
         </div>
         <div className="space-y-1">
           <h3 className="font-bold text-white text-sm">Play Whe Integration Coming Soon</h3>

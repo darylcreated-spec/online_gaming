@@ -10,7 +10,7 @@ import {
   Layers, 
   BarChart3, 
   CheckCircle2, 
-  Sparkles, 
+  Cpu, 
   HelpCircle, 
   Copy, 
   Check, 
@@ -292,7 +292,7 @@ export default function Pick4Diff9Panel() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <div className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <Cpu className="w-3.5 h-3.5 text-emerald-400" />
               Mathematical Forecast (Sequence Invariant Box Play)
             </div>
             <h3 className="text-lg font-mono font-black text-white uppercase tracking-tight flex items-center gap-2">

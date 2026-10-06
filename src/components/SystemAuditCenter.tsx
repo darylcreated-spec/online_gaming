@@ -17,7 +17,7 @@ import {
   ChevronUp,
   Terminal,
   Clock,
-  Sparkles,
+  TrendingUp,
   Search,
   Binary,
   Check

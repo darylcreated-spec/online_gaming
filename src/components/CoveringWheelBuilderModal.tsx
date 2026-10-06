@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import {
   Layers,
   X,
-  Sparkles,
+  Binary,
   DollarSign,
   TrendingDown,
   Clock,

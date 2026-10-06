@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, Calendar, RefreshCw, Zap, Sparkles, CheckCircle2 } from "lucide-react";
+import { Clock, Calendar, RefreshCw, Zap, Activity, CheckCircle2 } from "lucide-react";
 
 interface NextDrawInfo {
   game: "Play Whe" | "Pick 4" | "Cash Pot" | "Lotto Plus" | "Win for Life";

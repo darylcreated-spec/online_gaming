@@ -10,7 +10,7 @@ import {
   Layers, 
   BarChart3, 
   CheckCircle2, 
-  Sparkles, 
+  Crosshair, 
   HelpCircle, 
   Copy, 
   Check, 

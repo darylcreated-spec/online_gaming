@@ -20,7 +20,7 @@ import {
   Activity,
   Award,
   Flame,
-  Sparkles,
+  Crosshair,
   TrendingUp,
   Hash
 } from "lucide-react";

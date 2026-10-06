@@ -7,7 +7,7 @@ import {
   ScanLine,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
+  Target,
   DollarSign,
   Calendar,
   Layers,

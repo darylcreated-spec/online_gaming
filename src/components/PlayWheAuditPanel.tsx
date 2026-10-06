@@ -20,7 +20,7 @@ import {
   Activity,
   Award,
   Flame,
-  Sparkles,
+  Target,
   TrendingUp,
   Clock
 } from "lucide-react";

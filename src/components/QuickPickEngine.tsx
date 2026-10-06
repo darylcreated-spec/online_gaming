@@ -8,7 +8,7 @@ import {
   Check,
   Users,
   CheckCircle2,
-  Sparkles,
+  Binary,
   ArrowRight,
   Sliders,
   ShieldCheck,

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Sparkles, Shield, Cpu, Activity } from "lucide-react";
+import { Binary, Shield, Cpu, Activity } from "lucide-react";
 
 interface AppSplashScreenProps {
   onComplete?: () => void;
