@@ -367,9 +367,9 @@ export default function WinForLifeForensicPanel() {
                 key={idx}
                 className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5 flex items-center justify-between text-xs"
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold text-indigo-400">#{idx + 1}</span>
-                  <div className="flex items-center gap-1 font-bold">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[10px] font-bold text-indigo-400 shrink-0">#{idx + 1}</span>
+                  <div className="flex items-center gap-1 font-bold flex-wrap">
                     {tkt.map((b) => (
                       <span key={b} className="px-1.5 py-0.5 rounded bg-slate-800 text-gray-200 text-[11px]">
                         {b}
@@ -377,7 +377,7 @@ export default function WinForLifeForensicPanel() {
                     ))}
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0 ml-1">
                   <button
                     onClick={() => handleCopySlip(tkt, idx)}
                     title="Copy Slip"
@@ -413,7 +413,7 @@ export default function WinForLifeForensicPanel() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-5 gap-3.5">
           {data.nextCandidateSets.map((candidate, idx) => (
             <div
               key={idx}
@@ -607,13 +607,15 @@ export default function WinForLifeForensicPanel() {
             <div className="text-lg font-black text-cyan-400">
               {data.audit.fiveHitsCount} Draws
             </div>
-            <span className="text-[10px] text-cyan-300 font-bold">$1,000 TT Payouts</span>
+            <span className="text-[10px] text-cyan-300 font-bold">$1,000 TT | {data.audit.fourHitsCount} Match 4s</span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
             <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 3+ Prize Rate</span>
             <div className="text-lg font-black text-emerald-400">{data.audit.atLeastThreeHitsRatePercent}%</div>
-            <span className="text-[10px] text-gray-400">{data.audit.threeHitsCount} Free Slips</span>
+            <span className="text-[10px] text-emerald-300 font-bold">
+              {data.audit.threeHitsCount + data.audit.fourHitsCount + data.audit.fiveHitsCount + data.audit.sixHitsCount} / {data.audit.testedDrawsCount} Prize Wins
+            </span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">

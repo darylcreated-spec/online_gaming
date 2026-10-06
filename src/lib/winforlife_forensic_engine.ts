@@ -80,7 +80,7 @@ export interface ForensicEngineOutput {
   nextTargetDrawNumber: number;
   generatedAt: string;
   
-  // The 6 Primary Synthesis Strategy Predictions
+  // The 10 Primary Synthesis & Unconventional Strategy Predictions
   nextCandidateSets: ForensicCandidateSet[];
 
   // Unified Invariant Attractor Subspace
@@ -130,10 +130,18 @@ export function validateForensicLine(
   const reasons: string[] = [];
   let score = 100;
 
+  // Precompute ratios
+  const odds = sorted.filter(n => n % 2 !== 0).length;
+  const evens = 6 - odds;
+  const oddEvenRatio = `${odds}:${evens}`;
+  const lows = sorted.filter(n => n <= 14).length;
+  const highs = 6 - lows;
+  const highLowRatio = `${lows}:${highs}`;
+
   // 1. Sum Check: Optimal [70, 105], wide boundary [58, 118]
   const sum = sorted.reduce((a, b) => a + b, 0);
   if (sum < 58 || sum > 118) {
-    return { isValid: false, score: 0, sum, oddEvenRatio: "", highLowRatio: "", consecutivePairs: [], carryovers: [], reasons: ["Sum outside wide boundary [58, 118]"] };
+    return { isValid: false, score: 0, sum, oddEvenRatio, highLowRatio, consecutivePairs: [], carryovers: [], reasons: ["Sum outside wide boundary [58, 118]"] };
   }
   if (sum >= 70 && sum <= 105) score += 20;
   else score -= 10;
@@ -167,21 +175,15 @@ export function validateForensicLine(
   }
 
   // 4. Parity Ratio: 3:3, 4:2, or 2:4
-  const odds = sorted.filter(n => n % 2 !== 0).length;
-  const evens = 6 - odds;
-  const oddEvenRatio = `${odds}:${evens}`;
   if (odds === 3) score += 20;
   else if (odds === 4 || odds === 2) score += 15;
   else if (allowUnconventionalParity) {
     score += 10; // Unconventional parity wave
   } else {
-    return { isValid: false, score: 0, sum, oddEvenRatio, highLowRatio: "", consecutivePairs, carryovers, reasons: ["Extreme parity (not 3:3, 4:2, or 2:4)"] };
+    return { isValid: false, score: 0, sum, oddEvenRatio, highLowRatio, consecutivePairs, carryovers, reasons: ["Extreme parity (not 3:3, 4:2, or 2:4)"] };
   }
 
   // 5. High / Low Split: 1-14 vs 15-28
-  const lows = sorted.filter(n => n <= 14).length;
-  const highs = 6 - lows;
-  const highLowRatio = `${lows}:${highs}`;
   if (lows === 3) score += 15;
   else if (lows === 4 || lows === 2) score += 10;
   else score -= 10;
@@ -300,7 +302,7 @@ function computeUnifiedSynthesisScores(draws: WFLDraw[]) {
 }
 
 /**
- * Generates 6 fully dynamic candidate sets synthesizing all methods.
+ * Generates 10 fully dynamic candidate sets synthesizing all conventional and unconventional methods.
  */
 export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandidateSet[] {
   if (draws.length < 10) return [];
@@ -344,13 +346,28 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
     return Array.from(set).slice(0, 6).sort((a, b) => a - b);
   }
 
+  const usedTickets = new Set<string>();
+
+  function makeUniqueTicket(anchors: number[], baseOffset: number): number[] {
+    let offset = baseOffset;
+    let t = makeTicket(anchors, offset);
+    let attempts = 0;
+    while (usedTickets.has(t.join(',')) && attempts < pool16.length) {
+      offset = (offset + 1) % pool16.length;
+      t = makeTicket(anchors, offset);
+      attempts++;
+    }
+    usedTickets.add(t.join(','));
+    return t;
+  }
+
   // Strategy 1: Alpha Balanced Harmonic Wave
-  const t1 = makeTicket([prevNums[0], prevNums[1] || pool16[0]], 0);
+  const t1 = makeUniqueTicket([prevNums[0], prevNums[1] || pool16[0]], 0);
   const val1 = validateForensicLine(t1, prevNums);
 
   // Strategy 2: CRT Galois Ring Invariant Set (Z_4 x Z_7 non-degenerate residues)
   const crtAnchors = pool16.filter(n => (n % 4 !== 0) && (n % 7 !== 0)).slice(0, 3);
-  const t2 = makeTicket(crtAnchors.length >= 2 ? crtAnchors : [pool16[0], pool16[1]], 2);
+  const t2 = makeUniqueTicket(crtAnchors.length >= 2 ? crtAnchors : [pool16[0], pool16[1]], 2);
   const val2 = validateForensicLine(t2, prevNums);
 
   // Strategy 3: Multi-Lag Resonance Momentum (balls appearing >= 2 in last 4 draws)
@@ -358,13 +375,13 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
     .filter(b => winFreq[b] >= 2)
     .sort((a, b) => synthesisScores[b] - synthesisScores[a]);
   const t3Anchors = waveAnchors.length >= 2 ? waveAnchors.slice(0, 3) : [ranked[0].ball, ranked[1].ball];
-  const t3 = makeTicket(t3Anchors, 3);
+  const t3 = makeUniqueTicket(t3Anchors, 3);
   const val3 = validateForensicLine(t3, prevNums);
 
   // Strategy 4: Poisson Tension Turnaround Surge (top overdue turnaround ball)
   const tensionBalls = [...ranked].filter(x => droughts[x.ball] >= 6).sort((a, b) => droughts[b.ball] - droughts[a.ball]);
   const topTension = tensionBalls[0]?.ball || 26;
-  const t4 = makeTicket([topTension, prevNums[prevNums.length - 1] || 22], 4);
+  const t4 = makeUniqueTicket([topTension, prevNums[prevNums.length - 1] || 22], 4);
   const val4 = validateForensicLine(t4, prevNums);
 
   // Strategy 5: Co-Occurrence Affinity Hub (Perron-Frobenius top graph clique)
@@ -379,7 +396,7 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
       }
     }
   }
-  const t5 = makeTicket([bestP1, bestP2, prevNums[0] || pool16[0]], 1);
+  const t5 = makeUniqueTicket([bestP1, bestP2, prevNums[0] || pool16[0]], 1);
   const val5 = validateForensicLine(t5, prevNums);
 
   // Strategy 6: Takens Phase-Space Kinematic Vector Set
@@ -388,13 +405,14 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
     const candidate = n + shift;
     return (candidate >= 1 && candidate <= 28) ? candidate : n;
   }).slice(0, 3);
-  const t6 = makeTicket(kinematicAnchors, 5);
+  const t6 = makeUniqueTicket(kinematicAnchors, 5);
   const val6 = validateForensicLine(t6, prevNums);
 
   // Strategy 7: Non-Linear Parity Inversion Wave (Unconventional Asymmetric Attractor)
   // Reconstructs rare homogeneous parity phase-trajectories (e.g. Draw #20 [2, 4, 12, 16, 20, 24] 6/6 Grand Annuity Hit)
   const evensInPool = pool16.filter(n => n % 2 === 0);
   const t7 = (evensInPool.length >= 6 ? evensInPool.slice(0, 6) : makeTicket([2, 4], 7)).sort((a, b) => a - b);
+  usedTickets.add(t7.join(','));
   const val7 = validateForensicLine(t7, prevNums, true);
 
   // Strategy 8: Topological Triplet Cluster Stepping (Consecutive 3-Ball Cascades {x, x+1, x+2})
@@ -406,17 +424,18 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
       break;
     }
   }
-  const t8 = makeTicket(consecutiveTriplet || [pool16[0], pool16[1], pool16[2]], 8);
+  const t8 = makeUniqueTicket(consecutiveTriplet || [pool16[0], pool16[1], pool16[2]], 8);
   const val8 = validateForensicLine(t8, prevNums, false);
 
   // Strategy 9: Odd Parity Inversion Wave (Unconventional Odd Attractor)
   const oddsInPool = pool16.filter(n => n % 2 !== 0);
   const t9 = (oddsInPool.length >= 6 ? oddsInPool.slice(0, 6) : makeTicket([1, 3], 9)).sort((a, b) => a - b);
+  usedTickets.add(t9.join(','));
   const val9 = validateForensicLine(t9, prevNums, true);
 
   // Strategy 10: Markov Lag 1 & Lag 2 Dual Carryover Anchor Set
   const lag1Lag2 = [prevNums[0] || pool16[0], prev.numbers[0] || pool16[1], pool16[2]];
-  const t10 = makeTicket(lag1Lag2, 6);
+  const t10 = makeUniqueTicket(lag1Lag2, 6);
   const val10 = validateForensicLine(t10, prevNums, false);
 
   return [
@@ -761,7 +780,7 @@ export function executeWinForLifeForensicEngine(draws: WFLDraw[], auditSampleSiz
   const nextCandidateSets = generateForensicCandidateSets(sortedDraws);
 
   // 2. Compute Unified Invariant Attractor Subspace (Top 16-18 balls)
-  const { pool16, ranked } = computeUnifiedSynthesisScores(sortedDraws);
+  const { pool16, ranked, aff } = computeUnifiedSynthesisScores(sortedDraws);
 
   // Calculate historical capture rates for pool16
   let pool6Count = 0;
@@ -774,21 +793,39 @@ export function executeWinForLifeForensicEngine(draws: WFLDraw[], auditSampleSiz
     if (hits >= 4) pool4Count++;
   }
 
-  // Multi-draw rolling window capture calculations
-  const totalWindows5 = Math.max(1, sortedDraws.length - 25);
+  // Multi-draw rolling window capture calculations (Strictly dynamic)
   let win5CaptureCount = 0;
   let win3CaptureCount = 0;
   let win2CaptureCount = 0;
+  const totalWindows5 = Math.max(1, sortedDraws.length - 20 - 5 + 1);
+  const totalWindows3 = Math.max(1, sortedDraws.length - 20 - 3 + 1);
+  const totalWindows2 = Math.max(1, sortedDraws.length - 20 - 2 + 1);
 
   for (let t = 20; t <= sortedDraws.length - 5; t++) {
-    let maxHitIn5 = 0;
+    let maxHit = 0;
     for (let w = 0; w < 5; w++) {
       const hit = sortedDraws[t + w].numbers.filter(n => pool16.includes(n)).length;
-      if (hit > maxHitIn5) maxHitIn5 = hit;
+      if (hit > maxHit) maxHit = hit;
     }
-    if (maxHitIn5 >= 4) win5CaptureCount++;
-    if (maxHitIn5 >= 4) win3CaptureCount++;
-    if (maxHitIn5 >= 4) win2CaptureCount++;
+    if (maxHit >= 4) win5CaptureCount++;
+  }
+
+  for (let t = 20; t <= sortedDraws.length - 3; t++) {
+    let maxHit = 0;
+    for (let w = 0; w < 3; w++) {
+      const hit = sortedDraws[t + w].numbers.filter(n => pool16.includes(n)).length;
+      if (hit > maxHit) maxHit = hit;
+    }
+    if (maxHit >= 4) win3CaptureCount++;
+  }
+
+  for (let t = 20; t <= sortedDraws.length - 2; t++) {
+    let maxHit = 0;
+    for (let w = 0; w < 2; w++) {
+      const hit = sortedDraws[t + w].numbers.filter(n => pool16.includes(n)).length;
+      if (hit > maxHit) maxHit = hit;
+    }
+    if (maxHit >= 4) win2CaptureCount++;
   }
 
   // Generate Stefan Mandel Covering Wheel Slips (10 tickets covering pool16)
@@ -804,9 +841,9 @@ export function executeWinForLifeForensicEngine(draws: WFLDraw[], auditSampleSiz
     historicalFourCaptureCount: pool4Count,
     rollingWindowCaptureRates: {
       singleDrawFourPlusRate: Math.round((pool4Count / (sortedDraws.length - 20)) * 1000) / 10,
-      windowTwoDrawsRate: 85.3,
-      windowThreeDrawsRate: 93.7,
-      windowFiveDrawsRate: 99.6
+      windowTwoDrawsRate: Math.round((win2CaptureCount / totalWindows2) * 1000) / 10,
+      windowThreeDrawsRate: Math.round((win3CaptureCount / totalWindows3) * 1000) / 10,
+      windowFiveDrawsRate: Math.round((win5CaptureCount / totalWindows5) * 1000) / 10
     },
     crtSignature: "Z_4 x Z_7 Bijective Ring (Residues mod 4 >= 2, mod 7 >= 3)",
     coveringTickets
@@ -815,19 +852,17 @@ export function executeWinForLifeForensicEngine(draws: WFLDraw[], auditSampleSiz
   // 3. Walk-Forward Hit & Miss Audit
   const audit = runWalkForwardHitMissAudit(sortedDraws, auditSampleSize);
 
-  // 4. Empirical Affinity & Tension Telemetry
-  const topAffinityPairs: { pair: string; count: number }[] = [
-    { pair: "7 & 12", count: 33 },
-    { pair: "4 & 18", count: 30 },
-    { pair: "4 & 26", count: 29 },
-    { pair: "7 & 19", count: 29 },
-    { pair: "23 & 26", count: 29 },
-    { pair: "7 & 8", count: 28 },
-    { pair: "1 & 7", count: 27 },
-    { pair: "3 & 7", count: 27 },
-    { pair: "4 & 19", count: 27 },
-    { pair: "8 & 26", count: 27 }
-  ];
+  // 4. Empirical Affinity & Tension Telemetry (Computed Dynamically)
+  const pairsList: { pair: string; count: number }[] = [];
+  for (let a = 1; a <= 28; a++) {
+    for (let b = a + 1; b <= 28; b++) {
+      if (aff[a][b] > 0) {
+        pairsList.push({ pair: `${a} & ${b}`, count: aff[a][b] });
+      }
+    }
+  }
+  pairsList.sort((x, y) => y.count - x.count);
+  const topAffinityPairs = pairsList.slice(0, 10);
 
   const criticalTensionBalls = ranked
     .filter(r => r.drought >= 5)
