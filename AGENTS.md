@@ -27,5 +27,27 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 3. **Multi-Horizon Audit Transparency**:
    - Provide historical audit breakdowns across 50, 100, 200, and full archive horizons, displaying exact Match 6 and Match 5 verifiable draw numbers, dates, and strategies.
-<!-- END:unconventional-lottery-synthesis -->
+<!-- BEGIN:big-data-continuous-optimization -->
+# Big-Data Continuous Invariant Optimization & Portfolio Scaling
+
+1. **Portfolio Expansion via Empirical Transition Regimes**:
+   - For numerical lotteries with rich database history (e.g. 450+ draws), do not restrict candidate generation to a single macro-state.
+   - Maintain a minimum of 10 complementary candidate sets combining:
+     * Alpha Centroid Gaussian Waves
+     * CRT Modular Congruence Rings
+     * Multi-Lag Rolling Momentum
+     * Poisson Tension Reversals
+     * Topological Graph Co-occurrence Hubs
+     * Takens 6D Kinematic Phase Trajectories
+     * Non-Linear Parity Inversion Waves (Even & Odd)
+     * Topological Triplet Cascades ({x, x+1, x+2})
+     * High-Order Markov Multi-Lag Carryovers
+   - Apply strict dynamic ticket collision prevention so all tickets in the portfolio are distinct.
+
+2. **10-Slip Mandel Covering Array Wheel Integration**:
+   - Integrate an optimal 10-slip covering array wheel over the active 16-ball Invariant Attractor Core directly into the audited portfolio to maintain a 60%-75%+ empirical prize capture rate.
+
+3. **Dynamic Multi-Window Grounding**:
+   - All multi-draw window capture rates (2-draw, 3-draw, 5-draw) and co-occurrence telemetry must be computed dynamically from the live database without static approximations.
+<!-- END:big-data-continuous-optimization -->
 
