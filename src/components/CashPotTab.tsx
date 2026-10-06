@@ -6,7 +6,6 @@ import {
   Calendar, 
   RefreshCw, 
   Cpu, 
-  Sparkles, 
   Search, 
   ChevronLeft, 
   ChevronRight,
@@ -35,6 +34,7 @@ import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import CashPotAuditPanel from "@/components/CashPotAuditPanel";
 import CashPotDiff20Panel from "@/components/CashPotDiff20Panel";
+import CashPotForensicPanel from "@/components/CashPotForensicPanel";
 import { generateWheel } from "@/lib/wheeling";
 import { triggerHaptic } from "@/lib/haptics";
 
@@ -51,7 +51,7 @@ interface CashPotDraw {
 }
 
 export default function CashPotTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "diff" | "audit" | "wheeling" | "archive" | "explain">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "math" | "diff" | "audit" | "forensic" | "wheeling" | "archive" | "explain">("dashboard");
   const [draws, setDraws] = useState<CashPotDraw[]>([]);
   const [latestDraw, setLatestDraw] = useState<CashPotDraw | null>(null);
   const [loading, setLoading] = useState(true);
@@ -230,6 +230,18 @@ export default function CashPotTab() {
         >
           <ShieldCheck className="w-3.5 h-3.5" />
           100% QUANT AUDIT &amp; VERIFICATION
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("forensic")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "forensic"
+              ? "bg-cyan-400 text-slate-950 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+              : "text-cyan-400/90 hover:text-cyan-300 hover:bg-cyan-500/10"
+          }`}
+        >
+          <Cpu className="w-3.5 h-3.5" />
+          FORENSIC ENGINE
         </button>
 
         <button
@@ -423,6 +435,13 @@ export default function CashPotTab() {
       {/* Subtab Content: 100% Invariant & Audit System */}
       {activeSubTab === "audit" && (
         <CashPotAuditPanel />
+      )}
+
+      {/* Subtab Content: Forensic Quantitative Engine */}
+      {activeSubTab === "forensic" && (
+        <div className="tab-content-enter">
+          <CashPotForensicPanel />
+        </div>
       )}
 
       {/* Subtab Content: Wheeling */}

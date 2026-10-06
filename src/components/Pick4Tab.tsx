@@ -6,7 +6,6 @@ import {
   Calendar, 
   RefreshCw, 
   Cpu, 
-  Sparkles, 
   Search, 
   ChevronLeft, 
   ChevronRight,

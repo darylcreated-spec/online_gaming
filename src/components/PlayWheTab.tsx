@@ -31,7 +31,6 @@ import {
   Network,
   Mic,
   MicOff,
-  Sparkles,
   Brain,
   Zap,
   ShieldCheck,

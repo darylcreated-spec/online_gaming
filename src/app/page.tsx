@@ -18,9 +18,10 @@ import MultiBallMathPanel from "@/components/MultiBallMathPanel";
 import LottoDiff35Panel from "@/components/LottoDiff35Panel";
 import LottoQuant100Panel from "@/components/LottoQuant100Panel";
 import LottoAuditPanel from "@/components/LottoAuditPanel";
+import LottoForensicPanel from "@/components/LottoForensicPanel";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PushNotificationBell from "@/components/PushNotificationBell";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck } from "lucide-react";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck, Cpu } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { getCacheItem, setCacheItem } from "@/lib/idb_cache";
 import WinConceptLogoEmblem from "@/components/WinConceptLogoEmblem";
@@ -98,7 +99,7 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings">("welcome");
   const [utilitySubTool, setUtilitySubTool] = useState<"scanner" | "nl-query">("scanner");
-  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "quant-100" | "audit" | "history" | "builder" | "explain">("dashboard");
+  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "quant-100" | "forensic" | "audit" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "diff" | "history" | "translator" | "relationship" | "hits" | "explain" | "network" | "audit">("dashboard");
   
   const handleTabChange = (tab: "welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings") => {
@@ -622,6 +623,17 @@ export default function Home() {
                 100% QUANT ENGINE
               </button>
               <button
+                onClick={() => setLottoSubTab("forensic")}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  lottoSubTab === "forensic"
+                    ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.4)]"
+                    : "text-amber-400/90 hover:text-amber-300 hover:bg-amber-500/10"
+                }`}
+              >
+                <Cpu className="w-3.5 h-3.5" />
+                FORENSIC ENGINE
+              </button>
+              <button
                 onClick={() => setLottoSubTab("audit")}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                   lottoSubTab === "audit"
@@ -712,6 +724,12 @@ export default function Home() {
         {activeTab === "lotto-plus" && lottoSubTab === "quant-100" && (
           <div className="tab-content-enter">
             <LottoQuant100Panel />
+          </div>
+        )}
+
+        {activeTab === "lotto-plus" && lottoSubTab === "forensic" && (
+          <div className="tab-content-enter">
+            <LottoForensicPanel />
           </div>
         )}
 
