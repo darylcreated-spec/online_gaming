@@ -10,7 +10,7 @@ import {
   Layers, 
   BarChart3, 
   CheckCircle2, 
-  Sparkles, 
+  Target, 
   HelpCircle, 
   Copy, 
   Check, 
@@ -298,7 +298,7 @@ export default function WinForLifeDiff28Panel() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <div className="text-[10px] font-mono text-teal-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-teal-400" />
+              <Target className="w-3.5 h-3.5 text-teal-400" />
               Mathematical Forecast (Sequence Does Not Matter)
             </div>
             <h3 className="text-lg font-mono font-black text-white uppercase tracking-tight">

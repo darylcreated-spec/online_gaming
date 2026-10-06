@@ -9,7 +9,7 @@ import {
   Layers, 
   BarChart3, 
   CheckCircle2, 
-  Sparkles, 
+  Target, 
   Copy, 
   Check, 
   Filter, 
@@ -194,7 +194,7 @@ export default function WinForLifeQuant100Panel() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-emerald-400" />
+            <Target className="w-5 h-5 text-emerald-400" />
             <h3 className="font-mono text-lg font-bold text-white tracking-wide">
               THE 5 UNCONVENTIONAL PREDICTION SETS (6 OF 28)
             </h3>
