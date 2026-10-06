@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary, ShieldCheck, X, Sparkles } from "lucide-react";
+import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary, ShieldCheck, X } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
@@ -505,7 +505,7 @@ export default function WinForLifeTab() {
               : "text-amber-300 hover:text-white hover:bg-amber-500/20 border border-amber-500/30"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <Binary className="w-3.5 h-3.5 text-amber-400" />
           FORENSIC QUANT ENGINE
         </button>
         <button
