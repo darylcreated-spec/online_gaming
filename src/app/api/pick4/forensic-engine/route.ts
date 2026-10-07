@@ -35,6 +35,8 @@ export async function GET(request: NextRequest) {
     if (depthParam === "50") sampleSize = 50;
     else if (depthParam === "100") sampleSize = 100;
     else if (depthParam === "200") sampleSize = 200;
+    else if (depthParam === "500") sampleSize = 500;
+    else if (depthParam === "1000") sampleSize = 1000;
     else if (depthParam === "all" || depthParam === "full") sampleSize = draws.length - 20;
 
     const result = executePick4ForensicEngine(draws, sampleSize);

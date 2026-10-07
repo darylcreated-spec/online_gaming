@@ -89,9 +89,14 @@ async function verifyForensicEngines() {
     digit4: Number(r.digit4)
   }));
   const p4Result = executePick4ForensicEngine(p4Draws, 50);
-  console.log(`Pick 4: Total Draws: ${p4Result.totalDrawsInDb}, Target Draw: #${p4Result.nextTargetDrawNumber}`);
+  console.log(`Pick 4: Total Draws: ${p4Result.totalDrawsInDb}, Target Draw: #${p4Result.nextTargetDrawNumber} (${p4Result.nextTargetTimeSlot})`);
   console.log(`Pick 4: Candidate sets generated: ${p4Result.nextCandidateSets.length}`);
-  console.log(`Pick 4: Audit Tested Draws: ${p4Result.audit.testedDrawsCount}, Box Hits: ${p4Result.audit.boxHitsCount}`);
+  console.log(`Pick 4: Mandel covering slips: ${p4Result.mandelBoxWheel.length}`);
+  console.log(`Pick 4: 7-Ball Attractor Core: [${p4Result.attractorCore.pool.join(", ")}], Bankers: [${p4Result.attractorCore.bankerDigits.join(", ")}]`);
+  console.log(`Pick 4: Multi-Window Core Capture: 1-draw ${p4Result.attractorCore.rollingWindowCaptureRates.windowOneDrawRate}%, 2-draw ${p4Result.attractorCore.rollingWindowCaptureRates.windowTwoDrawsRate}%, 5-draw ${p4Result.attractorCore.rollingWindowCaptureRates.windowFiveDrawsRate}%`);
+  console.log(`Pick 4: Audit Tested Draws: ${p4Result.audit.testedDrawsCount}, Prize Capture Rate: ${p4Result.audit.prizeCaptureRatePercent}%`);
+  console.log(`Pick 4: Box Hits: ${p4Result.audit.boxHitsCount} (24w:${p4Result.audit.box24WayHitsCount}, 12w:${p4Result.audit.box12WayHitsCount}), Front/Back 3 Hits: ${p4Result.audit.frontBack3HitsCount}, Pair Hits: ${p4Result.audit.pairHitsCount}`);
+  console.log(`Pick 4: Total Simulated Payout: $${p4Result.audit.totalSimulatedPayoutTT.toLocaleString()} TT`);
   console.log("Pick 4 Forensic Engine: PASS!\n");
 
   console.log("================================================================================");

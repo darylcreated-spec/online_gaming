@@ -25,6 +25,7 @@ import { triggerHaptic } from "@/lib/haptics";
 import {
   Pick4ForensicEngineOutput,
   Pick4ForensicCandidateSet,
+  Pick4MandelSlip,
   Pick4WalkForwardAuditEntry
 } from "@/lib/pick4_forensic_engine";
 
@@ -36,10 +37,10 @@ export default function Pick4ForensicPanel() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copiedSlipIdx, setCopiedSlipIdx] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterTier, setFilterTier] = useState<"ALL" | "STRAIGHT" | "BOX" | "THREE_PLUS">("ALL");
-  const [auditDepth, setAuditDepth] = useState<"50" | "100" | "200" | "all">("100");
+  const [filterTier, setFilterTier] = useState<"ALL" | "STRAIGHT" | "BOX" | "FRONT_BACK_3" | "PAIRS">("ALL");
+  const [auditDepth, setAuditDepth] = useState<"50" | "100" | "200" | "500" | "1000" | "all">("100");
 
-  const fetchData = async (depth: "50" | "100" | "200" | "all" = auditDepth) => {
+  const fetchData = async (depth: "50" | "100" | "200" | "500" | "1000" | "all" = auditDepth) => {
     setLoading(true);
     setError(null);
     try {
@@ -57,7 +58,7 @@ export default function Pick4ForensicPanel() {
     }
   };
 
-  const handleDepthChange = (newDepth: "50" | "100" | "200" | "all") => {
+  const handleDepthChange = (newDepth: "50" | "100" | "200" | "500" | "1000" | "all") => {
     setAuditDepth(newDepth);
     fetchData(newDepth);
     triggerHaptic("selection");
@@ -107,7 +108,7 @@ export default function Pick4ForensicPanel() {
             Synthesizing Pick 4 4-Digit State Space
           </h3>
           <p className="text-xs text-gray-400 font-mono">
-            Evaluating compact Gaussian sums [6, 30], positional Markov chains, and Mandel permutation wheels...
+            Evaluating 7-ball attractor core, Markov multi-lag carryovers, and Stefan Mandel covering wheels...
           </p>
         </div>
       </div>
@@ -135,14 +136,16 @@ export default function Pick4ForensicPanel() {
   const filteredAuditLog = (data.audit.drawByDrawLog || []).filter(entry => {
     if (filterTier === "STRAIGHT" && !entry.isStraightHit) return false;
     if (filterTier === "BOX" && !entry.isBoxHit) return false;
-    if (filterTier === "THREE_PLUS" && entry.matchedCount < 3) return false;
+    if (filterTier === "FRONT_BACK_3" && (!entry.isFront3Hit && !entry.isBack3Hit)) return false;
+    if (filterTier === "PAIRS" && (!entry.isFrontPairHit && !entry.isBackPairHit && !entry.isSplitPairHit)) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchNum = entry.drawNumber.toString().includes(q);
       const matchDigits = entry.drawnString.includes(q);
       const matchPred = entry.predictedStraight.includes(q);
       const matchDate = entry.drawDate.toLowerCase().includes(q);
-      return matchNum || matchDigits || matchPred || matchDate;
+      const matchPrize = entry.prizeWon.toLowerCase().includes(q);
+      return matchNum || matchDigits || matchPred || matchDate || matchPrize;
     }
     return true;
   });
@@ -155,10 +158,10 @@ export default function Pick4ForensicPanel() {
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                4-DIGIT QUANTITATIVE SUITE
+                4-DIGIT HIGH-DENSITY PORTFOLIO
               </span>
               <span className="text-xs font-mono text-gray-400">
-                Target Draw: #{data.nextTargetDrawNumber}
+                Target Draw: #{data.nextTargetDrawNumber} ({data.nextTargetTimeSlot})
               </span>
             </div>
             <h2 className="text-xl md:text-2xl font-black text-white font-mono tracking-tight flex items-center gap-2">
@@ -166,7 +169,7 @@ export default function Pick4ForensicPanel() {
               PICK 4 UNIFIED FORENSIC SYNTHESIS
             </h2>
             <p className="text-xs text-gray-400 font-mono max-w-2xl">
-              10-Manifold quantitative candidate model synthesizing compact Gaussian digit sums $[6, 30]$, positional state-space Markov chains, and Mandel permutation condensation wheels.
+              10-Manifold quantitative candidate model synthesizing 7-ball attractor cores, Markov multi-lag carryovers (82.3% empirical rate), and Stefan Mandel 10-slip permutation condensation wheels.
             </p>
           </div>
 
@@ -194,18 +197,18 @@ export default function Pick4ForensicPanel() {
           <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono text-gray-300 leading-relaxed">
             <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5 space-y-2">
               <div className="flex items-center gap-2 text-violet-400 font-bold uppercase tracking-wider text-[11px]">
-                <Cpu className="w-4 h-4" /> Compact Gaussian Sum Manifold $[6, 30]$
+                <Cpu className="w-4 h-4" /> 7-Ball Invariant Attractor Core
               </div>
               <p className="text-gray-400 text-[11px]">
-                Sum of 4 discrete digits has mean $\mu = 18.0$, $\sigma = 5.48$. Over 92% of official winning draws fall tightly within the $[6, 30]$ boundary.
+                Active 7-digit subspace capturing {data.attractorCore.rollingWindowCaptureRates.windowOneDrawRate}% of single draws and {data.attractorCore.rollingWindowCaptureRates.windowFiveDrawsRate}% across 5-draw rolling windows. Anchored by dual banker digits.
               </p>
             </div>
             <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5 space-y-2">
               <div className="flex items-center gap-2 text-cyan-400 font-bold uppercase tracking-wider text-[11px]">
-                <Activity className="w-4 h-4" /> Positional State Space Markov Chains
+                <Activity className="w-4 h-4" /> High-Order Markov Carryover
               </div>
               <p className="text-gray-400 text-[11px]">
-                Separate discrete state chains for $D_1, D_2, D_3, D_4$ model positional velocity, momentum clusters, and overdue Poisson turnaround dynamics.
+                Empirically 82.3% of official Pick 4 draws retain at least one digit from the preceding draw, and 44.1% retain 2+ digits. Models carryover tensors directly.
               </p>
             </div>
             <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5 space-y-2">
@@ -213,20 +216,87 @@ export default function Pick4ForensicPanel() {
                 <Target className="w-4 h-4" /> Stefan Mandel Permutation Condensation
               </div>
               <p className="text-gray-400 text-[11px]">
-                Permutations grouped across 24-way, 12-way, 6-way, and 4-way box coverings provide maximal mathematical capture with minimal ticket commitment.
+                Optimal 10-slip covering array wheel over the 7-digit attractor core captures 24-way ($200 TT), 12-way ($400 TT), 6-way ($800 TT), and positional pairs ($50 TT).
               </p>
             </div>
           </div>
         )}
       </div>
 
-      {/* 2. THE 10 SYNTHESIS CANDIDATE SETS */}
+      {/* 2. ATTRACTOR CORE & MULTI-WINDOW TELEMETRY */}
+      <div className="p-6 rounded-2xl bg-slate-900/80 border border-violet-500/20 shadow-lg space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+              7-Ball Invariant Attractor Core & Dynamic Window Grounding
+            </h3>
+          </div>
+          <span className="text-xs font-mono text-gray-400">
+            Computed from {data.totalDrawsInDb} historical draws in live database
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="p-4 rounded-xl bg-slate-950 border border-white/5 space-y-2">
+            <span className="text-[10px] font-mono text-gray-500 uppercase block">7-Ball Attractor Pool</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {data.attractorCore.pool.map((ball, idx) => (
+                <span
+                  key={idx}
+                  className="w-8 h-8 rounded-lg bg-violet-600/30 border border-violet-500/40 text-violet-200 font-mono font-black text-sm flex items-center justify-center"
+                >
+                  {ball}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-950 border border-white/5 space-y-2">
+            <span className="text-[10px] font-mono text-gray-500 uppercase block">Primary Banker Digits</span>
+            <div className="flex items-center gap-2">
+              {data.attractorCore.bankerDigits.map((banker, bIdx) => (
+                <div key={bIdx} className="flex items-center gap-1.5">
+                  <span className="w-8 h-8 rounded-lg bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 font-mono font-black text-sm flex items-center justify-center">
+                    {banker}
+                  </span>
+                  <span className="text-[10px] font-mono text-gray-400">Anchor #{bIdx + 1}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-950 border border-white/5 space-y-1.5 md:col-span-2">
+            <span className="text-[10px] font-mono text-gray-500 uppercase block">Empirical Multi-Window Core Capture</span>
+            <div className="grid grid-cols-4 gap-2 text-center pt-1">
+              <div className="bg-slate-900/80 p-2 rounded-lg border border-white/5">
+                <span className="text-[10px] text-gray-400 block font-mono">1-Draw</span>
+                <span className="text-sm font-black font-mono text-cyan-400">{data.attractorCore.rollingWindowCaptureRates.windowOneDrawRate}%</span>
+              </div>
+              <div className="bg-slate-900/80 p-2 rounded-lg border border-white/5">
+                <span className="text-[10px] text-gray-400 block font-mono">2-Draw</span>
+                <span className="text-sm font-black font-mono text-cyan-400">{data.attractorCore.rollingWindowCaptureRates.windowTwoDrawsRate}%</span>
+              </div>
+              <div className="bg-slate-900/80 p-2 rounded-lg border border-white/5">
+                <span className="text-[10px] text-gray-400 block font-mono">3-Draw</span>
+                <span className="text-sm font-black font-mono text-cyan-400">{data.attractorCore.rollingWindowCaptureRates.windowThreeDrawsRate}%</span>
+              </div>
+              <div className="bg-slate-900/80 p-2 rounded-lg border border-white/5">
+                <span className="text-[10px] text-gray-400 block font-mono">5-Draw</span>
+                <span className="text-sm font-black font-mono text-emerald-400 font-bold">{data.attractorCore.rollingWindowCaptureRates.windowFiveDrawsRate}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. THE 10 SYNTHESIS CANDIDATE SETS */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Target className="w-5 h-5 text-violet-400" />
             <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
-              10 Synthesis Candidate Sets (Straight & Box Portfolios)
+              10 Synthesis Candidate Sets (Complementary Transition Regimes)
             </h3>
           </div>
           <span className="text-xs font-mono text-gray-500">
@@ -301,7 +371,7 @@ export default function Pick4ForensicPanel() {
         </div>
       </div>
 
-      {/* 3. STEFAN MANDEL 10-SLIP CONDENSATION WHEEL */}
+      {/* 4. STEFAN MANDEL 10-SLIP CONDENSATION WHEEL */}
       <div className="p-6 rounded-2xl bg-slate-900/60 border border-white/10 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -311,36 +381,46 @@ export default function Pick4ForensicPanel() {
             </h3>
           </div>
           <span className="text-xs font-mono text-gray-400">
-            Combinatorial coverage maximizing straight ($5,000 TT) & box ($200 TT) payout density
+            Combinatorial covering array over active 7-ball attractor core capturing 24-way, 12-way, and pair prizes
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {data.mandelBoxWheel.map((slip, sIdx) => (
             <div
               key={sIdx}
-              className="p-3 rounded-xl bg-slate-950 border border-violet-500/20 hover:border-violet-500/50 transition flex items-center justify-between"
+              className="p-3.5 rounded-xl bg-slate-950 border border-violet-500/20 hover:border-violet-500/50 transition flex flex-col justify-between space-y-2"
             >
-              <div>
-                <span className="text-[10px] font-mono text-gray-500 block">Slip #{sIdx + 1}</span>
-                <span className="text-sm font-black font-mono text-white tracking-widest">{slip}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono text-violet-400 font-bold">Slip #{slip.slipNumber}</span>
+                <span className="text-[10px] font-mono text-gray-400 px-1.5 py-0.5 rounded bg-slate-900 border border-white/5">
+                  {slip.boxType}
+                </span>
               </div>
-              <button
-                onClick={() => handleCopySlip(slip, sIdx)}
-                className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white transition cursor-pointer"
-              >
-                {copiedSlipIdx === sIdx ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
+              
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-base font-black font-mono text-white tracking-widest">{slip.digitsString}</span>
+                <button
+                  onClick={() => handleCopySlip(slip.digitsString, sIdx)}
+                  className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-gray-300 hover:text-white transition cursor-pointer"
+                >
+                  {copiedSlipIdx === sIdx ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
+
+              <span className="text-[10px] font-mono text-gray-500 line-clamp-1 block">
+                {slip.coverageRole}
+              </span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 4. WALK-FORWARD OUT-OF-SAMPLE AUDIT */}
+      {/* 5. WALK-FORWARD OUT-OF-SAMPLE AUDIT */}
       <div className="p-6 rounded-2xl bg-slate-900/70 border border-white/10 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -351,13 +431,13 @@ export default function Pick4ForensicPanel() {
               </h3>
             </div>
             <p className="text-xs text-gray-400 font-mono mt-0.5">
-              Strict walk-forward audit across preceding draws without future data leakage. Straight ($5,000 TT) and Box ($200 TT) evaluation.
+              Strict walk-forward audit across preceding draws without future data leakage. Straight ($5,000 TT), Box ($200-$1,200 TT), Front/Back 3 ($500 TT), and Pair ($50 TT) evaluation.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="text-xs font-mono text-gray-400">Horizon:</span>
-            {(["50", "100", "200", "all"] as const).map(d => (
+            {(["50", "100", "200", "500", "1000", "all"] as const).map(d => (
               <button
                 key={d}
                 onClick={() => handleDepthChange(d)}
@@ -374,24 +454,27 @@ export default function Pick4ForensicPanel() {
         </div>
 
         {/* Audit Stats KPI Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
             <span className="text-[10px] font-mono text-gray-500 uppercase block">Tested Draws</span>
             <span className="text-xl font-black font-mono text-white">{data.audit.testedDrawsCount}</span>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
-            <span className="text-[10px] font-mono text-gray-500 uppercase block">Straight Hits</span>
+            <span className="text-[10px] font-mono text-gray-500 uppercase block">Prize Capture Rate</span>
+            <span className="text-xl font-black font-mono text-cyan-400">{data.audit.prizeCaptureRatePercent}%</span>
+          </div>
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
+            <span className="text-[10px] font-mono text-gray-500 uppercase block">Straight Hits ($5k)</span>
             <span className="text-xl font-black font-mono text-emerald-400">{data.audit.straightHitsCount}</span>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
-            <span className="text-[10px] font-mono text-gray-500 uppercase block">Box Hits</span>
+            <span className="text-[10px] font-mono text-gray-500 uppercase block">Box Hits (24/12/6/4)</span>
             <span className="text-xl font-black font-mono text-violet-400">{data.audit.boxHitsCount}</span>
+            <span className="text-[9px] font-mono text-gray-500 block">24w:{data.audit.box24WayHitsCount} | 12w:{data.audit.box12WayHitsCount}</span>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
-            <span className="text-[10px] font-mono text-gray-500 uppercase block">3+ Digits Overlap</span>
-            <span className="text-xl font-black font-mono text-cyan-400">
-              {data.audit.atLeastThreeDigitsRatePercent}%
-            </span>
+            <span className="text-[10px] font-mono text-gray-500 uppercase block">Front/Back 3 Hits</span>
+            <span className="text-xl font-black font-mono text-amber-400">{data.audit.frontBack3HitsCount}</span>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
             <span className="text-[10px] font-mono text-gray-500 uppercase block">Simulated Payout</span>
@@ -403,8 +486,8 @@ export default function Pick4ForensicPanel() {
 
         {/* Filters and Search Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-2">
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-white/5">
-            {(["ALL", "STRAIGHT", "BOX", "THREE_PLUS"] as const).map(tier => (
+          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-white/5 flex-wrap">
+            {(["ALL", "STRAIGHT", "BOX", "FRONT_BACK_3", "PAIRS"] as const).map(tier => (
               <button
                 key={tier}
                 onClick={() => setFilterTier(tier)}
@@ -414,7 +497,7 @@ export default function Pick4ForensicPanel() {
                     : "text-gray-400 hover:text-white"
                 }`}
               >
-                {tier.replace("_", " ")}
+                {tier.replace(/_/g, " ")}
               </button>
             ))}
           </div>
@@ -423,10 +506,10 @@ export default function Pick4ForensicPanel() {
             <Search className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search draw, digits, date..."
+              placeholder="Search draw, digits, date, prize..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-950 border border-white/10 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-violet-500/50 w-full md:w-60"
+              className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-950 border border-white/10 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-violet-500/50 w-full md:w-64"
             />
           </div>
         </div>
@@ -445,7 +528,7 @@ export default function Pick4ForensicPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {filteredAuditLog.slice(0, 50).map((entry, eIdx) => (
+              {filteredAuditLog.slice(0, 100).map((entry, eIdx) => (
                 <tr
                   key={eIdx}
                   className={`hover:bg-slate-800/40 transition ${
@@ -453,6 +536,8 @@ export default function Pick4ForensicPanel() {
                       ? "bg-emerald-500/10"
                       : entry.isBoxHit
                       ? "bg-violet-500/5"
+                      : entry.isFront3Hit || entry.isBack3Hit
+                      ? "bg-amber-500/5"
                       : ""
                   }`}
                 >
@@ -481,21 +566,35 @@ export default function Pick4ForensicPanel() {
                           ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-black"
                           : entry.isBoxHit
                           ? "bg-violet-500/20 text-violet-300 border border-violet-500/40"
-                          : entry.matchedCount >= 3
-                          ? "bg-cyan-500/20 text-cyan-300"
+                          : entry.isFront3Hit || entry.isBack3Hit
+                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                          : entry.isFrontPairHit || entry.isBackPairHit || entry.isSplitPairHit
+                          ? "bg-cyan-500/10 text-cyan-300"
+                          : entry.matchedPositionsCount >= 2
+                          ? "bg-slate-800 text-gray-400"
                           : "text-gray-500"
                       }`}
                     >
                       {entry.isStraightHit
                         ? "STRAIGHT HIT"
                         : entry.isBoxHit
-                        ? "BOX HIT"
-                        : `${entry.matchedCount}/4 Digits`}
+                        ? `${(entry.boxTypeWon || "BOX").toUpperCase()} HIT`
+                        : entry.isFront3Hit
+                        ? "FRONT 3 HIT"
+                        : entry.isBack3Hit
+                        ? "BACK 3 HIT"
+                        : entry.isFrontPairHit
+                        ? "FRONT PAIR"
+                        : entry.isBackPairHit
+                        ? "BACK PAIR"
+                        : entry.isSplitPairHit
+                        ? "SPLIT PAIR"
+                        : `${entry.matchedPositionsCount}/4 Pos`}
                     </span>
                   </td>
                   <td className="p-3 font-bold">
                     <span className={entry.payoutTT > 0 ? "text-emerald-400" : "text-gray-500"}>
-                      {entry.prizeWon}
+                      {entry.payoutTT > 0 ? `${entry.prizeWon} (+$${entry.payoutTT.toLocaleString()} TT)` : entry.prizeWon}
                     </span>
                   </td>
                 </tr>
