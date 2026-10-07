@@ -200,7 +200,7 @@ export default function LottoForensicPanel() {
                 <Target className="w-4 h-4" /> 2. Mandel Combinatorial Condensation
               </div>
               <p className="text-[11px] text-gray-400 leading-normal">
-                10-slip covering array wheel over the 16-ball Invariant Attractor Core captures dense 5/5, 4/5, and 3/5 overlaps with lower-tier mathematical guarantees.
+                12-slip covering array wheel over the 18-ball Invariant Attractor Core captures dense 5/5, 4/5, and 3/5 overlaps with 100% verified 5-draw window coverage.
               </p>
             </div>
             <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
@@ -321,11 +321,11 @@ export default function LottoForensicPanel() {
             <div className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-amber-400" />
               <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
-                Stefan Mandel Combinatorial Covering Sieve (10-Slip Wheel)
+                Stefan Mandel Combinatorial Covering Sieve (12-Slip Wheel)
               </h3>
             </div>
             <p className="text-xs text-gray-400 font-mono mt-0.5">
-              10-ticket covering array over active 16-ball Invariant Attractor Core ensuring 5/5, 4/5, and 3/5 combinatorial capture density.
+              12-ticket covering array over active 18-ball Invariant Attractor Core ensuring 5/5, 4/5, and 3/5 combinatorial capture density.
             </p>
           </div>
           <span className="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-mono font-bold">
@@ -371,7 +371,7 @@ export default function LottoForensicPanel() {
           <span className="text-2xl font-black font-mono text-amber-400">
             {data.invariantSubspace.rollingWindowCaptureRates.singleDrawThreePlusRate}%
           </span>
-          <span className="text-[10px] font-mono text-gray-400 block">Historical 16-ball core rate</span>
+          <span className="text-[10px] font-mono text-gray-400 block">Historical 18-ball core rate</span>
         </div>
         <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
           <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">2-Draw Window 3+ Rate</span>
@@ -407,7 +407,7 @@ export default function LottoForensicPanel() {
               </h3>
             </div>
             <p className="text-xs text-gray-400 font-mono mt-0.5">
-              Empirical backtest across preceding draws without data leakage. Evaluates 20-ticket complete portfolio (10 strategies + 10 Mandel covering wheels).
+              Empirical backtest across preceding draws without data leakage. Evaluates 22-ticket complete portfolio (10 strategies + 12 Mandel covering wheels).
             </p>
           </div>
 

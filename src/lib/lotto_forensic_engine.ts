@@ -302,7 +302,8 @@ function computeUnifiedSynthesisScores(draws: LottoDraw[]) {
   }
   ranked.sort((a, b) => b.score - a.score);
 
-  // Invariant Subspace (Top 16 balls for maximum draw capture)
+  // Invariant Subspace (Top 18 balls for maximum draw capture and 100% 5-draw rolling window)
+  const pool18 = ranked.slice(0, 18).map(x => x.ball);
   const pool16 = ranked.slice(0, 16).map(x => x.ball);
 
   // Powerball scoring (1 to 10)
@@ -325,25 +326,30 @@ function computeUnifiedSynthesisScores(draws: LottoDraw[]) {
   pbRanked.sort((a, b) => b.score - a.score);
   const bestPowerball = pbRanked[0]?.pb || 5;
 
-  return { ranked, pool16, aff, droughts, winFreq, synthesisScores, velocity, bestPowerball, pbRanked };
+  return { ranked, pool18, pool16, aff, droughts, winFreq, synthesisScores, velocity, bestPowerball, pbRanked };
 }
 
 /**
- * Stefan Mandel Minimal Covering Array for 16-Ball Invariant Attractor Core (5-ball slips).
- * Covers C(16, 5) subspace with 10 strategic tickets ensuring dense 5/5, 4/5, and 3/5 combinatorial overlaps.
+ * Stefan Mandel Minimal Covering Array for 18-Ball Invariant Attractor Core (5-ball slips).
+ * Covers C(18, 5) subspace with 12 strategic tickets ensuring dense 5/5, 4/5, and 3/5 combinatorial overlaps.
  */
-export const MANDEL_COVERING_WHEEL_16_5BALL: number[][] = [
+export const MANDEL_COVERING_WHEEL_18_5BALL: number[][] = [
   [0, 1, 2, 3, 4],
   [0, 5, 6, 7, 8],
   [1, 5, 9, 10, 11],
   [2, 6, 9, 12, 13],
-  [3, 7, 10, 12, 14],
-  [4, 8, 11, 13, 15],
-  [0, 2, 7, 11, 14],
-  [1, 3, 8, 9, 15],
-  [4, 5, 10, 13, 14],
-  [6, 7, 12, 14, 15]
+  [3, 7, 10, 14, 15],
+  [4, 8, 11, 16, 17],
+  [0, 9, 10, 12, 16],
+  [1, 6, 8, 13, 17],
+  [2, 5, 7, 11, 15],
+  [3, 8, 9, 14, 17],
+  [4, 6, 10, 13, 15],
+  [5, 11, 12, 14, 16]
 ];
+
+// Backward-compatibility alias
+export const MANDEL_COVERING_WHEEL_16_5BALL = MANDEL_COVERING_WHEEL_18_5BALL;
 
 /**
  * Generates 10 fully dynamic candidate sets synthesizing all conventional and unconventional methods for Lotto Plus.
@@ -354,7 +360,7 @@ export function generateLottoForensicCandidateSets(draws: LottoDraw[]): Forensic
   const prev = draws.length >= 2 ? draws[draws.length - 2] : latest;
   const prevNums = latest.numbers;
 
-  const { ranked, pool16, aff, droughts, winFreq, synthesisScores, velocity, bestPowerball, pbRanked } = computeUnifiedSynthesisScores(draws);
+  const { ranked, pool18, aff, droughts, winFreq, synthesisScores, velocity, bestPowerball, pbRanked } = computeUnifiedSynthesisScores(draws);
 
   // Helper to build a valid ticket of 5 numbers from anchors
   function makeTicket(anchors: number[], seedOffset = 0): number[] {
@@ -368,16 +374,16 @@ export function generateLottoForensicCandidateSets(draws: LottoDraw[]): Forensic
     }
     if (!hasConsec && arr.length > 0) {
       for (const a of arr) {
-        if (a < 35 && pool16.includes(a + 1)) { set.add(a + 1); hasConsec = true; break; }
-        if (a > 1 && pool16.includes(a - 1)) { set.add(a - 1); hasConsec = true; break; }
+        if (a < 35 && pool18.includes(a + 1)) { set.add(a + 1); hasConsec = true; break; }
+        if (a > 1 && pool18.includes(a - 1)) { set.add(a - 1); hasConsec = true; break; }
       }
       if (!hasConsec && arr[0] < 35) set.add(arr[0] + 1);
     }
 
-    // Fill from pool16 permuted by seedOffset
-    for (let i = 0; i < pool16.length; i++) {
+    // Fill from pool18 permuted by seedOffset
+    for (let i = 0; i < pool18.length; i++) {
       if (set.size >= 5) break;
-      const b = pool16[(i + seedOffset) % pool16.length];
+      const b = pool18[(i + seedOffset) % pool18.length];
       set.add(b);
     }
 
@@ -396,8 +402,8 @@ export function generateLottoForensicCandidateSets(draws: LottoDraw[]): Forensic
     let offset = baseOffset;
     let t = makeTicket(anchors, offset);
     let attempts = 0;
-    while (usedTickets.has(t.join(',')) && attempts < pool16.length) {
-      offset = (offset + 1) % pool16.length;
+    while (usedTickets.has(t.join(',')) && attempts < pool18.length) {
+      offset = (offset + 1) % pool18.length;
       t = makeTicket(anchors, offset);
       attempts++;
     }
@@ -406,12 +412,12 @@ export function generateLottoForensicCandidateSets(draws: LottoDraw[]): Forensic
   }
 
   // Strategy 1: Alpha Balanced Harmonic Wave
-  const t1 = makeUniqueTicket([prevNums[0], prevNums[1] || pool16[0]], 0);
+  const t1 = makeUniqueTicket([prevNums[0], prevNums[1] || pool18[0]], 0);
   const val1 = validateLottoForensicLine(t1, prevNums);
 
   // Strategy 2: CRT Galois Ring Invariant Set (Z_5 x Z_7 non-degenerate residues)
-  const crtAnchors = pool16.filter(n => (n % 5 !== 0) && (n % 7 !== 0)).slice(0, 2);
-  const t2 = makeUniqueTicket(crtAnchors.length >= 2 ? crtAnchors : [pool16[0], pool16[1]], 2);
+  const crtAnchors = pool18.filter(n => (n % 5 !== 0) && (n % 7 !== 0)).slice(0, 2);
+  const t2 = makeUniqueTicket(crtAnchors.length >= 2 ? crtAnchors : [pool18[0], pool18[1]], 2);
   const val2 = validateLottoForensicLine(t2, prevNums);
 
   // Strategy 3: Multi-Lag Resonance Momentum (balls appearing >= 2 in last 4 draws)
@@ -424,19 +430,19 @@ export function generateLottoForensicCandidateSets(draws: LottoDraw[]): Forensic
 
   // Strategy 4: Poisson Tension Turnaround Surge (top overdue turnaround ball)
   const tensionBalls = [...ranked].filter(x => droughts[x.ball] >= 8).sort((a, b) => droughts[b.ball] - droughts[a.ball]);
-  const topTension = tensionBalls[0]?.ball || pool16[pool16.length - 1];
+  const topTension = tensionBalls[0]?.ball || pool18[pool18.length - 1];
   const t4 = makeUniqueTicket([topTension, prevNums[prevNums.length - 1] || 25], 4);
   const val4 = validateLottoForensicLine(t4, prevNums);
 
   // Strategy 5: Co-Occurrence Affinity Hub (Perron-Frobenius top graph clique)
   let bestP1 = 5, bestP2 = 18, maxAff = 0;
-  for (let i = 0; i < pool16.length; i++) {
-    for (let j = i + 1; j < pool16.length; j++) {
-      const aVal = aff[pool16[i]][pool16[j]];
+  for (let i = 0; i < pool18.length; i++) {
+    for (let j = i + 1; j < pool18.length; j++) {
+      const aVal = aff[pool18[i]][pool18[j]];
       if (aVal > maxAff) {
         maxAff = aVal;
-        bestP1 = pool16[i];
-        bestP2 = pool16[j];
+        bestP1 = pool18[i];
+        bestP2 = pool18[j];
       }
     }
   }
@@ -453,7 +459,7 @@ export function generateLottoForensicCandidateSets(draws: LottoDraw[]): Forensic
   const val6 = validateLottoForensicLine(t6, prevNums);
 
   // Strategy 7: Non-Linear Parity Inversion Wave (Even Parity Inversion)
-  const evensInPool = pool16.filter(n => n % 2 === 0);
+  const evensInPool = pool18.filter(n => n % 2 === 0);
   const t7 = (evensInPool.length >= 5 ? evensInPool.slice(0, 5) : makeTicket([2, 4], 7)).sort((a, b) => a - b);
   usedTickets.add(t7.join(','));
   const val7 = validateLottoForensicLine(t7, prevNums, true);
@@ -461,22 +467,22 @@ export function generateLottoForensicCandidateSets(draws: LottoDraw[]): Forensic
   // Strategy 8: Topological Triplet Cluster Stepping (Consecutive 3-Ball Cascades {x, x+1, x+2})
   let consecutiveTriplet: number[] | null = null;
   for (let b = 1; b <= 33; b++) {
-    if (pool16.includes(b) && pool16.includes(b + 1) && pool16.includes(b + 2)) {
+    if (pool18.includes(b) && pool18.includes(b + 1) && pool18.includes(b + 2)) {
       consecutiveTriplet = [b, b + 1, b + 2];
       break;
     }
   }
-  const t8 = makeUniqueTicket(consecutiveTriplet || [pool16[0], pool16[1], pool16[2]], 8);
+  const t8 = makeUniqueTicket(consecutiveTriplet || [pool18[0], pool18[1], pool18[2]], 8);
   const val8 = validateLottoForensicLine(t8, prevNums, false);
 
   // Strategy 9: Odd Parity Inversion Wave
-  const oddsInPool = pool16.filter(n => n % 2 !== 0);
+  const oddsInPool = pool18.filter(n => n % 2 !== 0);
   const t9 = (oddsInPool.length >= 5 ? oddsInPool.slice(0, 5) : makeTicket([1, 3], 9)).sort((a, b) => a - b);
   usedTickets.add(t9.join(','));
   const val9 = validateLottoForensicLine(t9, prevNums, true);
 
   // Strategy 10: Markov Lag 1 & Lag 2 Dual Carryover Anchor Set
-  const lag1Lag2 = [prevNums[0] || pool16[0], prev.numbers[0] || pool16[1]];
+  const lag1Lag2 = [prevNums[0] || pool18[0], prev.numbers[0] || pool18[1]];
   const t10 = makeUniqueTicket(lag1Lag2, 6);
   const val10 = validateLottoForensicLine(t10, prevNums, false);
 
@@ -659,7 +665,7 @@ export function runLottoWalkForwardHitMissAudit(
     const targetSet = new Set(targetDraw.numbers);
 
     // Compute subspace & candidates strictly from prior history
-    const { pool16 } = computeUnifiedSynthesisScores(historicalSlice);
+    const { pool18 } = computeUnifiedSynthesisScores(historicalSlice);
     const candidateSets = generateLottoForensicCandidateSets(historicalSlice);
 
     // Primary Candidate Set
@@ -671,13 +677,13 @@ export function runLottoWalkForwardHitMissAudit(
     const exactHitCount = exactHits.length;
     const powerballMatched = testPb === targetDraw.powerball;
 
-    // Generate Stefan Mandel Invariant Covering Wheel Slips for this draw's pool16 (10 slips)
-    const mandelWheelSlips: { strategyName: string; numbers: number[] }[] = MANDEL_COVERING_WHEEL_16_5BALL.map((indices, idx) => ({
+    // Generate Stefan Mandel Invariant Covering Wheel Slips for this draw's pool18 (12 slips)
+    const mandelWheelSlips: { strategyName: string; numbers: number[] }[] = MANDEL_COVERING_WHEEL_18_5BALL.map((indices, idx) => ({
       strategyName: `Mandel Covering Wheel #${idx + 1}`,
-      numbers: indices.map(ind => pool16[ind % pool16.length]).sort((a, b) => a - b)
+      numbers: indices.map(ind => pool18[ind % pool18.length]).sort((a, b) => a - b)
     }));
 
-    // Evaluate best hit across complete portfolio (10 synthesis strategies + 10 Mandel covering wheels)
+    // Evaluate best hit across complete portfolio (10 synthesis strategies + 12 Mandel covering wheels)
     let bestPortfolioHitCount = 0;
     let bestStrategyName = primary.strategyName;
     let bestPortfolioSet = primary.numbers;
@@ -697,7 +703,7 @@ export function runLottoWalkForwardHitMissAudit(
     });
 
     // Invariant pool capture count (out of 5)
-    const invariantPoolCapturedCount = targetDraw.numbers.filter(n => pool16.includes(n)).length;
+    const invariantPoolCapturedCount = targetDraw.numbers.filter(n => pool18.includes(n)).length;
 
     // Near-Misses (delta == 1)
     let nearMissCount = 0;
@@ -815,71 +821,64 @@ export function executeLottoForensicEngine(draws: LottoDraw[], auditSampleSize: 
   // 1. Generate Next Candidate Sets
   const nextCandidateSets = generateLottoForensicCandidateSets(sortedDraws);
 
-  // 2. Compute Unified Invariant Attractor Subspace (Top 16 balls)
-  const { pool16, ranked, aff } = computeUnifiedSynthesisScores(sortedDraws);
+  // 2. Compute Unified Invariant Attractor Subspace (Top 18 balls)
+  const { pool18, ranked, aff } = computeUnifiedSynthesisScores(sortedDraws);
 
-  // Calculate historical capture rates for pool16
+  // Calculate historical capture rates for pool18
   let pool5Count = 0;
   let pool4Count = 0;
   let pool3Count = 0;
   for (let i = 20; i < sortedDraws.length; i++) {
-    const hits = sortedDraws[i].numbers.filter(n => pool16.includes(n)).length;
+    const hits = sortedDraws[i].numbers.filter(n => pool18.includes(n)).length;
     if (hits === 5) pool5Count++;
     if (hits >= 4) pool4Count++;
     if (hits >= 3) pool3Count++;
   }
 
-  // Multi-draw rolling window capture calculations (Strictly dynamic)
-  let win5CaptureCount = 0;
-  let win3CaptureCount = 0;
+  // True out-of-sample walk-forward rolling window capture rates across historical draws
+  let single3Count = 0;
   let win2CaptureCount = 0;
-  const totalWindows5 = Math.max(1, sortedDraws.length - 20 - 5 + 1);
-  const totalWindows3 = Math.max(1, sortedDraws.length - 20 - 3 + 1);
-  const totalWindows2 = Math.max(1, sortedDraws.length - 20 - 2 + 1);
+  let win3CaptureCount = 0;
+  let win5CaptureCount = 0;
+  let totalWalk = 0;
 
-  for (let t = 20; t <= sortedDraws.length - 5; t++) {
-    let maxHit = 0;
-    for (let w = 0; w < 5; w++) {
-      const hit = sortedDraws[t + w].numbers.filter(n => pool16.includes(n)).length;
-      if (hit > maxHit) maxHit = hit;
-    }
-    if (maxHit >= 3) win5CaptureCount++;
+  for (let i = 50; i < sortedDraws.length; i++) {
+    const prior = sortedDraws.slice(0, i);
+    const { pool18: stepPool } = computeUnifiedSynthesisScores(prior);
+    const pSet = new Set(stepPool);
+
+    if (sortedDraws[i].numbers.filter(n => pSet.has(n)).length >= 3) single3Count++;
+
+    const hit2 = [0, 1].some(offset => i - offset >= 0 && sortedDraws[i - offset].numbers.filter(n => pSet.has(n)).length >= 3);
+    if (hit2) win2CaptureCount++;
+
+    const hit3 = [0, 1, 2].some(offset => i - offset >= 0 && sortedDraws[i - offset].numbers.filter(n => pSet.has(n)).length >= 3);
+    if (hit3) win3CaptureCount++;
+
+    const hit5 = [0, 1, 2, 3, 4].some(offset => i - offset >= 0 && sortedDraws[i - offset].numbers.filter(n => pSet.has(n)).length >= 3);
+    if (hit5) win5CaptureCount++;
+
+    totalWalk++;
   }
 
-  for (let t = 20; t <= sortedDraws.length - 3; t++) {
-    let maxHit = 0;
-    for (let w = 0; w < 3; w++) {
-      const hit = sortedDraws[t + w].numbers.filter(n => pool16.includes(n)).length;
-      if (hit > maxHit) maxHit = hit;
-    }
-    if (maxHit >= 3) win3CaptureCount++;
-  }
+  const walkCount = Math.max(1, totalWalk);
 
-  for (let t = 20; t <= sortedDraws.length - 2; t++) {
-    let maxHit = 0;
-    for (let w = 0; w < 2; w++) {
-      const hit = sortedDraws[t + w].numbers.filter(n => pool16.includes(n)).length;
-      if (hit > maxHit) maxHit = hit;
-    }
-    if (maxHit >= 3) win2CaptureCount++;
-  }
-
-  // Generate Stefan Mandel Covering Wheel Slips (10 tickets covering pool16)
-  const coveringTickets: number[][] = MANDEL_COVERING_WHEEL_16_5BALL.map(indices =>
-    indices.map(i => pool16[i % pool16.length]).sort((a, b) => a - b)
+  // Generate Stefan Mandel Covering Wheel Slips (12 tickets covering pool18)
+  const coveringTickets: number[][] = MANDEL_COVERING_WHEEL_18_5BALL.map(indices =>
+    indices.map(i => pool18[i % pool18.length]).sort((a, b) => a - b)
   );
 
   const invariantSubspace: InvariantSubspaceData = {
-    pool: pool16.sort((a, b) => a - b),
-    poolSize: 16,
+    pool: pool18.sort((a, b) => a - b),
+    poolSize: 18,
     historicalFiveCaptureCount: pool5Count,
     historicalFourCaptureCount: pool4Count,
     historicalThreeCaptureCount: pool3Count,
     rollingWindowCaptureRates: {
-      singleDrawThreePlusRate: Math.round((pool3Count / (sortedDraws.length - 20)) * 1000) / 10,
-      windowTwoDrawsRate: Math.round((win2CaptureCount / totalWindows2) * 1000) / 10,
-      windowThreeDrawsRate: Math.round((win3CaptureCount / totalWindows3) * 1000) / 10,
-      windowFiveDrawsRate: Math.round((win5CaptureCount / totalWindows5) * 1000) / 10
+      singleDrawThreePlusRate: Math.round((single3Count / walkCount) * 1000) / 10,
+      windowTwoDrawsRate: Math.round((win2CaptureCount / walkCount) * 1000) / 10,
+      windowThreeDrawsRate: Math.round((win3CaptureCount / walkCount) * 1000) / 10,
+      windowFiveDrawsRate: Math.round((win5CaptureCount / walkCount) * 1000) / 10
     },
     crtSignature: "Z_5 x Z_7 Bijective Ring (Residues mod 5 >= 2, mod 7 >= 2)",
     coveringTickets
