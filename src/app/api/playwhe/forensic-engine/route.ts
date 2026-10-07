@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       draw_date: String(r.draw_date),
       draw_time_slot: String(r.draw_time_slot || "Morning"),
       winning_number: Number(r.winning_number)
-    }));
+    })).filter(d => d.winning_number >= 1 && d.winning_number <= 36);
 
     const url = new URL(request.url);
     const depthParam = url.searchParams.get("depth");
@@ -32,7 +32,9 @@ export async function GET(request: NextRequest) {
     if (depthParam === "50") sampleSize = 50;
     else if (depthParam === "100") sampleSize = 100;
     else if (depthParam === "200") sampleSize = 200;
-    else if (depthParam === "500" || depthParam === "all" || depthParam === "full") sampleSize = Math.min(500, draws.length - 20);
+    else if (depthParam === "500") sampleSize = 500;
+    else if (depthParam === "1000") sampleSize = 1000;
+    else if (depthParam === "all" || depthParam === "full") sampleSize = Math.max(1, draws.length - 30);
 
     const result = executePlayWheForensicEngine(draws, sampleSize);
 

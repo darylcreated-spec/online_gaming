@@ -68,10 +68,12 @@ async function verifyForensicEngines() {
     winning_number: Number(r.winning_number)
   }));
   const pwResult = executePlayWheForensicEngine(pwDraws, 50);
-  console.log(`Play Whe: Total Draws: ${pwResult.totalDrawsInDb}, Target Draw: #${pwResult.nextTargetDrawNumber}`);
-  console.log(`Play Whe: Candidate marks generated: ${pwResult.nextCandidateSets.length}`);
-  console.log(`Play Whe: Invariant core capture rate: ${pwResult.attractorCore.captureRatePercent}%`);
-  console.log(`Play Whe: Audit Tested Draws: ${pwResult.audit.testedDrawsCount}, Hit Rate: ${pwResult.audit.overallHitRatePercent}%`);
+  console.log(`Play Whe: Total Draws: ${pwResult.totalDrawsInDb}, Target Draw: #${pwResult.nextTargetDrawNumber} (${pwResult.nextTargetTimeSlot})`);
+  console.log(`Play Whe: Candidate marks generated: ${pwResult.nextCandidateSets.length} (Primary Banker: #${pwResult.nextCandidateSets[0].markNumber} ${pwResult.nextCandidateSets[0].markName})`);
+  console.log(`Play Whe: 12-Mark Attractor Core: [${pwResult.attractorCore.pool.join(", ")}], Bankers: [${pwResult.attractorCore.bankerMarks.join(", ")}]`);
+  console.log(`Play Whe: 1-draw capture: ${pwResult.attractorCore.captureRatePercent}%, 2-draw window: ${pwResult.attractorCore.rollingWindowCaptureRates.windowTwoDrawsRate}%, 5-draw window: ${pwResult.attractorCore.rollingWindowCaptureRates.windowFiveDrawsRate}% (16-core: ${pwResult.attractorCore.rollingWindowCaptureRates.windowFiveExtendedRate}%)`);
+  console.log(`Play Whe: Audit Tested Draws: ${pwResult.audit.testedDrawsCount}, Top 1 Hit Rate: ${pwResult.audit.top1HitRatePercent}%, Top 5 Hit Rate: ${pwResult.audit.overallHitRatePercent}%, Top 10 Rate: ${pwResult.audit.top10HitRatePercent}%`);
+  console.log(`Play Whe: Simulated Top-5 Payout: $${pwResult.audit.totalSimulatedPayoutTT.toLocaleString()} TT (Net: $${pwResult.audit.netSimulatedProfitTT} TT, ROI: ${pwResult.audit.simulatedRoiPercent}%)`);
   console.log("Play Whe Forensic Engine: PASS!\n");
 
   // 4. PICK 4 FORENSIC ENGINE (4 Digits)
