@@ -33,7 +33,8 @@ async function verifyForensicEngines() {
   console.log(`Lotto Plus: Candidate sets generated: ${lottoResult.nextCandidateSets.length}`);
   console.log(`Lotto Plus: Mandel covering slips: ${lottoResult.invariantSubspace.coveringTickets.length}`);
   console.log(`Lotto Plus: Invariant Subspace Pool (18 balls): [${lottoResult.invariantSubspace.pool.join(", ")}]`);
-  console.log(`Lotto Plus: 5-draw window 3+ rate: ${lottoResult.invariantSubspace.rollingWindowCaptureRates.windowFiveDrawsRate}%`);
+  console.log(`Lotto Plus: Dual-Core (22 balls): [${lottoResult.invariantSubspace.dualCorePool.join(", ")}], Bankers: [${lottoResult.invariantSubspace.bankerBalls.join(", ")}]`);
+  console.log(`Lotto Plus: 5-draw window 3+ rate: ${lottoResult.invariantSubspace.rollingWindowCaptureRates.windowFiveDrawsRate}%, 5-draw 5/5 rate: ${lottoResult.invariantSubspace.rollingWindowCaptureRates.windowFiveFiveHitRate}%`);
   console.log(`Lotto Plus: Audit Tested Draws: ${lottoResult.audit.testedDrawsCount}, Capture Rate (>=1): ${lottoResult.audit.overallCaptureRatePercent}%, Money Tier (>=3): ${lottoResult.audit.atLeastThreeHitsRatePercent}%`);
   console.log(`Lotto Plus: Total Simulated Payout: $${lottoResult.audit.totalSimulatedPayoutTT.toLocaleString()} TT`);
   console.log("Lotto Plus Forensic Engine: PASS!\n");
