@@ -485,16 +485,22 @@ export default function PlayWheDiff37Panel() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-white/10 overflow-hidden bg-slate-950/70 max-h-96 overflow-y-auto sleek-scrollbar">
-          <table className="w-full text-left text-xs">
+        {/* Mobile Swipe Hint */}
+        <div className="text-[10px] text-gray-500 sm:hidden flex items-center justify-between px-1">
+          <span>Swipe table sideways to view all columns &rarr;</span>
+          <span className="text-amber-400/80 font-mono">Audit Ledger</span>
+        </div>
+
+        <div className="rounded-xl border border-white/10 overflow-x-auto overflow-y-auto bg-slate-950/70 max-h-96 sleek-scrollbar">
+          <table className="w-full min-w-[650px] text-left text-xs">
             <thead className="sticky top-0 bg-slate-950 text-gray-400 text-[10px] uppercase border-b border-white/10 z-10">
               <tr>
-                <th className="py-2.5 px-3">Draw #</th>
-                <th className="py-2.5 px-3">Date &amp; Slot</th>
-                <th className="py-2.5 px-3">Actual Result</th>
-                <th className="py-2.5 px-3">&sigma;37 Complement</th>
-                <th className="py-2.5 px-3">Audit Hit Status</th>
-                <th className="py-2.5 px-3">Matched Set</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">Draw #</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">Date &amp; Slot</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">Actual Result</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">&sigma;37 Complement</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">Audit Hit Status</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">Matched Set</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-[11px]">
@@ -507,23 +513,36 @@ export default function PlayWheDiff37Panel() {
               ) : (
                 filteredEntries.map((entry) => (
                   <tr key={entry.drawNumber} className="hover:bg-white/[0.02] transition">
-                    <td className="py-2.5 px-3 font-bold text-white">#{entry.drawNumber}</td>
-                    <td className="py-2.5 px-3 text-gray-400">
+                    <td className="py-2.5 px-3 font-bold text-white whitespace-nowrap">#{entry.drawNumber}</td>
+                    <td className="py-2.5 px-3 text-gray-400 whitespace-nowrap">
                       <div>{entry.drawDate}</div>
                       <div className="text-[9px] text-amber-400/80">{entry.timeSlot}</div>
                     </td>
-                    <td className="py-2.5 px-3">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-md bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center">
+                        <span className="w-6 h-6 rounded-md bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shrink-0">
                           {String(entry.actualNumber).padStart(2, "0")}
                         </span>
-                        <span className="text-white font-bold uppercase">{entry.actualMarkName}</span>
+                        <div className="min-w-0">
+                          <span className="text-white font-bold uppercase block truncate">{entry.actualMarkName}</span>
+                          <div className="sm:hidden mt-0.5">
+                            {entry.isHit ? (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 inline-block">
+                                HIT (Rank #{entry.hitRank})
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-gray-500 border border-white/5 inline-block">
+                                MISS
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </td>
-                    <td className="py-2.5 px-3 text-emerald-400">
+                    <td className="py-2.5 px-3 text-emerald-400 whitespace-nowrap">
                       #{entry.sigma37Complement} ({37 - entry.actualNumber === entry.sigma37Complement ? "Exact" : ""})
                     </td>
-                    <td className="py-2.5 px-3">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
                       {entry.isHit ? (
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                           HIT (Rank #{entry.hitRank})
@@ -534,7 +553,7 @@ export default function PlayWheDiff37Panel() {
                         </span>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 text-gray-300">
+                    <td className="py-2.5 px-3 text-gray-300 whitespace-nowrap">
                       {entry.winningSetName || "—"}
                     </td>
                   </tr>
