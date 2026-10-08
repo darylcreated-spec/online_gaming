@@ -19,6 +19,7 @@ import LottoDiff35Panel from "@/components/LottoDiff35Panel";
 import LottoQuant100Panel from "@/components/LottoQuant100Panel";
 import LottoAuditPanel from "@/components/LottoAuditPanel";
 import LottoForensicPanel from "@/components/LottoForensicPanel";
+import EngineBenchmarkTracker from "@/components/EngineBenchmarkTracker";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PushNotificationBell from "@/components/PushNotificationBell";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck, Cpu } from "lucide-react";
@@ -97,12 +98,12 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings">("welcome");
+  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "engine-tracker" | "settings">("welcome");
   const [utilitySubTool, setUtilitySubTool] = useState<"scanner" | "nl-query">("scanner");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "quant-100" | "forensic" | "audit" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "diff" | "history" | "translator" | "relationship" | "hits" | "explain" | "network" | "audit" | "forensic">("dashboard");
   
-  const handleTabChange = (tab: "welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "settings") => {
+  const handleTabChange = (tab: "welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "engine-tracker" | "settings") => {
     triggerHaptic("selection");
     setActiveTab(tab);
   };
@@ -467,6 +468,19 @@ export default function Home() {
               className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(168,85,247,0.4)] shrink-0" 
             />
             <span>PICK 4</span>
+          </button>
+
+          {/* ENGINE TRACKER */}
+          <button
+            onClick={() => handleTabChange("engine-tracker")}
+            className={`min-w-[155px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === "engine-tracker"
+                ? "bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]"
+                : "text-gray-400 hover:text-cyan-300 border border-transparent hover:border-cyan-500/30 hover:bg-cyan-500/10"
+            }`}
+          >
+            <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>ENGINE TRACKER</span>
           </button>
 
           {/* SYNDICATES */}
@@ -906,6 +920,12 @@ export default function Home() {
           </div>
         )}
 
+        {activeTab === "engine-tracker" && (
+          <div className="tab-content-enter">
+            <EngineBenchmarkTracker />
+          </div>
+        )}
+
         {activeTab === "settings" && (
           <div className="tab-content-enter">
             <SettingsTab />
@@ -1032,6 +1052,19 @@ export default function Home() {
             className="w-6 h-6 object-contain rounded-md shrink-0 drop-shadow-[0_0_6px_rgba(168,85,247,0.3)]" 
           />
           <span className="text-[9px] font-mono tracking-wider whitespace-nowrap">PICK 4</span>
+        </button>
+
+        {/* ENGINE TRACKER */}
+        <button
+          onClick={() => handleTabChange("engine-tracker")}
+          className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
+            activeTab === "engine-tracker"
+              ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.25)] font-bold"
+              : "text-gray-400 hover:text-cyan-300 border-transparent hover:border-white/10 hover:bg-white/5"
+          }`}
+        >
+          <Cpu className="w-5 h-5 text-cyan-400 shrink-0" />
+          <span className="text-[9px] font-mono tracking-wider whitespace-nowrap">ENGINES</span>
         </button>
 
         {/* SYNDICATES / POOLS */}

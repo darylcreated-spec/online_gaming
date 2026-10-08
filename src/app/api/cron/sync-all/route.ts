@@ -3,6 +3,7 @@ import { verifyPlayWhePredictions } from "@/lib/predictions";
 import { reviseAndAuditAfterDraw } from "@/lib/winning_formula_engine";
 import { broadcastDrawNotification } from "@/lib/pushNotifications";
 import { query, recordSyncAudit } from "@/lib/db";
+import { reconcileAndGradeEnginePredictions, snapshotAllEnginePredictions } from "@/lib/engine_tracker";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 import { runDrawWatchdog } from "@/lib/draw_watchdog";
 import { NextResponse } from "next/server";
@@ -92,6 +93,19 @@ async function handleSync(request: Request) {
       results.predictionRevision = await reviseAndAuditAfterDraw();
     } catch (e: any) {
       results.predictionRevision = { error: e.message };
+    }
+
+    // 5b. Automated Multi-Engine Evaluation & Target Draw N+1 Snapshot
+    try {
+      const reconcileEngineRes = await reconcileAndGradeEnginePredictions();
+      const snapshotEngineRes = await snapshotAllEnginePredictions();
+      results.engineTracker = {
+        reconciled: reconcileEngineRes,
+        snapshotted: snapshotEngineRes
+      };
+    } catch (etErr: any) {
+      console.warn("[Auto-Sync] Engine tracker hook warning:", etErr.message);
+      results.engineTracker = { error: etErr.message };
     }
 
     // 6. Draw Watchdog Freshness Check

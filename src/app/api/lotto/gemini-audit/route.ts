@@ -121,7 +121,7 @@ Please provide:
   }
 
   // Pre-compiled Gemini Quantitative Synthesis based on the exact live database draws
-  const embeddedGeminiReport = `### 🌟 Google Gemini Quantitative Statistical Audit: Lotto Plus 5/35
+  const embeddedGeminiReport = `### Google Gemini Quantitative Statistical Audit: Lotto Plus 5/35
 
 **Target Draw**: #${targetDrawNumber} | **Base Draw**: #${latestDraw.draw_number} (${latestDraw.draw_date})  
 **Analyzed Winning Numbers**: \`[${latestDraw.num1}, ${latestDraw.num2}, ${latestDraw.num3}, ${latestDraw.num4}, ${latestDraw.num5}]\` (Sum: ${latestDraw.num1 + latestDraw.num2 + latestDraw.num3 + latestDraw.num4 + latestDraw.num5})
