@@ -506,11 +506,36 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
 
           // 3. APEX CHAMPION MASTER CONSENSUS (Pick 4 Super-Wheel)
           if (forensic.nextCandidateSets?.[0]) {
-            const apexPick4Wheel = [
+            const rawPick4Candidates: number[][] = [
+              ...(formula?.predictedNumbers?.length === 4 ? [formula.predictedNumbers] : []),
               ...forensic.nextCandidateSets.map(c => c.digits),
               ...(formula?.wheelLines || []),
               ...(forensic.mandelBoxWheel?.map(s => s.digits) || [])
             ];
+
+            // Deduplicate 4-number combinations
+            const seenPick4Keys = new Set<string>();
+            const dedupedPick4Wheel: number[][] = [];
+            for (const cand of rawPick4Candidates) {
+              if (!cand || cand.length !== 4) continue;
+              const key = cand.join("-");
+              if (!seenPick4Keys.has(key)) {
+                seenPick4Keys.add(key);
+                dedupedPick4Wheel.push(cand);
+              }
+            }
+
+            // Rank combinations so 4-distinct-digit (24-Way) sets inside [10-25] sum band lead the Top 4 sets
+            const scorePick4Set = (d: number[]) => {
+              const uniqueCount = new Set(d).size;
+              const s = d.reduce((a, b) => a + b, 0);
+              const inBand = s >= 10 && s <= 25 ? 10 : 0;
+              return uniqueCount * 10 + inBand;
+            };
+
+            const orderedPick4Wheel = [...dedupedPick4Wheel].sort((a, b) => scorePick4Set(b) - scorePick4Set(a));
+            const balancedPrimary = orderedPick4Wheel[0] || formula?.predictedNumbers || forensic.nextCandidateSets[0].digits;
+
             await insertOrUpdateEngineLog({
               game_key: "pick4",
               engine_key: "apex-master",
@@ -518,8 +543,8 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               strategy_name: "Refined Positional Markov + Mandel Box Super-Wheel",
               target_draw_number: targetDraw,
               target_time_slot: forensic.nextTargetTimeSlot || formula?.targetPeriod,
-              predicted_numbers: forensic.nextCandidateSets[0].digits,
-              wheel_slips: apexPick4Wheel,
+              predicted_numbers: balancedPrimary,
+              wheel_slips: orderedPick4Wheel,
               simulated_bet_tt: 4.0
             });
             recordedCount++;
@@ -1425,6 +1450,11 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               [prevDigits[0], prevDigits[1], forensic.nextCandidateSets[0].digits[2], forensic.nextCandidateSets[0].digits[3]],
               [forensic.nextCandidateSets[0].digits[0], forensic.nextCandidateSets[0].digits[1], prevDigits[2], prevDigits[3]]
             ];
+            const balancedPrimaryHist = apexPick4Slips.find(d => {
+              const s = d.reduce((a, b) => a + b, 0);
+              return d.length === 4 && new Set(d).size === 4 && s >= 10 && s <= 25;
+            }) || forensic.nextCandidateSets[0].digits;
+
             await upsertVerifiedWalkForwardLog({
               game_key: "pick4",
               engine_key: "apex-master",
@@ -1433,7 +1463,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
               target_time_slot: actual.draw_time_slot,
-              predicted_numbers: forensic.nextCandidateSets[0].digits,
+              predicted_numbers: balancedPrimaryHist,
               wheel_slips: apexPick4Slips,
               actual_numbers: actualDigits,
               simulated_bet_tt: 4.0
@@ -1942,6 +1972,13 @@ export async function getEngineLeaderboardStats(
       `SELECT * FROM prediction_engine_logs WHERE game_key = ? AND engine_key = ? ORDER BY target_draw_number DESC, id DESC LIMIT 1`,
       [g, "apex-master"]
     ).catch(() => []);
+    if (!pendingRows || pendingRows.length === 0 || pendingRows[0]?.status !== "PENDING") {
+      await snapshotAllEnginePredictions(g);
+      pendingRows = await query<any>(
+        `SELECT * FROM prediction_engine_logs WHERE game_key = ? AND engine_key = ? ORDER BY target_draw_number DESC, id DESC LIMIT 1`,
+        [g, "apex-master"]
+      ).catch(() => []);
+    }
     if (!pendingRows || pendingRows.length === 0) {
       pendingRows = await query<any>(
         `SELECT * FROM prediction_engine_logs WHERE game_key = ? AND engine_key = ? ORDER BY target_draw_number DESC, id DESC LIMIT 1`,

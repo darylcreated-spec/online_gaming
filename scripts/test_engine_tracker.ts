@@ -58,10 +58,14 @@ async function main() {
   console.log("--- APEX CHAMPION MASTER PICKS (1 REFINED SELECTION PER GAME FOR DRAW N+1) ---");
   stats.championPicks.forEach(pick => {
     const nums = pick.game_key === "pick4"
-      ? pick.predicted_numbers.join("")
+      ? pick.predicted_numbers.map(n => String(n)).join(" - ")
       : pick.predicted_numbers.map(n => String(n).padStart(2, "0")).join(" - ");
     console.log(`[${pick.game_key.toUpperCase()}] Target Draw #${pick.target_draw_number}${pick.target_time_slot ? ` (${pick.target_time_slot})` : ""} | System: ${pick.engine_name}`);
     console.log(`   Master Pick: [${nums}]${pick.predicted_powerball ? ` + PB/Mult: ${pick.predicted_powerball}` : ""} | Verified Win Rate: ${pick.verified_win_rate_pct}% | ROI: +${pick.verified_roi_pct}% | Best: ${pick.best_prize}`);
+    if (pick.game_key === "pick4" && pick.condensed_wheel.length > 0) {
+      const top4Sets = pick.condensed_wheel.slice(0, 4).map((w, i) => `Set #${i + 1}: [${w.join(" - ")}]`).join(" | ");
+      console.log(`   Top 4 Refined 4-Number Sets: ${top4Sets}`);
+    }
   });
 
   console.log("\n--- ENGINE LEADERBOARD RANKINGS ---");

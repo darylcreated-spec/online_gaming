@@ -78,6 +78,12 @@ export default function EngineBenchmarkTracker() {
 
   useEffect(() => {
     fetchData(selectedGame, selectedHorizon);
+
+    const handleLiveDrawSync = () => {
+      fetchData(selectedGame, selectedHorizon);
+    };
+    window.addEventListener("win_concept_sync_completed", handleLiveDrawSync);
+    return () => window.removeEventListener("win_concept_sync_completed", handleLiveDrawSync);
   }, [selectedGame, selectedHorizon]);
 
   const handleManualAction = async (
@@ -133,12 +139,14 @@ export default function EngineBenchmarkTracker() {
   const handleCopyChampionPick = (pick: ChampionMasterPick) => {
     triggerHaptic("selection");
     const fmt = (arr: number[]) =>
-      pick.game_key === "pick4" ? arr.join("") : arr.map(n => String(n).padStart(2, "0")).join(" - ");
+      pick.game_key === "pick4"
+        ? arr.map(n => String(n)).join(" - ")
+        : arr.map(n => String(n).padStart(2, "0")).join(" - ");
     const lines = [
       `[${getGameLabel(pick.game_key).toUpperCase()} — APEX CHAMPION MASTER PICK | Draw #${pick.target_draw_number}${pick.target_time_slot ? ` (${pick.target_time_slot})` : ""}]`,
-      `Master Pick: ${fmt(pick.predicted_numbers)}${pick.predicted_powerball ? ` + PB/Mult: ${pick.predicted_powerball}` : ""}`,
+      `Master 4-Number Pick: ${fmt(pick.predicted_numbers)}${pick.predicted_powerball ? ` + PB/Mult: ${pick.predicted_powerball}` : ""}`,
       ...(pick.condensed_wheel.length > 0
-        ? [`Condensed Wheel Slips:`, ...pick.condensed_wheel.slice(0, 5).map((w, i) => `  Slip #${i + 1}: ${fmt(w)}`)]
+        ? [`Top Refined Combinations:`, ...pick.condensed_wheel.slice(0, 5).map((w, i) => `  Set #${i + 1}: ${fmt(w)}`)]
         : [])
     ];
     navigator.clipboard?.writeText(lines.join("\n")).catch(() => {});
@@ -435,16 +443,27 @@ export default function EngineBenchmarkTracker() {
                       <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-semibold block mb-1.5">
                         {pick.game_key === "play-whe"
                           ? "Refined Top-5 Master Marks (Play Any or All 5)"
+                          : pick.game_key === "pick4"
+                          ? "Primary 4 Positional Numbers (Pos 1 – Pos 2 – Pos 3 – Pos 4)"
                           : "Primary Refined Master Combination"}
                       </span>
                       <div className="flex flex-wrap items-center gap-1.5">
                         {pick.predicted_numbers.map((num, i) => (
-                          <span
-                            key={i}
-                            className="w-9 h-9 rounded-lg bg-emerald-500/20 border-2 border-emerald-400/70 text-white font-mono font-bold text-sm flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.25)]"
-                          >
-                            {pick.game_key === "pick4" ? String(num) : String(num).padStart(2, "0")}
-                          </span>
+                          <React.Fragment key={i}>
+                            <div className="flex flex-col items-center">
+                              {pick.game_key === "pick4" && (
+                                <span className="text-[9px] font-mono text-slate-400 mb-0.5">
+                                  Pos {i + 1}
+                                </span>
+                              )}
+                              <span className="w-9 h-9 rounded-lg bg-emerald-500/20 border-2 border-emerald-400/70 text-white font-mono font-bold text-sm flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                                {pick.game_key === "pick4" ? String(num) : String(num).padStart(2, "0")}
+                              </span>
+                            </div>
+                            {pick.game_key === "pick4" && i < pick.predicted_numbers.length - 1 && (
+                              <span className="text-emerald-400/70 font-mono font-bold text-xs mt-3">-</span>
+                            )}
+                          </React.Fragment>
                         ))}
                         {pick.predicted_powerball !== undefined && (
                           <span className="px-2.5 h-9 rounded-lg bg-amber-500/20 border-2 border-amber-400/70 text-amber-300 font-mono font-bold text-xs flex items-center justify-center">
@@ -452,6 +471,28 @@ export default function EngineBenchmarkTracker() {
                           </span>
                         )}
                       </div>
+
+                      {/* For Pick 4: Always show the Top 4 Refined 4-Number Combinations directly on the card */}
+                      {pick.game_key === "pick4" && pick.condensed_wheel && pick.condensed_wheel.length > 0 && (
+                        <div className="mt-2.5 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1">
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold block">
+                            Top 4 Refined 4-Number Combinations (Straight / 24-Way Box):
+                          </span>
+                          <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                            {pick.condensed_wheel.slice(0, 4).map((slip, sIdx) => (
+                              <div
+                                key={sIdx}
+                                className="px-2 py-1 rounded bg-slate-950/90 border border-slate-800 flex items-center justify-between text-[11px] font-mono"
+                              >
+                                <span className="text-slate-500">Set #{sIdx + 1}:</span>
+                                <span className="text-emerald-300 font-bold">
+                                  {slip.map(d => String(d)).join(" - ")}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Calibrated Corridor & Contributing Models */}
@@ -913,7 +954,9 @@ export default function EngineBenchmarkTracker() {
                       <td className="py-3 px-4">
                         <div className="flex flex-wrap gap-1">
                           {audit.predicted_numbers.map((n, nIdx) => {
-                            const isMatch = actualSet.has(n);
+                            const isMatch = audit.game_key === "pick4"
+                              ? audit.actual_numbers?.[nIdx] === n || actualSet.has(n)
+                              : actualSet.has(n);
                             return (
                               <span
                                 key={nIdx}
@@ -923,7 +966,7 @@ export default function EngineBenchmarkTracker() {
                                     : "bg-slate-800 text-slate-400"
                                 }`}
                               >
-                                {String(n).padStart(2, "0")}
+                                {audit.game_key === "pick4" ? String(n) : String(n).padStart(2, "0")}
                               </span>
                             );
                           })}
@@ -940,7 +983,7 @@ export default function EngineBenchmarkTracker() {
                           <div className="flex flex-wrap gap-1">
                             {audit.actual_numbers.map((an, aIdx) => (
                               <span key={aIdx} className="px-1 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-300">
-                                {String(an).padStart(2, "0")}
+                                {audit.game_key === "pick4" ? String(an) : String(an).padStart(2, "0")}
                               </span>
                             ))}
                             {audit.actual_powerball && (

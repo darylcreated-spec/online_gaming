@@ -4,6 +4,7 @@ import { reviseAndAuditAfterDraw } from "@/lib/winning_formula_engine";
 import { broadcastDrawNotification } from "@/lib/pushNotifications";
 import { query, recordSyncAudit } from "@/lib/db";
 import { reconcileAndGradeEnginePredictions, snapshotAllEnginePredictions } from "@/lib/engine_tracker";
+import { runFullSystemCalibration } from "@/lib/engine_calibrator";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
 import { runDrawWatchdog } from "@/lib/draw_watchdog";
 import { NextResponse } from "next/server";
@@ -95,12 +96,24 @@ async function handleSync(request: Request) {
       results.predictionRevision = { error: e.message };
     }
 
-    // 5b. Automated Multi-Engine Evaluation & Target Draw N+1 Snapshot
+    // 5b. Automated Multi-Engine Evaluation, Bayesian Recalibration & Target Draw N+1 Snapshot
     try {
       const reconcileEngineRes = await reconcileAndGradeEnginePredictions();
+      const anyNewDrawSynced =
+        (results.playWhe?.drawsAdded || 0) > 0 ||
+        (results.lottoPlus?.drawsAdded || 0) > 0 ||
+        (results.winForLife?.drawsAdded || 0) > 0 ||
+        (results.cashPot?.drawsAdded || 0) > 0 ||
+        (results.pick4?.drawsAdded || 0) > 0 ||
+        (results.reconciliation?.drawsHealed || 0) > 0 ||
+        reconcileEngineRes.verifiedCount > 0;
+      if (anyNewDrawSynced) {
+        await runFullSystemCalibration();
+      }
       const snapshotEngineRes = await snapshotAllEnginePredictions();
       results.engineTracker = {
         reconciled: reconcileEngineRes,
+        recalibrated: anyNewDrawSynced,
         snapshotted: snapshotEngineRes
       };
     } catch (etErr: any) {

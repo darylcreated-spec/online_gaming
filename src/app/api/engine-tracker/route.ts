@@ -6,6 +6,7 @@ import {
   seedHistoricalEngineAuditsIfEmpty,
   calibrateAndReverifyAllEngines
 } from "@/lib/engine_tracker";
+import { runFullSystemCalibration } from "@/lib/engine_calibrator";
 
 export const dynamic = "force-dynamic";
 
@@ -16,8 +17,15 @@ export async function GET(request: NextRequest) {
     const depthParam = searchParams.get("depth") || "100";
     const horizon = depthParam === "all" ? 1000 : parseInt(depthParam, 10) || 100;
 
-    // Check if initial seeding/snapshotting is needed
+    // 1. Check if initial seeding/snapshotting is needed
     await seedHistoricalEngineAuditsIfEmpty();
+
+    // 2. Automatically grade any newly completed draws & recalculate Draw #N+1
+    const reconciled = await reconcileAndGradeEnginePredictions();
+    if (reconciled.verifiedCount > 0) {
+      await runFullSystemCalibration();
+      await snapshotAllEnginePredictions();
+    }
 
     const stats = await getEngineLeaderboardStats(game, horizon);
 
