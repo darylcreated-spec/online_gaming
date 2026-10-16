@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { EngineLeaderboardRow, EngineLogEntry, CalibrationDiagnostic } from "@/lib/engine_tracker";
+import type { EngineCalibrationProfile } from "@/lib/engine_calibrator";
 
 interface EngineTrackerResponse {
   success: boolean;
@@ -32,6 +33,7 @@ interface EngineTrackerResponse {
   leaderboard: EngineLeaderboardRow[];
   recentAudits: EngineLogEntry[];
   diagnostics: CalibrationDiagnostic[];
+  calibrationProfiles?: EngineCalibrationProfile[];
   totalEvaluated: number;
   overallWinRatePct: number;
   totalSimulatedNetProfitTT: number;
@@ -42,6 +44,8 @@ export default function EngineBenchmarkTracker() {
   const [data, setData] = useState<EngineTrackerResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [calibrating, setCalibrating] = useState(false);
+  const [actionBanner, setActionBanner] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedGame, setSelectedGame] = useState<string>("all");
   const [selectedHorizon, setSelectedHorizon] = useState<string>("100");
@@ -72,24 +76,41 @@ export default function EngineBenchmarkTracker() {
     fetchData(selectedGame, selectedHorizon);
   }, [selectedGame, selectedHorizon]);
 
-  const handleManualAction = async (action: "reconcile" | "snapshot" | "reconcile_and_snapshot") => {
-    setActionLoading(true);
+  const handleManualAction = async (
+    action: "reconcile" | "snapshot" | "reconcile_and_snapshot" | "calibrate",
+    targetGame?: string
+  ) => {
+    if (action === "calibrate") {
+      setCalibrating(true);
+    } else {
+      setActionLoading(true);
+    }
+    setActionBanner(null);
     try {
       triggerHaptic("selection");
+      const gameParam = targetGame || (selectedGame === "all" ? undefined : selectedGame);
       const res = await fetch("/api/engine-tracker", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, game: selectedGame === "all" ? undefined : selectedGame })
+        body: JSON.stringify({ action, game: gameParam })
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to execute action.");
       triggerHaptic("success");
+      if (action === "calibrate") {
+        setActionBanner(
+          json.message || "Closed-Loop Bayesian Calibration and historical re-verification completed."
+        );
+      } else {
+        setActionBanner(json.message || "Engine reconciliation and N+1 snapshot completed.");
+      }
       await fetchData(selectedGame, selectedHorizon);
     } catch (err: any) {
-      alert("Error: " + err.message);
+      setError("Error: " + err.message);
       triggerHaptic("warning");
     } finally {
       setActionLoading(false);
+      setCalibrating(false);
     }
   };
 
@@ -135,23 +156,31 @@ export default function EngineBenchmarkTracker() {
               </span>
               <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                EMPIRICAL VERIFIER ONLINE
+                BAYESIAN CALIBRATOR ACTIVE
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
               <Cpu className="w-6 h-6 text-cyan-400" />
-              Engine Prediction & Hit Evaluation Tracker
+              Engine Prediction & Closed-Loop Calibration Tracker
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-              Automatic snapshotting, multi-tier prize grading, and comparative hit leaderboards across all 5 NLCB games. Detects optimal regimes and flags models requiring calibration.
+              Walk-forward Bayesian weight optimization, multi-slip wheel grading, and comparative hit leaderboards across all 5 NLCB games.
             </p>
           </div>
 
           {/* Quick Action Controls */}
           <div className="flex flex-wrap items-center gap-2">
             <button
+              onClick={() => handleManualAction("calibrate")}
+              disabled={calibrating || actionLoading || loading}
+              className="px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Sliders className={`w-3.5 h-3.5 ${calibrating ? "animate-spin" : ""}`} />
+              {calibrating ? "Calibrating Regimes..." : "Auto-Calibrate All Engines"}
+            </button>
+            <button
               onClick={() => handleManualAction("reconcile_and_snapshot")}
-              disabled={actionLoading || loading}
+              disabled={actionLoading || calibrating || loading}
               className="px-3.5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] flex items-center gap-1.5 disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${actionLoading ? "animate-spin" : ""}`} />
@@ -159,7 +188,7 @@ export default function EngineBenchmarkTracker() {
             </button>
             <button
               onClick={() => fetchData()}
-              disabled={loading}
+              disabled={loading || calibrating}
               className="p-2 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white transition-colors"
               title="Refresh Dashboard"
             >
@@ -167,6 +196,21 @@ export default function EngineBenchmarkTracker() {
             </button>
           </div>
         </div>
+
+        {actionBanner && (
+          <div className="mt-4 p-3 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-emerald-300 text-xs font-mono flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{actionBanner}</span>
+            </div>
+            <button
+              onClick={() => setActionBanner(null)}
+              className="text-slate-400 hover:text-white text-[11px] px-2 py-0.5 rounded bg-slate-900/60"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* Global KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-800/80">
@@ -367,6 +411,113 @@ export default function EngineBenchmarkTracker() {
         )}
       </div>
 
+      {/* 3.5. Closed-Loop Bayesian Calibration Telemetry */}
+      {data?.calibrationProfiles && data.calibrationProfiles.length > 0 && (
+        <div className="bg-[#0f1418] rounded-2xl border border-emerald-500/20 p-5 space-y-4 shadow-[0_0_25px_rgba(16,185,129,0.04)]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-2">
+                <Binary className="w-5 h-5 text-emerald-400" />
+                <h2 className="font-bold text-white text-base">
+                  Closed-Loop Bayesian Walk-Forward Calibration Profiles
+                </h2>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Empirically optimized sub-model posterior weights, sum corridors, and walk-forward test-verification lift across historical winning combinations.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 self-start sm:self-auto">
+              MULTIPLICATIVE WEIGHTS + SOFTMAX POSTERIOR
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {data.calibrationProfiles
+              .filter(p => selectedGame === "all" || p.game_key === selectedGame)
+              .map(profile => (
+                <div
+                  key={profile.game_key}
+                  className="p-4 rounded-xl bg-[#14191e] border border-slate-800 flex flex-col justify-between space-y-3"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="px-2.5 py-0.5 rounded text-xs font-bold font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                        {getGameLabel(profile.game_key)}
+                      </span>
+                      <span className="text-[11px] font-mono text-emerald-400 font-bold">
+                        {profile.calibration_lift_pct >= 0
+                          ? `+${profile.calibration_lift_pct}% Lift`
+                          : `${profile.calibration_lift_pct}% Lift`}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 my-2 p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 text-[11px] font-mono">
+                      <div>
+                        <span className="text-slate-500 block">Pre-Calib Win Rate</span>
+                        <span className="text-slate-300 font-semibold">{profile.pre_calibration_win_rate_pct}%</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">Calibrated Win Rate</span>
+                        <span className="text-emerald-400 font-bold">{profile.post_calibration_win_rate_pct}%</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">Optimal Sum Band</span>
+                        <span className="text-cyan-300 font-semibold">
+                          {profile.optimal_sum_min} – {profile.optimal_sum_max}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">Carryover / Window</span>
+                        <span className="text-amber-300 font-semibold">
+                          {profile.empirical_carryover_rate_pct}% ({profile.window_size}d)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 mt-2.5">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                        Calibrated Sub-Model Weights (Top Regimes)
+                      </span>
+                      {profile.sub_model_weights.slice(0, 4).map(sw => (
+                        <div key={sw.modelKey} className="space-y-0.5">
+                          <div className="flex items-center justify-between text-[11px] font-mono">
+                            <span className="text-slate-300 truncate max-w-[175px]" title={sw.modelName}>
+                              {sw.modelName}
+                            </span>
+                            <span className="text-emerald-400 font-semibold">
+                              {Math.round(sw.weight * 100)}% ({sw.liftMultiplier}x)
+                            </span>
+                          </div>
+                          <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full"
+                              style={{ width: `${Math.min(100, Math.round(sw.weight * 100 * 1.6))}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                    <span className="truncate max-w-[180px]" title={profile.dominant_strategy}>
+                      Lead: <strong className="text-slate-200">{profile.dominant_strategy}</strong>
+                    </span>
+                    <button
+                      onClick={() => handleManualAction("calibrate", profile.game_key)}
+                      disabled={calibrating}
+                      className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-0.5 disabled:opacity-50"
+                    >
+                      Recalibrate
+                      <ArrowUpRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
       {/* 4. Calibration Diagnostics & Improvement Alerts */}
       {data?.diagnostics && data.diagnostics.length > 0 && (
         <div className="bg-[#0f1418] rounded-2xl border border-slate-800 p-5 space-y-4">
@@ -413,10 +564,14 @@ export default function EngineBenchmarkTracker() {
                     </p>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                  <button
+                    onClick={() => handleManualAction("calibrate", diag.game_key)}
+                    disabled={calibrating}
+                    className="pt-2 border-t border-slate-800 flex items-center justify-between w-full text-left hover:opacity-90 transition-opacity disabled:opacity-50"
+                  >
                     <span className="text-[11px] font-mono text-cyan-400 font-semibold">{diag.suggestedAction}</span>
                     <ArrowUpRight className="w-4 h-4 text-cyan-400" />
-                  </div>
+                  </button>
                 </div>
               );
             })}

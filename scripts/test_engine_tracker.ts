@@ -21,31 +21,35 @@ try {
 async function main() {
   const { 
     ensureEngineLogsTable, 
-    snapshotAllEnginePredictions, 
-    reconcileAndGradeEnginePredictions,
+    calibrateAndReverifyAllEngines,
     getEngineLeaderboardStats 
   } = await import("../src/lib/engine_tracker");
   console.log("================================================================================");
-  console.log("TESTING ENGINE PREDICTION TRACKER & HIT EVALUATOR");
+  console.log("TESTING CLOSED-LOOP BAYESIAN CALIBRATOR & ENGINE PREDICTION TRACKER");
   console.log("================================================================================\n");
 
   // 1. Ensure Table Exists
-  console.log(">>> [1/4] Initializing database schema...");
+  console.log(">>> [1/3] Initializing database schema...");
   await ensureEngineLogsTable();
-  console.log("Database table & indexes verified.\n");
+  console.log("Database tables & indexes verified.\n");
 
-  // 2. Snapshot Predictions
-  console.log(">>> [2/4] Snapshotting predictions from all active engines for target draw N+1...");
-  const snapshotRes = await snapshotAllEnginePredictions();
-  console.log(`Successfully snapshotted ${snapshotRes.recordedCount} engine predictions across all 5 games.\n`);
+  // 2. Run Full System Calibration + Historical Walk-Forward Re-Verification + N+1 Snapshot
+  console.log(">>> [2/3] Running closed-loop Bayesian calibration & walk-forward test verification...");
+  const calibRes = await calibrateAndReverifyAllEngines("all");
+  console.log(`Calibrated ${calibRes.calibratedProfiles.length} game regimes.`);
+  console.log(`Re-verified ${calibRes.reverifiedCount} historical engine logs (${calibRes.prizesAwarded} money prize hits confirmed).`);
+  console.log(`Snapshotted ${calibRes.snapshottedCount} calibrated predictions for upcoming draw N+1.\n`);
 
-  // 3. Reconcile & Grade Predictions
-  console.log(">>> [3/4] Reconciling and grading pending engine predictions against official draws...");
-  const reconcileRes = await reconcileAndGradeEnginePredictions();
-  console.log(`Reconciliation completed: ${reconcileRes.verifiedCount} predictions verified, ${reconcileRes.prizesAwarded} money prize hits recorded.\n`);
+  console.log("--- BAYESIAN CALIBRATION PROFILES ---");
+  for (const prof of calibRes.calibratedProfiles) {
+    console.log(`[${prof.game_key.toUpperCase()}] Window: ${prof.window_size}d | Pre-Calib: ${prof.pre_calibration_win_rate_pct}% -> Post-Calib: ${prof.post_calibration_win_rate_pct}% (Lift: +${prof.calibration_lift_pct}%)`);
+    console.log(`   Optimal Sum Band: [${prof.optimal_sum_min} - ${prof.optimal_sum_max}] | Carryover Rate: ${prof.empirical_carryover_rate_pct}% | Lead Model: ${prof.dominant_strategy}`);
+    const topWeights = prof.sub_model_weights.slice(0, 3).map((w: any) => `${w.modelName}: ${Math.round(w.weight * 100)}% (${w.liftMultiplier}x)`).join(" | ");
+    console.log(`   Top Weights: ${topWeights}\n`);
+  }
 
-  // 4. Query Comparative Leaderboard
-  console.log(">>> [4/4] Querying multi-engine leaderboard stats across all games...");
+  // 3. Query Comparative Leaderboard
+  console.log(">>> [3/3] Querying multi-engine leaderboard stats across all games...");
   const stats = await getEngineLeaderboardStats("all", 100);
   console.log(`Total Evaluated Draws: ${stats.totalEvaluated}`);
   console.log(`Overall Win Rate: ${stats.overallWinRatePct}%`);
@@ -54,7 +58,7 @@ async function main() {
   console.log("--- ENGINE LEADERBOARD RANKINGS ---");
   stats.leaderboard.forEach((row, idx) => {
     console.log(`[Rank #${idx + 1}] ${row.engine_name} (${row.game_key})`);
-    console.log(`         Win Rate: ${row.prize_win_rate_pct}% (${row.prize_hits}/${row.total_evaluated}) | ROI: ${row.roi_pct}% | Net: $${row.net_profit_tt} TT | Status: ${row.status}`);
+    console.log(`         Win Rate: ${row.prize_win_rate_pct}% (${row.prize_hits}/${row.total_evaluated}) | Any Match: ${row.any_match_rate_pct}% | ROI: ${row.roi_pct}% | Net: $${row.net_profit_tt} TT | Best: ${row.best_prize} | Status: ${row.status}`);
   });
 
   console.log("\n--- CALIBRATION DIAGNOSTICS & ANOMALIES ---");
@@ -65,7 +69,7 @@ async function main() {
   });
 
   console.log("\n================================================================================");
-  console.log("ENGINE TRACKER PIPELINE VERIFICATION PASSED!");
+  console.log("CLOSED-LOOP ENGINE CALIBRATION & VERIFICATION PASSED!");
   console.log("================================================================================");
 }
 

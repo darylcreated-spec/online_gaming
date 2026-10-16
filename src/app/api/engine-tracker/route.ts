@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { 
-  getEngineLeaderboardStats, 
-  snapshotAllEnginePredictions, 
+import {
+  getEngineLeaderboardStats,
+  snapshotAllEnginePredictions,
   reconcileAndGradeEnginePredictions,
-  seedHistoricalEngineAuditsIfEmpty
+  seedHistoricalEngineAuditsIfEmpty,
+  calibrateAndReverifyAllEngines
 } from "@/lib/engine_tracker";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +45,20 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const action = body.action || "reconcile_and_snapshot";
-    const specificGame = body.game || undefined;
+    const specificGame = body.game && body.game !== "all" ? body.game : undefined;
+
+    if (action === "calibrate") {
+      const calibRes = await calibrateAndReverifyAllEngines(specificGame);
+      return NextResponse.json({
+        success: true,
+        action: "calibrate",
+        calibratedProfiles: calibRes.calibratedProfiles,
+        reverifiedCount: calibRes.reverifiedCount,
+        prizesAwarded: calibRes.prizesAwarded,
+        snapshottedCount: calibRes.snapshottedCount,
+        message: `Bayesian Walk-Forward Calibration complete: ${calibRes.calibratedProfiles.length} game regimes calibrated, ${calibRes.reverifiedCount} historical draw logs verified (${calibRes.prizesAwarded} prize hits), and ${calibRes.snapshottedCount} upcoming predictions updated.`
+      });
+    }
 
     let reconcileResult = { verifiedCount: 0, prizesAwarded: 0 };
     let snapshotResult = { recordedCount: 0 };
