@@ -55,7 +55,16 @@ async function main() {
   console.log(`Overall Win Rate: ${stats.overallWinRatePct}%`);
   console.log(`Total Simulated Net Profit: $${stats.totalSimulatedNetProfitTT.toLocaleString()} TT\n`);
 
-  console.log("--- ENGINE LEADERBOARD RANKINGS ---");
+  console.log("--- APEX CHAMPION MASTER PICKS (1 REFINED SELECTION PER GAME FOR DRAW N+1) ---");
+  stats.championPicks.forEach(pick => {
+    const nums = pick.game_key === "pick4"
+      ? pick.predicted_numbers.join("")
+      : pick.predicted_numbers.map(n => String(n).padStart(2, "0")).join(" - ");
+    console.log(`[${pick.game_key.toUpperCase()}] Target Draw #${pick.target_draw_number}${pick.target_time_slot ? ` (${pick.target_time_slot})` : ""} | System: ${pick.engine_name}`);
+    console.log(`   Master Pick: [${nums}]${pick.predicted_powerball ? ` + PB/Mult: ${pick.predicted_powerball}` : ""} | Verified Win Rate: ${pick.verified_win_rate_pct}% | ROI: +${pick.verified_roi_pct}% | Best: ${pick.best_prize}`);
+  });
+
+  console.log("\n--- ENGINE LEADERBOARD RANKINGS ---");
   stats.leaderboard.forEach((row, idx) => {
     console.log(`[Rank #${idx + 1}] ${row.engine_name} (${row.game_key})`);
     console.log(`         Win Rate: ${row.prize_win_rate_pct}% (${row.prize_hits}/${row.total_evaluated}) | Any Match: ${row.any_match_rate_pct}% | ROI: ${row.roi_pct}% | Net: $${row.net_profit_tt} TT | Best: ${row.best_prize} | Status: ${row.status}`);

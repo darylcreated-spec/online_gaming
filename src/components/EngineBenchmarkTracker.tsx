@@ -23,7 +23,7 @@ import {
   Award
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
-import { EngineLeaderboardRow, EngineLogEntry, CalibrationDiagnostic } from "@/lib/engine_tracker";
+import { EngineLeaderboardRow, EngineLogEntry, CalibrationDiagnostic, ChampionMasterPick } from "@/lib/engine_tracker";
 import type { EngineCalibrationProfile } from "@/lib/engine_calibrator";
 
 interface EngineTrackerResponse {
@@ -34,6 +34,7 @@ interface EngineTrackerResponse {
   recentAudits: EngineLogEntry[];
   diagnostics: CalibrationDiagnostic[];
   calibrationProfiles?: EngineCalibrationProfile[];
+  championPicks?: ChampionMasterPick[];
   totalEvaluated: number;
   overallWinRatePct: number;
   totalSimulatedNetProfitTT: number;
@@ -51,6 +52,9 @@ export default function EngineBenchmarkTracker() {
   const [selectedHorizon, setSelectedHorizon] = useState<string>("100");
   const [searchQuery, setSearchQuery] = useState("");
   const [auditFilter, setAuditFilter] = useState<"ALL" | "WINS" | "LOSSES">("ALL");
+  const [championOnlyMode, setChampionOnlyMode] = useState<boolean>(true);
+  const [expandedWheelGame, setExpandedWheelGame] = useState<string | null>(null);
+  const [copiedGame, setCopiedGame] = useState<string | null>(null);
 
   const fetchData = async (game = selectedGame, horizon = selectedHorizon) => {
     setLoading(true);
@@ -126,8 +130,61 @@ export default function EngineBenchmarkTracker() {
     }
   };
 
+  const handleCopyChampionPick = (pick: ChampionMasterPick) => {
+    triggerHaptic("selection");
+    const fmt = (arr: number[]) =>
+      pick.game_key === "pick4" ? arr.join("") : arr.map(n => String(n).padStart(2, "0")).join(" - ");
+    const lines = [
+      `[${getGameLabel(pick.game_key).toUpperCase()} — APEX CHAMPION MASTER PICK | Draw #${pick.target_draw_number}${pick.target_time_slot ? ` (${pick.target_time_slot})` : ""}]`,
+      `Master Pick: ${fmt(pick.predicted_numbers)}${pick.predicted_powerball ? ` + PB/Mult: ${pick.predicted_powerball}` : ""}`,
+      ...(pick.condensed_wheel.length > 0
+        ? [`Condensed Wheel Slips:`, ...pick.condensed_wheel.slice(0, 5).map((w, i) => `  Slip #${i + 1}: ${fmt(w)}`)]
+        : [])
+    ];
+    navigator.clipboard?.writeText(lines.join("\n")).catch(() => {});
+    setCopiedGame(pick.game_key);
+    setTimeout(() => setCopiedGame(null), 2200);
+  };
+
+  // Determine the #1 Champion Engine per game
+  const championEngineKeyByGame = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const row of data?.leaderboard || []) {
+      if (!map[row.game_key]) {
+        map[row.game_key] = row.engine_key;
+      } else if (row.engine_key === "apex-master") {
+        const currentBest = (data?.leaderboard || []).find(
+          r => r.game_key === row.game_key && r.engine_key === map[row.game_key]
+        );
+        if (currentBest && row.prize_win_rate_pct >= currentBest.prize_win_rate_pct) {
+          map[row.game_key] = "apex-master";
+        }
+      }
+    }
+    return map;
+  }, [data?.leaderboard]);
+
+  const displayedLeaderboard = React.useMemo(() => {
+    const allRows = data?.leaderboard || [];
+    if (!championOnlyMode) return allRows;
+    const seenGames = new Set<string>();
+    return allRows.filter(row => {
+      const targetChampKey = championEngineKeyByGame[row.game_key] || row.engine_key;
+      if (!seenGames.has(row.game_key) && row.engine_key === targetChampKey) {
+        seenGames.add(row.game_key);
+        return true;
+      }
+      return false;
+    });
+  }, [data?.leaderboard, championOnlyMode, championEngineKeyByGame]);
+
   // Filter audit records
   const filteredAudits = (data?.recentAudits || []).filter(audit => {
+    if (championOnlyMode) {
+      const champKey = championEngineKeyByGame[audit.game_key];
+      if (champKey && audit.engine_key !== champKey) return false;
+    }
+
     const matchesFilter =
       auditFilter === "ALL" ? true :
       auditFilter === "WINS" ? audit.is_prize_winner === 1 :
@@ -272,34 +329,218 @@ export default function EngineBenchmarkTracker() {
           ))}
         </div>
 
-        {/* Horizon selector */}
-        <div className="flex items-center gap-1.5 justify-end">
-          <span className="text-[11px] font-mono text-slate-500 uppercase mr-1">Horizon:</span>
-          {["50", "100", "200", "all"].map(depth => (
+        {/* Horizon & Champion Mode selector */}
+        <div className="flex flex-wrap items-center gap-2 justify-end">
+          <div className="flex items-center bg-[#0f1418] rounded-lg p-0.5 border border-slate-800">
             <button
-              key={depth}
-              onClick={() => setSelectedHorizon(depth)}
-              className={`px-2.5 py-1 rounded text-xs font-mono transition-all ${
-                selectedHorizon === depth
-                  ? "bg-slate-700 text-white font-bold border border-slate-600"
-                  : "text-slate-500 hover:text-slate-300"
+              onClick={() => setChampionOnlyMode(true)}
+              className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all flex items-center gap-1 ${
+                championOnlyMode
+                  ? "bg-emerald-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(16,185,129,0.25)]"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
+              title="Show only the #1 winning engine system per game"
             >
-              {depth === "all" ? "Full Archive" : depth}
+              <Award className="w-3.5 h-3.5" />
+              Top 1 Champion Per Game
             </button>
-          ))}
+            <button
+              onClick={() => setChampionOnlyMode(false)}
+              className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all ${
+                !championOnlyMode
+                  ? "bg-cyan-500 text-slate-950 font-bold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+              title="Compare all tracked sub-engines"
+            >
+              All Tracked Engines ({data?.leaderboard.length || 0})
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] font-mono text-slate-500 uppercase mr-0.5">Horizon:</span>
+            {["50", "100", "200", "all"].map(depth => (
+              <button
+                key={depth}
+                onClick={() => setSelectedHorizon(depth)}
+                className={`px-2.5 py-1 rounded text-xs font-mono transition-all ${
+                  selectedHorizon === depth
+                    ? "bg-slate-700 text-white font-bold border border-slate-600"
+                    : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                {depth === "all" ? "Full Archive" : depth}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
+      {/* 2.5. APEX CHAMPION MASTER PICKS COMMAND DECK (Refined Best Selection Per Game for Draw N+1) */}
+      {data?.championPicks && data.championPicks.length > 0 && (
+        <div className="bg-[#0f1418] rounded-2xl border border-amber-500/30 p-5 space-y-4 shadow-[0_0_30px_rgba(245,158,11,0.06)]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3.5">
+            <div>
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-amber-400" />
+                <h2 className="font-bold text-white text-base sm:text-lg">
+                  Apex Champion Master Picks — Next Draw (N+1)
+                </h2>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  SINGLE REFINED SELECTION PER GAME
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Eliminates choice overload by automatically selecting the #1 verified winning engine system per game and intersecting its top Bayesian-calibrated numbers for the upcoming draw.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {data.championPicks.map((pick) => {
+              const isExpanded = expandedWheelGame === pick.game_key;
+              const isCopied = copiedGame === pick.game_key;
+              return (
+                <div
+                  key={pick.game_key}
+                  className="rounded-xl bg-gradient-to-b from-[#161c22] to-[#11161b] border border-emerald-500/30 p-4 flex flex-col justify-between space-y-3.5 shadow-md"
+                >
+                  <div className="space-y-3">
+                    {/* Card Header */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <span className="px-2.5 py-0.5 rounded text-xs font-bold font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                          {getGameLabel(pick.game_key)}
+                        </span>
+                        <span className="ml-2 text-xs font-mono text-slate-300 font-bold">
+                          Target Draw #{pick.target_draw_number}
+                          {pick.target_time_slot ? ` (${pick.target_time_slot})` : ""}
+                        </span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
+                        {pick.verified_win_rate_pct}% Hit | +{pick.verified_roi_pct}% ROI
+                      </span>
+                    </div>
+
+                    {/* Selected Champion Engine Name */}
+                    <div className="flex items-center justify-between text-[11px] font-mono bg-slate-900/70 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                      <span className="text-slate-400">Winning System:</span>
+                      <span className="text-amber-300 font-semibold truncate max-w-[180px]" title={pick.engine_name}>
+                        {pick.engine_name}
+                      </span>
+                    </div>
+
+                    {/* Master Pick Numbers */}
+                    <div>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-semibold block mb-1.5">
+                        {pick.game_key === "play-whe"
+                          ? "Refined Top-5 Master Marks (Play Any or All 5)"
+                          : "Primary Refined Master Combination"}
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {pick.predicted_numbers.map((num, i) => (
+                          <span
+                            key={i}
+                            className="w-9 h-9 rounded-lg bg-emerald-500/20 border-2 border-emerald-400/70 text-white font-mono font-bold text-sm flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+                          >
+                            {pick.game_key === "pick4" ? String(num) : String(num).padStart(2, "0")}
+                          </span>
+                        ))}
+                        {pick.predicted_powerball !== undefined && (
+                          <span className="px-2.5 h-9 rounded-lg bg-amber-500/20 border-2 border-amber-400/70 text-amber-300 font-mono font-bold text-xs flex items-center justify-center">
+                            {pick.game_key === "cashpot" ? `Mult x${pick.predicted_powerball}` : `PB ${pick.predicted_powerball}`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Calibrated Corridor & Contributing Models */}
+                    <div className="text-[11px] font-mono text-slate-400 space-y-1 pt-1">
+                      <div className="flex items-center justify-between">
+                        <span>Calibrated Sum Corridor:</span>
+                        <span className="text-cyan-300 font-semibold">{pick.sum_corridor}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Best Verified Capture:</span>
+                        <span className="text-emerald-300 font-semibold">{pick.best_prize}</span>
+                      </div>
+                    </div>
+
+                    {/* Expandable Condensed Wheel Slips */}
+                    {pick.condensed_wheel && pick.condensed_wheel.length > 0 && (
+                      <div className="pt-1">
+                        <button
+                          onClick={() => setExpandedWheelGame(isExpanded ? null : pick.game_key)}
+                          className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-[11px] font-mono text-cyan-300 flex items-center justify-between transition-colors"
+                        >
+                          <span>
+                            {pick.game_key === "play-whe"
+                              ? `View 13-Mark High-Density Subspace Core`
+                              : `View Condensed Backup Wheel (${pick.condensed_wheel.length} Slips)`}
+                          </span>
+                          <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                        </button>
+
+                        {isExpanded && (
+                          <div className="mt-2 p-2.5 rounded-lg bg-slate-950/90 border border-slate-800 space-y-1.5 max-h-44 overflow-y-auto font-mono text-[11px]">
+                            {pick.condensed_wheel.map((slip, sIdx) => (
+                              <div key={sIdx} className="flex items-center justify-between py-0.5 border-b border-slate-900 last:border-0">
+                                <span className="text-slate-500">
+                                  {pick.game_key === "play-whe" ? "Core Pool:" : `Wheel #${sIdx + 1}:`}
+                                </span>
+                                <div className="flex flex-wrap gap-1 justify-end">
+                                  {slip.map((n, nIdx) => (
+                                    <span key={nIdx} className="px-1.5 py-0.5 rounded bg-slate-900 text-slate-200 border border-slate-800">
+                                      {pick.game_key === "pick4" ? String(n) : String(n).padStart(2, "0")}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Footer Actions */}
+                  <div className="pt-2.5 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleCopyChampionPick(pick)}
+                      className="flex-1 py-1.5 px-3 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-semibold transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {isCopied ? "Copied Master Ticket!" : "Copy Master Pick"}
+                    </button>
+                    <button
+                      onClick={() => setSelectedGame(pick.game_key === selectedGame ? "all" : pick.game_key)}
+                      className="py-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono transition-colors"
+                    >
+                      {selectedGame === pick.game_key ? "Show All" : "Focus Game"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* 3. Engine Performance Leaderboard */}
       <div className="bg-[#0f1418] rounded-2xl border border-slate-800 overflow-hidden shadow-lg">
-        <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-amber-400" />
-            <h2 className="font-bold text-white text-base">Comparative Engine Performance Leaderboard</h2>
+            <h2 className="font-bold text-white text-base">
+              {championOnlyMode
+                ? "Verified #1 Champion Engine Systems (1 Per Game)"
+                : "Comparative Engine Performance Leaderboard (All Tracked Engines)"}
+            </h2>
           </div>
           <span className="text-xs font-mono text-slate-400">
-            Ranked by Prize Win Rate & ROI
+            {championOnlyMode
+              ? "Showing only the highest-performing refined system per game"
+              : "Ranked by Prize Win Rate & ROI"}
           </span>
         </div>
 
@@ -308,7 +549,7 @@ export default function EngineBenchmarkTracker() {
             <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
             Evaluating multi-engine backtest and live draw logs...
           </div>
-        ) : !data || data.leaderboard.length === 0 ? (
+        ) : !data || displayedLeaderboard.length === 0 ? (
           <div className="p-8 text-center text-slate-500 font-mono text-xs">
             No verified engine records available for this game horizon yet. Click "Reconcile & Snapshot N+1" to start tracking.
           </div>
@@ -329,7 +570,7 @@ export default function EngineBenchmarkTracker() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-mono">
-                {data.leaderboard.map((row, idx) => {
+                {displayedLeaderboard.map((row, idx) => {
                   const isPrime = row.status === "ACTIVE PRIME";
                   const isDrift = row.status === "REGIME DRIFT ALERT";
                   const isCalib = row.status === "NEEDS CALIBRATION";
