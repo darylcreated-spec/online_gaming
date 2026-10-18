@@ -1060,13 +1060,21 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
     try {
       const liveDraws = await scrapeWinForLifeLivePortal();
       for (const d of liveDraws) {
-        const check = await db.execute({
-          sql: "SELECT 1 FROM winforlife_draws WHERE draw_date = ?",
-          args: [d.draw_date]
+        const latestRes = await db.execute(
+          "SELECT MAX(draw_number) as max_num, MAX(draw_date) as max_date FROM winforlife_draws"
+        );
+        const maxDrawNum = Number(latestRes.rows[0]?.max_num) || 460;
+        const maxDate = String(latestRes.rows[0]?.max_date || "2020-01-01");
+
+        // Reject out-of-order older dates or duplicate 6-number sets
+        if (!d.draw_date || d.draw_date <= maxDate) continue;
+
+        const dupCheck = await db.execute({
+          sql: "SELECT 1 FROM winforlife_draws WHERE draw_date = ? OR (num1 = ? AND num2 = ? AND num3 = ? AND num4 = ? AND num5 = ? AND num6 = ? AND draw_number >= ?)",
+          args: [d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.num6, maxDrawNum - 5]
         });
-        if (check.rows.length === 0) {
-          const maxRes = await db.execute("SELECT MAX(draw_number) as max_num FROM winforlife_draws");
-          const nextDrawNum = (Number(maxRes.rows[0]?.max_num) || 460) + 1;
+        if (dupCheck.rows.length === 0) {
+          const nextDrawNum = maxDrawNum + 1;
           const res = await db.execute({
             sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [nextDrawNum, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.num6, d.cash_ball, d.jackpot]
@@ -1077,6 +1085,9 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
     } catch (portalErr: any) {
       console.warn("[WinForLife] Live portal notice:", portalErr.message);
     }
+
+    // Self-healing guard: remove any out-of-order duplicate rows (e.g. draw_number >= 473 with older date < 2026-10-16)
+    await db.execute("DELETE FROM winforlife_draws WHERE draw_number >= 473 AND draw_date < '2026-10-16'").catch(() => {});
 
     // 3. Optional Tertiary Source: Official HTML scrape (only if full or targetYear)
     if (full || targetYear) {

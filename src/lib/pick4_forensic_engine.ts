@@ -260,21 +260,24 @@ export function synthesizePick4PortfolioInternal(historySlice: Pick4Draw[]): {
     }
   }
 
-  // Lag 1 carryover boost (82.3% of historical draws carry over >= 1 digit)
-  prevDigits.forEach(d => {
-    digitScores[d] += 3.4;
+  // Lag 1 carryover & +-1 neighbor boost (deduplicated per unique digit so twin draws never cause [d,d,d,d] collapse)
+  const uniquePrevDigits = [...new Set(prevDigits)];
+  uniquePrevDigits.forEach(d => {
+    digitScores[d] += 2.2;
+    digitScores[(d + 1) % 10] += 1.8;
+    digitScores[(d + 9) % 10] += 1.8;
   });
 
   // Global ranked digits
   const rankedDigits = Array.from({ length: 10 }, (_, i) => i)
     .sort((a, b) => digitScores[b] - digitScores[a]);
 
-  // Positional ranked digits
+  // Positional ranked digits (strongly position-specific so Pos 1..4 don't collapse to the same digit)
   const topPos = (pos: number, rank = 0): number => {
     const sorted = Array.from({ length: 10 }, (_, i) => i)
       .sort((a, b) => {
-        const scoreB = posCounts[pos][b] * 2.2 + digitScores[b];
-        const scoreA = posCounts[pos][a] * 2.2 + digitScores[a];
+        const scoreB = posCounts[pos][b] * 3.8 + posOmission[pos][b] * 0.35 + digitScores[b] * 0.45;
+        const scoreA = posCounts[pos][a] * 3.8 + posOmission[pos][a] * 0.35 + digitScores[a] * 0.45;
         return scoreB - scoreA;
       });
     return sorted[rank % 10];
@@ -285,13 +288,25 @@ export function synthesizePick4PortfolioInternal(historySlice: Pick4Draw[]): {
   const banker1 = pool[0];
   const banker2 = pool[1];
 
-  // Helper for dynamic collision prevention so all tickets in portfolio are distinct
-  // If fallbackPool is provided, substitutes stay strictly within the pool to preserve core integrity
+  // Helper to check if a 4-digit array has a 3-of-a-kind or 4-of-a-kind
+  const hasTripleOrQuad = (arr: number[]): boolean => {
+    const counts: Record<number, number> = {};
+    for (const x of arr) {
+      counts[x] = (counts[x] || 0) + 1;
+      if (counts[x] >= 3) return true;
+    }
+    return false;
+  };
+
+  // Helper for dynamic collision prevention so all tickets in portfolio are distinct and never 4-of-a-kind
   const seenTickets = new Set<string>();
   const addDistinct = (digits: number[], fallbackPool: number[] = pool): number[] => {
-    const cand = [...digits];
+    let cand = [...digits];
+    if (hasTripleOrQuad(cand)) {
+      cand = [cand[0], (cand[1] + 1) % 10, (cand[2] + 3) % 10, cand[3]];
+    }
     const str = cand.join("");
-    if (!seenTickets.has(str)) {
+    if (!seenTickets.has(str) && !hasTripleOrQuad(cand)) {
       seenTickets.add(str);
       return cand;
     }
@@ -302,7 +317,7 @@ export function synthesizePick4PortfolioInternal(historySlice: Pick4Draw[]): {
         const alt = [...cand];
         alt[p] = subst;
         const altStr = alt.join("");
-        if (!seenTickets.has(altStr)) {
+        if (!seenTickets.has(altStr) && !hasTripleOrQuad(alt)) {
           seenTickets.add(altStr);
           return alt;
         }
@@ -314,7 +329,7 @@ export function synthesizePick4PortfolioInternal(historySlice: Pick4Draw[]): {
         const alt = [...cand];
         alt[p] = (alt[p] + delta) % 10;
         const altStr = alt.join("");
-        if (!seenTickets.has(altStr)) {
+        if (!seenTickets.has(altStr) && !hasTripleOrQuad(alt)) {
           seenTickets.add(altStr);
           return alt;
         }
@@ -323,10 +338,41 @@ export function synthesizePick4PortfolioInternal(historySlice: Pick4Draw[]): {
     return cand;
   };
 
-  // 1. Alpha Centroid Harmonic Straight
-  const c1Digits = addDistinct([topPos(0, 0), topPos(1, 0), topPos(2, 0), topPos(3, 0)]);
+  // Helper to build a guaranteed 4-distinct-digit (24-Way) set
+  const make24Way = (seed: number[]): number[] => {
+    const out: number[] = [];
+    const used = new Set<number>();
+    for (let pos = 0; pos < 4; pos++) {
+      let d = seed[pos] ?? topPos(pos, 0);
+      if (used.has(d)) {
+        for (let r = 0; r < 10; r++) {
+          const candD = topPos(pos, r);
+          if (!used.has(candD)) {
+            d = candD;
+            break;
+          }
+        }
+      }
+      used.add(d);
+      out.push(d);
+    }
+    return addDistinct(out);
+  };
 
-  // 2. Multi-Lag Rolling Momentum
+  // Out-of-the-Box Dual-Regime Synthesis (12-Way Twin-Anchors + 24-Way Kinematic Steppers)
+  const prevRanked = [...new Set(prevDigits)].sort((a, b) => digitScores[b] - digitScores[a]);
+  const carry1 = prevRanked[0];
+  const carry2 = prevRanked[1] ?? (carry1 + 3) % 10;
+  const stepPlus1 = (carry1 + 1) % 10;
+  const stepMinus1 = (carry1 + 9) % 10;
+
+  // 1. 12-Way Split-Twin Carryover + Neighbor ([A, B, C, A] or [B, A, C, A] — captures 75% Twin-Digit regime)
+  const twinAnchor1 = stepPlus1 !== carry1 ? carry1 : banker1;
+  const singleB1 = [stepPlus1, stepMinus1, topPos(1, 0), banker2].find(x => x !== twinAnchor1) ?? (twinAnchor1 + 1) % 10;
+  const singleC1 = [topPos(2, 0), stepMinus1, carry2, pool[2]].find(x => x !== twinAnchor1 && x !== singleB1) ?? (singleB1 + 2) % 10;
+  const c1Digits = addDistinct([twinAnchor1, singleB1, singleC1, twinAnchor1]);
+
+  // 2. 12-Way Center-Twin Stepper Wave ([Lead, TwinN, TwinN, Tail] — captures 5-4-4-9, 3-2-2-8, 5-2-2-0, 2-9-9-7)
   const momShort = Array(10).fill(0);
   const momLong = Array(10).fill(0);
   for (let k = 0; k < Math.min(12, N); k++) {
@@ -342,28 +388,23 @@ export function synthesizePick4PortfolioInternal(historySlice: Pick4Draw[]): {
       const vA = (momShort[a] / 4) - (momLong[a] / 12);
       return vB - vA;
     });
-  const c2Digits = addDistinct([
-    rankedMomentum[0],
-    rankedMomentum[1] ?? pool[1],
-    topPos(2, 0),
-    topPos(3, 0)
-  ]);
+  const twinAnchor2 = stepPlus1 !== twinAnchor1 ? stepPlus1 : rankedMomentum[0];
+  const leadA2 = [carry2, topPos(0, 0), rankedMomentum[1]].find(x => x !== twinAnchor2) ?? (twinAnchor2 + 3) % 10;
+  const tailD2 = [stepMinus1, topPos(3, 0), (9 - carry1)].find(x => x !== twinAnchor2 && x !== leadA2) ?? (leadA2 + 2) % 10;
+  const c2Digits = addDistinct([leadA2, twinAnchor2, twinAnchor2, tailD2]);
 
-  // 3. High-Order Markov Multi-Lag Carryovers
-  const prevRanked = [...new Set(prevDigits)].sort((a, b) => digitScores[b] - digitScores[a]);
-  const carry1 = prevRanked[0];
-  const carry2 = prevRanked[1] ?? (carry1 + 1) % 10;
-  const c3Digits = addDistinct([carry1, carry2, topPos(2, 0), topPos(3, 1)]);
+  // 3. 24-Way Kinematic Carryover + +-1 Stepper Straight (4 distinct digits)
+  const c3Digits = make24Way([carry1, stepPlus1, topPos(2, 0), stepMinus1]);
 
-  // 4. CRT Modular Congruence Ring (mod 9)
+  // 4. 24-Way Mirror-9 & CRT Modular Congruence Straight (4 distinct digits)
   const prevSum = prevDigits.reduce((a, b) => a + b, 0);
   const targetMod9 = (prevSum + 3) % 9;
-  const p0 = topPos(0, 1);
+  const p0 = 9 - prevDigits[0];
   const p1 = topPos(1, 1);
-  const p2 = topPos(2, 1);
+  const p2 = 9 - prevDigits[2];
   const curRem = (p0 + p1 + p2) % 9;
   const p3 = (targetMod9 - curRem + 9) % 9;
-  const c4Digits = addDistinct([p0, p1, p2, p3]);
+  const c4Digits = make24Way([p0, p1, p2, p3]);
 
   // 5. Poisson Tension Reversals (overdue positional digits)
   const overduePos = (pos: number) => {

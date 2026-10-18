@@ -442,10 +442,10 @@ export default function EngineBenchmarkTracker() {
                     <div>
                       <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-semibold block mb-1.5">
                         {pick.game_key === "play-whe"
-                          ? "Refined Top-5 Master Marks (Play Any or All 5)"
+                          ? "5 Playable Tactical Marks (100% Graded Card Parity)"
                           : pick.game_key === "pick4"
-                          ? "Primary 4 Positional Numbers (Pos 1 – Pos 2 – Pos 3 – Pos 4)"
-                          : "Primary Refined Master Combination"}
+                          ? "Primary Twin-Anchor Combination (Pos 1 – Pos 2 – Pos 3 – Pos 4)"
+                          : "Line #1: Kinematic Lag 1–2 Neighbor Core"}
                       </span>
                       <div className="flex flex-wrap items-center gap-1.5">
                         {pick.predicted_numbers.map((num, i) => (
@@ -454,6 +454,11 @@ export default function EngineBenchmarkTracker() {
                               {pick.game_key === "pick4" && (
                                 <span className="text-[9px] font-mono text-slate-400 mb-0.5">
                                   Pos {i + 1}
+                                </span>
+                              )}
+                              {pick.game_key === "play-whe" && (
+                                <span className="text-[9px] font-mono text-slate-400 mb-0.5">
+                                  {["Step±1", "Lag2", "Mir37", "Slot", "Drght"][i] || `M${i + 1}`}
                                 </span>
                               )}
                               <span className="w-9 h-9 rounded-lg bg-emerald-500/20 border-2 border-emerald-400/70 text-white font-mono font-bold text-sm flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.25)]">
@@ -472,24 +477,68 @@ export default function EngineBenchmarkTracker() {
                         )}
                       </div>
 
-                      {/* For Pick 4: Always show the Top 4 Refined 4-Number Combinations directly on the card */}
+                      {/* For Pick 4: Always show the 4 Dual-Regime Playable Combinations (2x 12-Way Twin + 2x 24-Way) */}
                       {pick.game_key === "pick4" && pick.condensed_wheel && pick.condensed_wheel.length > 0 && (
-                        <div className="mt-2.5 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1">
+                        <div className="mt-2.5 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
                           <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold block">
-                            Top 4 Refined 4-Number Combinations (Straight / 24-Way Box):
+                            4 Playable Card Sets (2x 12-Way Twin + 2x 24-Way Box):
                           </span>
-                          <div className="grid grid-cols-2 gap-1.5 pt-0.5">
-                            {pick.condensed_wheel.slice(0, 4).map((slip, sIdx) => (
-                              <div
-                                key={sIdx}
-                                className="px-2 py-1 rounded bg-slate-950/90 border border-slate-800 flex items-center justify-between text-[11px] font-mono"
-                              >
-                                <span className="text-slate-500">Set #{sIdx + 1}:</span>
-                                <span className="text-emerald-300 font-bold">
-                                  {slip.map(d => String(d)).join(" - ")}
-                                </span>
-                              </div>
-                            ))}
+                          <div className="grid grid-cols-1 gap-1.5 pt-0.5">
+                            {pick.condensed_wheel.slice(0, 4).map((slip, sIdx) => {
+                              const uniqueCount = new Set(slip).size;
+                              const modeLabel = uniqueCount <= 3 ? "12-WAY TWIN" : "24-WAY DISTINCT";
+                              return (
+                                <div
+                                  key={sIdx}
+                                  className="px-2.5 py-1.5 rounded bg-slate-950/90 border border-slate-800 flex items-center justify-between text-[11px] font-mono"
+                                >
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-slate-400">Set #{sIdx + 1}</span>
+                                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                                      uniqueCount <= 3
+                                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                        : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                                    }`}>
+                                      {modeLabel}
+                                    </span>
+                                  </div>
+                                  <span className="text-emerald-300 font-bold tracking-wider">
+                                    {slip.map(d => String(d)).join(" - ")}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* For Multi-Ball Games (Cash Pot, Lotto Plus, Win For Life): Always show all 5 Playable Lines directly on card */}
+                      {pick.game_key !== "play-whe" && pick.game_key !== "pick4" && pick.condensed_wheel && pick.condensed_wheel.length > 0 && (
+                        <div className="mt-2.5 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold block">
+                            5 Orthogonal Playable Lines (Graded Card Portfolio):
+                          </span>
+                          <div className="space-y-1 pt-0.5">
+                            {pick.condensed_wheel.slice(0, 5).map((slip, sIdx) => {
+                              const lineLabels = [
+                                "L1 Neighbor",
+                                "L2 Cluster",
+                                "L3 HighZone",
+                                "L4 Mirror",
+                                "L5 Drought"
+                              ];
+                              return (
+                                <div
+                                  key={sIdx}
+                                  className="px-2 py-1 rounded bg-slate-950/90 border border-slate-800 flex items-center justify-between text-[11px] font-mono"
+                                >
+                                  <span className="text-slate-400 text-[10px]">{lineLabels[sIdx] || `Line #${sIdx + 1}`}:</span>
+                                  <span className="text-emerald-300 font-bold">
+                                    {slip.map(n => String(n).padStart(2, "0")).join(" - ")}
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -506,42 +555,6 @@ export default function EngineBenchmarkTracker() {
                         <span className="text-emerald-300 font-semibold">{pick.best_prize}</span>
                       </div>
                     </div>
-
-                    {/* Expandable Condensed Wheel Slips */}
-                    {pick.condensed_wheel && pick.condensed_wheel.length > 0 && (
-                      <div className="pt-1">
-                        <button
-                          onClick={() => setExpandedWheelGame(isExpanded ? null : pick.game_key)}
-                          className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-[11px] font-mono text-cyan-300 flex items-center justify-between transition-colors"
-                        >
-                          <span>
-                            {pick.game_key === "play-whe"
-                              ? `View 13-Mark High-Density Subspace Core`
-                              : `View Condensed Backup Wheel (${pick.condensed_wheel.length} Slips)`}
-                          </span>
-                          <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-                        </button>
-
-                        {isExpanded && (
-                          <div className="mt-2 p-2.5 rounded-lg bg-slate-950/90 border border-slate-800 space-y-1.5 max-h-44 overflow-y-auto font-mono text-[11px]">
-                            {pick.condensed_wheel.map((slip, sIdx) => (
-                              <div key={sIdx} className="flex items-center justify-between py-0.5 border-b border-slate-900 last:border-0">
-                                <span className="text-slate-500">
-                                  {pick.game_key === "play-whe" ? "Core Pool:" : `Wheel #${sIdx + 1}:`}
-                                </span>
-                                <div className="flex flex-wrap gap-1 justify-end">
-                                  {slip.map((n, nIdx) => (
-                                    <span key={nIdx} className="px-1.5 py-0.5 rounded bg-slate-900 text-slate-200 border border-slate-800">
-                                      {pick.game_key === "pick4" ? String(n) : String(n).padStart(2, "0")}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
 
                   {/* Card Footer Actions */}

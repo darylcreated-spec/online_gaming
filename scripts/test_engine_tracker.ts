@@ -28,14 +28,20 @@ async function main() {
   console.log("TESTING CLOSED-LOOP BAYESIAN CALIBRATOR & ENGINE PREDICTION TRACKER");
   console.log("================================================================================\n");
 
-  // 1. Ensure Table Exists
-  console.log(">>> [1/3] Initializing database schema...");
+  const { db } = await import("../src/lib/db");
+  const { reviseAndAuditAfterDraw } = await import("../src/lib/winning_formula_engine");
+
+  // 1. Ensure Table Exists & Clean Stale Pending/Corrupted Rows
+  console.log(">>> [1/3] Initializing database schema & clearing stale pending snapshots...");
   await ensureEngineLogsTable();
+  await db.execute("DELETE FROM prediction_engine_logs WHERE status = 'PENDING'");
+  await db.execute("DELETE FROM prediction_engine_logs WHERE game_key = 'win-for-life' AND target_draw_number >= 474");
   console.log("Database tables & indexes verified.\n");
 
   // 2. Run Full System Calibration + Historical Walk-Forward Re-Verification + N+1 Snapshot
   console.log(">>> [2/3] Running closed-loop Bayesian calibration & walk-forward test verification...");
   const calibRes = await calibrateAndReverifyAllEngines("all");
+  await reviseAndAuditAfterDraw();
   console.log(`Calibrated ${calibRes.calibratedProfiles.length} game regimes.`);
   console.log(`Re-verified ${calibRes.reverifiedCount} historical engine logs (${calibRes.prizesAwarded} money prize hits confirmed).`);
   console.log(`Snapshotted ${calibRes.snapshottedCount} calibrated predictions for upcoming draw N+1.\n`);
