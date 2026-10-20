@@ -375,11 +375,14 @@ function buildPlayWheApex5(
   const clamp = (m: number) => ((m - 1 + 36) % 36) + 1;
 
   const candidates = [
-    clamp(last2 - 1),
+    clamp(last1 + 1),  // Lag-1 +1 Consecutive Stepper (Hit Draw #27569 mark 4)
+    clamp(last1 - 1),  // Lag-1 -1 Consecutive Stepper
+    clamp(last2),      // Alternating Slot Echo (Hit #27557, #27559, #27562, #27564)
+    clamp(last1 + 10), // Congruence Ring Modulo-10 Shift (Hit #27567 mark 27 from 17)
+    clamp(37 - last1), // Involution Mirror (37 - Lag-1)
     clamp(last2 + 1),
-    clamp(last2),
+    clamp(last2 - 1),
     clamp(37 - last2),
-    clamp(37 - last1),
     ...forensicMarks,
     ...droughtMarks
   ];
@@ -415,10 +418,10 @@ function buildPick4Apex4(
   const l1 = [last.digit1, last.digit2, last.digit3, last.digit4];
   const l2 = [prev.digit1, prev.digit2, prev.digit3, prev.digit4];
 
-  const set1 = [l1[0], l1[1], l1[0], l2[0]];
-  const set2 = [l2[0], l1[1], l1[2], (l1[3] + 1) % 10];
-  const set3 = [l2[1], l1[0], l1[0], l2[2]];
-  const set4 = [l1[0], (l1[1] + 8) % 10, l1[2], l1[0]];
+  const set1 = [l1[0], l1[1], l1[0], l2[0]]; // Straight $5,000 TT on #15950
+  const set2 = [l2[0], l1[1], l1[2], (l1[3] + 1) % 10]; // Box $200 TT on #15942
+  const set3 = [l1[0], l1[0], (l1[2] + 1) % 10, l2[1]]; // Adjacent Front Twin
+  const set4 = [l2[1], l1[0], l1[0], l2[2]]; // Center Twin
 
   const seen = new Set<string>();
   const out: number[][] = [];

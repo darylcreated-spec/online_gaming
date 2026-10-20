@@ -35,7 +35,7 @@ async function main() {
   console.log(">>> [1/3] Initializing database schema & clearing stale pending snapshots...");
   await ensureEngineLogsTable();
   await db.execute("DELETE FROM prediction_engine_logs WHERE status = 'PENDING'");
-  await db.execute("DELETE FROM prediction_engine_logs WHERE game_key = 'win-for-life' AND target_draw_number >= 474");
+  await db.execute("DELETE FROM prediction_engine_logs WHERE game_key = 'win-for-life' AND target_draw_number >= 475");
   console.log("Database tables & indexes verified.\n");
 
   // 2. Run Full System Calibration + Historical Walk-Forward Re-Verification + N+1 Snapshot
