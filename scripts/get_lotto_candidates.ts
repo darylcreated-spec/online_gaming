@@ -28,7 +28,7 @@ async function checkLotto() {
 
   console.log('\n--- TOP CANDIDATE SETS ---');
   engineResult.nextCandidateSets.slice(0, 5).forEach((c, idx) => {
-    console.log('Set ' + (idx + 1) + ' (' + c.name + '): [' + c.numbers.join(', ') + '] + PB: ' + c.powerball + ' | Sum: ' + c.sum + ' | Parity: ' + c.oddCount + 'O/' + (5 - c.oddCount) + 'E | Rationale: ' + c.rationale);
+    console.log('Set ' + (idx + 1) + ' (' + c.strategyName + '): [' + c.numbers.join(', ') + '] + PB: ' + c.powerball + ' | Sum: ' + c.sum + ' | Parity: ' + c.oddEvenRatio + ' | Rationale: ' + c.rationale);
   });
 
   console.log('\n--- STEFAN MANDEL 5-SLIP COVERING WHEEL ---');

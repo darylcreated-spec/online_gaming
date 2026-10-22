@@ -2,13 +2,15 @@
   "name": "d-win-concept",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "sync-cloud": "node scripts/sync_cloud.js",
-    "generate-matrix": "node scripts/generate_matrix.js"
+    "generate-matrix": "node scripts/generate_matrix.js",
+    "backtest": "ts-node --project tsconfig.node.json ./scratch/run_winforlife_backtest.ts"
   },
   "dependencies": {
     "@google/genai": "^2.27.0",
@@ -34,6 +36,7 @@
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "ts-node": "^10"
   }
 }

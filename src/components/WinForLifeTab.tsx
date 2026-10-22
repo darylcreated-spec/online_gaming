@@ -506,7 +506,14 @@ export default function WinForLifeTab() {
           }`}
         >
           <Binary className="w-3.5 h-3.5 text-amber-400" />
-          FORENSIC QUANT ENGINE
+          <span>FORENSIC QUANT ENGINE</span>
+          <span className={`px-1.5 py-0.5 rounded text-[9px] font-black border ${
+            subTab === "forensic"
+              ? "bg-slate-950 text-amber-300 border-slate-900"
+              : "bg-amber-500/20 text-amber-200 border-amber-400/40"
+          }`}>
+            COMPILED
+          </span>
         </button>
         <button
           onClick={() => setSubTab("builder")}

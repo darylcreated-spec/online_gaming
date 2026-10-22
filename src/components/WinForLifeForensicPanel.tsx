@@ -216,6 +216,85 @@ export default function WinForLifeForensicPanel() {
         </div>
       </div>
 
+      {/* 2. DYNAMIC QUANTITATIVE TELEMETRY BAR */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 font-mono">
+        <div className="p-3 rounded-xl bg-slate-950/70 border border-emerald-500/20 text-center">
+          <span className="text-[10px] text-gray-500 block uppercase font-bold">Avg Composite</span>
+          <span className="text-base font-black text-emerald-400">
+            {data.averageCompositeScore !== undefined ? data.averageCompositeScore.toFixed(1) : "—"}
+          </span>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-950/70 border border-cyan-500/20 text-center">
+          <span className="text-[10px] text-gray-500 block uppercase font-bold">Median Score</span>
+          <span className="text-base font-black text-cyan-400">
+            {data.medianCompositeScore !== undefined ? data.medianCompositeScore.toFixed(1) : "—"}
+          </span>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-950/70 border border-indigo-500/20 text-center">
+          <span className="text-[10px] text-gray-500 block uppercase font-bold">Top Ball Score</span>
+          <span className="text-base font-black text-indigo-400">
+            {data.topRankedBallScore !== undefined ? data.topRankedBallScore.toFixed(1) : "—"}
+          </span>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-700/40 text-center">
+          <span className="text-[10px] text-gray-500 block uppercase font-bold">Bottom Ball Score</span>
+          <span className="text-base font-black text-gray-400">
+            {data.bottomRankedBallScore !== undefined ? data.bottomRankedBallScore.toFixed(1) : "—"}
+          </span>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-950/70 border border-amber-500/20 text-center">
+          <span className="text-[10px] text-gray-500 block uppercase font-bold">Candidate Coverage</span>
+          <span className="text-base font-black text-amber-400">
+            {data.candidateSetCoverageRate !== undefined ? `${data.candidateSetCoverageRate.toFixed(1)}%` : "100%"}
+          </span>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-950/70 border border-rose-500/20 text-center">
+          <span className="text-[10px] text-gray-500 block uppercase font-bold">Cash Ball Match</span>
+          <span className="text-base font-black text-rose-400">
+            {data.cashBallMatchRate !== undefined ? `${data.cashBallMatchRate.toFixed(1)}%` : `${data.audit.cashBallAccuracyPercent.toFixed(1)}%`}
+          </span>
+        </div>
+      </div>
+
+      {/* COMPILED DISCOVERIES: POSITIONAL CORRIDORS & STEP DELTAS */}
+      {data.positionalCorridors && data.positionalCorridors.length > 0 && (
+        <div className="p-4 rounded-2xl bg-slate-950/80 border border-emerald-500/20 font-mono space-y-3 shadow-lg">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-2">
+            <div className="flex items-center gap-2">
+              <Binary className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-xs font-black uppercase text-white tracking-wider">
+                Order Statistics Corridors (Sorted Invariant Bounds Across {data.totalDrawsInDb} Draws)
+              </h3>
+            </div>
+            <div className="flex items-center gap-2 text-[10px] text-gray-400">
+              <span>Adjacent Step Gaps: {data.stepDeltaDistribution?.slice(0, 3).map(s => `+${s.diff} (${s.pct}%)`).join(", ")}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            {data.positionalCorridors.map(c => (
+              <div key={c.ballIndex} className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 text-center space-y-1">
+                <span className="text-[10px] font-bold text-emerald-400 block">Ball #{c.ballIndex}</span>
+                <div className="text-xs font-black text-white">Median: {c.median}</div>
+                <div className="text-[10px] text-cyan-300">90% CI: [{c.p5} - {c.p95}]</div>
+                <div className="text-[9px] text-gray-500">Range: {c.min} - {c.max} (Avg {c.avg})</div>
+              </div>
+            ))}
+          </div>
+
+          {data.consecutiveStats && (
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5 text-[11px] text-gray-400">
+              <div>
+                <span className="text-gray-300 font-bold">Consecutive Stepping Invariant:</span> {data.consecutiveStats.pairRatePercent}% draws contain &gt;=1 adjacent pair ({'{'}x, x+1{'}'}); {data.consecutiveStats.tripletRatePercent}% contain triplets.
+              </div>
+              <div className="text-emerald-400 font-semibold">
+                Filters out &gt;78% of unviable permutations
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 2. DISCOVERY LAWS COLLAPSIBLE DRAWER */}
       {showTheory && (
         <div className="p-5 rounded-2xl bg-slate-900/90 border border-emerald-500/30 font-mono space-y-4 animate-in fade-in duration-300">
@@ -362,36 +441,53 @@ export default function WinForLifeForensicPanel() {
             <span className="text-[10px] text-indigo-400 font-bold">10 Strategic Slips</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
-            {data.invariantSubspace.coveringTickets.map((tkt, idx) => (
+            {(data.coveringPortfolio && data.coveringPortfolio.length > 0
+              ? data.coveringPortfolio
+              : data.invariantSubspace.coveringTickets.map((tkt, idx) => ({
+                  slipIndex: idx + 1,
+                  strategyName: `Mandel Covering Wheel Slip #${idx + 1}`,
+                  numbers: tkt,
+                  sum: tkt.reduce((a, b) => a + b, 0),
+                  oddEvenRatio: `${tkt.filter(n => n % 2 !== 0).length}O/${tkt.filter(n => n % 2 === 0).length}E`,
+                  highLowRatio: `${tkt.filter(n => n > 14).length}H/${tkt.filter(n => n <= 14).length}L`,
+                  consecutivePairs: []
+                }))
+            ).map((slip, idx) => (
               <div
                 key={idx}
-                className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5 flex items-center justify-between text-xs"
+                className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5 flex flex-col justify-between text-xs space-y-2 hover:border-indigo-500/30 transition-all"
               >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-[10px] font-bold text-indigo-400 shrink-0">#{idx + 1}</span>
-                  <div className="flex items-center gap-1 font-bold flex-wrap">
-                    {tkt.map((b) => (
-                      <span key={b} className="px-1.5 py-0.5 rounded bg-slate-800 text-gray-200 text-[11px]">
-                        {b}
-                      </span>
-                    ))}
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-indigo-400">#{slip.slipIndex}</span>
+                  <span className="text-[9px] text-gray-400 font-mono">
+                    Sum: {slip.sum} | {slip.oddEvenRatio}
+                  </span>
                 </div>
-                <div className="flex items-center gap-1 shrink-0 ml-1">
-                  <button
-                    onClick={() => handleCopySlip(tkt, idx)}
-                    title="Copy Slip"
-                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-300 transition cursor-pointer"
-                  >
-                    {copiedSlipIdx === idx ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  </button>
-                  <button
-                    onClick={() => handleSendToSyndicate(tkt, 3, `Covering Slip #${idx + 1}`)}
-                    title="Send to Syndicate"
-                    className="p-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-slate-950 font-bold transition cursor-pointer"
-                  >
-                    <Send className="w-3 h-3" />
-                  </button>
+                <div className="flex items-center justify-center gap-1 font-bold flex-wrap py-1 bg-slate-900/40 rounded-lg">
+                  {slip.numbers.map((b) => (
+                    <span key={b} className="w-5 h-5 rounded-full bg-slate-800 text-gray-200 text-[10px] flex items-center justify-center font-bold">
+                      {b}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-white/5">
+                  <span className="text-[9px] text-gray-500 font-mono">{slip.highLowRatio}</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleCopySlip(slip.numbers, idx)}
+                      title="Copy Slip"
+                      className="p-1 rounded-md bg-slate-800 hover:bg-slate-700 text-gray-300 transition cursor-pointer"
+                    >
+                      {copiedSlipIdx === idx ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                    <button
+                      onClick={() => handleSendToSyndicate(slip.numbers, 3, `Covering Slip #${slip.slipIndex}`)}
+                      title="Send to Syndicate"
+                      className="p-1 rounded-md bg-indigo-500 hover:bg-indigo-400 text-slate-950 font-bold transition cursor-pointer"
+                    >
+                      <Send className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

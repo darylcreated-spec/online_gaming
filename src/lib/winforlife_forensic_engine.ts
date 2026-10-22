@@ -105,8 +105,56 @@ export interface ForensicEngineOutput {
 
   // Empirical Telemetry
   topAffinityPairs: { pair: string; count: number }[];
+  // New telemetry fields (computed after engine run)
+  averageCompositeScore: number;
+  medianCompositeScore: number;
+  topRankedBallScore: number;
+  bottomRankedBallScore: number;
+  candidateSetCoverageRate: number;
+  cashBallMatchRate: number;
   criticalTensionBalls: { ball: number; drought: number; avgSkip: number; tensionRatio: number }[];
   hotMomentumBalls: { ball: number; hitsLast20: number }[];
+
+  // Compiled Discoveries: Positional Corridors, Step Interval Deltas, Follower Markov Transitions & Covering Array
+  coveringPortfolio: CoveringPortfolioSlip[];
+  positionalCorridors: PositionalCorridor[];
+  stepDeltaDistribution: StepDeltaFrequency[];
+  consecutiveStats: {
+    pairRatePercent: number;
+    tripletRatePercent: number;
+  };
+  followerTransitions: FollowerPattern[];
+}
+
+export interface CoveringPortfolioSlip {
+  slipIndex: number;
+  strategyName: string;
+  numbers: number[];
+  sum: number;
+  oddEvenRatio: string;
+  highLowRatio: string;
+  consecutivePairs: string[];
+}
+
+export interface PositionalCorridor {
+  ballIndex: number;
+  avg: number;
+  median: number;
+  p5: number;
+  p95: number;
+  min: number;
+  max: number;
+}
+
+export interface StepDeltaFrequency {
+  diff: number;
+  count: number;
+  pct: number;
+}
+
+export interface FollowerPattern {
+  previousBall: number;
+  topFollowers: { ball: number; frequency: number }[];
 }
 
 /**
@@ -140,11 +188,22 @@ export function validateForensicLine(
 
   // 1. Sum Check: Optimal [70, 105], wide boundary [58, 118]
   const sum = sorted.reduce((a, b) => a + b, 0);
-  if (sum < 58 || sum > 118) {
-    return { isValid: false, score: 0, sum, oddEvenRatio, highLowRatio, consecutivePairs: [], carryovers: [], reasons: ["Sum outside wide boundary [58, 118]"] };
-  }
-  if (sum >= 70 && sum <= 105) score += 20;
-  else score -= 10;
+  // Refined sum envelope: reject only outside wide bounds, but bias toward narrow high‑confidence range
+if (sum < 58 || sum > 118) {
+  // Outside absolute possible range – discard
+  return { isValid: false, score: 0, sum, oddEvenRatio, highLowRatio, consecutivePairs: [], carryovers: [], reasons: ["Sum outside wide boundary [58, 118]"] };
+}
+// Apply soft bonus/penalty based on narrow confidence envelope
+if (sum >= 70 && sum <= 105) {
+  score += 20; // high‑confidence centroid
+} else if (sum >= 58 && sum < 70) {
+  score += 5; // low side of envelope
+} else if (sum > 105 && sum <= 118) {
+  score += 5; // high side of envelope
+} else {
+  score -= 10; // far outlier
+}
+
 
   // 2. Consecutive Pairs: Must have >= 1 adjacent pair, <= 2
   const consecutivePairs: string[] = [];
@@ -590,6 +649,36 @@ export const MANDEL_COVERING_WHEEL_16_INDICES: number[][] = [
 ];
 
 /**
+ * Generates an optimized 10-slip Stefan Mandel covering wheel portfolio
+ * over the 16-ball Invariant Attractor Core.
+ */
+export function generateCoveringArrayPortfolio(pool16: number[]): CoveringPortfolioSlip[] {
+  return MANDEL_COVERING_WHEEL_16_INDICES.map((indices, idx) => {
+    const numbers = indices.map(i => pool16[i % pool16.length]).sort((a, b) => a - b);
+    const sum = numbers.reduce((a, b) => a + b, 0);
+    const odds = numbers.filter(n => n % 2 !== 0).length;
+    const evens = 6 - odds;
+    const highs = numbers.filter(n => n > 14).length;
+    const lows = 6 - highs;
+    const consecutivePairs: string[] = [];
+    for (let j = 0; j < numbers.length - 1; j++) {
+      if (numbers[j + 1] - numbers[j] === 1) {
+        consecutivePairs.push(`${numbers[j]}-${numbers[j + 1]}`);
+      }
+    }
+    return {
+      slipIndex: idx + 1,
+      strategyName: `Mandel Covering Wheel Slip #${idx + 1}`,
+      numbers,
+      sum,
+      oddEvenRatio: `${odds}O/${evens}E`,
+      highLowRatio: `${highs}H/${lows}L`,
+      consecutivePairs
+    };
+  });
+}
+
+/**
  * Conducts a walk-forward "Hit & Miss" backtest over the last N historical draws.
  */
 export function runWalkForwardHitMissAudit(
@@ -884,6 +973,97 @@ export function executeWinForLifeForensicEngine(draws: WFLDraw[], auditSampleSiz
       hitsLast20: freq20[r.ball]
     }));
 
+  // Compute telemetry metrics
+  const compositeScores = nextCandidateSets.map(cs => cs.compositeScore);
+  const averageCompositeScore = compositeScores.reduce((a, b) => a + b, 0) / compositeScores.length;
+  const sortedScores = [...compositeScores].sort((a, b) => a - b);
+  const medianCompositeScore = sortedScores.length % 2 === 0
+    ? (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2
+    : sortedScores[Math.floor(sortedScores.length / 2)];
+  const topRankedBallScore = ranked[0].score;
+  const bottomRankedBallScore = ranked[ranked.length - 1].score;
+  const candidateSetCoverageRate = (nextCandidateSets.filter(cs => cs.compositeScore >= 50).length / nextCandidateSets.length) * 100;
+  const cashBallMatchRate = audit.cashBallAccuracyPercent;
+
+  // Compile Discoveries & Pattern Metrics
+  const coveringPortfolio = generateCoveringArrayPortfolio(pool16);
+
+  // 1. Positional Order Statistics Corridors (Balls 1-6)
+  const positionalCorridors: PositionalCorridor[] = [];
+  for (let pos = 0; pos < 6; pos++) {
+    const vals = sortedDraws.map(d => d.numbers[pos]).sort((a, b) => a - b);
+    const min = vals[0] || 1;
+    const max = vals[vals.length - 1] || 28;
+    const p5 = vals[Math.floor(vals.length * 0.05)] || min;
+    const median = vals[Math.floor(vals.length * 0.50)] || Math.round((min + max) / 2);
+    const p95 = vals[Math.floor(vals.length * 0.95)] || max;
+    const avg = Math.round((vals.reduce((a, b) => a + b, 0) / (vals.length || 1)) * 10) / 10;
+    positionalCorridors.push({ ballIndex: pos + 1, avg, median, p5, p95, min, max });
+  }
+
+  // 2. Step Interval Deltas (Adjacent Sorted Gaps)
+  const deltaFreq: Record<number, number> = {};
+  let totalDeltas = 0;
+  sortedDraws.forEach(d => {
+    for (let i = 0; i < 5; i++) {
+      const diff = d.numbers[i + 1] - d.numbers[i];
+      deltaFreq[diff] = (deltaFreq[diff] || 0) + 1;
+      totalDeltas++;
+    }
+  });
+  const stepDeltaDistribution: StepDeltaFrequency[] = Object.entries(deltaFreq)
+    .map(([diff, count]) => ({
+      diff: Number(diff),
+      count,
+      pct: Math.round((count / (totalDeltas || 1)) * 1000) / 10
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+
+  // 3. Consecutive Stepping Frequency
+  let drawsWithPair = 0;
+  let drawsWithTriplet = 0;
+  sortedDraws.forEach(d => {
+    let hasPair = false;
+    let maxRun = 1;
+    let curRun = 1;
+    for (let i = 0; i < 5; i++) {
+      if (d.numbers[i + 1] - d.numbers[i] === 1) {
+        hasPair = true;
+        curRun++;
+        if (curRun > maxRun) maxRun = curRun;
+      } else {
+        curRun = 1;
+      }
+    }
+    if (hasPair) drawsWithPair++;
+    if (maxRun >= 3) drawsWithTriplet++;
+  });
+  const consecutiveStats = {
+    pairRatePercent: Math.round((drawsWithPair / (sortedDraws.length || 1)) * 1000) / 10,
+    tripletRatePercent: Math.round((drawsWithTriplet / (sortedDraws.length || 1)) * 1000) / 10
+  };
+
+  // 4. Follower Markov Transitions (Top Followers for Each Ball)
+  const transMatrix: number[][] = Array.from({ length: 29 }, () => Array(29).fill(0));
+  for (let i = 0; i < sortedDraws.length - 1; i++) {
+    const curNums = sortedDraws[i].numbers;
+    const nextNums = sortedDraws[i + 1].numbers;
+    for (const c of curNums) {
+      for (const n of nextNums) {
+        transMatrix[c][n]++;
+      }
+    }
+  }
+  const followerTransitions: FollowerPattern[] = [];
+  for (let ball = 1; ball <= 28; ball++) {
+    const rankedFollowers = Array.from({ length: 28 }, (_, idx) => idx + 1)
+      .map(nextBall => ({ ball: nextBall, frequency: transMatrix[ball][nextBall] }))
+      .sort((a, b) => b.frequency - a.frequency)
+      .slice(0, 3);
+    followerTransitions.push({ previousBall: ball, topFollowers: rankedFollowers });
+  }
+
   return {
     game: "win-for-life",
     totalDrawsInDb: sortedDraws.length,
@@ -895,6 +1075,17 @@ export function executeWinForLifeForensicEngine(draws: WFLDraw[], auditSampleSiz
     audit,
     topAffinityPairs,
     criticalTensionBalls,
-    hotMomentumBalls
+    hotMomentumBalls,
+    averageCompositeScore,
+    medianCompositeScore,
+    topRankedBallScore,
+    bottomRankedBallScore,
+    candidateSetCoverageRate,
+    cashBallMatchRate,
+    coveringPortfolio,
+    positionalCorridors,
+    stepDeltaDistribution,
+    consecutiveStats,
+    followerTransitions
   };
 }
