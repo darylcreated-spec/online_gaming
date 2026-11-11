@@ -1452,10 +1452,11 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
 
   for (const game of games) {
     try {
+      // Clean up corrupted draw numbers if any existed from faulty scraping
       await db.execute({
-        sql: "DELETE FROM prediction_engine_logs WHERE game_key = ?",
-        args: [game]
-      });
+        sql: "DELETE FROM prediction_engine_logs WHERE game_key = ? AND target_draw_number > 20000 AND game_key = 'pick4'",
+        args: []
+      }).catch(() => {});
       if (game === "play-whe") {
         const rows = await query<any>(
           "SELECT draw_number, draw_date, draw_time_slot, winning_number FROM playwhe_draws ORDER BY CAST(draw_number AS INTEGER) ASC"
