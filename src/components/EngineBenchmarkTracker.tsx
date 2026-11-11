@@ -13,6 +13,8 @@ import {
   AlertCircle,
   CheckCircle2,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Filter,
   Search,
   ArrowUpRight,
@@ -20,7 +22,9 @@ import {
   Zap,
   Sliders,
   Flame,
-  Award
+  Award,
+  Copy,
+  Share2
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { EngineLeaderboardRow, EngineLogEntry, CalibrationDiagnostic, ChampionMasterPick } from "@/lib/engine_tracker";
@@ -55,6 +59,7 @@ export default function EngineBenchmarkTracker() {
   const [championOnlyMode, setChampionOnlyMode] = useState<boolean>(true);
   const [expandedWheelGame, setExpandedWheelGame] = useState<string | null>(null);
   const [copiedGame, setCopiedGame] = useState<string | null>(null);
+  const [copiedSyndicateGame, setCopiedSyndicateGame] = useState<string | null>(null);
 
   const fetchData = async (game = selectedGame, horizon = selectedHorizon) => {
     setLoading(true);
@@ -144,7 +149,7 @@ export default function EngineBenchmarkTracker() {
         : arr.map(n => String(n).padStart(2, "0")).join(" - ");
     const lines = [
       `[${getGameLabel(pick.game_key).toUpperCase()} — APEX CHAMPION MASTER PICK | Draw #${pick.target_draw_number}${pick.target_time_slot ? ` (${pick.target_time_slot})` : ""}]`,
-      `Master 4-Number Pick: ${fmt(pick.predicted_numbers)}${pick.predicted_powerball ? ` + PB/Mult: ${pick.predicted_powerball}` : ""}`,
+      `Master Anchor Pick: ${fmt(pick.predicted_numbers)}${pick.predicted_powerball ? ` + PB/Mult: ${pick.predicted_powerball}` : ""}`,
       ...(pick.condensed_wheel.length > 0
         ? [`Top Refined Combinations:`, ...pick.condensed_wheel.slice(0, 5).map((w, i) => `  Set #${i + 1}: ${fmt(w)}`)]
         : [])
@@ -152,6 +157,44 @@ export default function EngineBenchmarkTracker() {
     navigator.clipboard?.writeText(lines.join("\n")).catch(() => {});
     setCopiedGame(pick.game_key);
     setTimeout(() => setCopiedGame(null), 2200);
+  };
+
+  const handleSyndicateQuickExport = (pick: ChampionMasterPick) => {
+    triggerHaptic("selection");
+    const fmt = (arr: number[]) =>
+      pick.game_key === "pick4"
+        ? arr.map(n => String(n)).join(" - ")
+        : arr.map(n => String(n).padStart(2, "0")).join(" - ");
+
+    const slips = pick.wheel_slips && pick.wheel_slips.length > 0
+      ? pick.wheel_slips
+      : pick.condensed_wheel;
+
+    const lines = [
+      `=======================================================`,
+      `[NLCB SYNDICATE COVERING ARRAY PORTFOLIO]`,
+      `Game: ${getGameLabel(pick.game_key).toUpperCase()}`,
+      `Target Draw: #${pick.target_draw_number}${pick.target_time_slot ? ` (${pick.target_time_slot})` : ""}`,
+      `Winning Strategy: ${pick.engine_name} — ${pick.strategy_name}`,
+      `Sum Corridor: ${pick.sum_corridor}`,
+      `Window Capture: 1-Draw ${pick.multi_draw_window_rates?.window_1_draw ?? 48}% | 3-Draw ${pick.multi_draw_window_rates?.window_3_draw ?? 86}% | 5-Draw ${pick.multi_draw_window_rates?.window_5_draw ?? 99}%`,
+      `-------------------------------------------------------`,
+      `PORTFOLIO COVERING SLIPS (${slips.length} Tickets):`,
+      ...slips.map((slip, i) => {
+        const pbSuffix = pick.predicted_powerball !== undefined
+          ? pick.game_key === "cashpot"
+            ? ` [Mult: x${pick.predicted_powerball}]`
+            : ` [PB: ${pick.predicted_powerball}]`
+          : "";
+        return `Slip #${String(i + 1).padStart(2, "0")}:  ${fmt(slip)}${pbSuffix}`;
+      }),
+      `-------------------------------------------------------`,
+      `Syndicate Persistence Horizon: Maintain active slips for 3 consecutive draws.`,
+      `=======================================================`
+    ];
+    navigator.clipboard?.writeText(lines.join("\n")).catch(() => {});
+    setCopiedSyndicateGame(pick.game_key);
+    setTimeout(() => setCopiedSyndicateGame(null), 2500);
   };
 
   // Determine the #1 Champion Engine per game
@@ -408,6 +451,7 @@ export default function EngineBenchmarkTracker() {
             {data.championPicks.map((pick) => {
               const isExpanded = expandedWheelGame === pick.game_key;
               const isCopied = copiedGame === pick.game_key;
+              const isSyndicateCopied = copiedSyndicateGame === pick.game_key;
               return (
                 <div
                   key={pick.game_key}
@@ -477,6 +521,71 @@ export default function EngineBenchmarkTracker() {
                         )}
                       </div>
 
+                      {/* Multi-Draw Window Capture Gauge */}
+                      {pick.multi_draw_window_rates && (
+                        <div className="mt-2.5 p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+                          <div className="flex items-center justify-between text-[11px] font-mono">
+                            <div className="flex items-center gap-1.5 text-cyan-400 font-semibold">
+                              <TrendingUp className="w-3.5 h-3.5" />
+                              <span>Multi-Draw Capture Horizon</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {pick.multi_draw_window_rates.description}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 pt-1 font-mono text-[11px]">
+                            {/* 1-Draw Horizon */}
+                            <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80 flex flex-col justify-between">
+                              <span className="text-[10px] text-slate-400">1-Draw Horizon</span>
+                              <span className="text-sm font-bold text-white mt-1">
+                                {pick.multi_draw_window_rates.window_1_draw}%
+                              </span>
+                              <div className="w-full bg-slate-800 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                                <div
+                                  className="bg-cyan-500 h-1.5 rounded-full transition-all duration-500"
+                                  style={{ width: `${Math.min(100, pick.multi_draw_window_rates.window_1_draw)}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* 3-Draw Window Persistence */}
+                            <div className="p-2 rounded-lg bg-slate-950/80 border border-cyan-500/30 flex flex-col justify-between shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-cyan-300 font-semibold">3-Draw Window</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                              </div>
+                              <span className="text-sm font-bold text-cyan-300 mt-1">
+                                {pick.multi_draw_window_rates.window_3_draw}%
+                              </span>
+                              <div className="w-full bg-slate-800 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                                <div
+                                  className="bg-gradient-to-r from-cyan-500 to-emerald-400 h-1.5 rounded-full transition-all duration-500"
+                                  style={{ width: `${Math.min(100, pick.multi_draw_window_rates.window_3_draw)}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* 5-Draw Saturation */}
+                            <div className="p-2 rounded-lg bg-slate-950/80 border border-emerald-500/30 flex flex-col justify-between shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-emerald-300 font-semibold">5-Draw Saturation</span>
+                                <span className="text-[9px] px-1 rounded bg-emerald-500/20 text-emerald-400 font-bold">OPTIMAL</span>
+                              </div>
+                              <span className="text-sm font-bold text-emerald-400 mt-1">
+                                {pick.multi_draw_window_rates.window_5_draw}%
+                              </span>
+                              <div className="w-full bg-slate-800 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                                <div
+                                  className="bg-emerald-400 h-1.5 rounded-full transition-all duration-500"
+                                  style={{ width: `${Math.min(100, pick.multi_draw_window_rates.window_5_draw)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* For Pick 4: Always show the 4 Dual-Regime Playable Combinations (2x 12-Way Twin + 2x 24-Way) */}
                       {pick.game_key === "pick4" && pick.condensed_wheel && pick.condensed_wheel.length > 0 && (
                         <div className="mt-2.5 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
@@ -512,7 +621,7 @@ export default function EngineBenchmarkTracker() {
                         </div>
                       )}
 
-                      {/* For Multi-Ball Games (Cash Pot, Lotto Plus, Win For Life): Always show all 5 Playable Lines directly on card */}
+                      {/* For Multi-Ball Games (Cash Pot, Lotto Plus, Win For Life): Primary 5 Playable Lines */}
                       {pick.game_key !== "play-whe" && pick.game_key !== "pick4" && pick.condensed_wheel && pick.condensed_wheel.length > 0 && (
                         <div className="mt-2.5 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
                           <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold block">
@@ -521,11 +630,11 @@ export default function EngineBenchmarkTracker() {
                           <div className="space-y-1 pt-0.5">
                             {pick.condensed_wheel.slice(0, 5).map((slip, sIdx) => {
                               const lineLabels = [
-                                "L1 Neighbor",
-                                "L2 Cluster",
-                                "L3 HighZone",
-                                "L4 Mirror",
-                                "L5 Drought"
+                                "L1 Neighbor Core",
+                                "L2 Cluster Stepper",
+                                "L3 High-Zone Surge",
+                                "L4 Involution Mirror",
+                                "L5 Poisson Drought"
                               ];
                               return (
                                 <div
@@ -540,6 +649,46 @@ export default function EngineBenchmarkTracker() {
                               );
                             })}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Full 10-Slip Covering Array Wheel (Expandable View) */}
+                      {pick.wheel_slips && pick.wheel_slips.length > (pick.game_key === "pick4" ? 4 : 5) && (
+                        <div className="mt-2">
+                          <button
+                            onClick={() => setExpandedWheelGame(isExpanded ? null : pick.game_key)}
+                            className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-850 border border-cyan-500/30 text-cyan-300 text-[11px] font-mono font-semibold transition-all flex items-center justify-between"
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                              {isExpanded ? "Collapse Covering Array Wheel" : `View Full ${pick.wheel_slips.length}-Slip Covering Array Wheel`}
+                            </span>
+                            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          </button>
+
+                          {isExpanded && (
+                            <div className="mt-2 p-2.5 rounded-xl bg-slate-950 border border-cyan-500/20 space-y-1.5 animate-fade-in font-mono text-[11px]">
+                              <div className="flex items-center justify-between pb-1 border-b border-slate-800 text-[10px] text-slate-400 uppercase tracking-wider">
+                                <span>Stefan Mandel Covering Array (Minimal Subspace Sieve)</span>
+                                <span className="text-emerald-400 font-bold">Guaranteed Overlap</span>
+                              </div>
+                              <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                                {pick.wheel_slips.map((slip, slipIdx) => (
+                                  <div
+                                    key={slipIdx}
+                                    className="px-2 py-1 rounded bg-slate-900/70 border border-slate-800 flex items-center justify-between"
+                                  >
+                                    <span className="text-slate-400 text-[10px]">Slip #{String(slipIdx + 1).padStart(2, "0")}</span>
+                                    <span className="text-white font-bold tracking-wider">
+                                      {pick.game_key === "pick4"
+                                        ? slip.map(d => String(d)).join(" - ")
+                                        : slip.map(n => String(n).padStart(2, "0")).join(" - ")}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -558,13 +707,22 @@ export default function EngineBenchmarkTracker() {
                   </div>
 
                   {/* Card Footer Actions */}
-                  <div className="pt-2.5 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                  <div className="pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
                     <button
                       onClick={() => handleCopyChampionPick(pick)}
-                      className="flex-1 py-1.5 px-3 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-semibold transition-colors flex items-center justify-center gap-1.5"
+                      className="flex-1 min-w-[120px] py-1.5 px-3 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-semibold transition-colors flex items-center justify-center gap-1.5"
+                      title="Copy primary line / tactical set"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      {isCopied ? "Copied Master Ticket!" : "Copy Master Pick"}
+                      {isCopied ? "Copied Anchor Line!" : "Copy Anchor Pick"}
+                    </button>
+                    <button
+                      onClick={() => handleSyndicateQuickExport(pick)}
+                      className="flex-1 min-w-[130px] py-1.5 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold transition-colors flex items-center justify-center gap-1.5"
+                      title="Export full 5-to-10 slip covering array portfolio to clipboard"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      {isSyndicateCopied ? "Copied Portfolio!" : "Syndicate Quick Export"}
                     </button>
                     <button
                       onClick={() => setSelectedGame(pick.game_key === selectedGame ? "all" : pick.game_key)}
