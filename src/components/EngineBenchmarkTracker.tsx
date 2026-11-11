@@ -18,6 +18,7 @@ import {
   Filter,
   Search,
   ArrowUpRight,
+  Crosshair,
   ShieldCheck,
   Zap,
   Sliders,
@@ -178,6 +179,12 @@ export default function EngineBenchmarkTracker() {
       `Winning Strategy: ${pick.engine_name} — ${pick.strategy_name}`,
       `Sum Corridor: ${pick.sum_corridor}`,
       `Window Capture: 1-Draw ${pick.multi_draw_window_rates?.window_1_draw ?? 48}% | 3-Draw ${pick.multi_draw_window_rates?.window_3_draw ?? 86}% | 5-Draw ${pick.multi_draw_window_rates?.window_5_draw ?? 99}%`,
+      ...(pick.convergence_locks && pick.convergence_locks.length > 0
+        ? [`Multi-Engine Convergence Locks: ${pick.convergence_locks.join(", ")}`]
+        : []),
+      ...(pick.bonus_ball_rotation && pick.bonus_ball_rotation.length > 0
+        ? [`Top-3 Weibull Renewal Bonus Ball Rotation: ${pick.bonus_ball_rotation.join(", ")}`]
+        : []),
       `-------------------------------------------------------`,
       `PORTFOLIO COVERING SLIPS (${slips.length} Tickets):`,
       ...slips.map((slip, i) => {
@@ -481,6 +488,30 @@ export default function EngineBenchmarkTracker() {
                         {pick.engine_name}
                       </span>
                     </div>
+
+                    {/* Multi-Engine Convergence Locks & Bonus Ball Rotation Strip */}
+                    {(pick.convergence_locks || pick.bonus_ball_rotation) && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        {pick.convergence_locks && pick.convergence_locks.length > 0 && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-950/70 border border-cyan-500/40 text-[10px] font-mono">
+                            <Crosshair className="w-3 h-3 text-cyan-400" />
+                            <span className="text-cyan-300 font-semibold">Convergence Locks:</span>
+                            <span className="text-white font-bold">
+                              {pick.convergence_locks.map(b => (pick.game_key === "pick4" ? String(b) : String(b).padStart(2, "0"))).join(", ")}
+                            </span>
+                          </div>
+                        )}
+                        {pick.bonus_ball_rotation && pick.bonus_ball_rotation.length > 0 && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-[10px] font-mono">
+                            <Target className="w-3 h-3 text-amber-400" />
+                            <span className="text-amber-300 font-semibold">Top-3 Renewal PB:</span>
+                            <span className="text-amber-200 font-bold">
+                              {pick.bonus_ball_rotation.join(", ")}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Master Pick Numbers */}
                     <div>

@@ -1,6 +1,6 @@
 import { query } from "@/lib/db";
 import { initPredictionAuditTable, recordHotPickPrediction, reconcilePredictionAudits } from "@/lib/prediction_audit_engine";
-import { getCalibrationProfiles } from "@/lib/engine_calibrator";
+import { getCalibrationProfiles, getLiveCalibratedWeightsMap, computeRecentResidualBias } from "@/lib/engine_calibrator";
 
 // ---------------------------------------------------------------------------
 // MATHEMATICAL INVARIANT & BAYESIAN CALIBRATED ENGINE
@@ -60,7 +60,12 @@ export async function generatePlayWheFormulaPick(): Promise<GameFormulaResult> {
   const prev3Num = Number(prev3Draw.winning_number);
   const nextSlot = getNextTimeSlot(String(lastDraw.draw_time_slot || "Morning"));
 
-  const profiles = await getCalibrationProfiles("play-whe");
+  const calib = await getLiveCalibratedWeightsMap("play-whe");
+  const wSlot = calib.liftMap["slot_markov"] ?? 1.0;
+  const wGlob = calib.liftMap["global_markov"] ?? 1.0;
+  const wMom = calib.liftMap["momentum_16"] ?? 1.0;
+  const wDrought = calib.liftMap["poisson_drought"] ?? 1.0;
+  const wSigma = calib.liftMap["sigma37_mirror"] ?? 1.0;
 
   const freq = Array(37).fill(0);
   const slotMarkov = Array(37).fill(0);
@@ -92,8 +97,16 @@ export async function generatePlayWheFormulaPick(): Promise<GameFormulaResult> {
 
   const baseScore = (m: number) => {
     const skip = lastSeen[m] >= 0 ? N - 1 - lastSeen[m] : 45;
-    const drought = skip >= 24 && skip <= 75 ? skip * 0.9 : 0;
-    return slotMarkov[m] * 12 + globalMarkov[m] * 8 + mom12[m] * 14 + drought + (freq[m] / Math.max(1, N)) * 80;
+    const drought = skip >= 24 && skip <= 75 ? skip * 0.9 * wDrought : 0;
+    const sigmaBonus = m === mirror1 || m === mirror2 ? 12 * wSigma : 0;
+    return (
+      slotMarkov[m] * 12 * wSlot +
+      globalMarkov[m] * 8 * wGlob +
+      mom12[m] * 14 * wMom +
+      drought +
+      sigmaBonus +
+      (freq[m] / Math.max(1, N)) * 80
+    );
   };
 
   // Orthogonal 5-Mode Selection (Guarantees non-stagnant, multi-regime coverage)
@@ -335,6 +348,17 @@ export async function generateCashPotFormulaPick(): Promise<GameFormulaResult> {
     }
   });
 
+  const calib = await getLiveCalibratedWeightsMap("cashpot");
+  const wCarry = calib.liftMap["carryover_hub"] ?? 1.0;
+  const wMom = calib.liftMap["rolling_momentum"] ?? 1.0;
+  const wTriplet = calib.liftMap["triplet_cascade"] ?? 1.0;
+  const wDrought = calib.liftMap["poisson_tension"] ?? 1.0;
+
+  const histArrays = rows.slice(-15).map((r: any) =>
+    [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5)].sort((a, b) => a - b)
+  );
+  const residual = computeRecentResidualBias(histArrays, 20, 52.5);
+
   // Build Kinematic ±1 Neighbor Pool from Lag-1 and Lag-2 (excluding exact Lag-1 repeats beyond top 1)
   const lag1Set = new Set(prevNums);
   const lag2Set = new Set(prev2Nums);
@@ -346,10 +370,17 @@ export async function generateCashPotFormulaPick(): Promise<GameFormulaResult> {
 
   const ballScore = (n: number) => {
     const skip = lastSeen[n] >= 0 ? N - 1 - lastSeen[n] : 15;
-    const isNeighbor = neighborPool.has(n) ? 16.0 : 0;
-    const isLag2 = lag2Set.has(n) && !lag1Set.has(n) ? 10.0 : 0;
-    const drought = skip >= 4 && skip <= 12 ? 9.0 : 0;
-    return isNeighbor + isLag2 + drought + freq12[n] * 3.5;
+    const isPlusOne = prevNums.includes(n - 1) || prev2Nums.includes(n - 1);
+    const isMinusOne = prevNums.includes(n + 1) || prev2Nums.includes(n + 1);
+    const dirMult = isPlusOne
+      ? residual.plusOneWeightMultiplier
+      : isMinusOne
+      ? residual.minusOneWeightMultiplier
+      : 1.0;
+    const isNeighbor = neighborPool.has(n) ? 16.0 * wTriplet * dirMult : 0;
+    const isLag2 = lag2Set.has(n) && !lag1Set.has(n) ? 10.0 * wCarry * residual.carryoverWeightMultiplier : 0;
+    const drought = skip >= 4 && skip <= 12 ? 9.0 * wDrought : 0;
+    return isNeighbor + isLag2 + drought + freq12[n] * 3.5 * wMom;
   };
 
   // Top 1 carryover anchor from Lag-1 + Top 1 from Lag-2
@@ -466,6 +497,15 @@ export async function generateLottoPlusFormulaPick(): Promise<GameFormulaResult>
     });
   });
 
+  const calib = await getLiveCalibratedWeightsMap("lotto-plus");
+  const wMom = calib.liftMap["rolling_momentum"] ?? 1.0;
+  const wTriplet = calib.liftMap["triplet_cascade"] ?? 1.0;
+  const wDrought = calib.liftMap["poisson_tension"] ?? 1.0;
+  const histArrays = rows.slice(-15).map((r: any) =>
+    [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5)].sort((a, b) => a - b)
+  );
+  const residual = computeRecentResidualBias(histArrays, 35, 90.0);
+
   const lag1Set = new Set(prevNums);
   const neighborPool = new Set<number>();
   [...prevNums, ...prev2Nums].forEach(x => {
@@ -475,9 +515,16 @@ export async function generateLottoPlusFormulaPick(): Promise<GameFormulaResult>
 
   const ballScore = (n: number) => {
     const skip = lastSeen[n] >= 0 ? N - 1 - lastSeen[n] : 20;
-    const isNeigh = neighborPool.has(n) ? 16.0 : 0;
-    const drought = skip >= 5 && skip <= 16 ? 11.0 : 0;
-    return isNeigh + drought + freq15[n] * 4.0;
+    const isPlusOne = prevNums.includes(n - 1) || prev2Nums.includes(n - 1);
+    const isMinusOne = prevNums.includes(n + 1) || prev2Nums.includes(n + 1);
+    const dirMult = isPlusOne
+      ? residual.plusOneWeightMultiplier
+      : isMinusOne
+      ? residual.minusOneWeightMultiplier
+      : 1.0;
+    const isNeigh = neighborPool.has(n) ? 16.0 * wTriplet * dirMult : 0;
+    const drought = skip >= 5 && skip <= 16 ? 11.0 * wDrought : 0;
+    return isNeigh + drought + freq15[n] * 4.0 * wMom;
   };
 
   const anchor1 = [...prevNums].sort((a, b) => ballScore(b) - ballScore(a))[0] || prevNums[0];
@@ -583,6 +630,16 @@ export async function generateWinForLifeFormulaPick(): Promise<GameFormulaResult
     });
   });
 
+  const calib = await getLiveCalibratedWeightsMap("win-for-life");
+  const wCarry = calib.liftMap["carryover_hub"] ?? 1.0;
+  const wMom = calib.liftMap["rolling_momentum"] ?? 1.0;
+  const wTriplet = calib.liftMap["triplet_cascade"] ?? 1.0;
+  const wDrought = calib.liftMap["poisson_tension"] ?? 1.0;
+  const histArrays = rows.slice(-15).map((r: any) =>
+    [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5), Number(r.num6)].sort((a, b) => a - b)
+  );
+  const residual = computeRecentResidualBias(histArrays, 28, 87.0);
+
   const lag1Set = new Set(prevNums);
   const lag2Set = new Set(prev2Nums);
   const neighborPool = new Set<number>();
@@ -593,11 +650,18 @@ export async function generateWinForLifeFormulaPick(): Promise<GameFormulaResult
 
   const ballScore = (n: number) => {
     const skip = lastSeen[n] >= 0 ? N - 1 - lastSeen[n] : 15;
-    const isLag1Neigh = prevNums.some(p => Math.abs(p - n) === 1) ? 18.0 : 0;
-    const isLag2Neigh = prev2Nums.some(p => Math.abs(p - n) === 1) ? 12.0 : 0;
-    const isLag2Carry = lag2Set.has(n) && !lag1Set.has(n) ? 10.0 : 0;
-    const drought = skip >= 4 && skip <= 12 ? 9.0 : 0;
-    return isLag1Neigh + isLag2Neigh + isLag2Carry + drought + freq15[n] * 3.5;
+    const isPlusOne = prevNums.includes(n - 1) || prev2Nums.includes(n - 1);
+    const isMinusOne = prevNums.includes(n + 1) || prev2Nums.includes(n + 1);
+    const dirMult = isPlusOne
+      ? residual.plusOneWeightMultiplier
+      : isMinusOne
+      ? residual.minusOneWeightMultiplier
+      : 1.0;
+    const isLag1Neigh = prevNums.some(p => Math.abs(p - n) === 1) ? 18.0 * wTriplet * dirMult : 0;
+    const isLag2Neigh = prev2Nums.some(p => Math.abs(p - n) === 1) ? 12.0 * wTriplet * dirMult : 0;
+    const isLag2Carry = lag2Set.has(n) && !lag1Set.has(n) ? 10.0 * wCarry * residual.carryoverWeightMultiplier : 0;
+    const drought = skip >= 4 && skip <= 12 ? 9.0 * wDrought : 0;
+    return isLag1Neigh + isLag2Neigh + isLag2Carry + drought + freq15[n] * 3.5 * wMom;
   };
 
   const anchor1 = [...prevNums].sort((a, b) => ballScore(b) - ballScore(a))[0] || prevNums[0];

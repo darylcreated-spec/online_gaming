@@ -85,6 +85,124 @@ export async function getCalibrationProfiles(specificGame?: string): Promise<Eng
   }
 }
 
+export interface ResidualBiasTelemetry {
+  sumBiasDelta: number;
+  reversionTargetShift: number;
+  plusOneNeighborHits: number;
+  minusOneNeighborHits: number;
+  plusOneWeightMultiplier: number;
+  minusOneWeightMultiplier: number;
+  zeroCarryoverDrought: number;
+  carryoverWeightMultiplier: number;
+}
+
+/**
+ * Kalman / First-Difference Residual Error Tracker
+ * Inspects the most recent draws to quantify directional chamber drift (+1 vs -1 neighbor skew),
+ * sum-envelope mean reversion pressure, and carryover drought rebound tension.
+ */
+export function computeRecentResidualBias(
+  histNumbers: number[][],
+  maxBall: number,
+  expectedMeanSum: number
+): ResidualBiasTelemetry {
+  const n = histNumbers.length;
+  if (n < 5) {
+    return {
+      sumBiasDelta: 0,
+      reversionTargetShift: 0,
+      plusOneNeighborHits: 0,
+      minusOneNeighborHits: 0,
+      plusOneWeightMultiplier: 1.0,
+      minusOneWeightMultiplier: 1.0,
+      zeroCarryoverDrought: 0,
+      carryoverWeightMultiplier: 1.0
+    };
+  }
+
+  // 1. Sum residual over last 3 draws
+  const last3 = histNumbers.slice(-3);
+  const meanRecentSum =
+    last3.reduce((acc, d) => acc + d.reduce((s, x) => s + x, 0), 0) / last3.length;
+  const sumBiasDelta = Math.round((meanRecentSum - expectedMeanSum) * 10) / 10;
+  // Ornstein-Uhlenbeck mean-reversion shift (-0.45 * deviation)
+  const reversionTargetShift = Math.round(-0.45 * sumBiasDelta * 10) / 10;
+
+  // 2. Directional kinematic velocity skew (+1 vs -1 step transitions over last 6 draws)
+  let plusOneNeighborHits = 0;
+  let minusOneNeighborHits = 0;
+  const startK = Math.max(1, n - 6);
+  for (let i = startK; i < n; i++) {
+    const prevSet = new Set(histNumbers[i - 1] || []);
+    const curr = histNumbers[i] || [];
+    for (const b of curr) {
+      if (prevSet.has(b - 1)) plusOneNeighborHits++;
+      if (prevSet.has(b + 1)) minusOneNeighborHits++;
+    }
+  }
+  const totalDir = Math.max(1, plusOneNeighborHits + minusOneNeighborHits);
+  const plusShare = plusOneNeighborHits / totalDir;
+  const minusShare = minusOneNeighborHits / totalDir;
+  const plusOneWeightMultiplier = Math.round((0.8 + plusShare * 0.6) * 100) / 100;
+  const minusOneWeightMultiplier = Math.round((0.8 + minusShare * 0.6) * 100) / 100;
+
+  // 3. Consecutive zero-carryover drought tracker
+  let zeroCarryoverDrought = 0;
+  for (let i = n - 1; i >= Math.max(1, n - 5); i--) {
+    const prevSet = new Set(histNumbers[i - 1] || []);
+    const hasCarry = (histNumbers[i] || []).some(b => prevSet.has(b));
+    if (!hasCarry) {
+      zeroCarryoverDrought++;
+    } else {
+      break;
+    }
+  }
+  const carryoverWeightMultiplier =
+    zeroCarryoverDrought >= 2 ? 1.45 : zeroCarryoverDrought === 1 ? 1.2 : 1.0;
+
+  return {
+    sumBiasDelta,
+    reversionTargetShift,
+    plusOneNeighborHits,
+    minusOneNeighborHits,
+    plusOneWeightMultiplier,
+    minusOneWeightMultiplier,
+    zeroCarryoverDrought,
+    carryoverWeightMultiplier
+  };
+}
+
+/**
+ * Returns a normalized lookup map of calibrated sub-model weights and sum corridors for a game.
+ */
+export async function getLiveCalibratedWeightsMap(gameKey: string): Promise<{
+  weightsMap: Record<string, number>;
+  liftMap: Record<string, number>;
+  optimalSumMin: number;
+  optimalSumMax: number;
+  dominantStrategy: string;
+}> {
+  const profiles = await getCalibrationProfiles(gameKey);
+  const prof = profiles[0];
+  const weightsMap: Record<string, number> = {};
+  const liftMap: Record<string, number> = {};
+
+  if (prof && Array.isArray(prof.sub_model_weights)) {
+    for (const w of prof.sub_model_weights) {
+      weightsMap[w.modelKey] = w.weight;
+      liftMap[w.modelKey] = Math.max(0.6, Math.min(2.2, w.liftMultiplier || 1.0));
+    }
+  }
+
+  return {
+    weightsMap,
+    liftMap,
+    optimalSumMin: prof?.optimal_sum_min ?? 0,
+    optimalSumMax: prof?.optimal_sum_max ?? 999,
+    dominantStrategy: prof?.dominant_strategy ?? "Bayesian Multi-Manifold Consensus"
+  };
+}
+
 /**
  * Softmax / Multiplicative Weights normalizer
  */
