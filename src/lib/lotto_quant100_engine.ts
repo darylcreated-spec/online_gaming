@@ -190,17 +190,23 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[]): LottoQu
     }
 
     // Set 1: CRT Galois Ring Orthogonal Basis (Z_5 x Z_7)
-    // Selects 1 number from each residue class mod 5 {0, 1, 2, 3, 4} with highest combined score
+    // Selects 1 number from each residue class mod 5 {0, 1, 2, 3, 4} combining dynamic kinematic resonance + window momentum
+    const prev2Nums = t > 1 ? cleanDraws[t - 2].nums : lastNums;
+    const recent12Freq = new Array(36).fill(0);
+    for (let w = Math.max(0, t - 11); w <= t; w++) {
+      cleanDraws[w].nums.forEach(n => recent12Freq[n]++);
+    }
     const mod5Buckets: number[][] = [[], [], [], [], []];
     for (let n = 1; n <= 35; n++) {
       mod5Buckets[n % 5].push(n);
     }
+    const scoreMod5Ball = (x: number) => {
+      const isL1Neigh = lastNums.some(ln => Math.abs(ln - x) === 1) ? 6.5 : 0;
+      const isL2Carry = prev2Nums.includes(x) && !lastNums.includes(x) ? 4.5 : 0;
+      return windowFreq[x] * 1.2 + recent12Freq[x] * 2.2 + isL1Neigh + isL2Carry + (manifoldSet.has(x) ? 2.5 : 0);
+    };
     const S1 = mod5Buckets.map(bucket => {
-      return bucket.sort((a, b) => {
-        const scoreA = windowFreq[a] * 1.5 + globalFreq[a] * 0.5 + (manifoldSet.has(a) ? 3 : 0);
-        const scoreB = windowFreq[b] * 1.5 + globalFreq[b] * 0.5 + (manifoldSet.has(b) ? 3 : 0);
-        return scoreB - scoreA;
-      })[0];
+      return bucket.sort((a, b) => scoreMod5Ball(b) - scoreMod5Ball(a))[0];
     }).sort((a,b)=>a-b);
 
     // Set 2: Topological Graph Eigen-Centrality

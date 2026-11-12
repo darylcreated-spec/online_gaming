@@ -378,17 +378,35 @@ export function generateCashPotForensicCandidateSets(draws: CashPotDraw[]): Cash
 
   const usedTickets = new Set<string>();
 
-  function makeUniqueTicket(anchors: number[], baseOffset: number): number[] {
-    let offset = baseOffset;
-    let t = makeTicket(anchors, offset);
-    let attempts = 0;
-    while (usedTickets.has(t.join(',')) && attempts < pool14.length) {
-      offset = (offset + 1) % pool14.length;
-      t = makeTicket(anchors, offset);
-      attempts++;
+  function makeUniqueTicket(anchors: number[], baseOffset: number, allowUnconventionalParity = false): number[] {
+    let bestFallback: number[] | null = null;
+    for (let attempt = 0; attempt < pool14.length; attempt++) {
+      const offset = (baseOffset + attempt) % pool14.length;
+      const t = makeTicket(anchors, offset);
+      const key = t.join(',');
+      if (usedTickets.has(key)) continue;
+      if (!bestFallback) bestFallback = t;
+      const val = validateCashPotForensicLine(t, prevNums, allowUnconventionalParity);
+      if (val.isValid) {
+        usedTickets.add(key);
+        return t;
+      }
     }
-    usedTickets.add(t.join(','));
-    return t;
+    // If anchors alone produced low-sum/invalid lines across all pool14 offsets, rotate with balanced pool14 seeds
+    for (let i = 0; i < pool14.length; i++) {
+      const altSeed = [pool14[i], pool14[(i + 5) % pool14.length], pool14[(i + 10) % pool14.length]];
+      const t = makeTicket(altSeed, (baseOffset + i) % pool14.length);
+      const key = t.join(',');
+      if (usedTickets.has(key)) continue;
+      const val = validateCashPotForensicLine(t, prevNums, allowUnconventionalParity);
+      if (val.isValid) {
+        usedTickets.add(key);
+        return t;
+      }
+    }
+    const chosen = bestFallback || makeTicket(anchors, baseOffset);
+    usedTickets.add(chosen.join(','));
+    return chosen;
   }
 
   // Strategy 1: Alpha Balanced Harmonic Wave

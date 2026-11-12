@@ -407,17 +407,35 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
 
   const usedTickets = new Set<string>();
 
-  function makeUniqueTicket(anchors: number[], baseOffset: number): number[] {
-    let offset = baseOffset;
-    let t = makeTicket(anchors, offset);
-    let attempts = 0;
-    while (usedTickets.has(t.join(',')) && attempts < pool16.length) {
-      offset = (offset + 1) % pool16.length;
-      t = makeTicket(anchors, offset);
-      attempts++;
+  function makeUniqueTicket(anchors: number[], baseOffset: number, allowUnconventionalParity = false): number[] {
+    let bestFallback: number[] | null = null;
+    for (let attempt = 0; attempt < pool16.length; attempt++) {
+      const offset = (baseOffset + attempt) % pool16.length;
+      const t = makeTicket(anchors, offset);
+      const key = t.join(',');
+      if (usedTickets.has(key)) continue;
+      if (!bestFallback) bestFallback = t;
+      const val = validateForensicLine(t, prevNums, allowUnconventionalParity);
+      if (val.isValid) {
+        usedTickets.add(key);
+        return t;
+      }
     }
-    usedTickets.add(t.join(','));
-    return t;
+    // If rigid anchors forced an out-of-corridor sum, rotate balanced seeds from pool16
+    for (let i = 0; i < pool16.length; i++) {
+      const altSeed = [pool16[i], pool16[(i + 5) % pool16.length], pool16[(i + 11) % pool16.length]];
+      const t = makeTicket(altSeed, (baseOffset + i) % pool16.length);
+      const key = t.join(',');
+      if (usedTickets.has(key)) continue;
+      const val = validateForensicLine(t, prevNums, allowUnconventionalParity);
+      if (val.isValid) {
+        usedTickets.add(key);
+        return t;
+      }
+    }
+    const chosen = bestFallback || makeTicket(anchors, baseOffset);
+    usedTickets.add(chosen.join(','));
+    return chosen;
   }
 
   // Strategy 1: Alpha Balanced Harmonic Wave
