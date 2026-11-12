@@ -94,6 +94,10 @@ export interface ChampionMasterPick {
   wheel_slips?: number[][];
   convergence_locks?: number[];
   bonus_ball_rotation?: number[];
+  line_powerballs?: number[];
+  wheel_10_capture_pct?: number;
+  conviction_tier?: "HIGH CONVICTION" | "BALANCED" | "HIGH ENTROPY";
+  entropy_ratio?: number;
   verified_win_rate_pct: number;
   verified_any_match_pct: number;
   verified_roi_pct: number;
@@ -176,7 +180,8 @@ export function evaluatePredictionAgainstDraw(
   actualNums: number[],
   simulatedBetTT: number,
   predPowerball?: number,
-  actualPowerball?: number
+  actualPowerball?: number,
+  linePowerballs?: number[]
 ): {
   matchCount: number;
   bestWheelMatch: number;
@@ -308,33 +313,34 @@ export function evaluatePredictionAgainstDraw(
   } else if (gameKey === "lotto-plus") {
     const playable5Lines = buildPlayableLines(predNums, wheelSlips || [], 5, 5);
     matchCount = predNums.filter(n => actualSet.has(n)).length;
-    playable5Lines.forEach(line => {
+
+    const scoreLottoLine = (m: number, pbMatch: boolean): { payout: number; tier: string } => {
+      if (m === 5) return { payout: pbMatch ? 2000000.0 : 50000.0, tier: pbMatch ? "MATCH 5 + PB JACKPOT ($2M TT)" : "MATCH 5 ($50,000 TT)" };
+      if (m === 4) return { payout: pbMatch ? 1500.0 : 300.0, tier: pbMatch ? "MATCH 4 + PB ($1,500 TT)" : "MATCH 4 ($300 TT)" };
+      if (m === 3) return { payout: pbMatch ? 100.0 : 25.0, tier: pbMatch ? "MATCH 3 + PB ($100 TT)" : "MATCH 3 ($25 TT)" };
+      if (m === 2 && pbMatch) return { payout: 10.0, tier: "MATCH 2 + PB ($10 TT)" };
+      if (m === 1 && pbMatch) return { payout: 5.0, tier: "MATCH 1 + PB ($5 TT)" };
+      return { payout: 0, tier: "NONE" };
+    };
+
+    let bestLinePayout = 0;
+    let bestLineTier = "NONE";
+    playable5Lines.forEach((line, idx) => {
       const m = line.filter(n => actualSet.has(n)).length;
       if (m > bestWheelMatch) bestWheelMatch = m;
+      const linePb = linePowerballs && linePowerballs[idx] !== undefined ? linePowerballs[idx] : predPowerball;
+      const pbMatch = linePb !== undefined && actualPowerball !== undefined && linePb === actualPowerball;
+      const scored = scoreLottoLine(m, pbMatch);
+      if (scored.payout > bestLinePayout) {
+        bestLinePayout = scored.payout;
+        bestLineTier = scored.tier;
+      }
     });
-    const effectiveMatch = Math.max(matchCount, bestWheelMatch);
-    const pbMatch = predPowerball !== undefined && actualPowerball !== undefined && predPowerball === actualPowerball;
 
-    if (effectiveMatch === 5) {
+    if (bestLinePayout > 0) {
       isPrize = 1;
-      prizeTier = pbMatch ? "MATCH 5 + PB JACKPOT ($2M TT)" : "MATCH 5 ($50,000 TT)";
-      simulatedPayoutTT = pbMatch ? 2000000.0 : 50000.0;
-    } else if (effectiveMatch === 4) {
-      isPrize = 1;
-      prizeTier = pbMatch ? "MATCH 4 + PB ($1,500 TT)" : "MATCH 4 ($300 TT)";
-      simulatedPayoutTT = pbMatch ? 1500.0 : 300.0;
-    } else if (effectiveMatch === 3) {
-      isPrize = 1;
-      prizeTier = pbMatch ? "MATCH 3 + PB ($100 TT)" : "MATCH 3 ($25 TT)";
-      simulatedPayoutTT = pbMatch ? 100.0 : 25.0;
-    } else if (effectiveMatch === 2 && pbMatch) {
-      isPrize = 1;
-      prizeTier = "MATCH 2 + PB ($10 TT)";
-      simulatedPayoutTT = 10.0;
-    } else if (effectiveMatch === 1 && pbMatch) {
-      isPrize = 1;
-      prizeTier = "MATCH 1 + PB ($5 TT)";
-      simulatedPayoutTT = 5.0;
+      prizeTier = bestLineTier;
+      simulatedPayoutTT = bestLinePayout;
     }
   } else if (gameKey === "win-for-life") {
     const playable5Lines = buildPlayableLines(predNums, wheelSlips || [], 5, 6);
@@ -1679,6 +1685,32 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
         }
       }
 
+      let linePowerballs: number[] | undefined = undefined;
+      if (gameKey === "lotto-plus" && pred.engine_key === "apex-master") {
+        try {
+          const pbRows = await query<any>(
+            "SELECT powerball FROM draws WHERE CAST(draw_number AS INTEGER) < ? ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 30",
+            [targetDraw]
+          ).catch(() =>
+            query<any>(
+              "SELECT powerball FROM lotto_draws WHERE CAST(draw_number AS INTEGER) < ? ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 30",
+              [targetDraw]
+            )
+          ).catch(() => []);
+          const pbHist = (pbRows || []).map((r: any) => Number(r.powerball)).filter((v: number) => !isNaN(v) && v >= 1).reverse();
+          if (pbHist.length >= 5) {
+            const pbRot = buildDynamicBonusBallRotation(pbHist, 10).rotation;
+            linePowerballs = [
+              pbRot[0],
+              pbRot[1] ?? pbRot[0],
+              pbRot[2] ?? pbRot[0],
+              pbRot[0],
+              pbRot[1] ?? pbRot[0]
+            ];
+          }
+        } catch {}
+      }
+
       const simulatedBetTT = Number(pred.simulated_bet_tt || 1.0);
       const evalRes = evaluatePredictionAgainstDraw(
         gameKey,
@@ -1687,7 +1719,8 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
         actualDraw.numbers,
         simulatedBetTT,
         pred.predicted_powerball !== null ? Number(pred.predicted_powerball) : undefined,
-        actualDraw.powerball
+        actualDraw.powerball,
+        linePowerballs
       );
 
       await db.execute({
@@ -1763,6 +1796,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
     target_time_slot?: string;
     predicted_numbers: number[];
     predicted_powerball?: number;
+    line_powerballs?: number[];
     wheel_slips?: number[][];
     actual_numbers: number[];
     actual_powerball?: number;
@@ -1775,7 +1809,8 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
       params.actual_numbers,
       params.simulated_bet_tt,
       params.predicted_powerball,
-      params.actual_powerball
+      params.actual_powerball,
+      params.line_powerballs
     );
 
     const existing = await query<any>(
@@ -2329,6 +2364,15 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
             });
 
             // APEX CHAMPION MASTER CONSENSUS (Lotto Plus 5 Playable Lines)
+            const pbRotObj = buildDynamicBonusBallRotation(hist.map(d => d.powerball), 10);
+            const pbRot = pbRotObj.rotation;
+            const linePbs = [
+              pbRot[0] ?? pbRenewalHist,
+              pbRot[1] ?? pbRot[0] ?? pbRenewalHist,
+              pbRot[2] ?? pbRot[0] ?? pbRenewalHist,
+              pbRot[0] ?? pbRenewalHist,
+              pbRot[1] ?? pbRot[0] ?? pbRenewalHist
+            ];
             const apexLotto5Lines = buildMultiBallApex5(
               hist.map(d => d.numbers),
               35,
@@ -2345,6 +2389,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               target_draw_date: actual.draw_date,
               predicted_numbers: apexLotto5Lines[0],
               predicted_powerball: pbRenewalHist,
+              line_powerballs: linePbs,
               wheel_slips: apexLotto5Lines,
               actual_numbers: actual.numbers,
               actual_powerball: actual.powerball,
@@ -2789,6 +2834,81 @@ export async function getEngineLeaderboardStats(
       } catch {}
 
       const prof = calibrationProfiles.find(cp => cp.game_key === g);
+
+      // Per-line rotated Powerballs for Lotto Plus (Top-3 Weibull Renewal across 5 playable lines)
+      const linePowerballs =
+        g === "lotto-plus" && bonusRotation && bonusRotation.length > 0
+          ? [
+              bonusRotation[0],
+              bonusRotation[1] ?? bonusRotation[0],
+              bonusRotation[2] ?? bonusRotation[0],
+              bonusRotation[0],
+              bonusRotation[1] ?? bonusRotation[0]
+            ]
+          : undefined;
+
+      // 10-Slip Mandel Wheel Empirical Capture % over recent 60 draws
+      let wheel10CapturePct: number | undefined = undefined;
+      if ((g === "cashpot" || g === "lotto-plus" || g === "win-for-life") && wSlips.length > 5 && recentDraws.length > 0) {
+        const minPrizeMatch = g === "cashpot" ? 2 : 3;
+        const slips10 = wSlips.slice(0, 10);
+        let captured = 0;
+        for (const r of recentDraws) {
+          const drawNums = g === "win-for-life"
+            ? [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5), Number(r.num6)]
+            : [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5)];
+          const dSet = new Set(drawNums);
+          if (slips10.some(slip => slip.filter(n => dSet.has(n)).length >= minPrizeMatch)) {
+            captured++;
+          }
+        }
+        wheel10CapturePct = Math.round((captured / recentDraws.length) * 1000) / 10;
+      }
+
+      // Scale-invariant Shannon Entropy Conviction Tier via G-statistic z-score over recent 60 draws
+      let convictionTier: "HIGH CONVICTION" | "BALANCED" | "HIGH ENTROPY" = "BALANCED";
+      let entropyRatio: number | undefined = undefined;
+      if (recentDraws.length >= 15) {
+        const poolSize = g === "play-whe" ? 36 : g === "pick4" ? 10 : g === "cashpot" ? 20 : g === "lotto-plus" ? 35 : 28;
+        const minVal = g === "pick4" ? 0 : 1;
+        const counts = new Array(poolSize).fill(0);
+        let totalBalls = 0;
+        for (const r of recentDraws) {
+          const vals =
+            g === "play-whe"
+              ? [Number(r.winning_number)]
+              : g === "pick4"
+              ? [Number(r.digit1), Number(r.digit2), Number(r.digit3), Number(r.digit4)]
+              : g === "win-for-life"
+              ? [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5), Number(r.num6)]
+              : [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5)];
+          for (const v of vals) {
+            const idx = v - minVal;
+            if (idx >= 0 && idx < poolSize) {
+              counts[idx]++;
+              totalBalls++;
+            }
+          }
+        }
+        if (totalBalls > 0) {
+          let hBits = 0;
+          for (const c of counts) {
+            if (c > 0) {
+              const p = c / totalBalls;
+              hBits -= p * Math.log2(p);
+            }
+          }
+          const hMax = Math.log2(poolSize);
+          entropyRatio = Math.round((hBits / hMax) * 1000) / 1000;
+          const gStat = 2 * totalBalls * Math.LN2 * (hMax - hBits);
+          const df = poolSize - 1;
+          const zScore = (gStat - df) / Math.sqrt(2 * df);
+          if (zScore >= 1.0) convictionTier = "HIGH CONVICTION";
+          else if (zScore < -0.5) convictionTier = "HIGH ENTROPY";
+          else convictionTier = "BALANCED";
+        }
+      }
+
       championPicks.push({
         game_key: g,
         engine_key: champRow.engine_key,
@@ -2802,6 +2922,10 @@ export async function getEngineLeaderboardStats(
         wheel_slips: wSlips,
         convergence_locks: convergenceLocks.length > 0 ? convergenceLocks : undefined,
         bonus_ball_rotation: bonusRotation,
+        line_powerballs: linePowerballs,
+        wheel_10_capture_pct: wheel10CapturePct,
+        conviction_tier: convictionTier,
+        entropy_ratio: entropyRatio,
         multi_draw_window_rates: windowRates,
         verified_win_rate_pct: champRow.prize_win_rate_pct,
         verified_any_match_pct: champRow.any_match_rate_pct,

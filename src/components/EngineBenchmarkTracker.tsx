@@ -188,10 +188,14 @@ export default function EngineBenchmarkTracker() {
       `-------------------------------------------------------`,
       `PORTFOLIO COVERING SLIPS (${slips.length} Tickets):`,
       ...slips.map((slip, i) => {
-        const pbSuffix = pick.predicted_powerball !== undefined
+        const rotatedPb =
+          pick.game_key === "lotto-plus" && pick.line_powerballs && pick.line_powerballs.length > 0
+            ? pick.line_powerballs[i % pick.line_powerballs.length]
+            : pick.predicted_powerball;
+        const pbSuffix = rotatedPb !== undefined
           ? pick.game_key === "cashpot"
-            ? ` [Mult: x${pick.predicted_powerball}]`
-            : ` [PB: ${pick.predicted_powerball}]`
+            ? ` [Mult: x${rotatedPb}]`
+            : ` [PB: ${rotatedPb}]`
           : "";
         return `Slip #${String(i + 1).padStart(2, "0")}:  ${fmt(slip)}${pbSuffix}`;
       }),
@@ -489,9 +493,31 @@ export default function EngineBenchmarkTracker() {
                       </span>
                     </div>
 
-                    {/* Multi-Engine Convergence Locks & Bonus Ball Rotation Strip */}
-                    {(pick.convergence_locks || pick.bonus_ball_rotation) && (
+                    {/* Multi-Engine Convergence Locks, Bonus Ball Rotation, Conviction & Wheel Telemetry */}
+                    {(pick.convergence_locks || pick.bonus_ball_rotation || pick.conviction_tier || pick.wheel_10_capture_pct !== undefined) && (
                       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        {pick.conviction_tier && (
+                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-mono font-bold ${
+                            pick.conviction_tier === "HIGH CONVICTION"
+                              ? "bg-emerald-950/70 border-emerald-500/40 text-emerald-300"
+                              : pick.conviction_tier === "HIGH ENTROPY"
+                              ? "bg-rose-950/70 border-rose-500/40 text-rose-300"
+                              : "bg-slate-900 border-slate-700 text-slate-300"
+                          }`}>
+                            <Activity className="w-3 h-3" />
+                            <span>{pick.conviction_tier}</span>
+                            {pick.entropy_ratio !== undefined && (
+                              <span className="opacity-75">({pick.entropy_ratio.toFixed(3)})</span>
+                            )}
+                          </div>
+                        )}
+                        {pick.wheel_10_capture_pct !== undefined && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-950/70 border border-violet-500/40 text-[10px] font-mono">
+                            <ShieldCheck className="w-3 h-3 text-violet-400" />
+                            <span className="text-violet-300 font-semibold">10-Slip Wheel Capture:</span>
+                            <span className="text-white font-bold">{pick.wheel_10_capture_pct}%</span>
+                          </div>
+                        )}
                         {pick.convergence_locks && pick.convergence_locks.length > 0 && (
                           <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-950/70 border border-cyan-500/40 text-[10px] font-mono">
                             <Crosshair className="w-3 h-3 text-cyan-400" />
@@ -504,7 +530,9 @@ export default function EngineBenchmarkTracker() {
                         {pick.bonus_ball_rotation && pick.bonus_ball_rotation.length > 0 && (
                           <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-[10px] font-mono">
                             <Target className="w-3 h-3 text-amber-400" />
-                            <span className="text-amber-300 font-semibold">Top-3 Renewal PB:</span>
+                            <span className="text-amber-300 font-semibold">
+                              {pick.game_key === "cashpot" ? "Top-3 Mult:" : "Top-3 Renewal PB:"}
+                            </span>
                             <span className="text-amber-200 font-bold">
                               {pick.bonus_ball_rotation.join(", ")}
                             </span>
@@ -667,15 +695,26 @@ export default function EngineBenchmarkTracker() {
                                 "L4 Involution Mirror",
                                 "L5 Poisson Drought"
                               ];
+                              const linePb =
+                                pick.game_key === "lotto-plus" && pick.line_powerballs && pick.line_powerballs.length > 0
+                                  ? pick.line_powerballs[sIdx % pick.line_powerballs.length]
+                                  : undefined;
                               return (
                                 <div
                                   key={sIdx}
                                   className="px-2 py-1 rounded bg-slate-950/90 border border-slate-800 flex items-center justify-between text-[11px] font-mono"
                                 >
                                   <span className="text-slate-400 text-[10px]">{lineLabels[sIdx] || `Line #${sIdx + 1}`}:</span>
-                                  <span className="text-emerald-300 font-bold">
-                                    {slip.map(n => String(n).padStart(2, "0")).join(" - ")}
-                                  </span>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-emerald-300 font-bold">
+                                      {slip.map(n => String(n).padStart(2, "0")).join(" - ")}
+                                    </span>
+                                    {linePb !== undefined && (
+                                      <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[10px] font-bold">
+                                        PB {linePb}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               );
                             })}

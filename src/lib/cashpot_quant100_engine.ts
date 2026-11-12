@@ -196,27 +196,72 @@ export function computeCashPotQuant100Engine(rawDraws: CashPotDrawRecord[]): Cas
     }
   });
 
+  const enforceCashPotCorridor = (
+    initial: number[],
+    rankedPool: number[],
+    preserveMod5 = false
+  ): number[] => {
+    const penaltyOf = (arr: number[]) => {
+      const s = arr.reduce((a, b) => a + b, 0);
+      const ev = arr.filter(x => x % 2 === 0).length;
+      const lo = arr.filter(x => x <= 10).length;
+      const sumPen = s < 37 ? (37 - s) * 4 : s > 65 ? (s - 65) * 4 : 0;
+      const evPen = ev < 2 ? (2 - ev) * 10 : ev > 3 ? (ev - 3) * 10 : 0;
+      const loPen = lo < 2 ? (2 - lo) * 8 : lo > 3 ? (lo - 3) * 8 : 0;
+      return sumPen + evPen + loPen;
+    };
+
+    let cur = [...initial];
+    for (let iter = 0; iter < 25; iter++) {
+      const curPen = penaltyOf(cur);
+      if (curPen === 0) break;
+      let bestSwap: number[] | null = null;
+      let bestPen = curPen;
+
+      for (let i = cur.length - 1; i >= 0; i--) {
+        const outVal = cur[i];
+        for (const inVal of rankedPool) {
+          if (cur.includes(inVal)) continue;
+          if (preserveMod5 && inVal % 5 !== outVal % 5) continue;
+          const trial = [...cur];
+          trial[i] = inVal;
+          const p = penaltyOf(trial);
+          if (p < bestPen) {
+            bestPen = p;
+            bestSwap = trial;
+            if (p === 0) break;
+          }
+        }
+        if (bestPen === 0) break;
+      }
+      if (!bestSwap) break;
+      cur = bestSwap;
+    }
+    return cur.sort((a, b) => a - b);
+  };
+
+  const rankedByFreq = Array.from({ length: 20 }, (_, i) => i + 1).sort((a, b) => freq20[b] - freq20[a]);
+
   // Candidate Set 1: CRT Galois Mod 5 Decomposition
-  // Selects 1 representative from each residue class 0..4 mod 5, weighted by empirical frequency
-  const set1Nums: number[] = [];
+  // Selects 1 representative from each residue class 0..4 mod 5, weighted by empirical frequency & P10-P90 corridor
+  const rawSet1: number[] = [];
   for (let r = 0; r < 5; r++) {
     const candidates = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
       .filter(n => n % 5 === r)
       .sort((a, b) => freq20[b] - freq20[a]);
-    set1Nums.push(candidates[0]);
+    rawSet1.push(candidates[0]);
   }
-  set1Nums.sort((a, b) => a - b);
+  const set1Nums = enforceCashPotCorridor(rawSet1, rankedByFreq, true);
 
   // Candidate Set 2: Harmonic Eigenvector Degree Centrality
-  // Top 5 balls with highest co-occurrence adjacency centrality
+  // Top 5 balls with highest co-occurrence adjacency centrality within [37, 65] corridor
   const centrality = Array(21).fill(0);
   for (let i = 1; i <= 20; i++) {
     for (let j = 1; j <= 20; j++) centrality[i] += co20[i][j];
   }
-  const set2Nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-    .sort((a, b) => centrality[b] - centrality[a])
-    .slice(0, 5)
-    .sort((a, b) => a - b);
+  const rankedByCentrality = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    .sort((a, b) => centrality[b] - centrality[a]);
+  const set2Nums = enforceCashPotCorridor(rankedByCentrality.slice(0, 5), rankedByCentrality, false);
 
   // Candidate Set 3: Phase-Space 5D Velocity Vector Projection (Takens' Delay)
   const prev1 = getNumbers(sortedDraws[N - 1]);
@@ -228,19 +273,19 @@ export function computeCashPotQuant100Engine(rawDraws: CashPotDrawRecord[]): Cas
     if (next > 20) next = 1 + ((next - 1) % 20);
     return next;
   });
-  const set3Nums = Array.from(new Set(set3Candidate));
+  const rawSet3 = Array.from(new Set(set3Candidate));
   for (let k = 1; k <= 20; k++) {
-    if (set3Nums.length >= 5) break;
-    if (!set3Nums.includes(k)) set3Nums.push(k);
+    if (rawSet3.length >= 5) break;
+    if (!rawSet3.includes(k)) rawSet3.push(k);
   }
-  set3Nums.sort((a, b) => a - b);
+  const set3Nums = enforceCashPotCorridor(rawSet3, rankedByFreq, false);
 
   // Candidate Set 4: Stefan Mandel Sieve (Optimal Centroid & Parity Balance)
   // Perfectly balanced sum = 52, 3 Odd / 2 Even, spanning low and high decades
   const set4Nums = [3, 7, 10, 14, 18];
 
   // Candidate Set 5: Symmetric Ergodic Involution sigma_20(x) = 21 - x of latest draw
-  const set5Nums = prev1.map(n => 21 - n).sort((a, b) => a - b);
+  const set5Nums = enforceCashPotCorridor(prev1.map(n => 21 - n), rankedByFreq, false);
 
   const theFiveQuantSets: CashPotQuantSet[] = [
     {

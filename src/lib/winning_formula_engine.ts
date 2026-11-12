@@ -38,6 +38,86 @@ function getNextTimeSlot(currentSlot: string): string {
   return "Morning";
 }
 
+interface CorridorConstraints {
+  pickCount: number;
+  maxNum: number;
+  sumMin: number;
+  sumMax: number;
+  minEven: number;
+  maxEven: number;
+  lowCutoff: number;
+  minLow: number;
+  maxLow: number;
+  maxLag1Repeats: number;
+}
+
+/**
+ * Builds a sorted ticket from prioritized seed + ranked candidates while
+ * enforcing empirical P10-P90 sum corridor, parity, and low/high balance.
+ */
+function fillCorridorLine(
+  seed: number[],
+  rankedPool: number[],
+  lag1Set: Set<number>,
+  c: CorridorConstraints
+): number[] {
+  const res: number[] = [];
+  let lag1Count = 0;
+  for (const n of [...seed, ...rankedPool]) {
+    if (n < 1 || n > c.maxNum || res.includes(n)) continue;
+    if (lag1Set.has(n)) {
+      if (lag1Count >= c.maxLag1Repeats) continue;
+      lag1Count++;
+    }
+    res.push(n);
+    if (res.length === c.pickCount) break;
+  }
+
+  const penaltyOf = (arr: number[]) => {
+    const s = arr.reduce((a, b) => a + b, 0);
+    const ev = arr.filter(x => x % 2 === 0).length;
+    const lo = arr.filter(x => x <= c.lowCutoff).length;
+    const sumPen = s < c.sumMin ? (c.sumMin - s) * 4 : s > c.sumMax ? (s - c.sumMax) * 4 : 0;
+    const evPen = ev < c.minEven ? (c.minEven - ev) * 10 : ev > c.maxEven ? (ev - c.maxEven) * 10 : 0;
+    const loPen = lo < c.minLow ? (c.minLow - lo) * 8 : lo > c.maxLow ? (lo - c.maxLow) * 8 : 0;
+    return sumPen + evPen + loPen;
+  };
+
+  let cur = [...res];
+  for (let iter = 0; iter < 30; iter++) {
+    const curPen = penaltyOf(cur);
+    if (curPen === 0) break;
+
+    let bestSwap: number[] | null = null;
+    let bestPen = curPen;
+    const lag1InCur = cur.filter(x => lag1Set.has(x)).length;
+
+    for (let i = cur.length - 1; i >= 0; i--) {
+      const outVal = cur[i];
+      for (const inVal of rankedPool) {
+        if (cur.includes(inVal)) continue;
+        const nextLag1 = lag1InCur - (lag1Set.has(outVal) ? 1 : 0) + (lag1Set.has(inVal) ? 1 : 0);
+        if (nextLag1 > c.maxLag1Repeats) continue;
+
+        const trial = [...cur];
+        trial[i] = inVal;
+        const p = penaltyOf(trial);
+        if (p < bestPen) {
+          bestPen = p;
+          bestSwap = trial;
+          if (p === 0) break;
+        }
+      }
+      if (bestPen === 0) break;
+    }
+
+    if (!bestSwap) break;
+    cur = bestSwap;
+  }
+
+  return cur.sort((a, b) => a - b);
+}
+
 /**
  * 1. PLAY WHE (1-36, 5-Mode Orthogonal Kinematic & Persistence Portfolio)
  * Mathematical Formula:
@@ -391,21 +471,21 @@ export async function generateCashPotFormulaPick(): Promise<GameFormulaResult> {
     .filter(n => !lag1Set.has(n))
     .sort((a, b) => ballScore(b) - ballScore(a));
 
-  const fill5 = (seed: number[], maxLag1Repeats = 1): number[] => {
-    const res: number[] = [];
-    let lag1Count = 0;
-    const candidates = [...seed, ...nonLag1Neighbors, ...Array.from({ length: 20 }, (_, i) => i + 1).sort((a, b) => ballScore(b) - ballScore(a))];
-    for (const n of candidates) {
-      if (n < 1 || n > 20 || res.includes(n)) continue;
-      if (lag1Set.has(n)) {
-        if (lag1Count >= maxLag1Repeats) continue;
-        lag1Count++;
-      }
-      res.push(n);
-      if (res.length === 5) break;
-    }
-    return res.sort((a, b) => a - b);
-  };
+  const rankedAll = Array.from({ length: 20 }, (_, i) => i + 1).sort((a, b) => ballScore(b) - ballScore(a));
+  const rankedPool = [...nonLag1Neighbors, ...rankedAll];
+  const fill5 = (seed: number[], maxLag1Repeats = 1): number[] =>
+    fillCorridorLine(seed, rankedPool, lag1Set, {
+      pickCount: 5,
+      maxNum: 20,
+      sumMin: 37,
+      sumMax: 65,
+      minEven: 2,
+      maxEven: 3,
+      lowCutoff: 10,
+      minLow: 2,
+      maxLow: 3,
+      maxLag1Repeats
+    });
 
   // Line 1: Lag 1-2 Kinematic ±1 Neighbor Core
   const line1 = fill5([anchor1, anchor2, ...nonLag1Neighbors.slice(0, 3)], 1);
@@ -531,21 +611,21 @@ export async function generateLottoPlusFormulaPick(): Promise<GameFormulaResult>
   const anchor2 = [...prev2Nums].filter(n => !lag1Set.has(n)).sort((a, b) => ballScore(b) - ballScore(a))[0] || prev2Nums[0];
   const nonLag1Neighbors = Array.from(neighborPool).filter(n => !lag1Set.has(n)).sort((a, b) => ballScore(b) - ballScore(a));
 
-  const fill5 = (seed: number[], maxLag1Repeats = 1): number[] => {
-    const res: number[] = [];
-    let lag1Count = 0;
-    const allRanked = Array.from({ length: 35 }, (_, i) => i + 1).sort((a, b) => ballScore(b) - ballScore(a));
-    for (const n of [...seed, ...nonLag1Neighbors, ...allRanked]) {
-      if (n < 1 || n > 35 || res.includes(n)) continue;
-      if (lag1Set.has(n)) {
-        if (lag1Count >= maxLag1Repeats) continue;
-        lag1Count++;
-      }
-      res.push(n);
-      if (res.length === 5) break;
-    }
-    return res.sort((a, b) => a - b);
-  };
+  const allRanked = Array.from({ length: 35 }, (_, i) => i + 1).sort((a, b) => ballScore(b) - ballScore(a));
+  const rankedPool = [...nonLag1Neighbors, ...allRanked];
+  const fill5 = (seed: number[], maxLag1Repeats = 1): number[] =>
+    fillCorridorLine(seed, rankedPool, lag1Set, {
+      pickCount: 5,
+      maxNum: 35,
+      sumMin: 65,
+      sumMax: 118,
+      minEven: 2,
+      maxEven: 3,
+      lowCutoff: 17,
+      minLow: 2,
+      maxLow: 3,
+      maxLag1Repeats
+    });
 
   const cBase = Math.min(34, nonLag1Neighbors[0] || 14);
   const highCands = Array.from({ length: 15 }, (_, i) => i + 21).filter(n => !lag1Set.has(n)).sort((a, b) => ballScore(b) - ballScore(a));
@@ -668,21 +748,21 @@ export async function generateWinForLifeFormulaPick(): Promise<GameFormulaResult
   const anchor2 = [...prev2Nums].filter(n => !lag1Set.has(n)).sort((a, b) => ballScore(b) - ballScore(a))[0] || prev2Nums[0];
   const nonLag1Neighbors = Array.from(neighborPool).filter(n => !lag1Set.has(n)).sort((a, b) => ballScore(b) - ballScore(a));
 
-  const fill6 = (seed: number[], maxLag1Repeats = 1): number[] => {
-    const res: number[] = [];
-    let lag1Count = 0;
-    const allRanked = Array.from({ length: 28 }, (_, i) => i + 1).sort((a, b) => ballScore(b) - ballScore(a));
-    for (const n of [...seed, ...nonLag1Neighbors, ...allRanked]) {
-      if (n < 1 || n > 28 || res.includes(n)) continue;
-      if (lag1Set.has(n)) {
-        if (lag1Count >= maxLag1Repeats) continue;
-        lag1Count++;
-      }
-      res.push(n);
-      if (res.length === 6) break;
-    }
-    return res.sort((a, b) => a - b);
-  };
+  const allRanked = Array.from({ length: 28 }, (_, i) => i + 1).sort((a, b) => ballScore(b) - ballScore(a));
+  const rankedPool = [...nonLag1Neighbors, ...allRanked];
+  const fill6 = (seed: number[], maxLag1Repeats = 1): number[] =>
+    fillCorridorLine(seed, rankedPool, lag1Set, {
+      pickCount: 6,
+      maxNum: 28,
+      sumMin: 66,
+      sumMax: 111,
+      minEven: 2,
+      maxEven: 4,
+      lowCutoff: 14,
+      minLow: 2,
+      maxLow: 4,
+      maxLag1Repeats
+    });
 
   // Line 1: Pure Lag 1-2 ±1 Kinematic Neighbor Wave + 1 Carryover Anchor
   const line1 = fill6([anchor1, anchor2, ...nonLag1Neighbors.slice(0, 4)], 1);
