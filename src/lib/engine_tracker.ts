@@ -1926,7 +1926,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
           .filter(d => d.winning_number >= 1 && d.winning_number <= 36);
 
         const N = draws.length;
-        const evalWindow = Math.min(28, N - 50);
+        const evalWindow = Math.min(45, N - 50);
         const forensicFull = executePlayWheForensicEngine(draws, evalWindow);
         const quantPWhFull = computePlayWheQuant100Engine(
           draws.map(d => ({
@@ -2084,7 +2084,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
         }));
 
         const N = draws.length;
-        const evalWindow = Math.min(28, N - 30);
+        const evalWindow = Math.min(45, N - 30);
         for (let t = N - evalWindow; t < N; t++) {
           const hist = draws.slice(0, t);
           const actual = draws[t];
@@ -2188,7 +2188,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
         }));
 
         const N = draws.length;
-        const evalWindow = Math.min(16, N - 25);
+        const evalWindow = Math.min(35, N - 25);
         for (let t = N - evalWindow; t < N; t++) {
           const hist = draws.slice(0, t);
           const actual = draws[t];
@@ -2295,10 +2295,20 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
         }));
 
         const N = draws.length;
-        const evalWindow = Math.min(16, N - 25);
+        const evalWindow = Math.min(35, N - 25);
         for (let t = N - evalWindow; t < N; t++) {
           const hist = draws.slice(0, t);
           const actual = draws[t];
+          const pbRotObj = buildDynamicBonusBallRotation(hist.map(d => d.powerball), 10);
+          const pbRenewalHist = pbRotObj.primary;
+          const pbRot = pbRotObj.rotation;
+          const linePbs = [
+            pbRot[0] ?? pbRenewalHist,
+            pbRot[1] ?? pbRot[0] ?? pbRenewalHist,
+            pbRot[2] ?? pbRot[0] ?? pbRenewalHist,
+            pbRot[0] ?? pbRenewalHist,
+            pbRot[1] ?? pbRot[0] ?? pbRenewalHist
+          ];
           const forensic = executeLottoForensicEngine(hist, 5);
           if (forensic.nextCandidateSets?.[0]) {
             const forensic5Lines = forensic.nextCandidateSets.slice(0, 5).map(c => c.numbers);
@@ -2338,7 +2348,8 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
                 target_draw_number: actual.draw_number,
                 target_draw_date: actual.draw_date,
                 predicted_numbers: quantSlips[0],
-                predicted_powerball: forensic.nextCandidateSets[0].powerball || 2,
+                predicted_powerball: pbRenewalHist,
+                line_powerballs: linePbs,
                 wheel_slips: quantSlips,
                 actual_numbers: actual.numbers,
                 actual_powerball: actual.powerball,
@@ -2346,7 +2357,6 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               });
             }
 
-            const pbRenewalHist = buildDynamicBonusBallRotation(hist.map(d => d.powerball), 10).primary;
             const wf5Lines = (forensic.invariantSubspace?.highDensityTickets || forensic5Lines).slice(0, 5);
             await upsertVerifiedWalkForwardLog({
               game_key: "lotto-plus",
@@ -2364,15 +2374,6 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
             });
 
             // APEX CHAMPION MASTER CONSENSUS (Lotto Plus 5 Playable Lines)
-            const pbRotObj = buildDynamicBonusBallRotation(hist.map(d => d.powerball), 10);
-            const pbRot = pbRotObj.rotation;
-            const linePbs = [
-              pbRot[0] ?? pbRenewalHist,
-              pbRot[1] ?? pbRot[0] ?? pbRenewalHist,
-              pbRot[2] ?? pbRot[0] ?? pbRenewalHist,
-              pbRot[0] ?? pbRenewalHist,
-              pbRot[1] ?? pbRot[0] ?? pbRenewalHist
-            ];
             const apexLotto5Lines = buildMultiBallApex5(
               hist.map(d => d.numbers),
               35,
@@ -2410,7 +2411,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
         }));
 
         const N = draws.length;
-        const evalWindow = Math.min(16, N - 25);
+        const evalWindow = Math.min(35, N - 25);
         for (let t = N - evalWindow; t < N; t++) {
           const hist = draws.slice(0, t);
           const actual = draws[t];
@@ -2726,30 +2727,27 @@ export async function getEngineLeaderboardStats(
   const championPicks: ChampionMasterPick[] = [];
 
   for (const g of gamesToQuery) {
-    // Find the #1 ranked engine for this game (preferring apex-master when tied or leading)
+    // Merit-based Champion Selection: rank by verified Win Rate & ROI (preferring >=10 verified draws)
     const gameLeaderRows = leaderboard
       .filter(r => r.game_key === g)
-      .sort((a, b) =>
-        b.prize_win_rate_pct - a.prize_win_rate_pct ||
-        b.roi_pct - a.roi_pct ||
-        (a.engine_key === "apex-master" ? -1 : 1)
-      );
-    const champRow = gameLeaderRows.find(r => r.engine_key === "apex-master") || gameLeaderRows[0];
+      .sort((a, b) => {
+        const aQualified = a.total_evaluated >= 10 ? 1 : 0;
+        const bQualified = b.total_evaluated >= 10 ? 1 : 0;
+        if (bQualified !== aQualified) return bQualified - aQualified;
+        const aScore = a.prize_win_rate_pct * 0.6 + Math.min(200, Math.max(-100, a.roi_pct)) * 0.4;
+        const bScore = b.prize_win_rate_pct * 0.6 + Math.min(200, Math.max(-100, b.roi_pct)) * 0.4;
+        return bScore - aScore || b.prize_win_rate_pct - a.prize_win_rate_pct || b.roi_pct - a.roi_pct;
+      });
+    const champRow = gameLeaderRows[0];
     if (!champRow) continue;
 
-    // Fetch latest PENDING prediction for this game (preferring apex-master, fallback to champRow.engine_key)
+    // Fetch latest PENDING prediction for the merit-ranked champion engine
     let pendingRows = await query<any>(
       `SELECT * FROM prediction_engine_logs WHERE game_key = ? AND engine_key = ? ORDER BY target_draw_number DESC, id DESC LIMIT 1`,
-      [g, "apex-master"]
+      [g, champRow.engine_key]
     ).catch(() => []);
     if (!pendingRows || pendingRows.length === 0 || pendingRows[0]?.status !== "PENDING") {
       await snapshotAllEnginePredictions(g);
-      pendingRows = await query<any>(
-        `SELECT * FROM prediction_engine_logs WHERE game_key = ? AND engine_key = ? ORDER BY target_draw_number DESC, id DESC LIMIT 1`,
-        [g, "apex-master"]
-      ).catch(() => []);
-    }
-    if (!pendingRows || pendingRows.length === 0) {
       pendingRows = await query<any>(
         `SELECT * FROM prediction_engine_logs WHERE game_key = ? AND engine_key = ? ORDER BY target_draw_number DESC, id DESC LIMIT 1`,
         [g, champRow.engine_key]
@@ -2789,8 +2787,8 @@ export async function getEngineLeaderboardStats(
       let convergenceLocks: number[] = [];
       try {
         const siblingPending = await query<any>(
-          "SELECT engine_key, predicted_numbers FROM prediction_engine_logs WHERE game_key = ? AND target_draw_number = ? AND engine_key != 'apex-master'",
-          [g, Number(pRow.target_draw_number)]
+          "SELECT engine_key, predicted_numbers FROM prediction_engine_logs WHERE game_key = ? AND target_draw_number = ? AND engine_key != ?",
+          [g, Number(pRow.target_draw_number), champRow.engine_key]
         );
         const ballVoteCounts = new Map<number, number>();
         (siblingPending || []).forEach((row: any) => {

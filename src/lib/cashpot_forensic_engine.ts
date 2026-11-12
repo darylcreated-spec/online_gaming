@@ -377,35 +377,53 @@ export function generateCashPotForensicCandidateSets(draws: CashPotDraw[]): Cash
   }
 
   const usedTickets = new Set<string>();
+  const usedTicketArrays: number[][] = [];
+
+  const maxOverlapWithUsed = (t: number[]): number => {
+    let maxOv = 0;
+    for (const prev of usedTicketArrays) {
+      let ov = 0;
+      for (const x of t) {
+        if (prev.includes(x)) ov++;
+      }
+      if (ov > maxOv) maxOv = ov;
+    }
+    return maxOv;
+  };
 
   function makeUniqueTicket(anchors: number[], baseOffset: number, allowUnconventionalParity = false): number[] {
     let bestFallback: number[] | null = null;
-    for (let attempt = 0; attempt < pool14.length; attempt++) {
-      const offset = (baseOffset + attempt) % pool14.length;
-      const t = makeTicket(anchors, offset);
-      const key = t.join(',');
-      if (usedTickets.has(key)) continue;
-      if (!bestFallback) bestFallback = t;
-      const val = validateCashPotForensicLine(t, prevNums, allowUnconventionalParity);
-      if (val.isValid) {
-        usedTickets.add(key);
-        return t;
+    for (const maxAllowedOverlap of [2, 3, 5]) {
+      for (let attempt = 0; attempt < pool14.length; attempt++) {
+        const offset = (baseOffset + attempt) % pool14.length;
+        const t = makeTicket(anchors, offset);
+        const key = t.join(',');
+        if (usedTickets.has(key)) continue;
+        if (!bestFallback) bestFallback = t;
+        const val = validateCashPotForensicLine(t, prevNums, allowUnconventionalParity);
+        if (val.isValid && maxOverlapWithUsed(t) <= maxAllowedOverlap) {
+          usedTickets.add(key);
+          usedTicketArrays.push(t);
+          return t;
+        }
       }
-    }
-    // If anchors alone produced low-sum/invalid lines across all pool14 offsets, rotate with balanced pool14 seeds
-    for (let i = 0; i < pool14.length; i++) {
-      const altSeed = [pool14[i], pool14[(i + 5) % pool14.length], pool14[(i + 10) % pool14.length]];
-      const t = makeTicket(altSeed, (baseOffset + i) % pool14.length);
-      const key = t.join(',');
-      if (usedTickets.has(key)) continue;
-      const val = validateCashPotForensicLine(t, prevNums, allowUnconventionalParity);
-      if (val.isValid) {
-        usedTickets.add(key);
-        return t;
+      // If anchors alone produced low-sum/invalid/high-overlap lines, rotate with balanced pool14 seeds
+      for (let i = 0; i < pool14.length; i++) {
+        const altSeed = [pool14[i], pool14[(i + 5) % pool14.length], pool14[(i + 10) % pool14.length]];
+        const t = makeTicket(altSeed, (baseOffset + i) % pool14.length);
+        const key = t.join(',');
+        if (usedTickets.has(key)) continue;
+        const val = validateCashPotForensicLine(t, prevNums, allowUnconventionalParity);
+        if (val.isValid && maxOverlapWithUsed(t) <= maxAllowedOverlap) {
+          usedTickets.add(key);
+          usedTicketArrays.push(t);
+          return t;
+        }
       }
     }
     const chosen = bestFallback || makeTicket(anchors, baseOffset);
     usedTickets.add(chosen.join(','));
+    usedTicketArrays.push(chosen);
     return chosen;
   }
 

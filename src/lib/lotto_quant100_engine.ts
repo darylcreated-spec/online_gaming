@@ -278,9 +278,61 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[]): LottoQu
       mandelRank.push({ n, score });
     }
     mandelRank.sort((a, b) => b.score - a.score);
-    const S5 = mandelRank.slice(0, 5).map(x => x.n).sort((a,b)=>a-b);
+    const S5Raw = mandelRank.slice(0, 5).map(x => x.n).sort((a,b)=>a-b);
 
-    return { S1, S2, S3, S4: S4Final, S5, manifold: Array.from(manifoldSet).sort((a,b)=>a-b) };
+    // Enforce P10-P90 [65, 118] sum corridor, 2-3 parity/low-high balance, and <=2 ball overlap across S1..S5
+    const rankedPool35 = mandelRank.map(x => x.n);
+    const enforceLottoCorridor = (initial: number[], priorSets: number[][]): number[] => {
+      const penaltyOf = (arr: number[]) => {
+        const s = arr.reduce((a, b) => a + b, 0);
+        const ev = arr.filter(x => x % 2 === 0).length;
+        const lo = arr.filter(x => x <= 17).length;
+        let maxOv = 0;
+        for (const p of priorSets) {
+          let ov = 0;
+          for (const x of arr) if (p.includes(x)) ov++;
+          if (ov > maxOv) maxOv = ov;
+        }
+        const sumPen = s < 65 ? (65 - s) * 3 : s > 118 ? (s - 118) * 3 : 0;
+        const evPen = ev < 2 ? (2 - ev) * 12 : ev > 3 ? (ev - 3) * 12 : 0;
+        const loPen = lo < 2 ? (2 - lo) * 10 : lo > 3 ? (lo - 3) * 10 : 0;
+        const ovPen = maxOv > 2 ? (maxOv - 2) * 20 : 0;
+        return sumPen + evPen + loPen + ovPen;
+      };
+
+      let cur = [...initial];
+      for (let iter = 0; iter < 25; iter++) {
+        const curPen = penaltyOf(cur);
+        if (curPen === 0) break;
+        let bestSwap: number[] | null = null;
+        let bestPen = curPen;
+        for (let i = cur.length - 1; i >= 0; i--) {
+          for (const inVal of rankedPool35) {
+            if (cur.includes(inVal)) continue;
+            const trial = [...cur];
+            trial[i] = inVal;
+            const p = penaltyOf(trial);
+            if (p < bestPen) {
+              bestPen = p;
+              bestSwap = trial;
+              if (p === 0) break;
+            }
+          }
+          if (bestPen === 0) break;
+        }
+        if (!bestSwap) break;
+        cur = bestSwap;
+      }
+      return cur.sort((a, b) => a - b);
+    };
+
+    const S1Final = enforceLottoCorridor(S1, []);
+    const S2Final = enforceLottoCorridor(S2, [S1Final]);
+    const S3Final = enforceLottoCorridor(S3, [S1Final, S2Final]);
+    const S4Balanced = enforceLottoCorridor(S4Final, [S1Final, S2Final, S3Final]);
+    const S5Final = enforceLottoCorridor(S5Raw, [S1Final, S2Final, S3Final, S4Balanced]);
+
+    return { S1: S1Final, S2: S2Final, S3: S3Final, S4: S4Balanced, S5: S5Final, manifold: Array.from(manifoldSet).sort((a,b)=>a-b) };
   }
 
   // --- HISTORICAL AUDIT ACROSS ALL DRAWS ---
