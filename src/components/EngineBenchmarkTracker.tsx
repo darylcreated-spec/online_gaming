@@ -1270,6 +1270,63 @@ export default function EngineBenchmarkTracker() {
           </div>
         )}
       </div>
+
+      {/* 6. Up-to-Date Engine Guide & Telemetry Notes */}
+      <div className="rounded-2xl bg-slate-950/80 border border-slate-800 p-5 space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-cyan-400" />
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
+              Tracked Engine Notes &amp; Telemetry Guide
+            </h2>
+          </div>
+          <span className="text-[10px] font-mono text-slate-500 uppercase">Merit-Ranked Closed-Loop Architecture</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs font-mono text-slate-400 leading-relaxed">
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
+            <div className="text-emerald-400 font-bold uppercase">Winning Formula Engine</div>
+            <p>
+              Uses Lag 1–2 ±1 kinematic neighbors, Sigma involution mirrors, and empirical P10–P90 sum-corridor enforcement (<span className="text-slate-200">[37, 65]</span> Cash Pot, <span className="text-slate-200">[65, 118]</span> Lotto Plus, <span className="text-slate-200">[66, 111]</span> Win For Life) with balanced parity.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
+            <div className="text-cyan-400 font-bold uppercase">Quant 100% Sieve Engine</div>
+            <p>
+              Combines Chinese Remainder Theorem (CRT) residue classes, eigenvector co-occurrence centrality, Takens phase-space velocity, and Stefan Mandel sieve pruning with corridor &amp; overlap constraints.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
+            <div className="text-amber-400 font-bold uppercase">Forensic Quantitative Engine</div>
+            <p>
+              Synthesizes multi-lag momentum, Poisson drought tension, and graph affinity hubs while enforcing &le;2-ball line orthogonality in Cash Pot and dual-regime 12-Way/24-Way splits in Pick 4.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
+            <div className="text-purple-400 font-bold uppercase">Apex Champion Consensus</div>
+            <p>
+              Cross-engine consensus portfolio fusing top Forensic and Quant 100% signals into 5 orthogonal playable lines plus a 10-slip Mandel covering wheel and Top-3 Weibull Powerball rotation.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
+            <div className="text-sky-400 font-bold uppercase">11-Model Ensemble (Play Whe)</div>
+            <p>
+              Play Whe consensus combining Markov transitions, EWMA, cycle recency, day+slot bias, pair chains, autocorrelation, and RTM Z-score rebound across 5 tactical marks.
+            </p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
+            <div className="text-rose-400 font-bold uppercase">Conviction &amp; Merit Selection</div>
+            <p>
+              Each game&apos;s Champion Pick is selected dynamically by verified Win Rate + ROI composite. <span className="text-emerald-300">HIGH CONVICTION</span> vs. <span className="text-rose-300">HIGH ENTROPY</span> reflects rolling 60-draw Shannon entropy departure from uniform randomness.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

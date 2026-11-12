@@ -803,55 +803,55 @@ export default function PlayWheTab({
       {subTab === "explain" && (
         <div className="glass-panel border border-white/5 p-5 rounded-xl bg-slate-950/20 space-y-4">
           <h3 className="text-xs font-bold text-white uppercase font-mono tracking-widest border-b border-white/5 pb-2">
-            How The App Helps You Reduce The Odds in Play Whe
+            How The App Evaluates &amp; Tracks Play Whe (1–36)
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
             <div className="space-y-1.5">
-              <h4 className="text-emerald-400 font-bold uppercase">1. 11-MODEL ENSEMBLE CONSENSUS</h4>
+              <h4 className="text-emerald-400 font-bold uppercase">1. 5-MARK TACTICAL PORTFOLIO</h4>
               <p>
-                Picking 1 mark at random gives a <strong>2.78% win chance</strong>. The app's expanded 11-model ensemble (Markov, Momentum, Day+Slot, Cycle, Slot Freq, Decay, Pair Chains, Entropy, EWMA, RTM Rebound, Autocorr Lag-3) votes on candidate marks, boosting top-5 single-slot hit probability to <strong>~13.8% – 16.5%</strong>.
+                A single random mark has a <strong>2.78% (1/36)</strong> baseline hit rate; a 5-mark card has a <strong>13.89% (5/36)</strong> baseline. All 5 tracked engines (<strong>Forensic</strong>, <strong>Ensemble</strong>, <strong>Apex</strong>, <strong>Winning Formula</strong>, <strong>Quant 100%</strong>) output 5 distinct marks graded identically.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-emerald-400 font-bold uppercase">2. MARKOV SUCCESSOR VECTORS</h4>
+              <h4 className="text-emerald-400 font-bold uppercase">2. KINEMATIC &amp; INVOLUTION MODES</h4>
               <p>
-                Calculates 1-step transition probability vectors ("Which mark follows which?") across 18,000+ past draws to identify high-likelihood successor marks following the latest draw.
+                Combines <strong>Lag-1 / Lag-2 ±1 Steppers</strong>, <strong>Sigma-37 Involution Mirrors</strong> (37 − X), <strong>Same-Slot Conditional Markov Leaders</strong>, and <strong>Poisson Drought Rebounds</strong> (skip 25–75 draws).
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-emerald-400 font-bold uppercase">3. EWMA & RTM Z-SCORE REBOUND</h4>
+              <h4 className="text-emerald-400 font-bold uppercase">3. EWMA &amp; CHINAPOO PARTNERS</h4>
               <p>
-                Exponentially weights recent draws (α=0.12) to detect short-term trends while flagging underrepresented marks with <strong>Z &lt; -1.5</strong> that are statistically due for regression to the mean.
+                Exponentially weights recent draws alongside traditional Chinapoo companion pairings and RTM Z-score rebound signals to rank candidate marks for each time slot.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-emerald-400 font-bold uppercase">4. AUTOCORRELATION LAG SIGNALS</h4>
+              <h4 className="text-emerald-400 font-bold uppercase">4. SHANNON ENTROPY CONVICTION</h4>
               <p>
-                Measures lag-2, lag-3, and lag-4 autocorrelation coefficients to detect marks that exhibit periodic cyclical re-appearances within short draw intervals.
+                Measures rolling 60-draw G-statistic departure from uniform entropy to classify each regime as <strong>HIGH CONVICTION</strong>, <strong>BALANCED</strong>, or <strong>HIGH ENTROPY</strong>, helping you size plays when non-uniform clustering appears.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">5. CHINAPOO PARTNER MAPPING</h4>
+              <h4 className="text-primary font-bold uppercase">5. SLOT-TO-SLOT MARKOV VECTORS</h4>
               <p>
-                Correlates traditional companion pairings (e.g. 1 & 16, 2 & 17) and flags long-sleeping partner marks due for co-occurrence.
+                Tracks 1-step transition probabilities across Morning → Midday → Afternoon → Evening → Morning draws using the live Turso Cloud archive.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">6. CHI-SQUARE & ENTROPY GAUGE</h4>
+              <h4 className="text-primary font-bold uppercase">6. BAYESIAN WEIGHT CALIBRATION</h4>
               <p>
-                Performs Chi-Square goodness-of-fit testing (detecting non-random bias) and Shannon Entropy measurements to evaluate rolling 40-draw distribution predictability.
+                Walk-forward out-of-sample backtests dynamically re-weight sub-models based on recent empirical lift rather than static assumptions.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">7. MONTE CARLO SIMULATION</h4>
+              <h4 className="text-primary font-bold uppercase">7. MERIT-BASED CHAMPION DECK</h4>
               <p>
-                Simulates 10,000 Monte Carlo draw iterations for Bayesian top picks to estimate empirical coverage probabilities across simulated draws.
+                The <strong>Engine Tracker</strong> ranks all 5 Play Whe engines over a 45-draw walk-forward window and live draws, promoting the highest-performing system automatically.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">8. LIVE SLOT VERIFICATION</h4>
+              <h4 className="text-primary font-bold uppercase">8. LIVE 4-SLOT AUTO-GRADING</h4>
               <p>
-                Automatically grades predictions against official Turso Cloud DB draw records immediately following each draw slot (Morning 10:30 AM, Midday 1:00 PM, Afternoon 4:00 PM, Evening 7:00 PM).
+                Automatically reconciles predictions against official NLCB results after Morning (10:30 AM), Midday (1:00 PM), Afternoon (4:00 PM), and Evening (7:00 PM) draws.
               </p>
             </div>
           </div>

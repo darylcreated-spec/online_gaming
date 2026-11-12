@@ -1893,49 +1893,49 @@ export default function WinForLifeTab() {
         <div className="space-y-6">
           <div className="glass-panel p-6 rounded-xl space-y-5">
             <div className="border-b border-white/5 pb-3">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">How The App Helps You Reduce The Odds</h3>
-              <p className="text-[11px] text-gray-400 mt-1">Mathematical filtering, 10-model consensus voting, advanced statistical engines, and combinatorial wheeling designed to maximize winning probability.</p>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">How The App Reduces The Odds in Win For Life (6 of 28)</h3>
+              <p className="text-[11px] text-gray-400 mt-1">Empirical P10–P90 sum-corridor filtering, 4 audited quantitative engines, 10-slip Mandel covering wheels, and closed-loop Bayesian calibration.</p>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs text-gray-400 leading-relaxed font-mono">
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">1. Combinatorial Odds Compression</h4>
+                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">1. P10–P90 Sum Corridor [66, 111] &amp; Balance</h4>
                   <p>
-                    Out of 376,740 possible Win for Life combinations (6/28 + Cash Ball 1/3), over 70% of random tickets fall into statistically rare or cold probability zones. The app filters out non-viable combinations (such as 6 consecutive numbers or extreme sum totals), isolating the high-density target band.
+                    Out of 376,740 possible 6/28 combinations (+ Cash Ball 1–10), candidate lines are constrained to the empirical <strong>[66, 111]</strong> sum corridor with balanced <strong>2:4 / 3:3 / 4:2</strong> parity and low-high splits, eliminating extreme low/high tail collapses.
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">2. 10-Model Ensemble Consensus</h4>
+                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">2. 4 Audited Quantitative Engines</h4>
                   <p>
-                    Predictions combine 10 distinct analytical engines: Markov Chains, Frequency Momentum, Day Bias, Cycle Recency, Freq-Gap Ratios, Exponential Decay, Skip-Gram Pairs, Shannon Entropy, EWMA Recency (α=0.15), and RTM Z-Score Rebound (Z &lt; -1.5) to score each number's probability coefficient.
+                    Every draw is evaluated across <strong>Quant 100% Sieve</strong> (CRT mod-7/mod-5 + eigenvector centrality), <strong>Winning Formula</strong> (Lag 1–2 ±1 kinematic wave), <strong>Forensic Engine</strong>, and <strong>Apex Champion Consensus</strong>, with merit-based Champion selection in the <strong>Engine Tracker</strong>.
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">3. Abbreviated Wheeling Systems</h4>
+                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">3. 10-Slip Mandel Covering Wheel</h4>
                   <p>
-                    Wheeling allows you to select candidate pools of 8 to 12 numbers and mathematically compresses them into guaranteed multi-match ticket combinations, giving you wide coverage at a fraction of full-system ticket costs.
+                    Over the active 14–16 ball attractor core, the app constructs a 10-slip minimal covering wheel (with live <strong>10-Slip Wheel Capture %</strong> telemetry) to maximize 3/6, 4/6, and 5/6 prize density per dollar wagered.
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">4. Advanced Statistical Intelligence</h4>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">4. Entropy Conviction &amp; Cash Ball Renewal</h4>
                   <p>
-                    Evaluates distribution randomness via Chi-Square Goodness-of-Fit and Shannon Entropy, calculates Bayesian Posterior probabilities, and simulates 10,000 Monte Carlo draw outcomes.
+                    Tracks Shannon entropy conviction (<strong>HIGH CONVICTION</strong> / <strong>BALANCED</strong> / <strong>HIGH ENTROPY</strong>) alongside Weibull renewal projections for the 1–10 Cash Ball.
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">5. Real-Time Ticket OCR & Auto-Syncing</h4>
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">5. Real-Time Ticket OCR &amp; Auto-Grading</h4>
                   <p>
-                    AI computer vision parses physical ticket slips, while background sync engines instantly record official NLCB draw results following Tuesday & Friday evening draws at 7:00 PM.
+                    Computer-vision ticket scanning verifies physical slips against official draws, while background sync jobs reconcile NLCB Win For Life results and update Bayesian sub-model weights automatically.
                   </p>
                 </div>
                 <div className="p-3 bg-slate-900/60 rounded-lg border border-white/5">
-                  <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1 text-emerald-400">Winning Strategy Tip</div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider mb-1 text-emerald-400">Winning Strategy Tip</div>
                   <p className="text-[11px] text-gray-300">
-                    Use the <strong>Ensemble Heatmap</strong> to pick 8-10 candidate numbers, then send them directly into the <strong>Wheeling Generator</strong> to generate balanced slips with guaranteed match coverage.
+                    Check the <strong>ENGINE TRACKER</strong> tab before playing to see which engine currently holds the #1 merit rank for Win For Life and whether the chamber is in a <strong>BALANCED</strong> or <strong>HIGH ENTROPY</strong> regime.
                   </p>
                 </div>
               </div>

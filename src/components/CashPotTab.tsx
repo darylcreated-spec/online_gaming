@@ -767,32 +767,30 @@ export default function CashPotTab() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-gray-300 leading-relaxed">
             <div className="space-y-2">
-              <h4 className="text-yellow-300 font-bold uppercase">1. Compact 20-Ball State Space</h4>
+              <h4 className="text-yellow-300 font-bold uppercase">1. Multi-Engine Portfolio &amp; Orthogonality</h4>
               <p className="text-gray-400">
-                Unlike games with 35 or 36 balls, Cash Pot selects 5 balls from only 20. The complete mathematical sample space is:
-                <br /><code className="text-yellow-400 font-bold">C(20, 5) = 15,504 combinations</code>.
-                This allows our engine to compute exact combinatorial graphs and PageRank companion network affinities with 100% precision.
+                Out of <code className="text-yellow-400 font-bold">C(20, 5) = 15,504</code> combinations, the app runs 4 audited engines in parallel: <strong>Winning Formula</strong> (Lag 1–2 kinematic ±1 neighbor core), <strong>Quant 100% Sieve</strong> (CRT mod-5 + Takens velocity + eigenvector centrality), <strong>Forensic Engine</strong> (with &le;2-ball line overlap enforcement), and <strong>Apex Champion Consensus</strong>.
               </p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-yellow-300 font-bold uppercase">2. Gaussian Sum &amp; Odd/Even Filtering</h4>
+              <h4 className="text-yellow-300 font-bold uppercase">2. Empirical P10–P90 Corridor [37, 65] &amp; Balance</h4>
               <p className="text-gray-400">
-                Winning tickets concentrate heavily around a sum of <strong>52.5</strong> (range 40 to 65 accounts for &gt;80% of historical outcomes). Combinations with unbalanced sums (e.g. &lt;25 or &gt;85) or 5 all-odd / 5 all-even tickets are automatically suppressed.
+                All generated 5-ball lines are constrained to the empirical P10–P90 sum corridor of <strong>[37, 65]</strong> (centered near 52.5) with balanced <strong>2:3 / 3:2</strong> odd-even and low-high splits, eliminating extreme tail collapses.
               </p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-yellow-300 font-bold uppercase">3. Abbreviated Wheel Coverage</h4>
+              <h4 className="text-yellow-300 font-bold uppercase">3. 10-Slip Mandel Wheel &amp; Multiplier Rotation</h4>
               <p className="text-gray-400">
-                By choosing a pool of 8 to 12 numbers and applying bitmask covering wheels, players can guarantee a 4-of-5 or 3-of-5 winning payout if their target pool contains the winning numbers, slashing wager cost by 85% compared to full permutation wheels.
+                Beyond the 5 primary playable lines, the app builds a 10-slip abbreviated covering wheel over the active attractor pool (tracked via live <strong>10-Slip Wheel Capture %</strong>) alongside Weibull renewal projections for the <strong>x1–x5 Multiplier</strong>.
               </p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-yellow-300 font-bold uppercase">4. Daily Draw Auto-Grading</h4>
+              <h4 className="text-yellow-300 font-bold uppercase">4. Closed-Loop Calibration &amp; Merit Ranking</h4>
               <p className="text-gray-400">
-                Immediately following the daily 7:00 PM AST draw, the Turso cloud database synchronizes the official result, updating historical frequency counts, EWMA velocity, and Markov transition matrices automatically.
+                After each official draw, the <strong>Engine Tracker</strong> grades all pending predictions, updates Bayesian sub-model weights, measures Shannon entropy conviction regimes, and promotes the highest-performing engine by verified Win Rate &amp; ROI.
               </p>
             </div>
           </div>
