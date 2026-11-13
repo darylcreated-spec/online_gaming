@@ -126,7 +126,7 @@ export interface CashPotQuant100AnalysisResult {
   };
 }
 
-export function computeCashPotQuant100Engine(rawDraws: CashPotDrawRecord[]): CashPotQuant100AnalysisResult {
+export function computeCashPotQuant100Engine(rawDraws: CashPotDrawRecord[], maxAuditWindow?: number): CashPotQuant100AnalysisResult {
   // Sort draws strictly ascending by draw_number
   const sortedDraws = [...rawDraws]
     .filter(d => d.num1 != null && d.num5 != null)
@@ -375,7 +375,7 @@ export function computeCashPotQuant100Engine(rawDraws: CashPotDrawRecord[]): Cas
   let jackpot5HitCount = 0;
   let totalEvaluated = 0;
 
-  const startIdx = Math.max(15, 0);
+  const startIdx = maxAuditWindow && maxAuditWindow > 0 ? Math.max(15, N - maxAuditWindow) : Math.max(15, 0);
 
   for (let t = startIdx; t < N; t++) {
     totalEvaluated++;

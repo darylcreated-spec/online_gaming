@@ -684,7 +684,9 @@ export default function EngineBenchmarkTracker() {
                       {pick.game_key !== "play-whe" && pick.game_key !== "pick4" && pick.condensed_wheel && pick.condensed_wheel.length > 0 && (
                         <div className="mt-2.5 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
                           <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold block">
-                            5 Orthogonal Playable Lines (Graded Card Portfolio):
+                            {pick.wheel_slips && pick.wheel_slips.length > 5 && pick.engine_key === "apex-master"
+                              ? `Top 5 Core Lines (${pick.wheel_slips.length}-Slip Portfolio Graded at $${pick.wheel_slips.length} TT):`
+                              : "5 Orthogonal Playable Lines (Graded Card Portfolio):"}
                           </span>
                           <div className="space-y-1 pt-0.5">
                             {pick.condensed_wheel.slice(0, 5).map((slip, sIdx) => {
@@ -743,19 +745,32 @@ export default function EngineBenchmarkTracker() {
                                 <span className="text-emerald-400 font-bold">Guaranteed Overlap</span>
                               </div>
                               <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
-                                {pick.wheel_slips.map((slip, slipIdx) => (
-                                  <div
-                                    key={slipIdx}
-                                    className="px-2 py-1 rounded bg-slate-900/70 border border-slate-800 flex items-center justify-between"
-                                  >
-                                    <span className="text-slate-400 text-[10px]">Slip #{String(slipIdx + 1).padStart(2, "0")}</span>
-                                    <span className="text-white font-bold tracking-wider">
-                                      {pick.game_key === "pick4"
-                                        ? slip.map(d => String(d)).join(" - ")
-                                        : slip.map(n => String(n).padStart(2, "0")).join(" - ")}
-                                    </span>
-                                  </div>
-                                ))}
+                                {pick.wheel_slips.map((slip, slipIdx) => {
+                                  const slipPb =
+                                    pick.game_key === "lotto-plus" && pick.line_powerballs && pick.line_powerballs.length > 0
+                                      ? pick.line_powerballs[slipIdx % pick.line_powerballs.length]
+                                      : undefined;
+                                  return (
+                                    <div
+                                      key={slipIdx}
+                                      className="px-2 py-1 rounded bg-slate-900/70 border border-slate-800 flex items-center justify-between"
+                                    >
+                                      <span className="text-slate-400 text-[10px]">Slip #{String(slipIdx + 1).padStart(2, "0")}</span>
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-white font-bold tracking-wider">
+                                          {pick.game_key === "pick4"
+                                            ? slip.map(d => String(d)).join(" - ")
+                                            : slip.map(n => String(n).padStart(2, "0")).join(" - ")}
+                                        </span>
+                                        {slipPb !== undefined && (
+                                          <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[10px] font-bold">
+                                            PB {slipPb}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           )}

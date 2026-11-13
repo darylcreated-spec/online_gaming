@@ -125,7 +125,7 @@ export function diff35(n: number): number {
   return d === 0 ? 35 : d;
 }
 
-export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[]): LottoQuant100AnalysisResult {
+export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAuditWindow?: number): LottoQuant100AnalysisResult {
   if (!rawDraws || rawDraws.length < 20) {
     throw new Error("At least 20 historical draws required for Quant 100% Analysis.");
   }
@@ -341,7 +341,8 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[]): LottoQu
   let manifold100HitCount = 0;
   const allAuditEntries: Quant100VerificationEntry[] = [];
 
-  for (let t = 10; t < N - 1; t++) {
+  const loopStart = maxAuditWindow && maxAuditWindow > 0 ? Math.max(10, (N - 1) - maxAuditWindow) : 10;
+  for (let t = loopStart; t < N - 1; t++) {
     totalDrawsTested++;
     const actualNext = cleanDraws[t + 1];
     const actualSet = new Set(actualNext.nums);

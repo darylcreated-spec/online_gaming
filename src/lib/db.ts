@@ -20,7 +20,53 @@ if (!globalForDb.libsqlDb) {
   });
 }
 
-export const db = globalForDb.libsqlDb;
+const rawClient = globalForDb.libsqlDb;
+
+/**
+ * Retries transient LibSQL transport calls only when a temporary network/TLS
+ * connect drop occurs (e.g. UND_ERR_CONNECT_TIMEOUT or fetch failed over HTTP).
+ */
+async function withTransientRetry<T>(fn: () => Promise<T>, maxAttempts: number = 4): Promise<T> {
+  let lastErr: any;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastErr = err;
+      const code = String(err?.cause?.code || err?.code || "");
+      const msg = String(err?.message || "");
+      const isTransient =
+        msg.includes("fetch failed") ||
+        code === "UND_ERR_CONNECT_TIMEOUT" ||
+        code === "ETIMEDOUT" ||
+        code === "ECONNRESET" ||
+        code === "ENOTFOUND" ||
+        code === "EAI_AGAIN";
+      if (!isTransient || attempt === maxAttempts) {
+        throw err;
+      }
+      await new Promise(resolve => setTimeout(resolve, attempt * 400));
+    }
+  }
+  throw lastErr;
+}
+
+export const db: typeof rawClient = new Proxy(rawClient, {
+  get(target, prop, receiver) {
+    if (prop === "execute") {
+      return (stmt: Parameters<typeof target.execute>[0]) =>
+        withTransientRetry(() => target.execute(stmt));
+    }
+    if (prop === "batch") {
+      return (
+        stmts: Parameters<typeof target.batch>[0],
+        mode?: Parameters<typeof target.batch>[1]
+      ) => withTransientRetry(() => target.batch(stmts, mode));
+    }
+    const val = Reflect.get(target, prop, receiver);
+    return typeof val === "function" ? val.bind(target) : val;
+  }
+});
 
 // Helper to run raw SQL statements
 export async function query<T = any>(sql: string, args: any[] = []): Promise<T[]> {

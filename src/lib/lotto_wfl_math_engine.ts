@@ -42,13 +42,13 @@ export const GAME_SPECS: Record<SupportedGame, GameMathSpecs> = {
   "lotto-plus": {
     game: "lotto-plus",
     title: "Lotto Plus",
-    poolMax: 36,
+    poolMax: 35,
     pickCount: 5,
     ticketPrice: 5,
     bonusLabel: "Powerball",
     bonusMax: 10,
-    targetSumMin: 68,
-    targetSumMax: 113
+    targetSumMin: 65,
+    targetSumMax: 118
   },
   "win-for-life": {
     game: "win-for-life",
@@ -280,12 +280,17 @@ export function computeMultiBallNextDrawProbabilities(
   targetDate: string = ""
 ): NextDrawMathPrediction {
   const specs = GAME_SPECS[game];
-  const totalDraws = drawsChronological.length;
+  const filteredDraws =
+    game === "lotto-plus"
+      ? drawsChronological.filter(d => extractMainNumbers(d, specs.pickCount).every(n => n >= 1 && n <= specs.poolMax))
+      : drawsChronological;
+  const activeDraws = filteredDraws.length >= 10 ? filteredDraws : drawsChronological;
+  const totalDraws = activeDraws.length;
   if (totalDraws < 10) {
     throw new Error(`Insufficient historical data: ${totalDraws} draws found (minimum 10 required).`);
   }
 
-  const latestDraw = drawsChronological[totalDraws - 1];
+  const latestDraw = activeDraws[totalDraws - 1];
   const lastNumbers = extractMainNumbers(latestDraw, specs.pickCount);
   const lastBonus = extractBonusBall(latestDraw, game);
 
@@ -315,7 +320,7 @@ export function computeMultiBallNextDrawProbabilities(
   );
 
   for (let i = 0; i < totalDraws; i++) {
-    const draw = drawsChronological[i];
+    const draw = activeDraws[i];
     const nums = extractMainNumbers(draw, pickCount);
     const bBall = extractBonusBall(draw, game);
 
@@ -350,7 +355,7 @@ export function computeMultiBallNextDrawProbabilities(
 
     // Markov transition from previous draw
     if (i > 0) {
-      const prevNums = extractMainNumbers(drawsChronological[i - 1], pickCount);
+      const prevNums = extractMainNumbers(activeDraws[i - 1], pickCount);
       const sharesWithLast = prevNums.some(p => lastNumbers.includes(p));
       if (sharesWithLast) {
         nums.forEach(n => {

@@ -64,13 +64,13 @@ interface GameConfig {
 
 const LOTTO_PLUS_CONFIG: GameConfig = {
   game: "lotto-plus",
-  poolMax: 36,
+  poolMax: 35,
   pickCount: 5,
   bonusLabel: "Powerball",
   bonusMax: 10,
-  targetMinSum: 75,
-  targetMaxSum: 115,
-  midPoint: 18,
+  targetMinSum: 65,
+  targetMaxSum: 118,
+  midPoint: 17,
 };
 
 const WIN_FOR_LIFE_CONFIG: GameConfig = {
@@ -372,9 +372,20 @@ function scoreCombination(
 // 3. Stochastic Sampling Engine
 // ─────────────────────────────────────────────────────────────────────
 
+function createSeededRng(seedValue: number): () => number {
+  let t = (seedValue >>> 0) || 1;
+  return () => {
+    t = (t + 0x6D2B79F5) >>> 0;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function generateWeightedCandidate(
   model: ReturnType<typeof buildStatisticalModel>,
-  config: GameConfig
+  config: GameConfig,
+  rng: () => number = Math.random
 ): number[] {
   const { poolMax, pickCount } = config;
 
@@ -392,7 +403,7 @@ function generateWeightedCandidate(
 
   let attempts = 0;
   while (selected.length < pickCount && attempts < 200) {
-    let r = Math.random() * totalWeight;
+    let r = rng() * totalWeight;
     for (let n = 1; n <= poolMax; n++) {
       r -= weights[n];
       if (r <= 0) {
@@ -405,10 +416,12 @@ function generateWeightedCandidate(
     attempts++;
   }
 
-  // Fallback if needed
+  // Deterministic/seeded fallback if needed
+  let fallback = 1;
   while (selected.length < pickCount) {
-    const fallback = Math.floor(Math.random() * poolMax) + 1;
-    if (!selected.includes(fallback)) selected.push(fallback);
+    const cand = ((Math.floor(rng() * poolMax) + fallback - 1) % poolMax) + 1;
+    if (!selected.includes(cand)) selected.push(cand);
+    fallback++;
   }
 
   return selected.sort((a, b) => a - b);
@@ -416,7 +429,8 @@ function generateWeightedCandidate(
 
 function selectBonusBall(
   model: ReturnType<typeof buildStatisticalModel>,
-  config: GameConfig
+  config: GameConfig,
+  rng: () => number = Math.random
 ): number {
   const { bonusMax } = config;
   const weights = new Float64Array(bonusMax + 1);
@@ -428,13 +442,13 @@ function selectBonusBall(
   }
 
   const total = Array.from(weights).slice(1).reduce((a, b) => a + b, 0);
-  let r = Math.random() * total;
+  let r = rng() * total;
 
   for (let p = 1; p <= bonusMax; p++) {
     r -= weights[p];
     if (r <= 0) return p;
   }
-  return Math.floor(Math.random() * bonusMax) + 1;
+  return Math.floor(rng() * bonusMax) + 1;
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -450,14 +464,29 @@ export function runMEVEngine(
   const startTime = performance.now();
   const config = game === "win-for-life" ? WIN_FOR_LIFE_CONFIG : LOTTO_PLUS_CONFIG;
 
-  // Step 1: Build statistical model from ALL historical draws
-  const model = buildStatisticalModel(historicalDraws, config);
+  // Exclude legacy draws containing numbers above the active chamber poolMax (e.g. >35 in modern 5/35 Lotto Plus)
+  const filteredDraws = historicalDraws.filter(d => {
+    const nums = [d.num1, d.num2, d.num3, d.num4, d.num5];
+    if (config.pickCount === 6 && d.num6 !== undefined) nums.push(d.num6);
+    return nums.every(n => n >= 1 && n <= config.poolMax);
+  });
+  const activeDraws = filteredDraws.length >= 10 ? filteredDraws : historicalDraws;
 
-  // Step 2: Generate weighted stochastic candidates
+  // Deterministic seed anchored on latest draw state for reproducible recommendations
+  const latestDraw = activeDraws[activeDraws.length - 1];
+  const seedBase = latestDraw
+    ? (latestDraw.num1 * 131 + latestDraw.num2 * 257 + latestDraw.num3 * 521 + latestDraw.num4 * 1031 + latestDraw.num5 * 2053 + activeDraws.length * 4099 + config.poolMax)
+    : activeDraws.length * 4099;
+  const rng = createSeededRng(seedBase);
+
+  // Step 1: Build statistical model from filtered modern draws
+  const model = buildStatisticalModel(activeDraws, config);
+
+  // Step 2: Generate seeded deterministic weighted candidates
   const candidates: { nums: number[]; score: ReturnType<typeof scoreCombination> }[] = [];
 
   for (let i = 0; i < candidatePoolSize; i++) {
-    const nums = generateWeightedCandidate(model, config);
+    const nums = generateWeightedCandidate(model, config, rng);
     const score = scoreCombination(nums, model, config);
     candidates.push({ nums, score });
   }
@@ -465,38 +494,53 @@ export function runMEVEngine(
   // Step 3: Sort by MEV score descending
   candidates.sort((a, b) => b.score.total - a.score.total);
 
-  // Step 4: Pick top unique candidates
+  // Step 4: Pick top unique candidates with progressive overlap diversity cap
   const seen = new Set<string>();
+  const selectedArrays: number[][] = [];
   const topTickets: MEVTicket[] = [];
+  const maxOverlapThreshold = (cand: number[]) => {
+    let maxOv = 0;
+    const cSet = new Set(cand);
+    for (const prev of selectedArrays) {
+      let ov = 0;
+      for (const n of prev) if (cSet.has(n)) ov++;
+      if (ov > maxOv) maxOv = ov;
+    }
+    return maxOv;
+  };
 
-  for (const c of candidates) {
-    const key = c.nums.join(",");
-    if (seen.has(key)) continue;
-    seen.add(key);
+  for (const overlapCap of [config.pickCount - 3, config.pickCount - 2, config.pickCount]) {
+    for (const c of candidates) {
+      if (topTickets.length >= ticketCount) break;
+      const key = c.nums.join(",");
+      if (seen.has(key)) continue;
+      if (maxOverlapThreshold(c.nums) > overlapCap) continue;
+      seen.add(key);
+      selectedArrays.push(c.nums);
 
-    const bonus = selectBonusBall(model, config);
+      const bonus = selectBonusBall(model, config, rng);
 
-    let grade: "S" | "A+" | "A" | "B" = "B";
-    if (c.score.total >= 80) grade = "S";
-    else if (c.score.total >= 70) grade = "A+";
-    else if (c.score.total >= 60) grade = "A";
+      let grade: "S" | "A+" | "A" | "B" = "B";
+      if (c.score.total >= 80) grade = "S";
+      else if (c.score.total >= 70) grade = "A+";
+      else if (c.score.total >= 60) grade = "A";
 
-    topTickets.push({
-      numbers: c.nums,
-      bonusBall: bonus,
-      bonusLabel: config.bonusLabel,
-      mevScore: Math.round(c.score.total * 10) / 10,
-      grade,
-      breakdown: {
-        frequencyScore: c.score.frequencyScore,
-        recencyScore: c.score.recencyScore,
-        companionScore: c.score.companionScore,
-        positionalScore: c.score.positionalScore,
-        balanceScore: c.score.balanceScore,
-        overdueBoost: c.score.overdueBoost,
-      },
-    });
-
+      topTickets.push({
+        numbers: c.nums,
+        bonusBall: bonus,
+        bonusLabel: config.bonusLabel,
+        mevScore: Math.round(c.score.total * 10) / 10,
+        grade,
+        breakdown: {
+          frequencyScore: c.score.frequencyScore,
+          recencyScore: c.score.recencyScore,
+          companionScore: c.score.companionScore,
+          positionalScore: c.score.positionalScore,
+          balanceScore: c.score.balanceScore,
+          overdueBoost: c.score.overdueBoost,
+        },
+      });
+    }
     if (topTickets.length >= ticketCount) break;
   }
 

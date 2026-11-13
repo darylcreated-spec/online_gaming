@@ -175,7 +175,7 @@ function computeQuartiles(nums: number[]): string {
   return `Q1:${q[0]} Q2:${q[1]} Q3:${q[2]} Q4:${q[3]}`;
 }
 
-export function computeWinForLifeQuant100Engine(rawDraws: WinForLifeDrawRecord[]): WflQuant100AnalysisResult {
+export function computeWinForLifeQuant100Engine(rawDraws: WinForLifeDrawRecord[], maxAuditWindow?: number): WflQuant100AnalysisResult {
   if (!rawDraws || rawDraws.length < 20) {
     throw new Error("At least 20 historical draws required for Win For Life Quant 100% Analysis.");
   }
@@ -435,7 +435,8 @@ export function computeWinForLifeQuant100Engine(rawDraws: WinForLifeDrawRecord[]
   let manifold100SuccessCount = 0;
   let totalEvaluated = 0;
 
-  for (let t = 10; t < N; t++) {
+  const startIdx = maxAuditWindow && maxAuditWindow > 0 ? Math.max(10, N - maxAuditWindow) : 10;
+  for (let t = startIdx; t < N; t++) {
     totalEvaluated++;
     const target = cleanDraws[t];
     const targetNums = target.nums;

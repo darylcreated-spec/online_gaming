@@ -406,35 +406,55 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
   }
 
   const usedTickets = new Set<string>();
+  const usedTicketArrays: number[][] = [];
+
+  function maxOverlapWithUsed(ticket: number[]): number {
+    let maxOv = 0;
+    const tSet = new Set(ticket);
+    for (const prevTicket of usedTicketArrays) {
+      let ov = 0;
+      for (const n of prevTicket) {
+        if (tSet.has(n)) ov++;
+      }
+      if (ov > maxOv) maxOv = ov;
+    }
+    return maxOv;
+  }
 
   function makeUniqueTicket(anchors: number[], baseOffset: number, allowUnconventionalParity = false): number[] {
     let bestFallback: number[] | null = null;
-    for (let attempt = 0; attempt < pool16.length; attempt++) {
-      const offset = (baseOffset + attempt) % pool16.length;
-      const t = makeTicket(anchors, offset);
-      const key = t.join(',');
-      if (usedTickets.has(key)) continue;
-      if (!bestFallback) bestFallback = t;
-      const val = validateForensicLine(t, prevNums, allowUnconventionalParity);
-      if (val.isValid) {
-        usedTickets.add(key);
-        return t;
+    for (const maxAllowedOverlap of [3, 4, 6]) {
+      for (let attempt = 0; attempt < pool16.length; attempt++) {
+        const offset = (baseOffset + attempt) % pool16.length;
+        const t = makeTicket(anchors, offset);
+        const key = t.join(',');
+        if (usedTickets.has(key)) continue;
+        if (!bestFallback) bestFallback = t;
+        const val = validateForensicLine(t, prevNums, allowUnconventionalParity);
+        if (val.isValid && maxOverlapWithUsed(t) <= maxAllowedOverlap) {
+          usedTickets.add(key);
+          usedTicketArrays.push(t);
+          return t;
+        }
       }
-    }
-    // If rigid anchors forced an out-of-corridor sum, rotate balanced seeds from pool16
-    for (let i = 0; i < pool16.length; i++) {
-      const altSeed = [pool16[i], pool16[(i + 5) % pool16.length], pool16[(i + 11) % pool16.length]];
-      const t = makeTicket(altSeed, (baseOffset + i) % pool16.length);
-      const key = t.join(',');
-      if (usedTickets.has(key)) continue;
-      const val = validateForensicLine(t, prevNums, allowUnconventionalParity);
-      if (val.isValid) {
-        usedTickets.add(key);
-        return t;
+      // If rigid anchors forced an out-of-corridor sum or excessive overlap, rotate balanced seeds from pool16
+      for (let i = 0; i < pool16.length; i++) {
+        const altSeed = [pool16[i], pool16[(i + 5) % pool16.length], pool16[(i + 11) % pool16.length]];
+        const t = makeTicket(altSeed, (baseOffset + i) % pool16.length);
+        const key = t.join(',');
+        if (usedTickets.has(key)) continue;
+        if (!bestFallback) bestFallback = t;
+        const val = validateForensicLine(t, prevNums, allowUnconventionalParity);
+        if (val.isValid && maxOverlapWithUsed(t) <= maxAllowedOverlap) {
+          usedTickets.add(key);
+          usedTicketArrays.push(t);
+          return t;
+        }
       }
     }
     const chosen = bestFallback || makeTicket(anchors, baseOffset);
     usedTickets.add(chosen.join(','));
+    usedTicketArrays.push(chosen);
     return chosen;
   }
 
@@ -485,11 +505,34 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
   const t6 = makeUniqueTicket(kinematicAnchors, 5);
   const val6 = validateForensicLine(t6, prevNums);
 
+  function makeParityFilteredTicket(parityRemainder: 0 | 1, fallbackAnchors: number[], baseOffset: number): number[] {
+    const parityPool = pool16.filter(n => n % 2 === parityRemainder);
+    if (parityPool.length >= 6) {
+      for (let i = 0; i <= parityPool.length - 6; i++) {
+        for (let tail = i + 5; tail < parityPool.length; tail++) {
+          const cand = [parityPool[i], parityPool[i + 1], parityPool[i + 2], parityPool[i + 3], parityPool[i + 4], parityPool[tail]].sort((a, b) => a - b);
+          const key = cand.join(',');
+          if (!usedTickets.has(key) && validateForensicLine(cand, prevNums, true).isValid && maxOverlapWithUsed(cand) <= 4) {
+            usedTickets.add(key);
+            usedTicketArrays.push(cand);
+            return cand;
+          }
+        }
+      }
+      const fallbackParity = parityPool.slice(0, 6).sort((a, b) => a - b);
+      const key = fallbackParity.join(',');
+      if (!usedTickets.has(key)) {
+        usedTickets.add(key);
+        usedTicketArrays.push(fallbackParity);
+        return fallbackParity;
+      }
+    }
+    return makeUniqueTicket(parityPool.length >= 2 ? parityPool.slice(0, 2) : fallbackAnchors, baseOffset, true);
+  }
+
   // Strategy 7: Non-Linear Parity Inversion Wave (Unconventional Asymmetric Attractor)
   // Reconstructs rare homogeneous parity phase-trajectories (e.g. Draw #20 [2, 4, 12, 16, 20, 24] 6/6 Grand Annuity Hit)
-  const evensInPool = pool16.filter(n => n % 2 === 0);
-  const t7 = (evensInPool.length >= 6 ? evensInPool.slice(0, 6) : makeTicket([2, 4], 7)).sort((a, b) => a - b);
-  usedTickets.add(t7.join(','));
+  const t7 = makeParityFilteredTicket(0, [2, 4], 7);
   const val7 = validateForensicLine(t7, prevNums, true);
 
   // Strategy 8: Topological Triplet Cluster Stepping (Consecutive 3-Ball Cascades {x, x+1, x+2})
@@ -505,9 +548,7 @@ export function generateForensicCandidateSets(draws: WFLDraw[]): ForensicCandida
   const val8 = validateForensicLine(t8, prevNums, false);
 
   // Strategy 9: Odd Parity Inversion Wave (Unconventional Odd Attractor)
-  const oddsInPool = pool16.filter(n => n % 2 !== 0);
-  const t9 = (oddsInPool.length >= 6 ? oddsInPool.slice(0, 6) : makeTicket([1, 3], 9)).sort((a, b) => a - b);
-  usedTickets.add(t9.join(','));
+  const t9 = makeParityFilteredTicket(1, [1, 3], 9);
   const val9 = validateForensicLine(t9, prevNums, true);
 
   // Strategy 10: Markov Lag 1 & Lag 2 Dual Carryover Anchor Set

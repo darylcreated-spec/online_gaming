@@ -24,7 +24,7 @@ function seededRandom(seed: number): () => number {
 
 function createSlotSeed(dateStr: string, slotStr: string): number {
   let hash = 0;
-  const str = dateStr + slotStr + new Date().getMinutes().toString();
+  const str = `${dateStr}:${slotStr}`;
   for (let i = 0; i < str.length; i++) {
     hash = ((hash << 5) - hash) + str.charCodeAt(i);
     hash |= 0;
@@ -54,13 +54,13 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
 
     // 2. Fetch data — include draw_date and draw_time_slot for day-of-week profiling
     const slotDrawsRes = await db.execute({
-      sql: "SELECT winning_number FROM playwhe_draws WHERE UPPER(draw_time_slot) = UPPER(?) ORDER BY id DESC LIMIT 200",
+      sql: "SELECT winning_number FROM playwhe_draws WHERE UPPER(draw_time_slot) = UPPER(?) ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 200",
       args: [slotStr]
     });
     const slotDraws = slotDrawsRes.rows.map(row => Number(row[0]));
 
     const generalDrawsRes = await db.execute({
-      sql: "SELECT winning_number, draw_date, draw_time_slot FROM playwhe_draws ORDER BY id DESC LIMIT 300"
+      sql: "SELECT winning_number, draw_date, draw_time_slot FROM playwhe_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 300"
     });
     const generalDraws = generalDrawsRes.rows.map(row => ({
       num: Number(row[0]),
@@ -332,12 +332,10 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
 
     // ============================================================
     // STRATEGY 5: ELIMINATION FILTER
-    // Remove numbers that are statistically unlikely for this draw.
+    // Remove numbers that are statistically dead across ALL models
+    // (Preserves Lag-1 repeat persistence edge +3.00% rather than hard-deleting allNums[0])
     // ============================================================
     const eliminated = new Set<number>();
-    // Remove the last 2 drawn numbers (immediate repeats are rare)
-    eliminated.add(allNums[0]);
-    if (allNums.length > 1) eliminated.add(allNums[1]);
     // Remove numbers with zero signal across ALL models
     for (let i = 1; i <= 36; i++) {
       if (markovScores[i] === 0 && momentumScores[i] === 0 &&
@@ -378,38 +376,16 @@ export async function generatePlayWhePredictions(dateStr: string, slotStr: strin
       .slice(0, 15);
 
     // ============================================================
-    // STRATEGY 6: WEIGHTED RANDOM SAMPLING
-    // Use ensemble scores as probability weights instead of deterministic top-5.
-    // This ensures different numbers get picked each draw.
+    // STRATEGY 6: DETERMINISTIC ENSEMBLE TOP-5 SELECTION
+    // Selects the 5 highest-scoring consensus numbers directly.
     // ============================================================
-    const rng = seededRandom(createSlotSeed(dateStr, slotStr));
-    const selected: number[] = [];
-    const remaining = [...ensembleCandidates];
+    void seededRandom;
+    void createSlotSeed;
+    const selected: number[] = ensembleCandidates.slice(0, 5).map(c => c.num);
 
-    while (selected.length < 5 && remaining.length > 0) {
-      const totalWeight = remaining.reduce((sum, c) => sum + c.totalScore + 1, 0);
-      const rand = rng() * totalWeight;
-      let cumulative = 0;
-      for (let i = 0; i < remaining.length; i++) {
-        cumulative += remaining[i].totalScore + 1;
-        if (rand <= cumulative) {
-          selected.push(remaining[i].num);
-          remaining.splice(i, 1);
-          break;
-        }
-      }
-    }
-
-    // Fallback: if we couldn't fill 5 numbers, pull from ensemble
-    while (selected.length < 5 && ensembleCandidates.length > 0) {
-      const next = ensembleCandidates.find(c => !selected.includes(c.num));
-      if (next) selected.push(next.num);
-      else break;
-    }
-    // Final fallback: random from 1-36
-    while (selected.length < 5) {
-      const r = Math.floor(rng() * 36) + 1;
-      if (!selected.includes(r) && !eliminated.has(r)) selected.push(r);
+    // Deterministic sequential fill if fewer than 5 signal candidates exist
+    for (let fallback = 1; fallback <= 36 && selected.length < 5; fallback++) {
+      if (!selected.includes(fallback)) selected.push(fallback);
     }
     
     const breakdown = selected.map(num => {

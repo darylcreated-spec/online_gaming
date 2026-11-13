@@ -436,18 +436,109 @@ export function generateLottoForensicCandidateSets(draws: LottoDraw[]): Forensic
   }
 
   const usedTickets = new Set<string>();
+  const usedTicketArrays: number[][] = [];
 
-  function makeUniqueTicket(anchors: number[], baseOffset: number): number[] {
-    let offset = baseOffset;
-    let t = makeTicket(anchors, offset);
-    let attempts = 0;
-    while (usedTickets.has(t.join(',')) && attempts < pool18.length) {
-      offset = (offset + 1) % pool18.length;
-      t = makeTicket(anchors, offset);
-      attempts++;
+  function maxOverlapWithUsed(ticket: number[]): number {
+    let maxOv = 0;
+    const tSet = new Set(ticket);
+    for (const prevTicket of usedTicketArrays) {
+      let ov = 0;
+      for (const n of prevTicket) {
+        if (tSet.has(n)) ov++;
+      }
+      if (ov > maxOv) maxOv = ov;
     }
-    usedTickets.add(t.join(','));
-    return t;
+    return maxOv;
+  }
+
+  // Ensures every ticket satisfies the [65, 118] sum corridor, parity rules, and <=2 overlap diversity
+  const LOTTO_SUM_MIN = 65;
+  const LOTTO_SUM_MAX = 118;
+
+  function makeUniqueTicket(anchors: number[], baseOffset: number, allowUnconventionalParity = false): number[] {
+    let bestFallback: number[] | null = null;
+    let bestFallbackCost = Infinity;
+
+    const tryCandidate = (cand: number[], maxAllowedOverlap: number): number[] | null => {
+      const key = cand.join(',');
+      if (usedTickets.has(key)) return null;
+      const val = validateLottoForensicLine(cand, prevNums, allowUnconventionalParity);
+      const ov = maxOverlapWithUsed(cand);
+      const sumPenalty = val.sum < LOTTO_SUM_MIN ? LOTTO_SUM_MIN - val.sum : val.sum > LOTTO_SUM_MAX ? val.sum - LOTTO_SUM_MAX : 0;
+      const cost = (val.isValid ? 0 : 1000) + sumPenalty * 10 + Math.max(0, ov - 2) * 100;
+      if (cost < bestFallbackCost) {
+        bestFallbackCost = cost;
+        bestFallback = cand;
+      }
+      if (val.isValid && ov <= maxAllowedOverlap) {
+        return cand;
+      }
+      return null;
+    };
+
+    for (const maxAllowedOverlap of [2, 3, 5]) {
+      // Phase A: Direct offset rotation with requested strategy anchors
+      for (let attempt = 0; attempt < pool18.length; attempt++) {
+        const cand = makeTicket(anchors, (baseOffset + attempt) % pool18.length);
+        const accepted = tryCandidate(cand, maxAllowedOverlap);
+        if (accepted) {
+          usedTickets.add(accepted.join(','));
+          usedTicketArrays.push(accepted);
+          return accepted;
+        }
+      }
+      // Phase B: Preserve primary anchor while varying secondary anchor across pool18 to hit [65, 118] & low overlap
+      const primaryAnchor = anchors[0] || pool18[0];
+      for (let i = 0; i < pool18.length; i++) {
+        const altSecond = pool18[(i + baseOffset) % pool18.length];
+        if (altSecond === primaryAnchor) continue;
+        for (let step = 0; step < Math.min(8, pool18.length); step++) {
+          const cand = makeTicket([primaryAnchor, altSecond], (baseOffset + step * 3) % pool18.length);
+          const accepted = tryCandidate(cand, maxAllowedOverlap);
+          if (accepted) {
+            usedTickets.add(accepted.join(','));
+            usedTicketArrays.push(accepted);
+            return accepted;
+          }
+        }
+      }
+      // Phase C: Search full pool18 pair rotations if strategy anchors force sum/parity violation
+      for (let i = 0; i < pool18.length; i++) {
+        const b1 = pool18[(i + baseOffset) % pool18.length];
+        const b2 = pool18[(i + baseOffset + 5) % pool18.length];
+        const cand = makeTicket([b1, b2], (baseOffset + i * 2) % pool18.length);
+        const accepted = tryCandidate(cand, maxAllowedOverlap);
+        if (accepted) {
+          usedTickets.add(accepted.join(','));
+          usedTicketArrays.push(accepted);
+          return accepted;
+        }
+      }
+    }
+
+    const chosen = bestFallback || makeTicket(anchors, baseOffset);
+    usedTickets.add(chosen.join(','));
+    usedTicketArrays.push(chosen);
+    return chosen;
+  }
+
+  function makeParityFilteredTicket(parityRemainder: 0 | 1, fallbackAnchors: number[], baseOffset: number): number[] {
+    const parityPool = pool18.filter(n => n % 2 === parityRemainder);
+    if (parityPool.length >= 5) {
+      for (let i = 0; i <= parityPool.length - 5; i++) {
+        for (let tail = i + 4; tail < parityPool.length; tail++) {
+          const cand = [parityPool[i], parityPool[i + 1], parityPool[i + 2], parityPool[i + 3], parityPool[tail]].sort((a, b) => a - b);
+          const key = cand.join(',');
+          const sum = cand.reduce((s, x) => s + x, 0);
+          if (!usedTickets.has(key) && sum >= LOTTO_SUM_MIN && sum <= LOTTO_SUM_MAX && maxOverlapWithUsed(cand) <= 3) {
+            usedTickets.add(key);
+            usedTicketArrays.push(cand);
+            return cand;
+          }
+        }
+      }
+    }
+    return makeUniqueTicket(parityPool.length >= 2 ? parityPool.slice(0, 2) : fallbackAnchors, baseOffset, true);
   }
 
   // Strategy 1: Alpha Balanced Harmonic Wave
@@ -497,10 +588,8 @@ export function generateLottoForensicCandidateSets(draws: LottoDraw[]): Forensic
   const t6 = makeUniqueTicket(kinematicAnchors, 5);
   const val6 = validateLottoForensicLine(t6, prevNums);
 
-  // Strategy 7: Non-Linear Parity Inversion Wave (Even Parity Inversion)
-  const evensInPool = pool18.filter(n => n % 2 === 0);
-  const t7 = (evensInPool.length >= 5 ? evensInPool.slice(0, 5) : makeTicket([2, 4], 7)).sort((a, b) => a - b);
-  usedTickets.add(t7.join(','));
+  // Strategy 7: Non-Linear Parity Inversion Wave (Even Parity Inversion within Sum Corridor)
+  const t7 = makeParityFilteredTicket(0, [2, 4], 7);
   const val7 = validateLottoForensicLine(t7, prevNums, true);
 
   // Strategy 8: Topological Triplet Cluster Stepping (Consecutive 3-Ball Cascades {x, x+1, x+2})
@@ -514,10 +603,8 @@ export function generateLottoForensicCandidateSets(draws: LottoDraw[]): Forensic
   const t8 = makeUniqueTicket(consecutiveTriplet || [pool18[0], pool18[1], pool18[2]], 8);
   const val8 = validateLottoForensicLine(t8, prevNums, false);
 
-  // Strategy 9: Odd Parity Inversion Wave
-  const oddsInPool = pool18.filter(n => n % 2 !== 0);
-  const t9 = (oddsInPool.length >= 5 ? oddsInPool.slice(0, 5) : makeTicket([1, 3], 9)).sort((a, b) => a - b);
-  usedTickets.add(t9.join(','));
+  // Strategy 9: Odd Parity Inversion Wave (within Sum Corridor)
+  const t9 = makeParityFilteredTicket(1, [1, 3], 9);
   const val9 = validateLottoForensicLine(t9, prevNums, true);
 
   // Strategy 10: Markov Lag 1 & Lag 2 Dual Carryover Anchor Set

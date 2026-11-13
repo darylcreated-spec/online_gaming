@@ -193,13 +193,14 @@ export async function reconcilePredictionAudits() {
       }
     } else if (gameKey === "lotto-plus") {
       const rows = await query<any>(
-        "SELECT draw_number, draw_date, num1, num2, num3, num4, num5 FROM draws WHERE draw_number = ?",
+        "SELECT draw_number, draw_date, num1, num2, num3, num4, num5, powerball FROM draws WHERE draw_number = ?",
         [targetDraw]
       );
       if (rows.length > 0) {
         actualDraw = {
           draw_number: Number(rows[0].draw_number),
-          numbers: [Number(rows[0].num1), Number(rows[0].num2), Number(rows[0].num3), Number(rows[0].num4), Number(rows[0].num5)].sort((a, b) => a - b)
+          numbers: [Number(rows[0].num1), Number(rows[0].num2), Number(rows[0].num3), Number(rows[0].num4), Number(rows[0].num5)].sort((a, b) => a - b),
+          powerball: Number(rows[0].powerball || 0)
         };
       }
     } else if (gameKey === "win-for-life") {
@@ -242,6 +243,7 @@ export async function reconcilePredictionAudits() {
       // Compute intersection matches
       let matchingNumbers: number[] = [];
       let matchCount = 0;
+      let bestWheelMatch = 0;
       let isPrize = 0;
       let prizeTier = "NONE";
       let status: "VERIFIED_WINNER" | "VERIFIED_PARTIAL" | "VERIFIED_MISS" = "VERIFIED_MISS";
@@ -250,28 +252,59 @@ export async function reconcilePredictionAudits() {
         if (predictedNums.includes(actualNums[0])) {
           matchingNumbers = [actualNums[0]];
           matchCount = 1;
+          bestWheelMatch = 1;
           isPrize = 1;
           prizeTier = "EXACT_MARK";
           status = "VERIFIED_WINNER";
         }
       } else if (gameKey === "pick4") {
-        // Evaluate Box and Straight matches
+        const linesToEval = wheelLines.length > 0 ? wheelLines : [predictedNums];
         const actualSorted = [...actualNums].sort((a, b) => a - b).join("");
-        const predSorted = [...predictedNums].sort((a, b) => a - b).join("");
-        const exactStraight = predictedNums.join("") === actualNums.join("");
-        matchingNumbers = predictedNums.filter(d => actualNums.includes(d));
-        matchCount = matchingNumbers.length;
+        let hasStraight = false;
+        let hasBox = false;
+        let has3Pos = false;
+        let has2Pair = false;
 
-        if (exactStraight) {
+        matchingNumbers = predictedNums.filter((d, idx) => d === actualNums[idx] || actualNums.includes(d));
+
+        for (const line of linesToEval) {
+          if (!Array.isArray(line) || line.length !== 4) continue;
+          const posMatches = line.filter((d, idx) => d === actualNums[idx]).length;
+          if (posMatches > bestWheelMatch) bestWheelMatch = posMatches;
+          if (posMatches === 4) hasStraight = true;
+          else if ([...line].sort((a, b) => a - b).join("") === actualSorted) {
+            hasBox = true;
+            if (bestWheelMatch < 4) bestWheelMatch = 4;
+          } else if (posMatches === 3) {
+            has3Pos = true;
+          } else if (
+            (line[0] === actualNums[0] && line[1] === actualNums[1]) ||
+            (line[2] === actualNums[2] && line[3] === actualNums[3]) ||
+            (line[0] === actualNums[0] && line[3] === actualNums[3])
+          ) {
+            has2Pair = true;
+          }
+        }
+        matchCount = predictedNums.filter((d, idx) => d === actualNums[idx]).length;
+
+        if (hasStraight) {
           isPrize = 1;
           prizeTier = "STRAIGHT";
           status = "VERIFIED_WINNER";
-        } else if (predSorted === actualSorted) {
+        } else if (hasBox) {
           isPrize = 1;
           prizeTier = "BOX";
           status = "VERIFIED_WINNER";
-        } else if (matchCount >= 3) {
+        } else if (has3Pos) {
+          isPrize = 1;
           prizeTier = "MATCH_3_DIGITS";
+          status = "VERIFIED_WINNER";
+        } else if (has2Pair) {
+          isPrize = 1;
+          prizeTier = "MATCH_2_PAIR";
+          status = "VERIFIED_WINNER";
+        } else if (bestWheelMatch >= 2) {
+          prizeTier = "PARTIAL_2_DIGITS";
           status = "VERIFIED_PARTIAL";
         }
       } else {
@@ -279,70 +312,92 @@ export async function reconcilePredictionAudits() {
         matchingNumbers = predictedNums.filter(n => actualSet.has(n));
         matchCount = matchingNumbers.length;
 
-        // Check wheel lines best match
-        let bestWheelMatch = 0;
+        // Check wheel lines best match (preserve individual line matches too)
         wheelLines.forEach(line => {
-          const m = line.filter(n => actualSet.has(n)).length;
-          if (m > bestWheelMatch) bestWheelMatch = m;
+          const lineMatched = line.filter(n => actualSet.has(n));
+          if (lineMatched.length > bestWheelMatch) {
+            bestWheelMatch = lineMatched.length;
+            if (lineMatched.length > matchCount) {
+              matchingNumbers = lineMatched;
+            }
+          }
         });
+        const bestHit = Math.max(matchCount, bestWheelMatch);
 
         // Determine prize eligibility based on official NLCB rules
         if (gameKey === "cashpot") {
-          if (matchCount === 5 || bestWheelMatch === 5) {
+          if (bestHit === 5) {
             isPrize = 1;
             prizeTier = "MATCH_5_JACKPOT";
             status = "VERIFIED_WINNER";
-          } else if (matchCount === 4 || bestWheelMatch === 4) {
+          } else if (bestHit === 4) {
             isPrize = 1;
             prizeTier = "MATCH_4";
             status = "VERIFIED_WINNER";
-          } else if (matchCount === 3 || bestWheelMatch === 3) {
+          } else if (bestHit === 3) {
             isPrize = 1;
             prizeTier = "MATCH_3";
             status = "VERIFIED_WINNER";
-          } else if (matchCount >= 1 || bestWheelMatch >= 1) {
+          } else if (bestHit === 2) {
+            isPrize = 1;
+            prizeTier = "MATCH_2";
+            status = "VERIFIED_WINNER";
+          } else if (bestHit >= 1) {
             status = "VERIFIED_PARTIAL";
           }
         } else if (gameKey === "lotto-plus") {
-          if (matchCount === 5 || bestWheelMatch === 5) {
+          const actualPb = Number((actualDraw as any).powerball || 0);
+          const predPb = Number((pred as any).predicted_powerball || 0);
+          const pbMatched = actualPb >= 1 && predPb >= 1 && actualPb === predPb;
+
+          if (bestHit === 5 && pbMatched) {
+            isPrize = 1;
+            prizeTier = "JACKPOT_5_PB";
+            status = "VERIFIED_WINNER";
+          } else if (bestHit === 5) {
             isPrize = 1;
             prizeTier = "MATCH_5";
             status = "VERIFIED_WINNER";
-          } else if (matchCount === 4 || bestWheelMatch === 4) {
+          } else if (bestHit === 4) {
             isPrize = 1;
-            prizeTier = "MATCH_4";
+            prizeTier = pbMatched ? "MATCH_4_PB" : "MATCH_4";
             status = "VERIFIED_WINNER";
-          } else if (matchCount === 3 || bestWheelMatch === 3) {
+          } else if (bestHit === 3) {
             isPrize = 1;
-            prizeTier = "MATCH_3";
+            prizeTier = pbMatched ? "MATCH_3_PB" : "MATCH_3";
             status = "VERIFIED_WINNER";
-          } else if (matchCount >= 2 || bestWheelMatch >= 2) {
+          } else if (pbMatched) {
+            isPrize = 1;
+            prizeTier = bestHit >= 2 ? "MATCH_2_PB" : "POWERBALL_FREE_TICKET";
+            status = "VERIFIED_WINNER";
+          } else if (bestHit >= 2) {
             status = "VERIFIED_PARTIAL";
           }
         } else if (gameKey === "win-for-life") {
-          if (matchCount === 6 || bestWheelMatch === 6) {
+          if (bestHit === 6) {
             isPrize = 1;
             prizeTier = "MATCH_6";
             status = "VERIFIED_WINNER";
-          } else if (matchCount === 5 || bestWheelMatch === 5) {
+          } else if (bestHit === 5) {
             isPrize = 1;
             prizeTier = "MATCH_5";
             status = "VERIFIED_WINNER";
-          } else if (matchCount === 4 || bestWheelMatch === 4) {
+          } else if (bestHit === 4) {
             isPrize = 1;
             prizeTier = "MATCH_4";
             status = "VERIFIED_WINNER";
-          } else if (matchCount === 3 || bestWheelMatch === 3) {
+          } else if (bestHit === 3) {
             isPrize = 1;
             prizeTier = "MATCH_3";
             status = "VERIFIED_WINNER";
-          } else if (matchCount >= 2 || bestWheelMatch >= 2) {
+          } else if (bestHit >= 2) {
             status = "VERIFIED_PARTIAL";
           }
         }
       }
 
-      const efficiencyScore = (matchCount / (predictedNums.length || 1)) * 100;
+      const effectiveBestMatch = Math.max(matchCount, bestWheelMatch);
+      const efficiencyScore = (effectiveBestMatch / (predictedNums.length || 1)) * 100;
 
       await db.execute({
         sql: `

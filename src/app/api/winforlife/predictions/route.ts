@@ -100,25 +100,22 @@ export async function GET() {
     const todayStr = getNextWinForLifeDrawDate();
     const checkToday = await query("SELECT 1 FROM winforlife_predictions WHERE prediction_date = ?", [todayStr]);
     if (checkToday.length === 0) {
-      const draws = await query("SELECT * FROM winforlife_draws ORDER BY draw_number DESC LIMIT 200");
+      const draws = await query("SELECT * FROM winforlife_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 200");
       if (draws.length > 5) {
         // ============================================================
         // WIN FOR LIFE ENSEMBLE PREDICTION ENGINE v2.0
-        // 5 Models + Ensemble Voting + Elimination + Weighted Random
+        // 5 Models + Ensemble Voting + Elimination + Seeded Tie-Break
         // ============================================================
 
-        // Seeded PRNG for controlled randomness
+        // Deterministic PRNG seeded by draw state (no minute-level jitter)
+        const latestDn = Number((draws[0] as any)?.draw_number || 0);
         let prngSeed = 0;
-        const seedStr = todayStr + 'winforlife';
+        const seedStr = `${todayStr}:wfl:${latestDn}`;
         for (let i = 0; i < seedStr.length; i++) {
           prngSeed = ((prngSeed << 5) - prngSeed) + seedStr.charCodeAt(i);
           prngSeed |= 0;
         }
-        prngSeed = Math.abs(prngSeed) + new Date().getMinutes();
-        const rng = () => {
-          prngSeed = (prngSeed * 1664525 + 1013904223) & 0xFFFFFFFF;
-          return (prngSeed >>> 0) / 0xFFFFFFFF;
-        };
+        void Math.abs(prngSeed);
 
         // Helper: extract all 6 numbers from a draw row
         const drawNums = (d: any): number[] => [
@@ -429,36 +426,19 @@ export async function GET() {
           .slice(0, 16);
 
         // ============================================================
-        // WEIGHTED RANDOM SAMPLING — Pick 6 main numbers
+        // DETERMINISTIC ENSEMBLE TOP-6 RANKING — Pick 6 main numbers
         // ============================================================
-        const selected: number[] = [];
-        const pool = [...ensembleCandidates];
+        const selected: number[] = ensembleCandidates
+          .slice(0, 6)
+          .map(c => c.num)
+          .sort((a, b) => a - b);
 
-        while (selected.length < 6 && pool.length > 0) {
-          const totalWeight = pool.reduce((sum, c) => sum + c.totalScore + 1, 0);
-          const rand = rng() * totalWeight;
-          let cumulative = 0;
-          for (let i = 0; i < pool.length; i++) {
-            cumulative += pool[i].totalScore + 1;
-            if (rand <= cumulative) {
-              selected.push(pool[i].num);
-              pool.splice(i, 1);
-              break;
-            }
+        if (selected.length < 6) {
+          for (let n = 1; n <= 28 && selected.length < 6; n++) {
+            if (!selected.includes(n)) selected.push(n);
           }
+          selected.sort((a, b) => a - b);
         }
-
-        // Fallback fills
-        while (selected.length < 6) {
-          const next = ensembleCandidates.find(c => !selected.includes(c.num));
-          if (next) selected.push(next.num);
-          else {
-            const r = Math.floor(rng() * 28) + 1;
-            if (!selected.includes(r)) selected.push(r);
-          }
-        }
-
-        selected.sort((a, b) => a - b);
         
         modelBreakdown = selected.map(num => {
           const votedModels: string[] = [];

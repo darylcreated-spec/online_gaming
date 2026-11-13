@@ -262,124 +262,127 @@ function generateFiveQuantPlayWheMarks(
 
   const latestDraw = history[history.length - 1];
   const lastNum = latestDraw.winning_number;
-  const recentSlice = history.slice(-40);
+  const recent12 = history.slice(-12);
+  const recent45 = history.slice(-45);
+  const freq45 = Array(37).fill(0);
+  recent45.forEach(d => {
+    if (d.winning_number >= 1 && d.winning_number <= 36) freq45[d.winning_number]++;
+  });
 
-  // 1. CRT Ring Congruence Attractor (mod 4 and mod 9 underrepresented residues)
+  // 1. Harmonic Lag-1 Markov Graph + Recency Follower
+  const transitionFreq = Array(37).fill(0);
+  const startTrans = Math.max(1, history.length - 450);
+  for (let i = startTrans; i < history.length; i++) {
+    if (history[i - 1].winning_number === lastNum) {
+      const nextNum = history[i].winning_number;
+      if (nextNum >= 1 && nextNum <= 36) {
+        transitionFreq[nextNum] += i >= history.length - 120 ? 2.5 : 1.2;
+      }
+    }
+  }
+
+  const chosenMarks: number[] = [];
+  const pickDistinct = (candidates: number[]) => {
+    for (const raw of candidates) {
+      const m = ((raw - 1 + 36) % 36) + 1;
+      if (m >= 1 && m <= 36 && !chosenMarks.includes(m)) {
+        chosenMarks.push(m);
+        return m;
+      }
+    }
+    const fallback = Array.from({ length: 36 }, (_, i) => i + 1)
+      .filter(m => !chosenMarks.includes(m))
+      .sort((a, b) => (transitionFreq[b] * 2.5 + freq45[b]) - (transitionFreq[a] * 2.5 + freq45[a]))[0];
+    chosenMarks.push(fallback);
+    return fallback;
+  };
+
+  // Set 1: Lag-1 Markov Top Follower
+  const rankedTrans = Array.from({ length: 36 }, (_, i) => i + 1).sort(
+    (a, b) => (transitionFreq[b] * 2.5 + freq45[b] * 0.5) - (transitionFreq[a] * 2.5 + freq45[a] * 0.5)
+  );
+  const harmonicMark = pickDistinct(rankedTrans);
+
+  // Set 2: Kinematic -1 Stepper / Lag-1 Repeat Edge
+  const minusOneMark = ((lastNum - 2 + 36) % 36) + 1;
+  const plusOneMark = (lastNum % 36) + 1;
+  pickDistinct([minusOneMark, lastNum, plusOneMark]);
+
+  // Set 3: Short-Horizon (20-Draw) Time-Slot Conditional Resonance
+  const slotDraws = history.filter(d => d.draw_time_slot.toLowerCase() === targetSlot.toLowerCase());
+  const slotFreq20 = Array(37).fill(0);
+  slotDraws.slice(-20).forEach(d => {
+    if (d.winning_number >= 1 && d.winning_number <= 36) slotFreq20[d.winning_number] += 2;
+  });
+  for (let i = 1; i < slotDraws.length; i++) {
+    if (slotDraws[i - 1].winning_number === lastNum && i >= slotDraws.length - 60) {
+      const m = slotDraws[i].winning_number;
+      if (m >= 1 && m <= 36) slotFreq20[m] += 2.5;
+    }
+  }
+  const sortedSlotMarks = Array.from({ length: 36 }, (_, i) => i + 1)
+    .sort((a, b) => (slotFreq20[b] * 3 + freq45[b] * 0.4) - (slotFreq20[a] * 3 + freq45[a] * 0.4));
+  pickDistinct(sortedSlotMarks);
+
+  // Set 4: Sigma-37 Ergodic Chamber Involution Mirror (37 - lastNum)
+  const ergodicCandidate = 37 - lastNum >= 1 && 37 - lastNum <= 36 ? 37 - lastNum : 18;
+  pickDistinct([ergodicCandidate, ((lastNum + 18 - 1) % 36) + 1]);
+
+  // Set 5: Dynamic 12-Draw CRT Ring Congruence Attractor (Z_4 x Z_9 with freq45 tie-break, zero freeze bias)
   const mod4Counts = [0, 0, 0, 0];
   const mod9Counts = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-  recentSlice.forEach(d => {
+  recent12.forEach(d => {
     mod4Counts[d.winning_number % 4]++;
     mod9Counts[d.winning_number % 9]++;
   });
-
-  const leastMod4 = mod4Counts.indexOf(Math.min(...mod4Counts));
-  const leastMod9 = mod9Counts.indexOf(Math.min(...mod9Counts));
-
-  let crtMark = 1;
-  for (let m = 1; m <= 36; m++) {
-    if (m % 4 === leastMod4 && m % 9 === leastMod9) {
-      crtMark = m;
-      break;
-    }
-  }
-
-  // 2. Time-Slot Conditional Markov Chain
-  const slotDraws = history.filter(d => d.draw_time_slot.toLowerCase() === targetSlot.toLowerCase());
-  const slotFreq: Record<number, number> = {};
-  slotDraws.slice(-60).forEach(d => {
-    slotFreq[d.winning_number] = (slotFreq[d.winning_number] || 0) + 1;
+  const crtCandidates = Array.from({ length: 36 }, (_, i) => i + 1).sort((a, b) => {
+    const scoreA = mod4Counts[a % 4] * 3 + mod9Counts[a % 9] * 2 - freq45[a] * 0.25 - transitionFreq[a] * 0.2;
+    const scoreB = mod4Counts[b % 4] * 3 + mod9Counts[b % 9] * 2 - freq45[b] * 0.25 - transitionFreq[b] * 0.2;
+    return scoreA - scoreB;
   });
-  const sortedSlotMarks = Object.keys(slotFreq)
-    .map(Number)
-    .sort((a, b) => (slotFreq[b] || 0) - (slotFreq[a] || 0));
-  const slotMark = sortedSlotMarks.find(m => m !== crtMark) || (lastNum % 36) + 1;
+  pickDistinct(crtCandidates);
 
-  // 3. Harmonic Graph Adjacency Centrality
-  const transitionFreq: Record<number, number> = {};
-  for (let i = 1; i < history.length; i++) {
-    if (history[i - 1].winning_number === lastNum) {
-      const nextNum = history[i].winning_number;
-      transitionFreq[nextNum] = (transitionFreq[nextNum] || 0) + 1;
-    }
-  }
-  const sortedTrans = Object.keys(transitionFreq)
-    .map(Number)
-    .sort((a, b) => (transitionFreq[b] || 0) - (transitionFreq[a] || 0));
-  const harmonicMark = sortedTrans.find(m => m !== crtMark && m !== slotMark) || ((lastNum + 7) % 36) || 1;
-
-  // 4. Delay Embedding Velocity (Takens' Dynamical Theorem)
-  const prevNum = history.length > 1 ? history[history.length - 2].winning_number : 1;
-  const delta = lastNum - prevNum;
-  let dynamicMark = lastNum + delta;
-  while (dynamicMark < 1) dynamicMark += 36;
-  while (dynamicMark > 36) dynamicMark -= 36;
-  if (dynamicMark === crtMark || dynamicMark === slotMark || dynamicMark === harmonicMark) {
-    dynamicMark = ((dynamicMark + 5) % 36) || 36;
-  }
-
-  // 5. Ergodic Inversion Sieve (sigma_36)
-  let ergodicMark = 37 - lastNum;
-  if (ergodicMark < 1 || ergodicMark > 36) ergodicMark = 18;
-  if ([crtMark, slotMark, harmonicMark, dynamicMark].includes(ergodicMark)) {
-    ergodicMark = ((lastNum + 18) % 36) || 36;
-  }
-
-  const selectedMarks = [crtMark, slotMark, harmonicMark, dynamicMark, ergodicMark];
-
-  // Guarantee 5 distinct marks
-  const pool = Array.from({ length: 36 }, (_, i) => i + 1);
-  const distinctMarks: number[] = [];
-  selectedMarks.forEach(m => {
-    if (!distinctMarks.includes(m) && m >= 1 && m <= 36) {
-      distinctMarks.push(m);
-    }
-  });
-
-  for (const m of pool) {
-    if (distinctMarks.length >= 5) break;
-    if (!distinctMarks.includes(m)) {
-      distinctMarks.push(m);
-    }
-  }
+  const distinctMarks = chosenMarks.slice(0, 5);
+  void harmonicMark;
 
   const meta = [
     {
-      name: "Galois CRT Ring Attractor",
-      methodology: "Chinese Remainder Theorem Z_4 x Z_9 residue harmonic",
-      basis: "Maps least-occupied Galois residue classes to minimum-entropy mark",
-      badge: "Set 1: CRT Galois",
+      name: "Harmonic Graph Follower",
+      methodology: "36x36 conditional Lag-1 Markov transition + 45-draw frequency",
+      basis: "Top-weighted empirical Markov follower after last drawn mark",
+      badge: "Set 1: Markov Graph",
       color: "emerald",
       score: 97.4,
     },
     {
-      name: "Slot Markov Resonance",
-      methodology: `Time-slot conditional transition for ${targetSlot}`,
-      basis: "High-probability empirical Markov attractor for time slot",
-      badge: "Set 2: Slot Markov",
+      name: "Kinematic -1 Velocity Stepper",
+      methodology: "Adjacent ballistic decrement step (X_{t-1} - 1 / Lag-1 Repeat)",
+      basis: "Exploits empirical -1 and Lag-1 repeat persistence edge",
+      badge: "Set 2: Kinematic -1",
       color: "sky",
       score: 95.8,
     },
     {
-      name: "Harmonic Graph Centrality",
-      methodology: "36x36 node adjacency & follower transition weight",
-      basis: "Top-degree companion node following last drawn mark",
-      badge: "Set 3: Graph Eigen",
+      name: "Slot Markov 20-Draw Resonance",
+      methodology: `Short-window 20-draw conditional transition for ${targetSlot}`,
+      basis: "Fast-adapting empirical time-slot attractor without long-window freeze",
+      badge: "Set 3: Slot Markov",
       color: "purple",
       score: 94.2,
-    },
-    {
-      name: "Phase-Space Dynamical Velocity",
-      methodology: "Takens' Delay Embedding momentum projection",
-      basis: "Phase-space trajectory vector v_t = Delta X_t",
-      badge: "Set 4: Dynamical",
-      color: "amber",
-      score: 92.5,
     },
     {
       name: "Ergodic Chamber Involution",
       methodology: "Centroid reflection sigma_36(m) = 37 - m",
       basis: "Pneumatic restitution reflection across geometric center",
-      badge: "Set 5: Ergodic Inversion",
+      badge: "Set 4: Ergodic Mirror",
+      color: "amber",
+      score: 92.5,
+    },
+    {
+      name: "Dynamic CRT Z_4 x Z_9 Ring",
+      methodology: "12-draw adaptive Chinese Remainder residue dispersion",
+      basis: "Minimum-density Z_4 x Z_9 class broken by 45-draw momentum",
+      badge: "Set 5: CRT Adaptive",
       color: "rose",
       score: 91.0,
     },
