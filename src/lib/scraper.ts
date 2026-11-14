@@ -664,8 +664,8 @@ export async function scrapePlayWheLivePortal(): Promise<any[]> {
       const m = text.match(segRe);
       if (m) {
         const drawNum = parseInt(m[1], 10);
-        const body = m[2] || "";
-        const numMatch = body.match(/^(?:\s*Verified)?\s*(\d{1,2})\b/i);
+        const body = (m[2] || "").replace(/^[\s✅]*Verified\s*/i, "").trim();
+        const numMatch = body.match(/^(\d{1,2})\b/);
         const winNum = numMatch ? parseInt(numMatch[1], 10) : NaN;
         if (!isNaN(drawNum) && !isNaN(winNum) && winNum >= 1 && winNum <= 36) {
           draws.push({
@@ -801,13 +801,33 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
       console.warn("[PlayWhe] Live Portal fallback notice:", liveErr.message);
     }
 
-    // 3. Tertiary Source: Direct Official GET (renders current month without POST) + optional multi-year POST
+    // 3. Tertiary Source: Direct Official GET (.drawDetails cards + optional table) + optional multi-year POST
     try {
       const getRes = await fetchWithRetry(getScrapeUrl(PLAYWHE_URL));
       if (getRes.ok) {
         const html = await getRes.text();
         const $ = cheerio.load(html);
         const currentDraws: any[] = [];
+        const todayAst = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const headerDateMatch = $.root().text().match(/Play\s+Whe\s+Results\s+for\s+today:\s*(\d{1,2}-[A-Za-z]{3}-\d{2,4})/i);
+        const cardDate = headerDateMatch ? parsePlayWheDate(headerDateMatch[1]) : todayAst;
+
+        $(".drawDetails").each((_, card) => {
+          const slotRaw = $(card).find(".timeOfDay").first().text().trim();
+          const drawNumMatch = $(card).find(".drawnum").first().text().match(/(\d+)/);
+          const ballText = $(card).find("a .ball").first().text().trim() || $(card).find(".ball").first().text().trim();
+          const drawNum = drawNumMatch ? parseInt(drawNumMatch[1], 10) : NaN;
+          const winNum = parseInt(ballText, 10);
+          if (slotRaw && !isNaN(drawNum) && !isNaN(winNum) && winNum >= 1 && winNum <= 36) {
+            currentDraws.push({
+              draw_number: drawNum,
+              draw_date: cardDate,
+              draw_time_slot: slotRaw,
+              winning_number: winNum
+            });
+          }
+        });
+
         $("table").find("tr").each((_, row) => {
           const tds = $(row).find("td, th");
           if (tds.length < 4) return;
@@ -1367,8 +1387,8 @@ export async function scrapePick4LivePortal(): Promise<any[]> {
       const m = text.match(segRe);
       if (m) {
         const drawNum = parseInt(m[1], 10);
-        const body = m[2] || "";
-        const dMatch = body.match(/^(?:\s*Verified)?\s*(\d)\s+(\d)\s+(\d)\s+(\d)\b/i);
+        const body = (m[2] || "").replace(/^[\s✅]*Verified\s*/i, "").trim();
+        const dMatch = body.match(/^(\d)\s+(\d)\s+(\d)\s+(\d)\b/);
         if (dMatch) {
           draws.push({
             draw_number: drawNum,
@@ -1557,13 +1577,44 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
       console.warn("[Pick4] Live portal notice:", liveErr.message);
     }
 
-    // 3. Tertiary Source: Direct Official GET (renders current month without POST) + optional multi-year POST
+    // 3. Tertiary Source: Direct Official GET (.drawDetails cards + optional table) + optional multi-year POST
     try {
       const getRes = await fetchWithRetry(getScrapeUrl(PICK4_OFFICIAL_URL));
       if (getRes.ok) {
         const html = await getRes.text();
         const $ = cheerio.load(html);
         const currentDraws: any[] = [];
+        const todayAst = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const headerDateMatch = $.root().text().match(/DATE:\s*(\d{1,2}-[A-Za-z]{3}-\d{2,4})/i);
+        const cardDate = headerDateMatch ? parseDate(headerDateMatch[1]) : todayAst;
+
+        $(".drawDetails").each((_, card) => {
+          const slotRaw = $(card).find(".timeOfDay").first().text().trim().toUpperCase();
+          const drawNumMatch = $(card).find(".drawnum").first().text().match(/(\d+)/);
+          const digits = $(card)
+            .find(".ball")
+            .slice(0, 4)
+            .map((__, el) => parseInt($(el).text().trim(), 10))
+            .get();
+          const drawNum = drawNumMatch ? parseInt(drawNumMatch[1], 10) : NaN;
+          if (
+            slotRaw &&
+            !isNaN(drawNum) &&
+            digits.length === 4 &&
+            digits.every((d) => !isNaN(d) && d >= 0 && d <= 9)
+          ) {
+            currentDraws.push({
+              draw_number: drawNum,
+              draw_date: cardDate,
+              draw_time_slot: slotRaw,
+              digit1: digits[0],
+              digit2: digits[1],
+              digit3: digits[2],
+              digit4: digits[3]
+            });
+          }
+        });
+
         $("table").find("tr").each((_, row) => {
           const tds = $(row).find("td, th");
           if (tds.length < 7) return;
