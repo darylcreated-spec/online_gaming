@@ -48,6 +48,16 @@ function getPendingGamesFromWatchdog(report: WatchdogReport): SyncGameKey[] {
 export async function POST() {
   try {
     const watchdog = await runDrawWatchdog();
+    if (watchdog.holidayPause?.isHoliday && watchdog.sequenceGapsCount === 0) {
+      return NextResponse.json({
+        success: true,
+        skipped: true,
+        holidayPause: watchdog.holidayPause,
+        totalDrawsAdded: 0,
+        watchdog
+      });
+    }
+
     const pendingGames = getPendingGamesFromWatchdog(watchdog);
 
     if (pendingGames.length === 0) {

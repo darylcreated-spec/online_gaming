@@ -14,6 +14,7 @@
 
 import { query } from "./db";
 import { SupportedGameKey } from "./draw_schedule";
+import { getTTNonDrawHoliday, resolveLatestNonHolidayDailyDate } from "./nlcb_holidays";
 
 export interface GameFreshness {
   gameKey: SupportedGameKey;
@@ -26,7 +27,7 @@ export interface GameFreshness {
   expectedDrawDateAST: string;
   isLagging: boolean;
   lagMinutes: number;
-  status: "UP_TO_DATE" | "DRAW_IN_PROGRESS" | "MISSING_RESULT" | "PENDING_SCHEDULED";
+  status: "UP_TO_DATE" | "DRAW_IN_PROGRESS" | "MISSING_RESULT" | "PENDING_SCHEDULED" | "HOLIDAY_PAUSE";
   statusMessage: string;
 }
 
@@ -44,6 +45,10 @@ export interface WatchdogReport {
   };
   laggingGamesCount: number;
   sequenceGapsCount: number;
+  holidayPause?: {
+    isHoliday: boolean;
+    holidayName?: string;
+  };
   recommendations: string[];
 }
 
@@ -74,6 +79,7 @@ function getASTDateInfo(utcDate: Date) {
 export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<WatchdogReport> {
   const astInfo = getASTDateInfo(nowUtc);
   const nowMs = nowUtc.getTime();
+  const todayHoliday = getTTNonDrawHoliday(astInfo.isoDateStr);
 
   // 1. Fetch latest draw from all 5 database tables concurrently
   const [
@@ -143,6 +149,15 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
     mostRecentDailySlotUtcMs = makeUtcFromAST(yInfo.year, yInfo.month, yInfo.date, 19, 0);
   }
 
+  // Step back over any T&T religious/public non-draw holiday
+  const resolvedDaily = resolveLatestNonHolidayDailyDate(mostRecentDailyDateStr);
+  if (resolvedDaily.steppedBackDays > 0) {
+    mostRecentDailyDateStr = resolvedDaily.dateStr;
+    mostRecentDailySlot = dailySlots[3]; // Evening (7:00 PM) on last non-holiday draw day
+    const [ry, rm, rd] = resolvedDaily.dateStr.split("-").map(Number);
+    mostRecentDailySlotUtcMs = makeUtcFromAST(ry, rm - 1, rd, 19, 0);
+  }
+
   const minutesSinceDailyDraw = Math.floor((nowMs - mostRecentDailySlotUtcMs) / 60000);
 
   // Evaluate Play Whe
@@ -167,10 +182,12 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
     lagMinutes: pwLagging ? minutesSinceDailyDraw : 0,
     status: pwLagging 
       ? (minutesSinceDailyDraw < 45 ? "DRAW_IN_PROGRESS" : "MISSING_RESULT")
-      : "UP_TO_DATE",
+      : (todayHoliday.isHoliday ? "HOLIDAY_PAUSE" : "UP_TO_DATE"),
     statusMessage: pwLagging
       ? `Awaiting official ${mostRecentDailySlot.name} result (${minutesSinceDailyDraw}m since scheduled)`
-      : `Latest draw verified: #${pwRow?.draw_number} (${pwRow?.draw_time_slot || ""} ${pwRow?.draw_date})`
+      : todayHoliday.isHoliday
+        ? `Holiday pause (${todayHoliday.name || "Public/Religious Holiday"}): no draws scheduled today.`
+        : `Latest draw verified: #${pwRow?.draw_number} (${pwRow?.draw_time_slot || ""} ${pwRow?.draw_date})`
   };
 
   // Evaluate Pick 4
@@ -195,10 +212,12 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
     lagMinutes: pick4Lagging ? minutesSinceDailyDraw : 0,
     status: pick4Lagging 
       ? (minutesSinceDailyDraw < 45 ? "DRAW_IN_PROGRESS" : "MISSING_RESULT")
-      : "UP_TO_DATE",
+      : (todayHoliday.isHoliday ? "HOLIDAY_PAUSE" : "UP_TO_DATE"),
     statusMessage: pick4Lagging
       ? `Awaiting official ${mostRecentDailySlot.name} result (${minutesSinceDailyDraw}m since scheduled)`
-      : `Latest draw verified: #${pick4Row?.draw_number} (${pick4Row?.draw_time_slot || ""} ${pick4Row?.draw_date})`
+      : todayHoliday.isHoliday
+        ? `Holiday pause (${todayHoliday.name || "Public/Religious Holiday"}): no draws scheduled today.`
+        : `Latest draw verified: #${pick4Row?.draw_number} (${pick4Row?.draw_time_slot || ""} ${pick4Row?.draw_date})`
   };
 
   // -------------------------------------------------------------
@@ -214,6 +233,13 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
     const yInfo = getASTDateInfo(new Date(yesterdayAst.getTime() + 4 * 60 * 60 * 1000));
     expectedCpDateStr = yInfo.isoDateStr;
     cpPastDrawUtcMs = makeUtcFromAST(yInfo.year, yInfo.month, yInfo.date, 19, 0);
+  }
+
+  const resolvedCp = resolveLatestNonHolidayDailyDate(expectedCpDateStr);
+  if (resolvedCp.steppedBackDays > 0) {
+    expectedCpDateStr = resolvedCp.dateStr;
+    const [cy, cm, cd] = resolvedCp.dateStr.split("-").map(Number);
+    cpPastDrawUtcMs = makeUtcFromAST(cy, cm - 1, cd, 19, 0);
   }
 
   const cpMinutesSince = Math.floor((nowMs - cpPastDrawUtcMs) / 60000);
@@ -234,28 +260,33 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
     expectedDrawDateAST: expectedCpDateStr,
     isLagging: cpLagging,
     lagMinutes: cpLagging ? cpMinutesSince : 0,
-    status: cpLagging ? (cpMinutesSince < 60 ? "DRAW_IN_PROGRESS" : "MISSING_RESULT") : "UP_TO_DATE",
+    status: cpLagging
+      ? (cpMinutesSince < 60 ? "DRAW_IN_PROGRESS" : "MISSING_RESULT")
+      : (todayHoliday.isHoliday ? "HOLIDAY_PAUSE" : "UP_TO_DATE"),
     statusMessage: cpLagging
       ? `Awaiting official Cash Pot result for ${expectedCpDateStr}`
-      : `Latest draw verified: #${cpRow?.draw_number} (${cpRow?.draw_date})`
+      : todayHoliday.isHoliday
+        ? `Holiday pause (${todayHoliday.name || "Public/Religious Holiday"}): no Cash Pot draw today.`
+        : `Latest draw verified: #${cpRow?.draw_number} (${cpRow?.draw_date})`
   };
 
   // -------------------------------------------------------------
   // C. LOTTO PLUS (Wed & Sat at 20:30 AST = 8:30 PM)
   // -------------------------------------------------------------
-  // Find most recent Wednesday (3) or Saturday (6) at 8:30 PM
-  let lottoTargetDate = new Date(astInfo.astDate);
+  // Find most recent non-holiday Wednesday (3) or Saturday (6) at 8:30 PM
   let lottoDrawUtcMs = 0;
   let lottoDateStr = "";
 
-  for (let offset = 0; offset <= 7; offset++) {
+  for (let offset = 0; offset <= 14; offset++) {
     const testDate = new Date(astInfo.astDate.getTime() - offset * 86400000);
     const day = testDate.getUTCDay();
     if (day === 3 || day === 6) { // Wed or Sat
+      const candidateDateStr = `${testDate.getUTCFullYear()}-${String(testDate.getUTCMonth() + 1).padStart(2, "0")}-${String(testDate.getUTCDate()).padStart(2, "0")}`;
+      if (getTTNonDrawHoliday(candidateDateStr).isHoliday) continue;
       const testUtcMs = makeUtcFromAST(testDate.getUTCFullYear(), testDate.getUTCMonth(), testDate.getUTCDate(), 20, 30);
       if (nowMs >= testUtcMs) {
         lottoDrawUtcMs = testUtcMs;
-        lottoDateStr = `${testDate.getUTCFullYear()}-${String(testDate.getUTCMonth() + 1).padStart(2, "0")}-${String(testDate.getUTCDate()).padStart(2, "0")}`;
+        lottoDateStr = candidateDateStr;
         break;
       }
     }
@@ -279,10 +310,14 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
     expectedDrawDateAST: lottoDateStr,
     isLagging: lottoLagging,
     lagMinutes: lottoLagging ? lottoMinutesSince : 0,
-    status: lottoLagging ? (lottoMinutesSince < 60 ? "DRAW_IN_PROGRESS" : "MISSING_RESULT") : "UP_TO_DATE",
+    status: lottoLagging
+      ? (lottoMinutesSince < 60 ? "DRAW_IN_PROGRESS" : "MISSING_RESULT")
+      : (todayHoliday.isHoliday ? "HOLIDAY_PAUSE" : "UP_TO_DATE"),
     statusMessage: lottoLagging
       ? `Awaiting official Lotto Plus draw for ${lottoDateStr}`
-      : `Latest draw verified: #${lottoRow?.draw_number} (${lottoRow?.draw_date})`
+      : todayHoliday.isHoliday
+        ? `Holiday pause (${todayHoliday.name || "Public/Religious Holiday"}): no draws scheduled today.`
+        : `Latest draw verified: #${lottoRow?.draw_number} (${lottoRow?.draw_date})`
   };
 
   // -------------------------------------------------------------
@@ -291,14 +326,16 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
   let wflDrawUtcMs = 0;
   let wflDateStr = "";
 
-  for (let offset = 0; offset <= 7; offset++) {
+  for (let offset = 0; offset <= 14; offset++) {
     const testDate = new Date(astInfo.astDate.getTime() - offset * 86400000);
     const day = testDate.getUTCDay();
     if (day === 2 || day === 5) { // Tue or Fri
+      const candidateDateStr = `${testDate.getUTCFullYear()}-${String(testDate.getUTCMonth() + 1).padStart(2, "0")}-${String(testDate.getUTCDate()).padStart(2, "0")}`;
+      if (getTTNonDrawHoliday(candidateDateStr).isHoliday) continue;
       const testUtcMs = makeUtcFromAST(testDate.getUTCFullYear(), testDate.getUTCMonth(), testDate.getUTCDate(), 19, 0);
       if (nowMs >= testUtcMs) {
         wflDrawUtcMs = testUtcMs;
-        wflDateStr = `${testDate.getUTCFullYear()}-${String(testDate.getUTCMonth() + 1).padStart(2, "0")}-${String(testDate.getUTCDate()).padStart(2, "0")}`;
+        wflDateStr = candidateDateStr;
         break;
       }
     }
@@ -322,10 +359,14 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
     expectedDrawDateAST: wflDateStr,
     isLagging: wflLagging,
     lagMinutes: wflLagging ? wflMinutesSince : 0,
-    status: wflLagging ? (wflMinutesSince < 60 ? "DRAW_IN_PROGRESS" : "MISSING_RESULT") : "UP_TO_DATE",
+    status: wflLagging
+      ? (wflMinutesSince < 60 ? "DRAW_IN_PROGRESS" : "MISSING_RESULT")
+      : (todayHoliday.isHoliday ? "HOLIDAY_PAUSE" : "UP_TO_DATE"),
     statusMessage: wflLagging
       ? `Awaiting official Win For Life draw for ${wflDateStr}`
-      : `Latest draw verified: #${wflRow?.draw_number} (${wflRow?.draw_date})`
+      : todayHoliday.isHoliday
+        ? `Holiday pause (${todayHoliday.name || "Public/Religious Holiday"}): no draws scheduled today.`
+        : `Latest draw verified: #${wflRow?.draw_number} (${wflRow?.draw_date})`
   };
 
   // -------------------------------------------------------------
@@ -362,6 +403,10 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
     (laggingCount > 0 || sequenceGapsCount > 0) ? "ATTENTION_NEEDED" :
     "HEALTHY";
 
+  const defaultHealthyMessage = todayHoliday.isHoliday
+    ? `NLCB holiday schedule active (${todayHoliday.name || "Religious/Public Holiday"}). No draws scheduled today.`
+    : "All 5 NLCB games are 100% synchronized and up to date with official schedules.";
+
   return {
     status,
     timestampUTC: nowUtc.toISOString(),
@@ -376,6 +421,10 @@ export async function runDrawWatchdog(nowUtc: Date = new Date()): Promise<Watchd
     },
     laggingGamesCount: laggingCount,
     sequenceGapsCount,
-    recommendations: recommendations.length > 0 ? recommendations : ["All 5 NLCB games are 100% synchronized and up to date with official schedules."]
+    holidayPause: {
+      isHoliday: todayHoliday.isHoliday,
+      ...(todayHoliday.name ? { holidayName: todayHoliday.name } : {})
+    },
+    recommendations: recommendations.length > 0 ? recommendations : [defaultHealthyMessage]
   };
 }

@@ -80,6 +80,17 @@ export async function GET() {
       query<any>("SELECT timestamp, duration_ms, games_synced, draws_added, errors FROM sync_audit_log ORDER BY id DESC LIMIT 1").catch(() => [])
     ]);
 
+    const rawErrors = typeof lastAudit[0]?.errors === "string" ? lastAudit[0].errors : "";
+    const driftAlerts = rawErrors
+      .split(/[\n;|]+/)
+      .map((s: string) => s.trim())
+      .filter((s: string) => s.startsWith("PARSER_DRIFT:"));
+
+    checks.parserHealth = {
+      status: driftAlerts.length > 0 ? "DEGRADED" : "HEALTHY",
+      driftAlerts
+    };
+
     checks.telemetry = {
       activePushSubscribers: subCount[0]?.cnt || 0,
       lastSyncAttempt: lastAudit[0] || null

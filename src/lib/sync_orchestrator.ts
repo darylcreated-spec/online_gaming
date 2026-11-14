@@ -5,7 +5,10 @@ import {
   syncWinForLife,
   syncCashPot,
   syncPick4,
-  reconcileRecentDrawGaps
+  reconcileRecentDrawGaps,
+  resetScraperTelemetry,
+  getLastScraperTelemetry,
+  getParserDriftWarnings
 } from "./scraper";
 import {
   verifyPlayWhePredictions,
@@ -64,6 +67,7 @@ export async function runUnifiedSyncPipeline(options: UnifiedSyncOptions = {}) {
     : new Set<SyncGameKey>(ALL_GAMES);
 
   const skippedResult = { success: true, drawsAdded: 0, skipped: true };
+  resetScraperTelemetry();
 
   const [playWheRes, lottoRes, wflRes, cpRes, pick4Res] = await Promise.allSettled([
     activeGames.has("play-whe") ? syncPlayWhe(false) : Promise.resolve(skippedResult),
@@ -84,7 +88,9 @@ export async function runUnifiedSyncPipeline(options: UnifiedSyncOptions = {}) {
     lottoPlus: unpack(lottoRes),
     winForLife: unpack(wflRes),
     cashPot: unpack(cpRes),
-    pick4: unpack(pick4Res)
+    pick4: unpack(pick4Res),
+    sourceTelemetry: getLastScraperTelemetry(),
+    parserDrift: getParserDriftWarnings()
   };
 
   if (activeGames.has("play-whe") && results.playWhe.success) {
@@ -259,7 +265,8 @@ export async function runUnifiedSyncPipeline(options: UnifiedSyncOptions = {}) {
       results.lottoPlus?.error,
       results.winForLife?.error,
       results.cashPot?.error,
-      results.pick4?.error
+      results.pick4?.error,
+      ...(Array.isArray(results.parserDrift) ? results.parserDrift : [])
     ].filter(Boolean);
 
     await recordSyncAudit({

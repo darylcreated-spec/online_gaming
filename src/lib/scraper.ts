@@ -1,6 +1,43 @@
 import * as cheerio from "cheerio";
 import { db } from "./db";
 
+export interface SourceTelemetryEntry {
+  source: string;
+  game: string;
+  httpStatus: number;
+  parsedCount: number;
+  drift: boolean;
+  note?: string;
+  recordedAt: string;
+}
+
+const scraperTelemetry: SourceTelemetryEntry[] = [];
+
+export function resetScraperTelemetry() {
+  scraperTelemetry.length = 0;
+}
+
+export function recordScraperTelemetry(entry: Omit<SourceTelemetryEntry, "recordedAt">) {
+  const full: SourceTelemetryEntry = {
+    ...entry,
+    recordedAt: new Date().toISOString()
+  };
+  scraperTelemetry.push(full);
+  if (full.drift) {
+    console.warn(`[PARSER_DRIFT] ${full.source} (${full.game}) returned HTTP ${full.httpStatus} with expected markers but parsed 0 draws.${full.note ? ` ${full.note}` : ""}`);
+  }
+}
+
+export function getLastScraperTelemetry(): SourceTelemetryEntry[] {
+  return [...scraperTelemetry];
+}
+
+export function getParserDriftWarnings(): string[] {
+  return scraperTelemetry
+    .filter((t) => t.drift)
+    .map((t) => `PARSER_DRIFT:${t.source}:${t.game}:http=${t.httpStatus}:parsed=0${t.note ? `(${t.note})` : ""}`);
+}
+
 const BASE_URL = "https://www.nlcbplaywhelotto.com/nlcb-lotto-plus-results/";
 
 let isScraperApiExhausted = false;
@@ -643,7 +680,10 @@ export async function scrapePlayWheMonth(monthStr: string, yearVal: number, sid:
 export async function scrapePlayWheLivePortal(): Promise<any[]> {
   try {
     const res = await fetchWithRetry("https://nlcblottoresult.com/");
-    if (!res.ok) return [];
+    if (!res.ok) {
+      recordScraperTelemetry({ source: "nlcblottoresult", game: "play-whe", httpStatus: res.status, parsedCount: 0, drift: false, note: "non-ok-http" });
+      return [];
+    }
     const html = await res.text();
     const $ = cheerio.load(html);
     const text = $('table').eq(0).text().replace(/\s+/g, " ").trim();
@@ -677,6 +717,14 @@ export async function scrapePlayWheLivePortal(): Promise<any[]> {
         }
       }
     }
+    const hasMarkers = /Draw\s*#/i.test(text) || /Play\s*Whe/i.test(html);
+    recordScraperTelemetry({
+      source: "nlcblottoresult",
+      game: "play-whe",
+      httpStatus: res.status,
+      parsedCount: draws.length,
+      drift: draws.length === 0 && hasMarkers
+    });
     return draws;
   } catch (err: any) {
     console.warn("[PlayWhe] Live portal scrape notice:", err.message);
@@ -729,8 +777,10 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
       if (restRes.ok) {
         const items = await restRes.json();
         const list = Array.isArray(items) ? items : [items];
+        let parsedRailway = 0;
         for (const item of list) {
           if (item && item.draw_number && item.main_number !== undefined) {
+            parsedRailway++;
             const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
             const slot = (item.draw_period || item.draw_time || "MORNING").trim();
             const res = await db.execute({
@@ -742,6 +792,15 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
             }
           }
         }
+        recordScraperTelemetry({
+          source: "railway",
+          game: "play-whe",
+          httpStatus: restRes.status,
+          parsedCount: parsedRailway,
+          drift: parsedRailway === 0 && list.length > 0 && Boolean(list[0])
+        });
+      } else {
+        recordScraperTelemetry({ source: "railway", game: "play-whe", httpStatus: restRes.status, parsedCount: 0, drift: false, note: "non-ok-http" });
       }
 
       // By-month archive for current and recent month
@@ -851,6 +910,16 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
           );
           drawsAdded += batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
         }
+        const hasMarkers = $(".drawDetails").length > 0 || /Play\s+Whe\s+Results/i.test(html) || /Draw\s*#/i.test(html);
+        recordScraperTelemetry({
+          source: "nlcbplaywhelotto",
+          game: "play-whe",
+          httpStatus: getRes.status,
+          parsedCount: currentDraws.length,
+          drift: currentDraws.length === 0 && hasMarkers
+        });
+      } else {
+        recordScraperTelemetry({ source: "nlcbplaywhelotto", game: "play-whe", httpStatus: getRes.status, parsedCount: 0, drift: false, note: "non-ok-http" });
       }
     } catch (officialGetErr: any) {
       console.warn("[PlayWhe] Official GET fallback notice:", officialGetErr.message);
@@ -1011,7 +1080,10 @@ export async function saveWinForLifeDraw(draw: any): Promise<void> {
 export async function scrapeWinForLifeLivePortal(): Promise<any[]> {
   try {
     const res = await fetchWithRetry("https://nlcblottoresult.com/nlcb-win-for-life-results/");
-    if (!res.ok) return [];
+    if (!res.ok) {
+      recordScraperTelemetry({ source: "nlcblottoresult", game: "win-for-life", httpStatus: res.status, parsedCount: 0, drift: false, note: "non-ok-http" });
+      return [];
+    }
     const html = await res.text();
     const $ = cheerio.load(html);
     const draws: any[] = [];
@@ -1036,6 +1108,14 @@ export async function scrapeWinForLifeLivePortal(): Promise<any[]> {
           });
         }
       }
+    });
+    const hasMarkers = $("table").length > 0 && /Win\s+For\s+Life/i.test(html);
+    recordScraperTelemetry({
+      source: "nlcblottoresult",
+      game: "win-for-life",
+      httpStatus: res.status,
+      parsedCount: draws.length,
+      drift: draws.length === 0 && hasMarkers
     });
     return draws;
   } catch (err: any) {
@@ -1199,7 +1279,10 @@ export async function scrapeCashPotLivePortal(): Promise<
 > {
   try {
     const res = await fetchWithRetry("https://nlcblottoresult.com/nlcb-cashpot-results/");
-    if (!res.ok) return [];
+    if (!res.ok) {
+      recordScraperTelemetry({ source: "nlcblottoresult", game: "cashpot", httpStatus: res.status, parsedCount: 0, drift: false, note: "non-ok-http" });
+      return [];
+    }
     const html = await res.text();
     const $ = cheerio.load(html);
     const results: Array<{ draw_date: string; num1: number; num2: number; num3: number; num4: number; num5: number; multiplier: number }> = [];
@@ -1237,6 +1320,15 @@ export async function scrapeCashPotLivePortal(): Promise<
         num5: uniqueNums[4],
         multiplier
       });
+    });
+
+    const hasMarkers = /Winning\s+Numbers/i.test(html) || /Cash\s*Pot/i.test(html);
+    recordScraperTelemetry({
+      source: "nlcblottoresult",
+      game: "cashpot",
+      httpStatus: res.status,
+      parsedCount: results.length,
+      drift: results.length === 0 && hasMarkers
     });
 
     return results;
@@ -1367,7 +1459,10 @@ const PICK4_OFFICIAL_URL = "https://www.nlcbplaywhelotto.com/nlcb-pick-4-results
 export async function scrapePick4LivePortal(): Promise<any[]> {
   try {
     const res = await fetchWithRetry("https://nlcblottoresult.com/nlcb-pick-4-results/");
-    if (!res.ok) return [];
+    if (!res.ok) {
+      recordScraperTelemetry({ source: "nlcblottoresult", game: "pick4", httpStatus: res.status, parsedCount: 0, drift: false, note: "non-ok-http" });
+      return [];
+    }
     const html = await res.text();
     const $ = cheerio.load(html);
     const text = $('table').eq(0).text().replace(/\s+/g, " ").trim();
@@ -1402,6 +1497,14 @@ export async function scrapePick4LivePortal(): Promise<any[]> {
         }
       }
     }
+    const hasMarkers = /Draw\s*#/i.test(text) || /Pick\s*4/i.test(html);
+    recordScraperTelemetry({
+      source: "nlcblottoresult",
+      game: "pick4",
+      httpStatus: res.status,
+      parsedCount: draws.length,
+      drift: draws.length === 0 && hasMarkers
+    });
     return draws;
   } catch (err: any) {
     console.warn("[Pick4] Live portal scrape notice:", err.message);
@@ -1509,8 +1612,10 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
       if (res.ok) {
         const items = await res.json();
         const list = Array.isArray(items) ? items : [items];
+        let parsedRailway = 0;
         for (const item of list) {
           if (item && item.draw_number) {
+            parsedRailway++;
             const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
             const slot = (item.draw_period || item.draw_time || "MORNING").toUpperCase();
             const insRes = await db.execute({
@@ -1520,6 +1625,15 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
             if (insRes.rowsAffected > 0) drawsAdded++;
           }
         }
+        recordScraperTelemetry({
+          source: "railway",
+          game: "pick4",
+          httpStatus: res.status,
+          parsedCount: parsedRailway,
+          drift: parsedRailway === 0 && list.length > 0 && Boolean(list[0])
+        });
+      } else {
+        recordScraperTelemetry({ source: "railway", game: "pick4", httpStatus: res.status, parsedCount: 0, drift: false, note: "non-ok-http" });
       }
 
       // By-month archive for current and recent month
@@ -1640,6 +1754,16 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
           );
           drawsAdded += batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
         }
+        const hasMarkers = $(".drawDetails").length > 0 || /Pick\s*4/i.test(html) || /Draw\s*#/i.test(html);
+        recordScraperTelemetry({
+          source: "nlcbplaywhelotto",
+          game: "pick4",
+          httpStatus: getRes.status,
+          parsedCount: currentDraws.length,
+          drift: currentDraws.length === 0 && hasMarkers
+        });
+      } else {
+        recordScraperTelemetry({ source: "nlcbplaywhelotto", game: "pick4", httpStatus: getRes.status, parsedCount: 0, drift: false, note: "non-ok-http" });
       }
     } catch (officialGetErr: any) {
       console.warn("[Pick4] Official GET fallback notice:", officialGetErr.message);
