@@ -637,22 +637,27 @@ export async function scrapePlayWheLivePortal(): Promise<any[]> {
     if (!res.ok) return [];
     const html = await res.text();
     const $ = cheerio.load(html);
-    const text = $('table').eq(0).text();
-    const today = new Date().toISOString().split("T")[0];
+    const text = $('table').eq(0).text().replace(/\s+/g, " ").trim();
+    // Always use Trinidad & Tobago AST (UTC-4) date so evening draws stay on the right calendar day
+    const today = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-    const slots = [
-      { name: 'Morning', re: /Morning\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d{1,2})/i },
-      { name: 'Midday', re: /(?:Midday|Middy)\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d{1,2})/i },
-      { name: 'Afternoon', re: /Afternoon\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d{1,2})/i },
-      { name: 'Evening', re: /Evening\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d{1,2})/i }
+    const slotDefs = [
+      { name: "Morning", labelRe: "Morning" },
+      { name: "Midday", labelRe: "(?:Midday|Middy)" },
+      { name: "Afternoon", labelRe: "Afternoon" },
+      { name: "Evening", labelRe: "Evening" }
     ];
+    const nextBoundary = "(?:Morning|Midday|Middy|Afternoon|Evening)\\s+Draw\\s+#|$";
 
     const draws: any[] = [];
-    for (const s of slots) {
-      const m = text.match(s.re);
+    for (const s of slotDefs) {
+      const segRe = new RegExp(`${s.labelRe}\\s+Draw\\s+#(\\d+)([\\s\\S]*?)(?=${nextBoundary})`, "i");
+      const m = text.match(segRe);
       if (m) {
         const drawNum = parseInt(m[1], 10);
-        const winNum = parseInt(m[2], 10);
+        const body = m[2] || "";
+        const numMatch = body.match(/^(?:\s*Verified)?\s*(\d{1,2})\b/i);
+        const winNum = numMatch ? parseInt(numMatch[1], 10) : NaN;
         if (!isNaN(drawNum) && !isNaN(winNum) && winNum >= 1 && winNum <= 36) {
           draws.push({
             draw_number: drawNum,
@@ -787,7 +792,41 @@ export async function syncPlayWhe(full: boolean = false, targetYear?: number): P
       console.warn("[PlayWhe] Live Portal fallback notice:", liveErr.message);
     }
 
-    // 3. Optional Tertiary Source: Official HTML scrape (only if full or targetYear)
+    // 3. Tertiary Source: Direct Official GET (renders current month without POST) + optional multi-year POST
+    try {
+      const getRes = await fetchWithRetry(getScrapeUrl(PLAYWHE_URL));
+      if (getRes.ok) {
+        const html = await getRes.text();
+        const $ = cheerio.load(html);
+        const currentDraws: any[] = [];
+        $("table").find("tr").each((_, row) => {
+          const tds = $(row).find("td, th");
+          if (tds.length < 4) return;
+          const firstText = $(tds[0]).text().trim();
+          if (firstText.includes("Draw")) return;
+          const drawNum = parseInt(firstText, 10);
+          const drawDate = parsePlayWheDate($(tds[1]).text().trim());
+          const drawTimeSlot = $(tds[2]).text().trim();
+          const markParts = $(tds[3]).text().trim().split(/\s+/);
+          const winningNumber = parseInt(markParts[0], 10);
+          if (!isNaN(drawNum) && !isNaN(winningNumber) && winningNumber >= 1 && winningNumber <= 36) {
+            currentDraws.push({ draw_number: drawNum, draw_date: drawDate, draw_time_slot: drawTimeSlot, winning_number: winningNumber });
+          }
+        });
+        if (currentDraws.length > 0) {
+          const batchRes = await db.batch(
+            currentDraws.map(d => ({
+              sql: `INSERT OR IGNORE INTO playwhe_draws (draw_number, draw_date, draw_time_slot, winning_number) VALUES (?, ?, ?, ?)`,
+              args: [d.draw_number, d.draw_date, d.draw_time_slot, d.winning_number]
+            }))
+          );
+          drawsAdded += batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
+        }
+      }
+    } catch (officialGetErr: any) {
+      console.warn("[PlayWhe] Official GET fallback notice:", officialGetErr.message);
+    }
+
     if (full || targetYear) {
       try {
         const sid = await scrapePlayWheSid();
@@ -1154,11 +1193,11 @@ export async function syncCashPot(full: boolean = false, targetYear?: number): P
             if (item && item.draw_number) {
               const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
               const nums = [item.number1, item.number2, item.number3, item.number4, item.number5].sort((a: number, b: number) => a - b);
-              await db.execute({
+              const insRes = await db.execute({
                 sql: `INSERT OR IGNORE INTO cashpot_draws (draw_number, draw_date, num1, num2, num3, num4, num5, multiplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 args: [item.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], item.multiplier || 1]
               });
-              drawsAdded++;
+              if (insRes.rowsAffected > 0) drawsAdded++;
             }
           }
         }
@@ -1192,8 +1231,9 @@ export async function syncCashPot(full: boolean = false, targetYear?: number): P
                   args: [d.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], d.multiplier || 1]
                 };
               });
-              await db.batch(batch);
-              drawsAdded += data.length;
+              const batchRes = await db.batch(batch);
+              const inserted = batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
+              drawsAdded += inserted;
             }
           }
         } catch (e) {
@@ -1219,29 +1259,36 @@ export async function scrapePick4LivePortal(): Promise<any[]> {
     if (!res.ok) return [];
     const html = await res.text();
     const $ = cheerio.load(html);
-    const text = $('table').eq(0).text();
-    const today = new Date().toISOString().split("T")[0];
+    const text = $('table').eq(0).text().replace(/\s+/g, " ").trim();
+    const today = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-    const slots = [
-      { name: 'Morning', re: /Morning\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d)\s*(\d)\s*(\d)\s*(\d)/i },
-      { name: 'Midday', re: /(?:Midday|Middy)\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d)\s*(\d)\s*(\d)\s*(\d)/i },
-      { name: 'Afternoon', re: /Afternoon\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d)\s*(\d)\s*(\d)\s*(\d)/i },
-      { name: 'Evening', re: /Evening\s+Draw\s+#(\d+)[\s\S]*?Verified\s*(\d)\s*(\d)\s*(\d)\s*(\d)/i }
+    const slotDefs = [
+      { name: "Morning", labelRe: "Morning" },
+      { name: "Midday", labelRe: "(?:Midday|Middy)" },
+      { name: "Afternoon", labelRe: "Afternoon" },
+      { name: "Evening", labelRe: "Evening" }
     ];
+    const nextBoundary = "(?:Morning|Midday|Middy|Afternoon|Evening)\\s+Draw\\s+#|$";
 
     const draws: any[] = [];
-    for (const s of slots) {
-      const m = text.match(s.re);
+    for (const s of slotDefs) {
+      const segRe = new RegExp(`${s.labelRe}\\s+Draw\\s+#(\\d+)([\\s\\S]*?)(?=${nextBoundary})`, "i");
+      const m = text.match(segRe);
       if (m) {
-        draws.push({
-          draw_number: parseInt(m[1], 10),
-          draw_date: today,
-          draw_time_slot: s.name.toUpperCase(),
-          digit1: parseInt(m[2], 10),
-          digit2: parseInt(m[3], 10),
-          digit3: parseInt(m[4], 10),
-          digit4: parseInt(m[5], 10)
-        });
+        const drawNum = parseInt(m[1], 10);
+        const body = m[2] || "";
+        const dMatch = body.match(/^(?:\s*Verified)?\s*(\d)\s+(\d)\s+(\d)\s+(\d)\b/i);
+        if (dMatch) {
+          draws.push({
+            draw_number: drawNum,
+            draw_date: today,
+            draw_time_slot: s.name.toUpperCase(),
+            digit1: parseInt(dMatch[1], 10),
+            digit2: parseInt(dMatch[2], 10),
+            digit3: parseInt(dMatch[3], 10),
+            digit4: parseInt(dMatch[4], 10)
+          });
+        }
       }
     }
     return draws;
@@ -1419,7 +1466,43 @@ export async function syncPick4(full: boolean = false, targetYear?: number): Pro
       console.warn("[Pick4] Live portal notice:", liveErr.message);
     }
 
-    // 3. Optional Tertiary Source: Official HTML scrape (only if full or targetYear)
+    // 3. Tertiary Source: Direct Official GET (renders current month without POST) + optional multi-year POST
+    try {
+      const getRes = await fetchWithRetry(getScrapeUrl(PICK4_OFFICIAL_URL));
+      if (getRes.ok) {
+        const html = await getRes.text();
+        const $ = cheerio.load(html);
+        const currentDraws: any[] = [];
+        $("table").find("tr").each((_, row) => {
+          const tds = $(row).find("td, th");
+          if (tds.length < 7) return;
+          const firstText = $(tds[0]).text().trim();
+          if (firstText.toLowerCase().includes("draw")) return;
+          const drawNum = parseInt(firstText, 10);
+          const drawDate = parseDate($(tds[1]).text().trim());
+          const drawTimeSlot = $(tds[2]).text().trim().toUpperCase();
+          const d1 = parseInt($(tds[3]).text().trim(), 10);
+          const d2 = parseInt($(tds[4]).text().trim(), 10);
+          const d3 = parseInt($(tds[5]).text().trim(), 10);
+          const d4 = parseInt($(tds[6]).text().trim(), 10);
+          if (!isNaN(drawNum) && !isNaN(d1) && !isNaN(d2) && !isNaN(d3) && !isNaN(d4)) {
+            currentDraws.push({ draw_number: drawNum, draw_date: drawDate, draw_time_slot: drawTimeSlot, digit1: d1, digit2: d2, digit3: d3, digit4: d4 });
+          }
+        });
+        if (currentDraws.length > 0) {
+          const batchRes = await db.batch(
+            currentDraws.map(d => ({
+              sql: `INSERT OR IGNORE INTO pick4_draws (draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              args: [d.draw_number, d.draw_date, d.draw_time_slot, d.digit1, d.digit2, d.digit3, d.digit4]
+            }))
+          );
+          drawsAdded += batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
+        }
+      }
+    } catch (officialGetErr: any) {
+      console.warn("[Pick4] Official GET fallback notice:", officialGetErr.message);
+    }
+
     if (full || targetYear) {
       try {
         const sid = await scrapePick4Sid();
