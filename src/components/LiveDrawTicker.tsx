@@ -172,7 +172,7 @@ export default function LiveDrawTicker({
     if (syncStatus === "syncing") return;
     setSyncStatus("syncing");
     try {
-      const res = await fetch("/api/cron/sync-all", {
+      const res = await fetch("/api/sync/pulse", {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       });
@@ -181,7 +181,7 @@ export default function LiveDrawTicker({
       setSyncStatus("success");
       window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
       setTimeout(() => setSyncStatus("idle"), 3000);
-    } catch (e) {
+    } catch {
       setSyncStatus("idle");
     }
   };

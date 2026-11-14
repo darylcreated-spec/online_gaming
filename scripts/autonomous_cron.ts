@@ -1,55 +1,53 @@
-import { syncLatest, syncPlayWhe, syncWinForLife, syncCashPot, syncPick4 } from "../src/lib/scraper";
-import { verifyPlayWhePredictions, generatePlayWhePredictions, getLocalDateString } from "../src/lib/predictions";
-import { reviseAndAuditAfterDraw } from "../src/lib/winning_formula_engine";
+import fs from "fs";
+import path from "path";
 
 async function main() {
+  const envLocalPath = path.join(process.cwd(), ".env.local");
+  if (fs.existsSync(envLocalPath) && typeof process.loadEnvFile === "function") {
+    try {
+      process.loadEnvFile(envLocalPath);
+    } catch {
+      // Ignore if environment already injected by CI/Vercel
+    }
+  }
+
   console.log("=================================================");
-  console.log("🚀 AUTONOMOUS 24/7 NLCB DRAW SYNC ENGINE");
+  console.log("AUTONOMOUS NLCB DRAW SYNC ENGINE");
   console.log("Timestamp:", new Date().toISOString());
   console.log("=================================================");
 
   const startTime = Date.now();
-  const [playWheResult, lottoResult, winForLifeResult, cashPotResult, pick4Result] = await Promise.allSettled([
-    syncPlayWhe(false),
-    syncLatest(false),
-    syncWinForLife(false),
-    syncCashPot(false),
-    syncPick4(false)
-  ]);
+  const { runUnifiedSyncPipeline } = await import("../src/lib/sync_orchestrator");
+  const { acquireSyncLock, releaseSyncLock } = await import("../src/lib/cron_auth");
 
-  const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
-  console.log(`\n⚡ Sync finished in ${durationSec}s`);
-  console.log("Play Whe:", playWheResult.status === "fulfilled" ? playWheResult.value : playWheResult.reason);
-  console.log("Lotto Plus:", lottoResult.status === "fulfilled" ? lottoResult.value : lottoResult.reason);
-  console.log("Win For Life:", winForLifeResult.status === "fulfilled" ? winForLifeResult.value : winForLifeResult.reason);
-  console.log("Cash Pot:", cashPotResult.status === "fulfilled" ? cashPotResult.value : cashPotResult.reason);
-  console.log("Pick 4:", pick4Result.status === "fulfilled" ? pick4Result.value : pick4Result.reason);
-
-  // Auto-verify predictions and prepare next slot
-  try {
-    const verResult = await verifyPlayWhePredictions();
-    console.log(`\n🎯 Play Whe Verification: Verified ${verResult.verifiedCount} draws (${verResult.hitsAdded} hits recorded)`);
-    
-    // Ensure all 4 slots are ready for today
-    const todayStr = getLocalDateString();
-    for (const slot of ["MORNING", "MIDDAY", "AFTERNOON", "EVENING"]) {
-      await generatePlayWhePredictions(todayStr, slot);
-    }
-    console.log("✅ Next Play Whe predictions prepared and ready.");
-  } catch (err) {
-    console.warn("⚠️ Post-sync prediction update notice:", err);
+  const lock = await acquireSyncLock("cron_sync_all", 0, 120);
+  if (!lock.acquired) {
+    console.log(`Another sync holds the active DB lock (retry in ${lock.retryAfterSeconds}s). Exiting cleanly.`);
+    return;
   }
 
-  // Auto-audit Hot Picks and revised invariants
   try {
-    const auditRes = await reviseAndAuditAfterDraw();
-    console.log(`\n🔥 Hot Picks Revision & Live Audit Completed:`, auditRes);
-  } catch (err) {
-    console.warn("⚠️ Post-draw audit notice:", err);
+    const summary = await runUnifiedSyncPipeline({
+      calibrate: true,
+      reconcile: true,
+      notify: true,
+      audit: true,
+      triggerSource: "autonomous-cli"
+    });
+    const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`\nSync finished in ${durationSec}s (totalDrawsAdded=${summary.totalDrawsAdded})`);
+    console.log("Play Whe:", summary.results.playWhe);
+    console.log("Lotto Plus:", summary.results.lottoPlus);
+    console.log("Win For Life:", summary.results.winForLife);
+    console.log("Cash Pot:", summary.results.cashPot);
+    console.log("Pick 4:", summary.results.pick4);
+    console.log("Watchdog:", summary.results.watchdog?.status, "lagging:", summary.results.watchdog?.laggingGamesCount);
+  } finally {
+    await releaseSyncLock("cron_sync_all", lock.ownerId, true);
   }
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error("Fatal sync error:", err);
   process.exit(1);
 });

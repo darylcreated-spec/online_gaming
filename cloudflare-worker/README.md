@@ -28,13 +28,22 @@ npx wrangler deploy
 
 ---
 
-## 🔗 Connect to the App
+## 🔗 Connect & Enable Free Backup Cron Triggers
 
-Once deployed, add your Worker URL to your `.env.local` file and to your Vercel Project Environment Variables:
+1. Add your Worker URL (and optional relay secret) to your `.env.local` and Vercel Project Environment Variables:
 
 ```env
 CLOUDFLARE_WORKER_PROXY_URL="https://nlcb-edge-proxy.<your-subdomain>.workers.dev"
+CLOUDFLARE_PROXY_SECRET="optional_shared_secret"
 ```
+
+2. **(Optional) Harden the Worker Relay**: In Cloudflare Dashboard -> Workers & Pages -> `nlcb-edge-proxy` -> Settings -> Variables and Secrets, add:
+   - `PROXY_SECRET` matching `CLOUDFLARE_PROXY_SECRET` (restricts relay access alongside the built-in NLCB host allowlist)
+
+3. **Zero-Cost Backup Scheduler (`scheduled` Cron Trigger)**:
+   `wrangler.toml` includes a free Cron Trigger (`*/10 14-23 * * *` & `*/10 0-2 * * *`, covering `10 AM – 10 PM AST`). To activate it from Cloudflare's edge (zero GitHub Actions minutes needed), add two Worker Secrets in Cloudflare Dashboard:
+   - `SYNC_TARGET_URL`: `https://your-vercel-app.vercel.app`
+   - `CRON_SECRET`: exact match of your Vercel `CRON_SECRET`
 
 ### Verification
 You can test that your Worker is running by visiting:

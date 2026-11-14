@@ -111,8 +111,35 @@ export default function SettingsTab() {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
   };
 
+  const resolveAdminSecret = (forFullSync: boolean = false): string | null => {
+    if (typeof window === "undefined") return null;
+    const cached = sessionStorage.getItem("win_concept_admin_secret");
+    if (cached && cached.trim()) return cached.trim();
+
+    const message = forFullSync
+      ? "Enter Full Sync password (or Admin CRON_SECRET) to rebuild archive:"
+      : "Enter Admin Sync Secret (CRON_SECRET) for manual sync:";
+    const input = prompt(message);
+    if (!input || !input.trim()) {
+      addLog("Sync cancelled: admin secret not provided.");
+      return null;
+    }
+    const clean = input.trim();
+    sessionStorage.setItem("win_concept_admin_secret", clean);
+    return clean;
+  };
+
+  const clearCachedAdminSecretIfUnauthorized = (status: number) => {
+    if (status === 401 && typeof window !== "undefined") {
+      sessionStorage.removeItem("win_concept_admin_secret");
+    }
+  };
+
   const handleSyncAll = async () => {
     if (syncingGame) return;
+    const secret = resolveAdminSecret(false);
+    if (!secret) return;
+
     setSyncingGame("all");
     setSyncType("recent");
     setSyncSuccess(null);
@@ -121,10 +148,15 @@ export default function SettingsTab() {
     addLog("Connecting to NLCB for Play Whe, Lotto Plus, Win For Life, Cash Pot, and Pick 4...");
 
     try {
-      const res = await fetch("/api/cron/sync-all", {
+      const res = await fetch("/api/cron/sync-all?force=true", {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${secret}`
+        },
+        body: JSON.stringify({ force: true })
       });
+      clearCachedAdminSecretIfUnauthorized(res.status);
       const data = await res.json();
       if (data.success) {
         addLog(`Sync All Complete! Total draws added/updated: ${data.results?.totalDrawsAdded ?? data.totalDrawsAdded ?? 0}`);
@@ -160,57 +192,64 @@ export default function SettingsTab() {
     }
   };
 
-  const handleLottoSync = async (full: boolean = false) => {
+  const runGameSync = async (config: {
+    gameId: "lotto" | "playwhe" | "winforlife" | "cashpot" | "pick4";
+    label: string;
+    endpoint: string;
+    startYear: number;
+    full: boolean;
+  }) => {
     if (syncingGame) return;
-    
-    let pwd = "";
-    if (full) {
-      const input = prompt("Please enter the Full Sync password to continue:");
-      if (!input) {
-        addLog("Sync cancelled by user.");
-        return;
-      }
-      pwd = input;
-    }
+    const secret = resolveAdminSecret(config.full);
+    if (!secret) return;
 
-    setSyncingGame("lotto");
-    setSyncType(full ? "full" : "recent");
+    setSyncingGame(config.gameId);
+    setSyncType(config.full ? "full" : "recent");
     setSyncSuccess(null);
     setLogs([]);
-    setActiveStep(full ? "Initializing Lotto Plus Full Sync..." : "Syncing Lotto Plus Recent Draws...");
+    setActiveStep(
+      config.full
+        ? `Initializing ${config.label} Full Sync...`
+        : `Syncing ${config.label} Recent Draws...`
+    );
 
-    if (full) {
-      addLog("Initializing Lotto Plus FULL history sync (Year by Year)...");
+    const authHeaders = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${secret}`
+    };
+
+    if (config.full) {
+      addLog(`Initializing ${config.label} FULL history sync (Year by Year)...`);
       try {
         const currentYear = new Date().getFullYear();
-        const startYear = 2001;
         let totalAdded = 0;
-        
-        for (let y = currentYear; y >= startYear; y--) {
-          setActiveStep(`Syncing Lotto Plus Year ${y} (2001 to Present)...`);
-          addLog(`Syncing Lotto Plus Year ${y}...`);
-          
-          const res = await fetch("/api/sync", {
+
+        for (let y = currentYear; y >= config.startYear; y--) {
+          setActiveStep(`Syncing ${config.label} Year ${y} (${config.startYear} to Present)...`);
+          addLog(`Syncing ${config.label} Year ${y}...`);
+
+          const res = await fetch(config.endpoint, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ year: y, fullSecret: pwd })
+            headers: authHeaders,
+            body: JSON.stringify({ year: y, fullSecret: secret })
           });
+          clearCachedAdminSecretIfUnauthorized(res.status);
           const data = await res.json();
+          if (res.status === 401) {
+            addLog(`Authorization failed for ${config.label}. Please re-enter secret on next attempt.`);
+            setSyncSuccess(false);
+            setActiveStep("Unauthorized");
+            return;
+          }
           if (data.success) {
             totalAdded += data.drawsAdded || 0;
             addLog(`Year ${y} complete: Added ${data.drawsAdded || 0} draws.`);
-            if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-              new Notification("Lotto Plus Synced!", {
-                body: `Year ${y} complete: Added ${data.drawsAdded} historical draws!`,
-                icon: "/pwa-192x192.png"
-              });
-            }
           } else {
             addLog(`Year ${y} failed: ${data.error || data.details}`);
           }
-          // Polite delay
           await new Promise(r => setTimeout(r, 600));
         }
+
         addLog(`Full Sync Completed Successfully! Total draws added: ${totalAdded}`);
         setSyncSuccess(true);
         setActiveStep("Sync Completed!");
@@ -227,13 +266,14 @@ export default function SettingsTab() {
         setSyncType(null);
       }
     } else {
-      addLog("Starting Lotto Plus sync (Recent)...");
+      addLog(`Starting ${config.label} sync (Recent)...`);
       try {
-        const res = await fetch("/api/sync", {
+        const res = await fetch(config.endpoint, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders,
           body: JSON.stringify({ full: false })
         });
+        clearCachedAdminSecretIfUnauthorized(res.status);
         const data = await res.json();
         if (data.success) {
           addLog(`Sync Success! Added/Updated ${data.drawsAdded || 0} draws.`);
@@ -245,7 +285,7 @@ export default function SettingsTab() {
             window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
           }
           if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-            new Notification("Lotto Plus Synced!", {
+            new Notification(`${config.label} Synced!`, {
               body: `Added/Updated ${data.drawsAdded} draws successfully!`,
               icon: "/pwa-192x192.png"
             });
@@ -266,424 +306,20 @@ export default function SettingsTab() {
     }
   };
 
-  const handlePlayWheSync = async (full: boolean = false) => {
-    if (syncingGame) return;
+  const handleLottoSync = (full: boolean = false) =>
+    runGameSync({ gameId: "lotto", label: "Lotto Plus", endpoint: "/api/sync", startYear: 2001, full });
 
-    let pwd = "";
-    if (full) {
-      const input = prompt("Please enter the Full Sync password to continue:");
-      if (!input) {
-        addLog("Sync cancelled by user.");
-        return;
-      }
-      pwd = input;
-    }
+  const handlePlayWheSync = (full: boolean = false) =>
+    runGameSync({ gameId: "playwhe", label: "Play Whe", endpoint: "/api/playwhe/sync", startYear: 2001, full });
 
-    setSyncingGame("playwhe");
-    setSyncType(full ? "full" : "recent");
-    setSyncSuccess(null);
-    setLogs([]);
-    setActiveStep(full ? "Initializing Play Whe Full Sync..." : "Syncing Play Whe Recent Draws...");
+  const handleWinForLifeSync = (full: boolean = false) =>
+    runGameSync({ gameId: "winforlife", label: "Win for Life", endpoint: "/api/winforlife/sync", startYear: 2022, full });
 
-    if (full) {
-      addLog("Initializing Play Whe FULL history sync (Year by Year)...");
-      try {
-        const currentYear = new Date().getFullYear();
-        const startYear = 2001;
-        let totalAdded = 0;
-        
-        for (let y = currentYear; y >= startYear; y--) {
-          setActiveStep(`Syncing Play Whe Year ${y} (2001 to Present)...`);
-          addLog(`Syncing Play Whe Year ${y}...`);
-          
-          const res = await fetch("/api/playwhe/sync", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ year: y, fullSecret: pwd })
-          });
-          const data = await res.json();
-           if (data.success) {
-            totalAdded += data.drawsAdded || 0;
-            addLog(`Year ${y} complete: Added ${data.drawsAdded || 0} draws.`);
-            if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-              new Notification("Play Whe Synced!", {
-                body: `Year ${y} complete: Added ${data.drawsAdded} historical draws!`,
-                icon: "/pwa-192x192.png"
-              });
-            }
-          } else {
-            addLog(`Year ${y} failed: ${data.error || data.details}`);
-          }
-          // Polite delay
-          await new Promise(r => setTimeout(r, 600));
-        }
-        addLog(`Full Sync Completed Successfully! Total draws added: ${totalAdded}`);
-        setSyncSuccess(true);
-        setActiveStep("Sync Completed!");
-        fetchDBStatus();
-      } catch (err: any) {
-        addLog(`Full Sync Error: ${err.message}`);
-        setSyncSuccess(false);
-        setActiveStep("Sync Error!");
-      } finally {
-        setSyncingGame(null);
-        setSyncType(null);
-      }
-    } else {
-      addLog("Starting Play Whe sync (Recent)...");
-      try {
-        const res = await fetch("/api/playwhe/sync", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full: false })
-        });
-        const data = await res.json();
-        if (data.success) {
-          addLog(`Sync Success! Added/Updated ${data.drawsAdded || 0} draws.`);
-          addLog(`Details: ${data.details}`);
-          setSyncSuccess(true);
-          setActiveStep("Sync Completed!");
-          fetchDBStatus();
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
-          }
-          if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-            new Notification("Play Whe Synced!", {
-              body: `Added/Updated ${data.drawsAdded} draws successfully!`,
-              icon: "/pwa-192x192.png"
-            });
-          }
-        } else {
-          addLog(`Sync Failed: ${data.error || data.details}`);
-          setSyncSuccess(false);
-          setActiveStep("Sync Failed!");
-        }
-      } catch (err: any) {
-        addLog(`Sync Error: ${err.message}`);
-        setSyncSuccess(false);
-        setActiveStep("Sync Error!");
-      } finally {
-        setSyncingGame(null);
-        setSyncType(null);
-      }
-    }
-  };
+  const handleCashPotSync = (full: boolean = false) =>
+    runGameSync({ gameId: "cashpot", label: "Cash Pot", endpoint: "/api/cashpot/sync", startYear: 2022, full });
 
-  const handleWinForLifeSync = async (full: boolean = false) => {
-    if (syncingGame) return;
-    
-    let pwd = "";
-    if (full) {
-      const input = prompt("Please enter the Full Sync password to continue:");
-      if (!input) {
-        addLog("Sync cancelled by user.");
-        return;
-      }
-      pwd = input;
-    }
-
-    setSyncingGame("winforlife");
-    setSyncType(full ? "full" : "recent");
-    setSyncSuccess(null);
-    setLogs([]);
-    setActiveStep(full ? "Initializing Win for Life Full Sync..." : "Syncing Win for Life Recent Draws...");
-
-    if (full) {
-      addLog("Initializing Win for Life FULL history sync (Year by Year)...");
-      try {
-        const currentYear = new Date().getFullYear();
-        const startYear = 2022;
-        let totalAdded = 0;
-        
-        for (let y = currentYear; y >= startYear; y--) {
-          setActiveStep(`Syncing Win for Life Year ${y} (2022 to Present)...`);
-          addLog(`Syncing Win for Life Year ${y}...`);
-          
-          const res = await fetch("/api/winforlife/sync", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ year: y, fullSecret: pwd })
-          });
-          const data = await res.json();
-          if (data.success) {
-            totalAdded += data.drawsAdded || 0;
-            addLog(`Year ${y} complete: Added ${data.drawsAdded || 0} draws.`);
-            if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-              new Notification("Win for Life Synced!", {
-                body: `Year ${y} complete: Added ${data.drawsAdded} historical draws!`,
-                icon: "/pwa-192x192.png"
-              });
-            }
-          } else {
-            addLog(`Year ${y} failed: ${data.error || data.details}`);
-          }
-          // Polite delay
-          await new Promise(r => setTimeout(r, 600));
-        }
-        addLog(`Full Sync Completed Successfully! Total draws added: ${totalAdded}`);
-        setSyncSuccess(true);
-        setActiveStep("Sync Completed!");
-        fetchDBStatus();
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: {} }));
-        }
-      } catch (err: any) {
-        addLog(`Full Sync Error: ${err.message}`);
-        setSyncSuccess(false);
-        setActiveStep("Sync Error!");
-      } finally {
-        setSyncingGame(null);
-        setSyncType(null);
-      }
-    } else {
-      addLog("Starting Win for Life sync (Recent)...");
-      try {
-        const res = await fetch("/api/winforlife/sync", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full: false })
-        });
-        const data = await res.json();
-        if (data.success) {
-          addLog(`Sync Success! Added/Updated ${data.drawsAdded || 0} draws.`);
-          addLog(`Details: ${data.details}`);
-          setSyncSuccess(true);
-          setActiveStep("Sync Completed!");
-          fetchDBStatus();
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
-          }
-          if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-            new Notification("Win for Life Synced!", {
-              body: `Added/Updated ${data.drawsAdded} draws successfully!`,
-              icon: "/pwa-192x192.png"
-            });
-          }
-        } else {
-          addLog(`Sync Failed: ${data.error || data.details}`);
-          setSyncSuccess(false);
-          setActiveStep("Sync Failed!");
-        }
-      } catch (err: any) {
-        addLog(`Sync Error: ${err.message}`);
-        setSyncSuccess(false);
-        setActiveStep("Sync Error!");
-      } finally {
-        setSyncingGame(null);
-        setSyncType(null);
-      }
-    }
-  };
-
-  const handleCashPotSync = async (full: boolean = false) => {
-    if (syncingGame) return;
-    
-    let pwd = "";
-    if (full) {
-      const input = prompt("Please enter the Full Sync password to continue:");
-      if (!input) {
-        addLog("Sync cancelled by user.");
-        return;
-      }
-      pwd = input;
-    }
-
-    setSyncingGame("cashpot");
-    setSyncType(full ? "full" : "recent");
-    setSyncSuccess(null);
-    setLogs([]);
-    setActiveStep(full ? "Initializing Cash Pot Full Sync..." : "Syncing Cash Pot Recent Draws...");
-
-    if (full) {
-      addLog("Initializing Cash Pot FULL history sync (Year by Year)...");
-      try {
-        const currentYear = new Date().getFullYear();
-        const startYear = 2022;
-        let totalAdded = 0;
-        
-        for (let y = currentYear; y >= startYear; y--) {
-          setActiveStep(`Syncing Cash Pot Year ${y} (2022 to Present)...`);
-          addLog(`Syncing Cash Pot Year ${y}...`);
-          
-          const res = await fetch("/api/cashpot/sync", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ year: y, fullSecret: pwd })
-          });
-          const data = await res.json();
-          if (data.success) {
-            totalAdded += data.drawsAdded || 0;
-            addLog(`Year ${y} complete: Added ${data.drawsAdded || 0} draws.`);
-            if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-              new Notification("Cash Pot Synced!", {
-                body: `Year ${y} complete: Added ${data.drawsAdded} historical draws!`,
-                icon: "/pwa-192x192.png"
-              });
-            }
-          } else {
-            addLog(`Year ${y} failed: ${data.error || data.details}`);
-          }
-          await new Promise(r => setTimeout(r, 600));
-        }
-        addLog(`Full Sync Completed Successfully! Total draws added: ${totalAdded}`);
-        setSyncSuccess(true);
-        setActiveStep("Sync Completed!");
-        fetchDBStatus();
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: {} }));
-        }
-      } catch (err: any) {
-        addLog(`Full Sync Error: ${err.message}`);
-        setSyncSuccess(false);
-        setActiveStep("Sync Error!");
-      } finally {
-        setSyncingGame(null);
-        setSyncType(null);
-      }
-    } else {
-      addLog("Starting Cash Pot sync (Recent)...");
-      try {
-        const res = await fetch("/api/cashpot/sync", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full: false })
-        });
-        const data = await res.json();
-        if (data.success) {
-          addLog(`Sync Success! Added/Updated ${data.drawsAdded || 0} draws.`);
-          addLog(`Details: ${data.details}`);
-          setSyncSuccess(true);
-          setActiveStep("Sync Completed!");
-          fetchDBStatus();
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
-          }
-          if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-            new Notification("Cash Pot Synced!", {
-              body: `Added/Updated ${data.drawsAdded} draws successfully!`,
-              icon: "/pwa-192x192.png"
-            });
-          }
-        } else {
-          addLog(`Sync Failed: ${data.error || data.details}`);
-          setSyncSuccess(false);
-          setActiveStep("Sync Failed!");
-        }
-      } catch (err: any) {
-        addLog(`Sync Error: ${err.message}`);
-        setSyncSuccess(false);
-        setActiveStep("Sync Error!");
-      } finally {
-        setSyncingGame(null);
-        setSyncType(null);
-      }
-    }
-  };
-
-  const handlePick4Sync = async (full: boolean = false) => {
-    if (syncingGame) return;
-    
-    let pwd = "";
-    if (full) {
-      const input = prompt("Please enter the Full Sync password to continue:");
-      if (!input) {
-        addLog("Sync cancelled by user.");
-        return;
-      }
-      pwd = input;
-    }
-
-    setSyncingGame("pick4");
-    setSyncType(full ? "full" : "recent");
-    setSyncSuccess(null);
-    setLogs([]);
-    setActiveStep(full ? "Initializing Pick 4 Full Sync..." : "Syncing Pick 4 Recent Draws...");
-
-    if (full) {
-      addLog("Initializing Pick 4 FULL history sync (Year by Year)...");
-      try {
-        const currentYear = new Date().getFullYear();
-        const startYear = 2022;
-        let totalAdded = 0;
-        
-        for (let y = currentYear; y >= startYear; y--) {
-          setActiveStep(`Syncing Pick 4 Year ${y} (2022 to Present)...`);
-          addLog(`Syncing Pick 4 Year ${y}...`);
-          
-          const res = await fetch("/api/pick4/sync", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ year: y, fullSecret: pwd })
-          });
-          const data = await res.json();
-          if (data.success) {
-            totalAdded += data.drawsAdded || 0;
-            addLog(`Year ${y} complete: Added ${data.drawsAdded || 0} draws.`);
-            if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-              new Notification("Pick 4 Synced!", {
-                body: `Year ${y} complete: Added ${data.drawsAdded} historical draws!`,
-                icon: "/pwa-192x192.png"
-              });
-            }
-          } else {
-            addLog(`Year ${y} failed: ${data.error || data.details}`);
-          }
-          await new Promise(r => setTimeout(r, 600));
-        }
-        addLog(`Full Sync Completed Successfully! Total draws added: ${totalAdded}`);
-        setSyncSuccess(true);
-        setActiveStep("Sync Completed!");
-        fetchDBStatus();
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: {} }));
-        }
-      } catch (err: any) {
-        addLog(`Full Sync Error: ${err.message}`);
-        setSyncSuccess(false);
-        setActiveStep("Sync Error!");
-      } finally {
-        setSyncingGame(null);
-        setSyncType(null);
-      }
-    } else {
-      addLog("Starting Pick 4 sync (Recent)...");
-      try {
-        const res = await fetch("/api/pick4/sync", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ full: false })
-        });
-        const data = await res.json();
-        if (data.success) {
-          addLog(`Sync Success! Added/Updated ${data.drawsAdded || 0} draws.`);
-          addLog(`Details: ${data.details}`);
-          setSyncSuccess(true);
-          setActiveStep("Sync Completed!");
-          fetchDBStatus();
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
-          }
-          if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-            new Notification("Pick 4 Synced!", {
-              body: `Added/Updated ${data.drawsAdded} draws successfully!`,
-              icon: "/pwa-192x192.png"
-            });
-          }
-        } else {
-          addLog(`Sync Failed: ${data.error || data.details}`);
-          setSyncSuccess(false);
-          setActiveStep("Sync Failed!");
-        }
-      } catch (err: any) {
-        addLog(`Sync Error: ${err.message}`);
-        setSyncSuccess(false);
-        setActiveStep("Sync Error!");
-      } finally {
-        setSyncingGame(null);
-        setSyncType(null);
-      }
-    }
-  };
+  const handlePick4Sync = (full: boolean = false) =>
+    runGameSync({ gameId: "pick4", label: "Pick 4", endpoint: "/api/pick4/sync", startYear: 2022, full });
 
   return (
     <div className="space-y-6">

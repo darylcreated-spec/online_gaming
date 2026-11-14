@@ -267,59 +267,67 @@ export default function Home() {
     }
   }, [activeTab, lottoSubTab]);
 
-  // Smart Auto-Sync: Immediate on-launch check + Visibility change + Draw time scheduler
+  // Smart Read-First Auto-Refresh: Lightweight cached DB watchdog poll + bounded stale-draw pulse
   useEffect(() => {
     let isMounted = true;
     let refreshInterval: NodeJS.Timeout;
+    let lastDrawSignature = "";
 
-    const triggerBackgroundAutoSync = async (force: boolean = false) => {
-      if (typeof window === "undefined") return;
-      const lastSyncStr = localStorage.getItem("win_concept_last_sync_timestamp");
-      const lastSync = lastSyncStr ? parseInt(lastSyncStr, 10) : 0;
-      const now = Date.now();
-      const fortySeconds = 40 * 1000;
+    const checkLiveUpdates = async () => {
+      if (typeof window === "undefined" || document.visibilityState === "hidden") return;
 
-      // Only skip if synced less than 40 seconds ago and not forced
-      if (!force && now - lastSync < fortySeconds) {
-        return;
-      }
-
-      console.log("[AutoSync] Triggering background auto-sync from NLCB...");
       try {
-        const res = await fetch("/api/cron/sync-all", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" }
-        });
-        const data = await res.json();
-        
-        if (isMounted) {
+        const watchdogRes = await fetch("/api/watchdog");
+        if (!watchdogRes.ok) return;
+        const watchdog = await watchdogRes.json();
+        if (!isMounted) return;
+
+        const g = watchdog?.games;
+        const signature = g
+          ? `${g.playWhe?.latestDrawNumber}|${g.pick4?.latestDrawNumber}|${g.cashPot?.latestDrawNumber}|${g.lottoPlus?.latestDrawNumber}|${g.winForLife?.latestDrawNumber}`
+          : "";
+
+        // Refresh local view immediately whenever the DB shows newer results from background crons
+        if (signature && lastDrawSignature && signature !== lastDrawSignature) {
           localStorage.setItem("win_concept_last_sync_timestamp", Date.now().toString());
-          console.log("[AutoSync] Background sync result:", data);
-          
           fetchStats();
           fetchHistoryDraws(pagination.page);
-          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
+          window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: { watchdog } }));
+        }
+        if (signature) lastDrawSignature = signature;
+
+        // Only nudge bounded stale-draw pulse if results are lagging past schedule or a gap exists
+        if ((watchdog?.laggingGamesCount || 0) > 0 || (watchdog?.sequenceGapsCount || 0) > 0) {
+          const lastPulseStr = localStorage.getItem("win_concept_last_sync_timestamp");
+          const lastPulse = lastPulseStr ? parseInt(lastPulseStr, 10) : 0;
+          if (Date.now() - lastPulse < 120 * 1000) return;
+
+          localStorage.setItem("win_concept_last_sync_timestamp", Date.now().toString());
+          const pulseRes = await fetch("/api/sync/pulse", { method: "POST" });
+          const pulseData = await pulseRes.json().catch(() => null);
+
+          if (isMounted && pulseData && (pulseData.totalDrawsAdded || 0) > 0) {
+            fetchStats();
+            fetchHistoryDraws(pagination.page);
+            window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: pulseData }));
+          }
         }
       } catch (err) {
-        console.warn("[AutoSync] Background sync network error (will retry):", err);
+        console.warn("[AutoSync] Lightweight status check notice:", err);
       }
     };
 
-    // 1. Run immediately on app load (always forces fresh scrape check)
-    triggerBackgroundAutoSync(true);
+    checkLiveUpdates();
 
-    // 2. Run whenever user switches back to this browser tab (force check)
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        triggerBackgroundAutoSync(true);
+        checkLiveUpdates();
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // 3. Periodic interval every 60 seconds
-    refreshInterval = setInterval(() => {
-      triggerBackgroundAutoSync(false);
-    }, 60 * 1000);
+    // Poll lightweight cached DB watchdog every 90s while tab is visible
+    refreshInterval = setInterval(checkLiveUpdates, 90 * 1000);
 
     return () => {
       isMounted = false;

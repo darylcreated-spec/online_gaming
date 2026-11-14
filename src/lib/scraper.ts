@@ -29,6 +29,8 @@ const HEADERS = {
 };
 
 export const CLOUDFLARE_WORKER_PROXY_URL = process.env.CLOUDFLARE_WORKER_PROXY_URL || process.env.CF_PROXY_URL || "";
+const CLOUDFLARE_PROXY_SECRET = process.env.CLOUDFLARE_PROXY_SECRET || "";
+let cfProxyCooldownUntil = 0;
 
 export function getCloudflareProxyUrl(targetUrl: string): string {
   if (!CLOUDFLARE_WORKER_PROXY_URL) return targetUrl;
@@ -38,9 +40,36 @@ export function getCloudflareProxyUrl(targetUrl: string): string {
   return `${baseUrl}/?url=${encodeURIComponent(targetUrl)}`;
 }
 
-// Helper: fetch with exponential backoff retries and multi-tier fallback (Direct Fetch -> Cloudflare Worker Plan C)
+async function fetchViaCloudflareWorker(rawUrl: string, options: RequestInit): Promise<Response | null> {
+  if (!CLOUDFLARE_WORKER_PROXY_URL || Date.now() < cfProxyCooldownUntil) return null;
+  try {
+    const cfProxyUrl = getCloudflareProxyUrl(rawUrl);
+    const headers: Record<string, string> = {
+      ...((options.headers as Record<string, string>) || {})
+    };
+    if (CLOUDFLARE_PROXY_SECRET) {
+      headers["x-proxy-key"] = CLOUDFLARE_PROXY_SECRET;
+    }
+    const cfRes = await fetch(cfProxyUrl, {
+      ...options,
+      headers,
+      signal: AbortSignal.timeout(7000)
+    });
+    if (cfRes.ok) return cfRes;
+    if (cfRes.status >= 500) {
+      cfProxyCooldownUntil = Date.now() + 30 * 60 * 1000;
+      console.warn(`[Plan C] Cloudflare Worker returned HTTP ${cfRes.status}. Engaging 30m circuit breaker.`);
+    }
+    return null;
+  } catch (err: any) {
+    cfProxyCooldownUntil = Date.now() + 5 * 60 * 1000;
+    console.warn(`[Plan C] Cloudflare Worker relay notice: ${err.message}.`);
+    return null;
+  }
+}
+
+// Helper: Direct fetch first with Plan C Cloudflare Worker fallback strictly on 403/WAF blocks
 export async function fetchWithRetry(targetUrl: string, options: RequestInit = {}, retries: number = 2): Promise<Response> {
-  // If targetUrl contains ScraperAPI proxy, extract raw target URL for fallback
   let rawUrl = targetUrl;
   let isProxy = false;
   if (targetUrl.includes("api.scraperapi.com")) {
@@ -53,7 +82,7 @@ export async function fetchWithRetry(targetUrl: string, options: RequestInit = {
     }
   }
 
-  // Tier 1: Try ScraperAPI if requested and not exhausted
+  // Tier 1: Legacy ScraperAPI only if explicitly enabled
   if (isProxy && canUseScraperApi()) {
     for (let i = 0; i < retries; i++) {
       try {
@@ -62,12 +91,10 @@ export async function fetchWithRetry(targetUrl: string, options: RequestInit = {
           headers: { ...HEADERS, ...(options.headers || {}) },
           signal: AbortSignal.timeout(8000)
         });
-
         if (res.status === 401 || res.status === 403 || res.status === 429) {
           markScraperApiExhausted(`HTTP ${res.status}`);
           break;
         }
-
         if (res.ok) return res;
       } catch (err: any) {
         if (i === retries - 1) {
@@ -80,24 +107,8 @@ export async function fetchWithRetry(targetUrl: string, options: RequestInit = {
     }
   }
 
-  // Tier 2: Plan C Cloudflare Worker Edge Relay (if configured and target is official WAF-protected site)
-  if (CLOUDFLARE_WORKER_PROXY_URL && rawUrl.includes("nlcbplaywhelotto.com")) {
-    try {
-      const cfProxyUrl = getCloudflareProxyUrl(rawUrl);
-      const res = await fetch(cfProxyUrl, {
-        ...options,
-        signal: AbortSignal.timeout(7000)
-      });
-      if (res.ok) {
-        return res;
-      }
-      console.warn(`[Plan C] Cloudflare Worker returned HTTP ${res.status}. Falling back to direct fetch.`);
-    } catch (cfErr: any) {
-      console.warn(`[Plan C] Cloudflare Worker relay notice: ${cfErr.message}. Falling back to direct fetch.`);
-    }
-  }
-
-  // Tier 3: Direct Fetch from raw target URL with native browser headers
+  // Tier 2: Direct Fetch first (saves extra proxy hops and avoids CF Worker 521 latency),
+  // automatically upgrading to Plan C Cloudflare Worker on 403 WAF block when healthy.
   let lastError: any = null;
   for (let i = 0; i < retries; i++) {
     try {
@@ -108,11 +119,9 @@ export async function fetchWithRetry(targetUrl: string, options: RequestInit = {
       });
       if (res.ok) return res;
 
-      // If direct fetch is blocked by Cloudflare (403), try Plan C Cloudflare Worker as fallback if not already tried
-      if (res.status === 403 && CLOUDFLARE_WORKER_PROXY_URL) {
-        const cfProxyUrl = getCloudflareProxyUrl(rawUrl);
-        const cfRes = await fetch(cfProxyUrl, { ...options, signal: AbortSignal.timeout(7000) });
-        if (cfRes.ok) return cfRes;
+      if (res.status === 403) {
+        const cfRes = await fetchViaCloudflareWorker(rawUrl, options);
+        if (cfRes) return cfRes;
       }
 
       lastError = new Error(`Direct fetch HTTP ${res.status}: ${res.statusText}`);
@@ -1165,8 +1174,61 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
 
 // === CASHPOT SCRAPING & REST API ENGINE ===
 
+export async function scrapeCashPotLivePortal(): Promise<
+  Array<{ draw_date: string; num1: number; num2: number; num3: number; num4: number; num5: number; multiplier: number }>
+> {
+  try {
+    const res = await fetchWithRetry("https://nlcblottoresult.com/nlcb-cashpot-results/");
+    if (!res.ok) return [];
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const results: Array<{ draw_date: string; num1: number; num2: number; num3: number; num4: number; num5: number; multiplier: number }> = [];
+
+    const table = $("#wpdtSimpleTable-176").length
+      ? $("#wpdtSimpleTable-176")
+      : $("table").filter((_, el) => /winning\s+numbers/i.test($(el).text())).first();
+
+    table.find("tr").each((_, row) => {
+      const tds = $(row).find("td");
+      if (tds.length < 2) return;
+      const rawDate = $(tds[0]).text().trim();
+      if (!rawDate || /^date$/i.test(rawDate)) return;
+
+      const isoDate = parseDate(rawDate);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return;
+
+      const numsRaw = $(tds[1])
+        .text()
+        .split(/[^0-9]+/)
+        .map((n) => parseInt(n, 10))
+        .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 20);
+      const uniqueNums = Array.from(new Set(numsRaw)).sort((a, b) => a - b);
+      if (uniqueNums.length !== 5) return;
+
+      const multMatch = $(tds[2] || tds[1]).text().match(/(\d+)/);
+      const multiplier = multMatch ? Math.max(1, parseInt(multMatch[1], 10)) : 1;
+
+      results.push({
+        draw_date: isoDate,
+        num1: uniqueNums[0],
+        num2: uniqueNums[1],
+        num3: uniqueNums[2],
+        num4: uniqueNums[3],
+        num5: uniqueNums[4],
+        multiplier
+      });
+    });
+
+    return results;
+  } catch (err: any) {
+    console.warn("[CashPot] Live portal fallback notice:", err.message);
+    return [];
+  }
+}
+
 export async function syncCashPot(full: boolean = false, targetYear?: number): Promise<{ success: boolean; drawsAdded: number; details: string }> {
   let drawsAdded = 0;
+  let railwaySucceeded = false;
   try {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS cashpot_draws (
@@ -1187,6 +1249,7 @@ export async function syncCashPot(full: boolean = false, targetYear?: number): P
       try {
         const res = await fetchWithRetry("https://backend-production-412b.up.railway.app/api/cashpot/results/latest-date");
         if (res.ok) {
+          railwaySucceeded = true;
           const items = await res.json();
           const list = Array.isArray(items) ? items : [items];
           for (const item of list) {
@@ -1221,6 +1284,7 @@ export async function syncCashPot(full: boolean = false, targetYear?: number): P
         try {
           const res = await fetchWithRetry(`https://backend-production-412b.up.railway.app/api/cashpot/results/by-month-year/${y}/${mStr}`);
           if (res.ok) {
+            railwaySucceeded = true;
             const data = await res.json();
             if (Array.isArray(data) && data.length > 0) {
               const batch = data.map((d: any) => {
@@ -1238,6 +1302,33 @@ export async function syncCashPot(full: boolean = false, targetYear?: number): P
           }
         } catch (e) {
           console.warn(`[CashPot] Month ${y}-${mStr} sync notice:`, e);
+        }
+      }
+    }
+
+    // 3. Secondary non-Railway HTML portal fallback if Railway endpoints are unavailable
+    if (!full && !targetYear && !railwaySucceeded) {
+      const portalDraws = await scrapeCashPotLivePortal();
+      if (portalDraws.length > 0) {
+        const latestRes = await db.execute("SELECT draw_number, draw_date FROM cashpot_draws ORDER BY draw_date DESC, draw_number DESC LIMIT 1");
+        let nextDrawNum = Number(latestRes.rows[0]?.draw_number || 0);
+        const latestDateStr = String(latestRes.rows[0]?.draw_date || "");
+
+        const sortedAsc = [...portalDraws].sort((a, b) => a.draw_date.localeCompare(b.draw_date));
+        for (const d of sortedAsc) {
+          if (latestDateStr && d.draw_date <= latestDateStr) continue;
+          const dupCheck = await db.execute({
+            sql: "SELECT 1 FROM cashpot_draws WHERE draw_date = ? LIMIT 1",
+            args: [d.draw_date]
+          });
+          if (dupCheck.rows.length > 0) continue;
+
+          nextDrawNum += 1;
+          const insRes = await db.execute({
+            sql: `INSERT OR IGNORE INTO cashpot_draws (draw_number, draw_date, num1, num2, num3, num4, num5, multiplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [nextDrawNum, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.multiplier]
+          });
+          if (insRes.rowsAffected > 0) drawsAdded++;
         }
       }
     }

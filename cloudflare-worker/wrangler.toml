@@ -4,3 +4,8 @@ compatibility_date = "2024-09-01"
 
 # Free tier settings (100,000 requests/day free forever)
 workers_dev = true
+
+# Optional Free Backup Cron Triggers (10 AM - 10 PM AST = 14:00 - 02:00 UTC)
+# Set Worker secrets: SYNC_TARGET_URL and CRON_SECRET via Cloudflare dashboard or wrangler
+[triggers]
+crons = ["*/10 14-23 * * *", "*/10 0-2 * * *"]

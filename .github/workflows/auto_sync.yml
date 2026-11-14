@@ -1,16 +1,9 @@
-name: 🔄 Autonomous NLCB Live Results Sync
+name: Autonomous NLCB Live Results Sync (Manual Trigger)
 
+# Schedule triggers removed to avoid burning Free GitHub Actions minutes (2,000 min/mo limit).
+# Automated $0/mo scheduling runs via cron-job.org + Cloudflare Worker Cron + Vercel Cron + DB-locked public pulse.
 on:
-  schedule:
-    # Run every 15 minutes during active draw windows (AST is UTC-4)
-    # 10:30 AM AST = 14:30 UTC
-    # 1:00 PM AST = 17:00 UTC
-    # 4:00 PM AST = 20:00 UTC
-    # 7:00 PM AST = 23:00 UTC
-    # 8:30 PM AST = 00:30 UTC
-    - cron: '*/15 14-23 * * *'
-    - cron: '*/15 0-2 * * *'
-  workflow_dispatch: # Allows manual 1-click trigger from GitHub Actions tab
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -19,19 +12,21 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - name: 📥 Check out repository
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: 🚀 Run Autonomous Sync Engine
+      - name: Run Autonomous Sync Engine
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          CLOUDFLARE_WORKER_PROXY_URL: ${{ secrets.CLOUDFLARE_WORKER_PROXY_URL }}
+          CLOUDFLARE_PROXY_SECRET: ${{ secrets.CLOUDFLARE_PROXY_SECRET }}
         run: npx tsx scripts/autonomous_cron.ts
