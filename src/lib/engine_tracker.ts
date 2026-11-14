@@ -1607,6 +1607,7 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
         if (rows.length > 0) {
           actualDraw = {
             draw_number: Number(rows[0].draw_number),
+            draw_date: rows[0].draw_date ? String(rows[0].draw_date) : null,
             numbers: [Number(rows[0].winning_number)]
           };
         }
@@ -1620,6 +1621,7 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
         if (rows.length > 0) {
           actualDraw = {
             draw_number: Number(rows[0].draw_number),
+            draw_date: rows[0].draw_date ? String(rows[0].draw_date) : null,
             numbers: [Number(rows[0].digit1), Number(rows[0].digit2), Number(rows[0].digit3), Number(rows[0].digit4)]
           };
         }
@@ -1633,6 +1635,7 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
         if (rows.length > 0) {
           actualDraw = {
             draw_number: Number(rows[0].draw_number),
+            draw_date: rows[0].draw_date ? String(rows[0].draw_date) : null,
             numbers: [Number(rows[0].num1), Number(rows[0].num2), Number(rows[0].num3), Number(rows[0].num4), Number(rows[0].num5)].sort((a, b) => a - b),
             powerball: Number(rows[0].multiplier || 1)
           };
@@ -1653,6 +1656,7 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
         if (rows && rows.length > 0) {
           actualDraw = {
             draw_number: Number(rows[0].draw_number),
+            draw_date: rows[0].draw_date ? String(rows[0].draw_date) : null,
             numbers: [Number(rows[0].num1), Number(rows[0].num2), Number(rows[0].num3), Number(rows[0].num4), Number(rows[0].num5)].sort((a, b) => a - b),
             powerball: Number(rows[0].powerball || 1)
           };
@@ -1666,6 +1670,7 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
           if (rows && rows.length > 0) {
             actualDraw = {
               draw_number: Number(rows[0].draw_number),
+              draw_date: rows[0].draw_date ? String(rows[0].draw_date) : null,
               numbers: [Number(rows[0].num1), Number(rows[0].num2), Number(rows[0].num3), Number(rows[0].num4), Number(rows[0].num5)].sort((a, b) => a - b),
               powerball: Number(rows[0].powerball || 1)
             };
@@ -1681,6 +1686,7 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
         if (rows && rows.length > 0) {
           actualDraw = {
             draw_number: Number(rows[0].draw_number),
+            draw_date: rows[0].draw_date ? String(rows[0].draw_date) : null,
             numbers: [
               Number(rows[0].num1), Number(rows[0].num2), Number(rows[0].num3),
               Number(rows[0].num4), Number(rows[0].num5), Number(rows[0].num6)
@@ -1745,6 +1751,7 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
         sql: `
           UPDATE prediction_engine_logs
           SET status = 'VERIFIED',
+              target_draw_date = COALESCE(NULLIF(target_draw_date, ''), ?),
               actual_draw_number = ?,
               actual_numbers = ?,
               actual_powerball = ?,
@@ -1759,6 +1766,7 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
           WHERE id = ?
         `,
         args: [
+          actualDraw.draw_date || null,
           actualDraw.draw_number,
           JSON.stringify(actualDraw.numbers),
           actualDraw.powerball || null,
@@ -2662,15 +2670,59 @@ export async function getEngineLeaderboardStats(
     rawLogs = perGameArrays.flat().sort((a, b) => Number(b.id) - Number(a.id));
   }
 
-  const recentAudits: EngineLogEntry[] = rawLogs.map(r => ({
-    id: Number(r.id),
-    game_key: String(r.game_key),
-    engine_key: String(r.engine_key),
-    engine_name: String(r.engine_name),
-    strategy_name: String(r.strategy_name || ""),
-    target_draw_number: Number(r.target_draw_number),
-    target_draw_date: r.target_draw_date ? String(r.target_draw_date) : undefined,
-    target_time_slot: r.target_time_slot ? String(r.target_time_slot) : undefined,
+  // Resolve any missing target_draw_date from official draw tables so every ledger row shows its date
+  const missingByGame: Record<string, Set<number>> = {};
+  for (const r of rawLogs) {
+    if (!r.target_draw_date && r.target_draw_number) {
+      const gk = String(r.game_key);
+      if (!missingByGame[gk]) missingByGame[gk] = new Set();
+      missingByGame[gk].add(Number(r.target_draw_number));
+    }
+  }
+
+  const resolvedDateMap = new Map<string, string>();
+  const tableByGame: Record<string, string> = {
+    "play-whe": "playwhe_draws",
+    "pick4": "pick4_draws",
+    "cashpot": "cashpot_draws",
+    "lotto-plus": "draws",
+    "win-for-life": "winforlife_draws"
+  };
+
+  await Promise.all(
+    Object.entries(missingByGame).map(async ([gk, drawSet]) => {
+      const table = tableByGame[gk];
+      const nums = Array.from(drawSet).filter((n) => !Number.isNaN(n));
+      if (!table || nums.length === 0) return;
+      const placeholders = nums.map(() => "?").join(",");
+      try {
+        const rows = await query<any>(
+          `SELECT draw_number, draw_date FROM ${table} WHERE draw_number IN (${placeholders})`,
+          nums
+        );
+        for (const row of rows) {
+          if (row.draw_date) {
+            resolvedDateMap.set(`${gk}:${Number(row.draw_number)}`, String(row.draw_date));
+          }
+        }
+      } catch {}
+    })
+  );
+
+  const recentAudits: EngineLogEntry[] = rawLogs.map(r => {
+    const resolvedDate =
+      (r.target_draw_date ? String(r.target_draw_date) : undefined) ||
+      resolvedDateMap.get(`${String(r.game_key)}:${Number(r.target_draw_number)}`);
+
+    return {
+      id: Number(r.id),
+      game_key: String(r.game_key),
+      engine_key: String(r.engine_key),
+      engine_name: String(r.engine_name),
+      strategy_name: String(r.strategy_name || ""),
+      target_draw_number: Number(r.target_draw_number),
+      target_draw_date: resolvedDate,
+      target_time_slot: r.target_time_slot ? String(r.target_time_slot) : undefined,
     predicted_numbers: (() => {
       try { return JSON.parse(r.predicted_numbers); } catch { return []; }
     })(),
@@ -2694,7 +2746,8 @@ export async function getEngineLeaderboardStats(
     efficiency_score: Number(r.efficiency_score || 0),
     created_at: String(r.created_at),
     verified_at: r.verified_at ? String(r.verified_at) : undefined
-  }));
+    };
+  });
 
   // Aggregate by engine
   const engineMap: Record<string, {
