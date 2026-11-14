@@ -1187,7 +1187,12 @@ export default function EngineBenchmarkTracker() {
 
                   return (
                     <tr key={audit.id} className="hover:bg-slate-900/40 transition-colors">
-                      <td className="py-3 px-4 font-bold text-white">
+                      <td className="py-3 px-4 font-bold text-white whitespace-nowrap">
+                        {audit.target_draw_date && (
+                          <span className="block text-[10px] text-cyan-400/80 font-normal mb-0.5">
+                            {audit.target_draw_date}
+                          </span>
+                        )}
                         #{audit.target_draw_number}
                         {audit.target_time_slot && (
                           <span className="block text-[10px] text-slate-400 font-normal">
