@@ -9,21 +9,18 @@ export const maxDuration = 30;
 function getPendingGamesFromWatchdog(report: WatchdogReport): SyncGameKey[] {
   const candidates: SyncGameKey[] = [];
   const g = report.games;
-  const astDay = new Date(Date.now() - 4 * 60 * 60 * 1000).getUTCDay(); // 0=Sun
 
   if (
     g.playWhe.isLagging ||
-    (astDay !== 0 &&
-      (g.playWhe.latestDrawDate !== g.playWhe.expectedDrawDateAST ||
-        !(g.playWhe.latestTimeSlot || "").toLowerCase().includes(g.playWhe.expectedDrawSlot.toLowerCase())))
+    g.playWhe.latestDrawDate !== g.playWhe.expectedDrawDateAST ||
+    !(g.playWhe.latestTimeSlot || "").toLowerCase().includes(g.playWhe.expectedDrawSlot.toLowerCase())
   ) {
     candidates.push("play-whe");
   }
   if (
     g.pick4.isLagging ||
-    (astDay !== 0 &&
-      (g.pick4.latestDrawDate !== g.pick4.expectedDrawDateAST ||
-        !(g.pick4.latestTimeSlot || "").toLowerCase().includes(g.pick4.expectedDrawSlot.toLowerCase())))
+    g.pick4.latestDrawDate !== g.pick4.expectedDrawDateAST ||
+    !(g.pick4.latestTimeSlot || "").toLowerCase().includes(g.pick4.expectedDrawSlot.toLowerCase())
   ) {
     candidates.push("pick4");
   }
