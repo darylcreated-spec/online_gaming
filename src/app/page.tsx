@@ -12,6 +12,7 @@ import WelcomeTab from "@/components/WelcomeTab";
 import SyndicateTab from "@/components/SyndicateTab";
 import CashPotTab from "@/components/CashPotTab";
 import Pick4Tab from "@/components/Pick4Tab";
+import FastCashTab from "@/components/FastCashTab";
 import LiveDrawTicker from "@/components/LiveDrawTicker";
 import AppSplashScreen from "@/components/AppSplashScreen";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
@@ -22,7 +23,7 @@ import LottoForensicPanel from "@/components/LottoForensicPanel";
 import EngineBenchmarkTracker from "@/components/EngineBenchmarkTracker";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PushNotificationBell from "@/components/PushNotificationBell";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck, Cpu } from "lucide-react";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck, Cpu, Zap } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { getCacheItem, setCacheItem } from "@/lib/idb_cache";
 import WinConceptLogoEmblem from "@/components/WinConceptLogoEmblem";
@@ -98,12 +99,12 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "engine-tracker" | "settings">("welcome");
+  const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "fast-cash" | "syndicate" | "engine-tracker" | "settings">("welcome");
   const [utilitySubTool, setUtilitySubTool] = useState<"scanner" | "nl-query">("scanner");
   const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "quant-100" | "forensic" | "audit" | "history" | "builder" | "explain">("dashboard");
   const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "diff" | "history" | "translator" | "relationship" | "hits" | "explain" | "network" | "audit" | "forensic">("dashboard");
   
-  const handleTabChange = (tab: "welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "syndicate" | "engine-tracker" | "settings") => {
+  const handleTabChange = (tab: "welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "fast-cash" | "syndicate" | "engine-tracker" | "settings") => {
     triggerHaptic("selection");
     setActiveTab(tab);
   };
@@ -476,6 +477,19 @@ export default function Home() {
               className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(168,85,247,0.4)] shrink-0" 
             />
             <span>PICK 4</span>
+          </button>
+
+          {/* FAST CASH */}
+          <button
+            onClick={() => handleTabChange("fast-cash")}
+            className={`min-w-[125px] h-10 shrink-0 px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === "fast-cash"
+                ? "bg-rose-500/20 border border-rose-400 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.25)]"
+                : "text-gray-400 hover:text-rose-300 border border-transparent hover:border-rose-500/30 hover:bg-rose-500/10"
+            }`}
+          >
+            <Zap className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>FAST CASH</span>
           </button>
 
           {/* ENGINE TRACKER */}
@@ -922,6 +936,12 @@ export default function Home() {
           </div>
         )}
 
+        {activeTab === "fast-cash" && (
+          <div className="tab-content-enter">
+            <FastCashTab />
+          </div>
+        )}
+
         {activeTab === "syndicate" && (
           <div className="tab-content-enter">
             <SyndicateTab onSelectGame={setActiveTab} />
@@ -1060,6 +1080,19 @@ export default function Home() {
             className="w-6 h-6 object-contain rounded-md shrink-0 drop-shadow-[0_0_6px_rgba(168,85,247,0.3)]" 
           />
           <span className="text-[9px] font-mono tracking-wider whitespace-nowrap">PICK 4</span>
+        </button>
+
+        {/* FAST CASH */}
+        <button
+          onClick={() => handleTabChange("fast-cash")}
+          className={`min-w-[68px] h-[52px] shrink-0 flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all cursor-pointer border ${
+            activeTab === "fast-cash"
+              ? "bg-rose-500/20 border-rose-400 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.25)] font-bold"
+              : "text-gray-400 hover:text-rose-300 border-transparent hover:border-white/10 hover:bg-white/5"
+          }`}
+        >
+          <Zap className="w-5 h-5 text-rose-400 shrink-0" />
+          <span className="text-[9px] font-mono tracking-wider whitespace-nowrap">FAST CASH</span>
         </button>
 
         {/* ENGINE TRACKER */}
