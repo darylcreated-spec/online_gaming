@@ -27,6 +27,8 @@ export default function FastCashTab() {
   const [depth, setDepth] = useState<number>(200);
   const [ledgerFilter, setLedgerFilter] = useState<"ALL" | "TOP5" | "TOP10" | "TOP14">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
+  const [countdownSec, setCountdownSec] = useState<number>(180);
 
   const fetchReport = async (targetDepth = depth) => {
     setLoading(true);
@@ -49,23 +51,47 @@ export default function FastCashTab() {
     fetchReport(depth);
   }, [depth]);
 
-  const handleSyncLatest = async () => {
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const timer = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        return;
+      }
+      setCountdownSec((prev) => {
+        if (prev <= 1) {
+          handleSyncLatest(true);
+          return 180;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [autoRefresh, depth]);
+
+  const handleSyncLatest = async (silent = false) => {
     setSyncing(true);
-    setBanner(null);
+    if (!silent) setBanner(null);
     setError(null);
-    triggerHaptic("selection");
+    if (!silent) triggerHaptic("selection");
     try {
-      const res = await fetch("/api/fastcash/sync?pages=10", { method: "POST" });
+      const res = await fetch("/api/fastcash/sync?pages=3", { method: "POST" });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Sync failed");
-      setBanner(
-        `Synced ${json.pagesFetched} pages (${json.drawsFetched} checked, ${json.drawsAdded} new draws stored).`
-      );
-      triggerHaptic("success");
-      await fetchReport(depth);
+      setCountdownSec(180);
+      if (json.skippedCooldown) {
+        if (!silent) setBanner("Sync cooldown active (checked within last 45s).");
+      } else {
+        setBanner(
+          `Synced ${json.pagesFetched} page(s) (${json.drawsAdded} new draw(s) stored).`
+        );
+      }
+      if (!silent) triggerHaptic("success");
+      if (!json.skippedCooldown || !report) {
+        await fetchReport(depth);
+      }
     } catch (err: any) {
       setError(err.message || "Sync failed");
-      triggerHaptic("warning");
+      if (!silent) triggerHaptic("warning");
     } finally {
       setSyncing(false);
     }
@@ -131,7 +157,21 @@ export default function FastCashTab() {
             </div>
 
             <button
-              onClick={handleSyncLatest}
+              onClick={() => {
+                setAutoRefresh((v) => !v);
+                setCountdownSec(180);
+              }}
+              className={`px-3 py-2 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer ${
+                autoRefresh
+                  ? "bg-emerald-500/15 border-emerald-400/50 text-emerald-300"
+                  : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+              }`}
+            >
+              {autoRefresh ? `AUTO 3M (${countdownSec}s)` : "AUTO 3M: OFF"}
+            </button>
+
+            <button
+              onClick={() => handleSyncLatest(false)}
               disabled={syncing || loading}
               className="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/50 text-rose-200 text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
             >

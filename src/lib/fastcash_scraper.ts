@@ -104,15 +104,24 @@ export async function scrapeFastCashPage(
   return { draws, lastDateISO: currentDate };
 }
 
+let lastFastCashSyncMs = 0;
+const SYNC_COOLDOWN_MS = 45_000;
+const DEFAULT_MAX_ARCHIVE_ROWS = Number(process.env.FASTCASH_MAX_ROWS || 50000);
+
 /**
  * Incrementally syncs latest Fast Cash draws into the dedicated Fast Cash Turso DB,
- * stopping as soon as it hits draws already persisted.
+ * stopping as soon as it hits draws already persisted and only writing new draw_numbers.
  */
-export async function syncLatestFastCash(maxPages: number = 10): Promise<{
+export async function syncLatestFastCash(
+  maxPages: number = 3,
+  force: boolean = false
+): Promise<{
   success: boolean;
+  skippedCooldown?: boolean;
   pagesFetched: number;
   drawsFetched: number;
   drawsAdded: number;
+  rowsPruned?: number;
   latestDrawNumber: number | null;
 }> {
   await ensureFastCashSchema();
@@ -122,9 +131,23 @@ export async function syncLatestFastCash(maxPages: number = 10): Promise<{
   );
   const maxExistingDraw = existingRow[0]?.max_draw ? Number(existingRow[0].max_draw) : 0;
 
+  const nowMs = Date.now();
+  if (!force && maxExistingDraw > 0 && nowMs - lastFastCashSyncMs < SYNC_COOLDOWN_MS) {
+    return {
+      success: true,
+      skippedCooldown: true,
+      pagesFetched: 0,
+      drawsFetched: 0,
+      drawsAdded: 0,
+      latestDrawNumber: maxExistingDraw
+    };
+  }
+  lastFastCashSyncMs = nowMs;
+
   let pagesFetched = 0;
   let drawsFetched = 0;
   let drawsAdded = 0;
+  let rowsPruned = 0;
   let latestDrawNumber: number | null = maxExistingDraw || null;
   let dateCursor = getTodayAstISO();
 
@@ -139,19 +162,46 @@ export async function syncLatestFastCash(maxPages: number = 10): Promise<{
       latestDrawNumber = Math.max(latestDrawNumber || 0, draws[0].draw_number);
     }
 
-    const batchRes = await fastCashDb.batch(
-      draws.map((d) => ({
-        sql: `INSERT OR IGNORE INTO fastcash_draws (draw_number, draw_date, draw_time, winning_code, winning_index) VALUES (?, ?, ?, ?, ?)`,
-        args: [d.draw_number, d.draw_date, d.draw_time, d.winning_code, d.winning_index]
-      })),
-      "write"
-    );
-    const insertedOnPage = batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
-    drawsAdded += insertedOnPage;
+    // Only write draws strictly newer than maxExistingDraw (saves ~95% of Turso write ops)
+    const candidateDraws =
+      maxExistingDraw > 0 && page === 1
+        ? draws.filter((d) => d.draw_number > maxExistingDraw)
+        : draws;
 
-    // If every draw on this page was already stored and we're past page 1, stop early
+    if (candidateDraws.length > 0) {
+      const batchRes = await fastCashDb.batch(
+        candidateDraws.map((d) => ({
+          sql: `INSERT OR IGNORE INTO fastcash_draws (draw_number, draw_date, draw_time, winning_code, winning_index) VALUES (?, ?, ?, ?, ?)`,
+          args: [d.draw_number, d.draw_date, d.draw_time, d.winning_code, d.winning_index]
+        })),
+        "write"
+      );
+      const insertedOnPage = batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
+      drawsAdded += insertedOnPage;
+    }
+
+    // Stop as soon as we reach draw numbers already present in the database
     if (maxExistingDraw > 0 && draws.some((d) => d.draw_number <= maxExistingDraw)) {
       break;
+    }
+  }
+
+  // Automatic retention cap so 3-minute draws never exhaust free-tier storage
+  if (drawsAdded > 0 && DEFAULT_MAX_ARCHIVE_ROWS > 1000) {
+    try {
+      const countRes = await queryFastCash<{ cnt: number }>("SELECT COUNT(*) as cnt FROM fastcash_draws");
+      const totalRows = Number(countRes[0]?.cnt || 0);
+      if (totalRows > DEFAULT_MAX_ARCHIVE_ROWS) {
+        const pruneRes = await fastCashDb.execute({
+          sql: `DELETE FROM fastcash_draws WHERE draw_number <= (
+            SELECT draw_number FROM fastcash_draws ORDER BY draw_number DESC LIMIT 1 OFFSET ?
+          )`,
+          args: [DEFAULT_MAX_ARCHIVE_ROWS]
+        });
+        rowsPruned = pruneRes.rowsAffected || 0;
+      }
+    } catch (pruneErr: any) {
+      console.warn("[FastCash Retention] Prune notice:", pruneErr.message);
     }
   }
 
@@ -160,6 +210,7 @@ export async function syncLatestFastCash(maxPages: number = 10): Promise<{
     pagesFetched,
     drawsFetched,
     drawsAdded,
+    rowsPruned,
     latestDrawNumber
   };
 }
