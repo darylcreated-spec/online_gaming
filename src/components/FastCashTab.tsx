@@ -334,6 +334,30 @@ export default function FastCashTab() {
                 </div>
               </div>
 
+              {/* Top-10 Picks */}
+              <div className="bg-[#14191e] rounded-xl p-3 border border-amber-500/30">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-mono text-amber-300 uppercase font-bold">
+                    Top-10 Picks (Matches TOP-10 Analytics)
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">26.3% of Wheel</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {nextPred?.top10.map((code, idx) => (
+                    <span
+                      key={code}
+                      className={`px-2.5 py-1 rounded font-mono text-xs font-semibold border ${
+                        idx < 5
+                          ? "bg-rose-500/15 border-rose-500/40 text-rose-200"
+                          : "bg-amber-500/15 border-amber-500/40 text-amber-200"
+                      }`}
+                    >
+                      {code}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
               {/* 14-Ball Core */}
               <div className="bg-[#14191e] rounded-xl p-3 border border-cyan-500/30">
                 <div className="flex items-center justify-between mb-2">
@@ -633,7 +657,7 @@ export default function FastCashTab() {
                     <th className="py-3 px-4">Target Draw</th>
                     <th className="py-3 px-4">Actual Ball</th>
                     <th className="py-3 px-4">Top-1</th>
-                    <th className="py-3 px-4">Top-5 Sniper Set</th>
+                    <th className="py-3 px-4">Top-10 Picks</th>
                     <th className="py-3 px-4 text-center">Rank</th>
                     <th className="py-3 px-4">Session Resolution</th>
                     <th className="py-3 px-4 text-right">Status</th>
@@ -678,13 +702,15 @@ export default function FastCashTab() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex flex-wrap gap-1.5">
-                            {row.predicted_top5.map((code) => (
+                            {row.predicted_top10.map((code, idx) => (
                               <span
                                 key={code}
                                 className={`px-2 py-0.5 rounded text-[11px] border ${
                                   code === row.actual_code
                                     ? "bg-emerald-500/25 border-emerald-400 text-emerald-300 font-bold"
-                                    : "bg-slate-900 border-slate-800 text-slate-300"
+                                    : idx < 5
+                                    ? "bg-slate-900 border-rose-500/30 text-slate-200"
+                                    : "bg-slate-900 border-slate-800 text-slate-400"
                                 }`}
                               >
                                 {code}
