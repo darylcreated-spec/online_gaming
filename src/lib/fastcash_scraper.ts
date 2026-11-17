@@ -42,19 +42,31 @@ export async function scrapeFastCashPage(
   initialDateISO?: string
 ): Promise<{ draws: ParsedFastCashDraw[]; lastDateISO: string }> {
   const url = pageNum <= 1 ? FASTCASH_BASE_URL : `${FASTCASH_BASE_URL}page/${pageNum}/`;
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      "Accept": "text/html,application/xhtml+xml"
-    },
-    signal: AbortSignal.timeout(15000)
-  });
+  let html = "";
+  let lastFetchErr: any;
 
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status} fetching ${url}`);
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          "Accept": "text/html,application/xhtml+xml"
+        },
+        signal: AbortSignal.timeout(9000)
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} fetching ${url}`);
+      }
+      html = await res.text();
+      break;
+    } catch (err: any) {
+      lastFetchErr = err;
+      if (attempt === 2) throw err;
+      await new Promise((r) => setTimeout(r, 400));
+    }
   }
+  if (!html && lastFetchErr) throw lastFetchErr;
 
-  const html = await res.text();
   const $ = cheerio.load(html);
   const repeaters = $(".oxy-dynamic-list");
   const targetRepeater = repeaters.length > 1 ? repeaters.eq(1) : repeaters.eq(0);
@@ -152,21 +164,33 @@ export async function syncLatestFastCash(
   let dateCursor = getTodayAstISO();
 
   for (let page = 1; page <= maxPages; page++) {
-    const { draws, lastDateISO } = await scrapeFastCashPage(page, dateCursor);
-    dateCursor = lastDateISO;
-    pagesFetched++;
-    if (draws.length === 0) break;
+    let pageDraws: ParsedFastCashDraw[] = [];
+    try {
+      const { draws, lastDateISO } = await scrapeFastCashPage(page, dateCursor);
+      dateCursor = lastDateISO;
+      pageDraws = draws;
+      pagesFetched++;
+    } catch (pageErr: any) {
+      // If page 1 already succeeded, return partial success rather than failing the sync
+      if (page > 1 && pagesFetched > 0) {
+        console.warn(`[FastCash Sync] Page ${page} skipped due to timeout/error:`, pageErr.message);
+        break;
+      }
+      lastFastCashSyncMs = 0; // Reset cooldown on page 1 failure so retry is allowed immediately
+      throw pageErr;
+    }
+    if (pageDraws.length === 0) break;
 
-    drawsFetched += draws.length;
-    if (page === 1 && draws[0]) {
-      latestDrawNumber = Math.max(latestDrawNumber || 0, draws[0].draw_number);
+    drawsFetched += pageDraws.length;
+    if (page === 1 && pageDraws[0]) {
+      latestDrawNumber = Math.max(latestDrawNumber || 0, pageDraws[0].draw_number);
     }
 
     // Only write draws strictly newer than maxExistingDraw (saves ~95% of Turso write ops)
     const candidateDraws =
       maxExistingDraw > 0 && page === 1
-        ? draws.filter((d) => d.draw_number > maxExistingDraw)
-        : draws;
+        ? pageDraws.filter((d) => d.draw_number > maxExistingDraw)
+        : pageDraws;
 
     if (candidateDraws.length > 0) {
       const batchRes = await fastCashDb.batch(
@@ -181,7 +205,7 @@ export async function syncLatestFastCash(
     }
 
     // Stop as soon as we reach draw numbers already present in the database
-    if (maxExistingDraw > 0 && draws.some((d) => d.draw_number <= maxExistingDraw)) {
+    if (maxExistingDraw > 0 && pageDraws.some((d) => d.draw_number <= maxExistingDraw)) {
       break;
     }
   }

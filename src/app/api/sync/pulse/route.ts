@@ -2,9 +2,18 @@ import { NextResponse } from "next/server";
 import { runDrawWatchdog, WatchdogReport } from "@/lib/draw_watchdog";
 import { acquireSyncLock, releaseSyncLock } from "@/lib/cron_auth";
 import { runUnifiedSyncPipeline, SyncGameKey } from "@/lib/sync_orchestrator";
+import { syncLatestFastCash } from "@/lib/fastcash_scraper";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
+
+const VALID_SYNC_GAMES: SyncGameKey[] = [
+  "play-whe",
+  "lotto-plus",
+  "win-for-life",
+  "cashpot",
+  "pick4"
+];
 
 function getPendingGamesFromWatchdog(report: WatchdogReport): SyncGameKey[] {
   const candidates: SyncGameKey[] = [];
@@ -45,8 +54,68 @@ function getPendingGamesFromWatchdog(report: WatchdogReport): SyncGameKey[] {
  * Safe public stale-draw pulse for live dashboard visitors.
  * Only scrapes if a draw is actually pending/lagging AND the 120s global Turso lock permits.
  */
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const isManual = searchParams.get("manual") === "1";
+    const requestedGame = searchParams.get("game") || "";
+
+    if (isManual) {
+      const lock = await acquireSyncLock("manual_pulse", 25, 60);
+      if (!lock.acquired) {
+        return NextResponse.json({
+          success: true,
+          rateLimited: true,
+          cooldownRemainingSeconds: lock.retryAfterSeconds,
+          totalDrawsAdded: 0,
+          details: `Sync already ran recently (${lock.retryAfterSeconds}s cooldown remaining).`
+        });
+      }
+
+      try {
+        const targetGames: SyncGameKey[] = VALID_SYNC_GAMES.includes(requestedGame as SyncGameKey)
+          ? [requestedGame as SyncGameKey]
+          : VALID_SYNC_GAMES;
+
+        const [result, fastCashRes] = await Promise.all([
+          runUnifiedSyncPipeline({
+            onlyGames: targetGames,
+            calibrate: false,
+            reconcile: false,
+            notify: true,
+            audit: true,
+            triggerSource: "manual-pulse"
+          }),
+          !requestedGame || requestedGame === "all" || requestedGame === "fast-cash"
+            ? syncLatestFastCash(2).catch((e: any) => ({ success: false, drawsAdded: 0, error: e.message }))
+            : Promise.resolve(null)
+        ]);
+
+        const singleGameResult =
+          targetGames.length === 1
+            ? targetGames[0] === "play-whe"
+              ? result.playWhe
+              : targetGames[0] === "lotto-plus"
+              ? result.lottoPlus
+              : targetGames[0] === "win-for-life"
+              ? result.winForLife
+              : targetGames[0] === "cashpot"
+              ? result.cashPot
+              : result.pick4
+            : null;
+
+        return NextResponse.json({
+          ...result,
+          fastCash: fastCashRes,
+          drawsAdded: singleGameResult ? singleGameResult.drawsAdded || 0 : result.totalDrawsAdded || 0,
+          details: singleGameResult?.details || `Synchronized ${targetGames.join(", ")}`,
+          targetedGames: targetGames
+        });
+      } finally {
+        await releaseSyncLock("manual_pulse", lock.ownerId, true);
+      }
+    }
+
     const watchdog = await runDrawWatchdog();
     if (watchdog.holidayPause?.isHoliday && watchdog.sequenceGapsCount === 0) {
       return NextResponse.json({

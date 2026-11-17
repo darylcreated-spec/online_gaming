@@ -137,45 +137,41 @@ export default function SettingsTab() {
 
   const handleSyncAll = async () => {
     if (syncingGame) return;
-    const secret = resolveAdminSecret(false);
-    if (!secret) return;
 
     setSyncingGame("all");
     setSyncType("recent");
     setSyncSuccess(null);
     setLogs([]);
-    setActiveStep("Syncing All 5 Games in Parallel from NLCB...");
-    addLog("Connecting to NLCB for Play Whe, Lotto Plus, Win For Life, Cash Pot, and Pick 4...");
+    setActiveStep("Syncing All Games in Parallel from NLCB...");
+    addLog("Connecting to NLCB for Play Whe, Lotto Plus, Win For Life, Cash Pot, Pick 4, and Fast Cash...");
 
     try {
-      const res = await fetch("/api/cron/sync-all?force=true", {
+      const res = await fetch("/api/sync/pulse?manual=1&game=all", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${secret}`
-        },
-        body: JSON.stringify({ force: true })
+          "Content-Type": "application/json"
+        }
       });
-      clearCachedAdminSecretIfUnauthorized(res.status);
       const data = await res.json();
       if (data.success) {
-        addLog(`Sync All Complete! Total draws added/updated: ${data.results?.totalDrawsAdded ?? data.totalDrawsAdded ?? 0}`);
-        addLog(`Play Whe: ${data.results?.playWhe?.details || "Synced"}`);
-        addLog(`Lotto Plus: ${data.results?.lottoPlus?.details || "Synced"}`);
-        addLog(`Win For Life: ${data.results?.winForLife?.details || "Synced"}`);
-        addLog(`Cash Pot: ${data.results?.cashPot?.details || "Synced"}`);
-        addLog(`Pick 4: ${data.results?.pick4?.details || "Synced"}`);
+        if (data.rateLimited) {
+          addLog(data.details || `Sync cooldown active (${data.cooldownRemainingSeconds}s remaining).`);
+        } else {
+          addLog(`Sync All Complete! Total draws added/updated: ${data.totalDrawsAdded ?? 0}`);
+          addLog(`Play Whe: ${data.playWhe?.details || "Synced"}`);
+          addLog(`Lotto Plus: ${data.lottoPlus?.details || "Synced"}`);
+          addLog(`Win For Life: ${data.winForLife?.details || "Synced"}`);
+          addLog(`Cash Pot: ${data.cashPot?.details || "Synced"}`);
+          addLog(`Pick 4: ${data.pick4?.details || "Synced"}`);
+          if (data.fastCash?.success) {
+            addLog(`Fast Cash: +${data.fastCash.drawsAdded || 0} draws (Latest #${data.fastCash.latestDrawNumber || "—"})`);
+          }
+        }
         setSyncSuccess(true);
-        setActiveStep("All 5 Games Synchronized!");
+        setActiveStep("All Games Synchronized!");
         fetchDBStatus();
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("win_concept_sync_completed", { detail: data }));
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification("All 5 Games Synced!", {
-              body: `Updated latest draws across all 5 games!`,
-              icon: "/pwa-192x192.png"
-            });
-          }
         }
       } else {
         addLog(`Sync All Failed: ${data.error || "Unknown error"}`);
@@ -200,8 +196,8 @@ export default function SettingsTab() {
     full: boolean;
   }) => {
     if (syncingGame) return;
-    const secret = resolveAdminSecret(config.full);
-    if (!secret) return;
+    const secret = config.full ? resolveAdminSecret(true) : null;
+    if (config.full && !secret) return;
 
     setSyncingGame(config.gameId);
     setSyncType(config.full ? "full" : "recent");
@@ -213,9 +209,9 @@ export default function SettingsTab() {
         : `Syncing ${config.label} Recent Draws...`
     );
 
-    const authHeaders = {
+    const authHeaders: Record<string, string> = {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${secret}`
+      ...(secret ? { "Authorization": `Bearer ${secret}` } : {})
     };
 
     if (config.full) {
@@ -267,13 +263,19 @@ export default function SettingsTab() {
       }
     } else {
       addLog(`Starting ${config.label} sync (Recent)...`);
+      const pulseGameKey =
+        config.gameId === "lotto"
+          ? "lotto-plus"
+          : config.gameId === "playwhe"
+          ? "play-whe"
+          : config.gameId === "winforlife"
+          ? "win-for-life"
+          : config.gameId;
       try {
-        const res = await fetch(config.endpoint, {
+        const res = await fetch(`/api/sync/pulse?manual=1&game=${pulseGameKey}`, {
           method: "POST",
-          headers: authHeaders,
-          body: JSON.stringify({ full: false })
+          headers: { "Content-Type": "application/json" }
         });
-        clearCachedAdminSecretIfUnauthorized(res.status);
         const data = await res.json();
         if (data.success) {
           addLog(`Sync Success! Added/Updated ${data.drawsAdded || 0} draws.`);
