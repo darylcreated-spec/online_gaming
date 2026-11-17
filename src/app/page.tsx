@@ -488,7 +488,11 @@ export default function Home() {
                 : "text-gray-400 hover:text-rose-300 border border-transparent hover:border-rose-500/30 hover:bg-rose-500/10"
             }`}
           >
-            <Zap className="w-4 h-4 text-rose-400 shrink-0" />
+            <img
+              src="/images/fast_cash_icon.png"
+              alt="Fast Cash"
+              className="w-5 h-5 object-contain rounded shadow-[0_0_8px_rgba(244,63,94,0.4)] shrink-0"
+            />
             <span>FAST CASH</span>
           </button>
 
@@ -1091,7 +1095,11 @@ export default function Home() {
               : "text-gray-400 hover:text-rose-300 border-transparent hover:border-white/10 hover:bg-white/5"
           }`}
         >
-          <Zap className="w-5 h-5 text-rose-400 shrink-0" />
+          <img
+            src="/images/fast_cash_icon.png"
+            alt="Fast Cash"
+            className="w-6 h-6 object-contain rounded-md shrink-0 drop-shadow-[0_0_6px_rgba(244,63,94,0.3)]"
+          />
           <span className="text-[9px] font-mono tracking-wider whitespace-nowrap">FAST CASH</span>
         </button>
 

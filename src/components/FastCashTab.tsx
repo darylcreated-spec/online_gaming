@@ -125,12 +125,14 @@ export default function FastCashTab() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center">
-                <Zap className="w-5 h-5 text-rose-400" />
-              </div>
+              <img
+                src="/images/fast_cash_icon.png"
+                alt="Fast Cash"
+                className="w-11 h-11 object-contain rounded-xl shadow-[0_0_15px_rgba(244,63,94,0.35)] shrink-0"
+              />
               <div>
-                <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">
-                  NLCB Fast Cash — Two-Stage Algorithmic RNG Replication Lab
+                <h1 className="text-lg sm:text-xl font-bold text-slate-50 tracking-tight" style={{ color: "#f8fafc" }}>
+                  NLCB Fast Cash — Live Results &amp; 38-State Analytics
                 </h1>
                 <p className="text-xs text-slate-400 font-mono">
                   38-State Wheel (0, 00, 01–36) • 3-Min High-Frequency Draws • Dedicated Turso Audit DB
@@ -288,7 +290,7 @@ export default function FastCashTab() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Target className="w-5 h-5 text-rose-400" />
-                  <h2 className="font-bold text-white text-sm sm:text-base">
+                  <h2 className="font-bold text-slate-50 text-sm sm:text-base" style={{ color: "#f8fafc" }}>
                     Next Draw Candidate Rankings (#{nextPred?.targetDrawNumber})
                   </h2>
                 </div>
@@ -398,7 +400,7 @@ export default function FastCashTab() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Cpu className="w-5 h-5 text-cyan-400" />
-                  <h2 className="font-bold text-white text-sm sm:text-base">
+                  <h2 className="font-bold text-slate-50 text-sm sm:text-base" style={{ color: "#f8fafc" }}>
                     Walk-Forward Backtest ({wf?.evaluatedCount} Draws)
                   </h2>
                 </div>
@@ -506,19 +508,19 @@ export default function FastCashTab() {
           {report && report.sessionWindows.length > 0 && (
             <div className="bg-[#0f1418] rounded-2xl border border-slate-800 p-5 space-y-3 shadow-lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-emerald-400" />
+                <div className="flex items-center gap-2.5">
+                  <Layers className="w-5 h-5 text-emerald-400 shrink-0" />
                   <div>
-                    <h2 className="font-bold text-white text-sm sm:text-base">
-                      Multi-Draw Rolling Window Coverage (3-Min Progression)
+                    <h2 className="font-bold text-slate-50 text-sm sm:text-base" style={{ color: "#f8fafc" }}>
+                      Rolling Multi-Draw Window Coverage
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Historical overlap across W consecutive draws in the audited sample.
+                      How often at least 1 winning number landed inside each shortlist across N consecutive draws.
                     </p>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono font-semibold">
-                  Rolling Window Audit
+                <span className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono font-semibold self-start sm:self-auto">
+                  3-Min Draw Windows
                 </span>
               </div>
 
@@ -526,19 +528,19 @@ export default function FastCashTab() {
                 <table className="w-full text-left text-xs font-mono">
                   <thead className="bg-[#171c20] border-b border-slate-800 text-[10px] text-slate-400 uppercase">
                     <tr>
-                      <th className="py-2.5 px-3">Session Window</th>
-                      <th className="py-2.5 px-3">Duration</th>
-                      <th className="py-2.5 px-3">Top-5 Sniper</th>
-                      <th className="py-2.5 px-3">Top-10 Matrix</th>
-                      <th className="py-2.5 px-3">Top-14 Mandel Core</th>
-                      <th className="py-2.5 px-3">Top-19 Half-Wheel</th>
+                      <th className="py-2.5 px-3">Window</th>
+                      <th className="py-2.5 px-3">Time Span</th>
+                      <th className="py-2.5 px-3">Top 5 Picks <span className="text-slate-500">(of 38)</span></th>
+                      <th className="py-2.5 px-3">Top 10 Picks <span className="text-slate-500">(of 38)</span></th>
+                      <th className="py-2.5 px-3">Top 14 Picks <span className="text-slate-500">(of 38)</span></th>
+                      <th className="py-2.5 px-3">Top 19 Picks <span className="text-slate-500">(of 38)</span></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
                     {report.sessionWindows.map((sw) => (
                       <tr key={sw.windowDraws} className="hover:bg-slate-900/40">
-                        <td className="py-2.5 px-3 font-bold text-white">
-                          W = {sw.windowDraws} {sw.windowDraws === 1 ? "Draw" : "Draws"}
+                        <td className="py-2.5 px-3 font-bold text-white whitespace-nowrap">
+                          {sw.windowDraws} {sw.windowDraws === 1 ? "Draw" : "Draws"}
                         </td>
                         <td className="py-2.5 px-3 text-slate-400">{sw.durationMinutes} mins</td>
                         <td className="py-2.5 px-3 text-slate-200">
@@ -579,7 +581,7 @@ export default function FastCashTab() {
               <div>
                 <div className="flex items-center gap-2">
                   <Activity className="w-5 h-5 text-rose-400" />
-                  <h2 className="font-bold text-white text-base">
+                  <h2 className="font-bold text-slate-50 text-base" style={{ color: "#f8fafc" }}>
                     Fast Cash Draw-by-Draw Verification Audit Ledger
                   </h2>
                 </div>
