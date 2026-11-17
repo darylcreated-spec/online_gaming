@@ -158,11 +158,11 @@ export default function SettingsTab() {
           addLog(data.details || `Sync cooldown active (${data.cooldownRemainingSeconds}s remaining).`);
         } else {
           addLog(`Sync All Complete! Total draws added/updated: ${data.totalDrawsAdded ?? 0}`);
-          addLog(`Play Whe: ${data.playWhe?.details || "Synced"}`);
-          addLog(`Lotto Plus: ${data.lottoPlus?.details || "Synced"}`);
-          addLog(`Win For Life: ${data.winForLife?.details || "Synced"}`);
-          addLog(`Cash Pot: ${data.cashPot?.details || "Synced"}`);
-          addLog(`Pick 4: ${data.pick4?.details || "Synced"}`);
+          addLog(`Play Whe: ${data.results?.playWhe?.details || "Synced"}`);
+          addLog(`Lotto Plus: ${data.results?.lottoPlus?.details || "Synced"}`);
+          addLog(`Win For Life: ${data.results?.winForLife?.details || "Synced"}`);
+          addLog(`Cash Pot: ${data.results?.cashPot?.details || "Synced"}`);
+          addLog(`Pick 4: ${data.results?.pick4?.details || "Synced"}`);
           if (data.fastCash?.success) {
             addLog(`Fast Cash: +${data.fastCash.drawsAdded || 0} draws (Latest #${data.fastCash.latestDrawNumber || "—"})`);
           }

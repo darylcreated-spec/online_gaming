@@ -91,17 +91,18 @@ export async function POST(request: Request) {
             : Promise.resolve(null)
         ]);
 
+        const r = result.results || {};
         const singleGameResult =
           targetGames.length === 1
             ? targetGames[0] === "play-whe"
-              ? result.playWhe
+              ? r.playWhe
               : targetGames[0] === "lotto-plus"
-              ? result.lottoPlus
+              ? r.lottoPlus
               : targetGames[0] === "win-for-life"
-              ? result.winForLife
+              ? r.winForLife
               : targetGames[0] === "cashpot"
-              ? result.cashPot
-              : result.pick4
+              ? r.cashPot
+              : r.pick4
             : null;
 
         return NextResponse.json({
