@@ -220,17 +220,39 @@ export default function FastCashTab() {
             )}
           </div>
           <div className="bg-[#14191e] rounded-xl p-3 border border-slate-800">
-            <div className="text-[10px] text-slate-400 uppercase">Algorithmic Verdict</div>
-            <div className="text-base font-bold text-amber-300 mt-0.5">
+            <div className="text-[10px] text-slate-400 uppercase">Chi-Square (df=37)</div>
+            <div className="text-base font-bold text-white mt-0.5">
               {diag ? `χ²=${diag.chiSquare} (p=${diag.pValueApprox})` : "—"}
             </div>
             {diag && (
-              <div className="text-[10px] text-emerald-400 font-bold mt-0.5 truncate">
-                {diag.verdict}
+              <div className="text-[10px] text-cyan-300 font-semibold mt-0.5 truncate">
+                {diag.verdict.replace(/_/g, " ")}
               </div>
             )}
           </div>
         </div>
+
+        {/* Recent 3-Min Official Draws Feed */}
+        {report && report.recentDraws.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-800/60 flex items-center gap-2 overflow-x-auto pb-1 sleek-scrollbar">
+            <span className="text-[10px] font-mono uppercase text-slate-400 shrink-0 pr-1">
+              Recent Feed:
+            </span>
+            {report.recentDraws.slice(0, 12).map((d, idx) => (
+              <div
+                key={d.draw_number}
+                className={`shrink-0 px-2.5 py-1.5 rounded-lg border font-mono text-[11px] flex items-center gap-2 ${
+                  idx === 0
+                    ? "bg-rose-500/15 border-rose-500/40 text-white"
+                    : "bg-[#14191e] border-slate-800 text-slate-300"
+                }`}
+              >
+                <span className="text-[10px] text-slate-400">{d.draw_time}</span>
+                <span className="font-bold text-rose-300">{d.winning_code}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {banner && (
           <div className="mt-3 px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-mono flex items-center gap-2">
@@ -261,37 +283,37 @@ export default function FastCashTab() {
         <>
           {/* Next Draw Algorithmic Replication & Walk-Forward Performance */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Next Draw Replication */}
+            {/* Next Draw Candidate Rankings */}
             <div className="bg-[#0f1418] rounded-2xl border border-slate-800 p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Target className="w-5 h-5 text-rose-400" />
                   <h2 className="font-bold text-white text-sm sm:text-base">
-                    Next Draw Replication Portfolio (#{nextPred?.targetDrawNumber})
+                    Next Draw Candidate Rankings (#{nextPred?.targetDrawNumber})
                   </h2>
                 </div>
                 <span className="px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-[10px] font-mono text-rose-300">
-                  Two-Stage Hybrid Condenser
+                  38-State Ensemble
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="bg-[#14191e] rounded-xl p-3 border border-rose-500/40">
-                  <div className="text-[10px] font-mono text-slate-400 uppercase">Primary Sniper (Top-1)</div>
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="text-[10px] font-mono text-slate-400 uppercase">Top-1 Pick</div>
+                  <div className="mt-2 flex items-center gap-2.5">
                     <span className="w-10 h-10 rounded-xl bg-rose-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-lg">
                       {nextPred?.top1}
                     </span>
                     <div className="text-[11px] font-mono text-slate-300">
-                      <div>Score: {nextPred?.rankedScores[0]?.score}%</div>
-                      <div className="text-emerald-400">+52% vs Base</div>
+                      <div className="text-white font-semibold">Weight: {nextPred?.rankedScores[0]?.score}%</div>
+                      <div className="text-slate-400">Base: 2.63%</div>
                     </div>
                   </div>
                 </div>
 
                 <div className="sm:col-span-2 bg-[#14191e] rounded-xl p-3 border border-slate-800">
                   <div className="text-[10px] font-mono text-slate-400 uppercase mb-2">
-                    Stage-1 Sniper Top-5 Core (LCG + Markov + Phase + EWMA)
+                    Top-5 Core (Markov + LCG + Phase + EWMA)
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {nextPred?.top5.map((code, i) => (
@@ -310,13 +332,13 @@ export default function FastCashTab() {
                 </div>
               </div>
 
-              {/* Top-14 Mandel Attractor Core */}
+              {/* 14-Ball Core */}
               <div className="bg-[#14191e] rounded-xl p-3 border border-cyan-500/30">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-mono text-cyan-300 uppercase font-bold">
-                    Stage-2 Mandel Attractor Core (14 Balls • 100% 15-Draw Session Hit Rate)
+                    14-Ball Extended Core (Top-14 Ranked)
                   </span>
-                  <span className="text-[10px] font-mono text-slate-400">36.8% Wheel</span>
+                  <span className="text-[10px] font-mono text-slate-400">36.8% of Wheel</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {nextPred?.top14MandelCore.map((code, idx) => (
@@ -336,13 +358,13 @@ export default function FastCashTab() {
                 </div>
               </div>
 
-              {/* Top-19 Half-Wheel Sector */}
+              {/* 19-Ball Half-Wheel */}
               <div className="bg-[#14191e] rounded-xl p-3 border border-emerald-500/30">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-mono text-emerald-300 uppercase font-bold">
-                    19-Ball Half-Wheel Sector (100% 8-Draw / 24-Min Session Hit Rate)
+                    19-Ball Half-Wheel Coverage
                   </span>
-                  <span className="text-[10px] font-mono text-slate-400">50.0% Wheel</span>
+                  <span className="text-[10px] font-mono text-slate-400">50.0% of Wheel</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {nextPred?.top19HalfWheel.map((code) => (
@@ -357,15 +379,15 @@ export default function FastCashTab() {
               </div>
 
               {nextPred && (
-                <div className="text-[11px] font-mono text-slate-400 flex flex-wrap items-center justify-between gap-2 pt-1">
+                <div className="text-[11px] font-mono text-slate-400 flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/70">
                   <span>
-                    Active LCG Rule:{" "}
+                    Trailing LCG Fit:{" "}
                     <strong className="text-cyan-300">
                       ({nextPred.bestAffineRule.a}x + {nextPred.bestAffineRule.c}) mod 38
                     </strong>
                   </span>
                   <span>
-                    Trailing Top-5 Fit: <strong className="text-white">{nextPred.bestAffineRule.trainHitTop5Pct}%</strong>
+                    300-Draw Top-5 Fit: <strong className="text-white">{nextPred.bestAffineRule.trainHitTop5Pct}%</strong>
                   </span>
                 </div>
               )}
@@ -377,40 +399,34 @@ export default function FastCashTab() {
                 <div className="flex items-center gap-2">
                   <Cpu className="w-5 h-5 text-cyan-400" />
                   <h2 className="font-bold text-white text-sm sm:text-base">
-                    Single-Draw Out-of-Sample Lift ({wf?.evaluatedCount} Draws)
+                    Walk-Forward Backtest ({wf?.evaluatedCount} Draws)
                   </h2>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 text-[10px] font-mono">
-                  All 5 Tiers Beat Random
+                <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono">
+                  Out-of-Sample
                 </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs font-mono">
-                <div className="bg-[#14191e] rounded-xl p-2.5 border border-slate-800">
-                  <div className="text-[10px] text-slate-400">TOP-1</div>
-                  <div className="text-base font-bold text-rose-300 mt-1">{wf?.top1RatePct}%</div>
-                  <div className="text-[10px] text-slate-500">Base {wf?.top1BaselinePct}%</div>
-                </div>
-                <div className="bg-[#14191e] rounded-xl p-2.5 border border-slate-800">
-                  <div className="text-[10px] text-slate-400">TOP-5</div>
-                  <div className="text-base font-bold text-amber-300 mt-1">{wf?.top5RatePct}%</div>
-                  <div className="text-[10px] text-slate-500">Base {wf?.top5BaselinePct}%</div>
-                </div>
-                <div className="bg-[#14191e] rounded-xl p-2.5 border border-slate-800">
-                  <div className="text-[10px] text-slate-400">TOP-10</div>
-                  <div className="text-base font-bold text-cyan-300 mt-1">{wf?.top10RatePct}%</div>
-                  <div className="text-[10px] text-slate-500">Base {wf?.top10BaselinePct}%</div>
-                </div>
-                <div className="bg-[#14191e] rounded-xl p-2.5 border border-cyan-500/30">
-                  <div className="text-[10px] text-cyan-300">TOP-14</div>
-                  <div className="text-base font-bold text-white mt-1">{wf?.top14RatePct}%</div>
-                  <div className="text-[10px] text-slate-500">Base {wf?.top14BaselinePct}%</div>
-                </div>
-                <div className="bg-[#14191e] rounded-xl p-2.5 border border-emerald-500/30">
-                  <div className="text-[10px] text-emerald-300">TOP-19</div>
-                  <div className="text-base font-bold text-emerald-300 mt-1">{wf?.top19RatePct}%</div>
-                  <div className="text-[10px] text-slate-500">Base {wf?.top19BaselinePct}%</div>
-                </div>
+                {[
+                  { label: "TOP-1", val: wf?.top1RatePct ?? 0, base: wf?.top1BaselinePct ?? 2.63, accent: "text-rose-300", border: "border-slate-800" },
+                  { label: "TOP-5", val: wf?.top5RatePct ?? 0, base: wf?.top5BaselinePct ?? 13.16, accent: "text-white", border: "border-slate-800" },
+                  { label: "TOP-10", val: wf?.top10RatePct ?? 0, base: wf?.top10BaselinePct ?? 26.32, accent: "text-cyan-300", border: "border-slate-800" },
+                  { label: "TOP-14", val: wf?.top14RatePct ?? 0, base: wf?.top14BaselinePct ?? 36.84, accent: "text-white", border: "border-cyan-500/30" },
+                  { label: "TOP-19", val: wf?.top19RatePct ?? 0, base: wf?.top19BaselinePct ?? 50.0, accent: "text-emerald-300", border: "border-emerald-500/30" }
+                ].map((tier) => {
+                  const diff = Number((tier.val - tier.base).toFixed(2));
+                  return (
+                    <div key={tier.label} className={`bg-[#14191e] rounded-xl p-2.5 border ${tier.border}`}>
+                      <div className="text-[10px] text-slate-400">{tier.label}</div>
+                      <div className={`text-base font-bold ${tier.accent} mt-1`}>{tier.val}%</div>
+                      <div className="text-[10px] text-slate-400">Base {tier.base}%</div>
+                      <div className={`text-[10px] mt-0.5 font-semibold ${diff >= 0 ? "text-emerald-400" : "text-slate-500"}`}>
+                        {diff >= 0 ? `+${diff}%` : `${diff}%`}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Discovered Algorithmic Step-Delta & Wheel Anomalies */}
@@ -473,8 +489,9 @@ export default function FastCashTab() {
                         key={tw.matchedDrawNumber}
                         className="px-2.5 py-1.5 rounded bg-slate-900/80 border border-slate-800 flex items-center justify-between"
                       >
-                        <span className="text-slate-400">
-                          #{tw.matchedDrawNumber} [{tw.sequenceCodes.join("&rarr;")}]
+                        <span className="text-slate-300">
+                          <span className="text-slate-500">#{tw.matchedDrawNumber}</span>{" "}
+                          [{tw.sequenceCodes.join(" → ")}]
                         </span>
                         <span className="text-emerald-300 font-bold">Next: {tw.followerCode}</span>
                       </div>
@@ -485,23 +502,23 @@ export default function FastCashTab() {
             </div>
           </div>
 
-          {/* Multi-Draw Rolling Session Window Capture Matrix (100% Capture Horizons) */}
+          {/* Multi-Draw Rolling Window Coverage Matrix */}
           {report && report.sessionWindows.length > 0 && (
-            <div className="bg-[#0f1418] rounded-2xl border border-emerald-500/30 p-5 space-y-3 shadow-lg">
+            <div className="bg-[#0f1418] rounded-2xl border border-slate-800 p-5 space-y-3 shadow-lg">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Layers className="w-5 h-5 text-emerald-400" />
                   <div>
                     <h2 className="font-bold text-white text-sm sm:text-base">
-                      Multi-Draw Rolling Session Capture Matrix (3-Min Draw Progression)
+                      Multi-Draw Rolling Window Coverage (3-Min Progression)
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Empirical out-of-sample session win rate when tracking the dynamic replication sets across W consecutive draws.
+                      Historical overlap across W consecutive draws in the audited sample.
                     </p>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-mono font-bold">
-                  100.0% Verified Session Horizons
+                <span className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono font-semibold">
+                  Rolling Window Audit
                 </span>
               </div>
 
