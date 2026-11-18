@@ -160,6 +160,7 @@ export default function WinForLifeTab() {
   const [wheelingLoading, setWheelingLoading] = useState(false);
   const [isSavingSlips, setIsSavingSlips] = useState(false);
   const [showHeatmapOverlay, setShowHeatmapOverlay] = useState(true);
+  const [championPick, setChampionPick] = useState<any>(null);
 
   // Network map states
   const [hoveredNode, setHoveredNode] = useState<number | null>(null);
@@ -218,10 +219,30 @@ export default function WinForLifeTab() {
   const fetchStats = async () => {
     try {
       setStatsLoading(true);
-      const res = await fetch("/api/winforlife/stats");
+      const [res, trackerRes] = await Promise.all([
+        fetch("/api/winforlife/stats", { cache: "no-store" }),
+        fetch("/api/engine-tracker?game=win-for-life&depth=100", { cache: "no-store" }).catch(() => null)
+      ]);
       const data = await res.json();
       if (data.success) {
         setStats(data);
+      }
+      if (trackerRes && trackerRes.ok) {
+        const tData = await trackerRes.json();
+        const wflChamp = tData?.championPicks?.find((c: any) => c.game_key === "win-for-life") || tData?.championPicks?.[0];
+        if (wflChamp) {
+          setChampionPick(wflChamp);
+          const coreSet = new Set<number>();
+          for (const slip of wflChamp.wheel_slips || [wflChamp.predicted_numbers || []]) {
+            for (const b of slip) {
+              if (coreSet.size < 10) coreSet.add(b);
+            }
+          }
+          if (coreSet.size >= 6) {
+            setSelectedNums(prev => (prev.length === 0 ? Array.from(coreSet).sort((a, b) => a - b) : prev));
+            setSelectedCb(prev => (prev === null ? (wflChamp.predicted_powerball || wflChamp.bonus_ball_rotation?.[0] || 1) : prev));
+          }
+        }
       }
     } catch (e) {
       console.error(e);
@@ -656,43 +677,49 @@ export default function WinForLifeTab() {
               </div>
             </div>
 
-            {/* Card 3: Suggested Picks */}
-            <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+            {/* Card 3: Verified Champion Master Pick */}
+            <div className="glass-panel p-5 rounded-xl border border-emerald-500/30 bg-slate-950/60 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
               <div>
-                <span className="text-[10px] font-bold font-mono tracking-widest text-primary uppercase block mb-2">
-                  SUGGESTED ALGO PICKS
-                </span>
-                {statsLoading || !stats?.frequencies ? (
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-[10px] font-bold font-mono tracking-widest text-emerald-400 uppercase block">
+                    VERIFIED CHAMPION PICK
+                  </span>
+                  {championPick && (
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[9px] font-black font-mono">
+                      {championPick.win_rate_pct}% WIN RATE
+                    </span>
+                  )}
+                </div>
+                {statsLoading && !championPick ? (
                   <div className="space-y-2 animate-pulse py-1">
                     <div className="h-6 w-32 bg-white/5 rounded" />
                     <div className="h-4 w-48 bg-white/5 rounded" />
                   </div>
                 ) : (
                   <div className="space-y-2 font-mono">
-                    <div className="text-[9px] text-slate-500 uppercase tracking-widest">
-                      Based on Hot/Cold Gap Analysis
+                    <div className="text-[9px] text-slate-400 uppercase tracking-widest">
+                      {championPick ? `${championPick.engine_name} • Target #${championPick.target_draw_number}` : "Deterministic Hot/Cold Consensus"}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
                       {(() => {
-                        const frequencies = stats.frequencies || [];
-                        const hot = frequencies.slice(0, 4).map((f: any) => f.number);
-                        const cold = frequencies.slice(-4).map((f: any) => f.number);
-                        const finalPool = [
-                          ...hot,
-                          cold[Math.floor(Math.random() * cold.length)],
-                          cold[(Math.floor(Math.random() * cold.length) + 1) % cold.length]
-                        ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 6).sort((a, b) => a - b);
-                        
-                        const cb = stats.cashBallFrequencies?.[0]?.number || 1;
+                        const finalPool: number[] =
+                          championPick?.predicted_numbers?.length === 6
+                            ? championPick.predicted_numbers
+                            : (stats?.frequencies || []).slice(0, 6).map((f: any) => f.number).sort((a: number, b: number) => a - b);
+                        const cb =
+                          championPick?.predicted_powerball ||
+                          championPick?.bonus_ball_rotation?.[0] ||
+                          stats?.cashBallFrequencies?.[0]?.number ||
+                          1;
                         return (
                           <>
                             {finalPool.map((n, idx) => (
-                              <span key={idx} className="w-7 h-7 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+                              <span key={idx} className="w-7 h-7 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-300 flex items-center justify-center font-black text-xs">
                                 {n}
                               </span>
                             ))}
                             <span className="text-gray-600 font-bold mx-0.5">|</span>
-                            <span className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                            <span className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-300 flex items-center justify-center font-black text-xs" title="Cash Ball (1–3)">
                               {cb}
                             </span>
                           </>
@@ -705,6 +732,93 @@ export default function WinForLifeTab() {
             </div>
 
           </div>
+
+          {/* Connected Engines Tab #1 Verified Champion Portfolio & Multi-Draw Window Telemetry */}
+          {championPick && (
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/30 via-slate-900/90 to-slate-950 border border-emerald-500/40 shadow-[0_0_25px_rgba(16,185,129,0.12)] space-y-4 font-mono">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-emerald-500/20 pb-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-black uppercase tracking-wider text-emerald-300">
+                      Engines Tab #1 Verified Champion Portfolio — {championPick.engine_name}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">
+                      {championPick.win_rate_pct}% 3+ BALL PRIZE WIN RATE ({championPick.roi_pct >= 0 ? "+" : ""}{championPick.roi_pct}% ROI)
+                    </span>
+                    {championPick.bonus_ball_rotation?.length > 0 && (
+                      <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 text-amber-200 text-[10px] font-bold">
+                        Cash Ball Rotation (1–3): {championPick.bonus_ball_rotation.join(", ")}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-gray-400">
+                    {championPick.strategy_name} • Synchronized live with the Engines Tab walk-forward audit ledger
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    triggerHaptic("selection");
+                    setSubTab("builder");
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] uppercase tracking-wider transition cursor-pointer shrink-0"
+                >
+                  Open Champion Core in Wheeling ({selectedNums.length} Balls)
+                </button>
+              </div>
+
+              {championPick.window_rates && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-gray-400 uppercase block">1-Draw Window ({championPick.window_rates.tier_label})</span>
+                      <span className="text-[9px] text-gray-500">{championPick.window_rates.unique_pool_size}-Ball Invariant Core</span>
+                    </div>
+                    <span className="text-base font-black text-emerald-400">{championPick.window_rates.w1_rate_pct}%</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-gray-400 uppercase block">3-Draw Rolling Window</span>
+                      <span className="text-[9px] text-gray-500">4+ Prize Ball Capture</span>
+                    </div>
+                    <span className="text-base font-black text-emerald-400">{championPick.window_rates.w3_rate_pct}%</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-gray-400 uppercase block">5-Draw Saturation Window</span>
+                      <span className="text-[9px] text-gray-500">Multi-Draw Convergence</span>
+                    </div>
+                    <span className="text-base font-black text-emerald-400">{championPick.window_rates.w5_rate_pct}%</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                {(championPick.wheel_slips || [championPick.predicted_numbers]).slice(0, 10).map((slip: number[], idx: number) => (
+                  <div
+                    key={idx}
+                    className={`p-2.5 rounded-xl border flex items-center justify-between ${
+                      idx === 0
+                        ? "bg-emerald-500/15 border-emerald-400/50"
+                        : "bg-black/40 border-white/10"
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold text-gray-400">#{idx + 1}</span>
+                    <div className="flex items-center gap-1">
+                      {slip.map((n: number, bIdx: number) => (
+                        <span
+                          key={bIdx}
+                          className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-black text-[10px] flex items-center justify-center"
+                        >
+                          {n}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
 
 

@@ -70,16 +70,36 @@ export default function CashPotTab() {
   const [selectedPool, setSelectedPool] = useState<number[]>([1, 2, 3, 5, 7, 9, 12, 15]);
   const [wheelStrategy, setWheelStrategy] = useState<"abbreviated-4-4" | "abbreviated-3-3" | "full">("abbreviated-4-4");
   const [generatedTickets, setGeneratedTickets] = useState<number[][]>([]);
+  const [championPick, setChampionPick] = useState<any>(null);
 
   const fetchStats = async () => {
     try {
       setStatsLoading(true);
-      const res = await fetch("/api/cashpot/stats", { cache: "no-store" });
+      const [res, trackerRes] = await Promise.all([
+        fetch("/api/cashpot/stats", { cache: "no-store" }),
+        fetch("/api/engine-tracker?game=cashpot&depth=100", { cache: "no-store" }).catch(() => null)
+      ]);
       const data = await res.json();
       if (data.success) {
         setStats(data);
         if (data.latestDraw && !latestDraw) {
           setLatestDraw(data.latestDraw);
+        }
+      }
+      if (trackerRes && trackerRes.ok) {
+        const tData = await trackerRes.json();
+        const cpChamp = tData?.championPicks?.find((c: any) => c.game_key === "cashpot") || tData?.championPicks?.[0];
+        if (cpChamp) {
+          setChampionPick(cpChamp);
+          const coreSet = new Set<number>();
+          for (const slip of cpChamp.wheel_slips || [cpChamp.predicted_numbers || []]) {
+            for (const b of slip) {
+              if (coreSet.size < 12) coreSet.add(b);
+            }
+          }
+          if (coreSet.size >= 5) {
+            setSelectedPool(Array.from(coreSet).sort((a, b) => a - b));
+          }
         }
       }
     } catch (e) {
@@ -284,6 +304,91 @@ export default function CashPotTab() {
       {/* Subtab Content: Dashboard & Stats */}
       {activeSubTab === "dashboard" && (
         <div className="space-y-6">
+          {/* Connected Engines Tab #1 Verified Champion Portfolio & Multi-Draw Window Telemetry */}
+          {championPick && (
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-yellow-950/30 via-slate-900/90 to-slate-950 border border-yellow-500/40 shadow-[0_0_25px_rgba(250,204,21,0.12)] space-y-4 font-mono">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-yellow-500/20 pb-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <ShieldCheck className="w-4 h-4 text-yellow-400" />
+                    <span className="text-xs font-black uppercase tracking-wider text-yellow-300">
+                      Engines Tab #1 Verified Champion — {championPick.engine_name}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">
+                      {championPick.win_rate_pct}% WIN RATE ({championPick.roi_pct >= 0 ? "+" : ""}{championPick.roi_pct}% ROI)
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 text-[10px] font-bold">
+                      Target Draw #{championPick.target_draw_number}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400">
+                    {championPick.strategy_name} • Synchronized live with the Engines Tab walk-forward audit ledger
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    triggerHaptic("selection");
+                    setActiveSubTab("wheeling");
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-[11px] uppercase tracking-wider transition cursor-pointer shrink-0"
+                >
+                  Open Champion Core in Wheeling ({selectedPool.length} Balls)
+                </button>
+              </div>
+
+              {championPick.window_rates && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-gray-400 uppercase block">1-Draw Window ({championPick.window_rates.tier_label})</span>
+                      <span className="text-[9px] text-gray-500">{championPick.window_rates.unique_pool_size}-Ball Invariant Core</span>
+                    </div>
+                    <span className="text-base font-black text-emerald-400">{championPick.window_rates.w1_rate_pct}%</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-gray-400 uppercase block">3-Draw Rolling Window</span>
+                      <span className="text-[9px] text-gray-500">3+ Ball Hit Capture</span>
+                    </div>
+                    <span className="text-base font-black text-emerald-400">{championPick.window_rates.w3_rate_pct}%</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-gray-400 uppercase block">5-Draw Saturation Window</span>
+                      <span className="text-[9px] text-gray-500">Multi-Draw Convergence</span>
+                    </div>
+                    <span className="text-base font-black text-emerald-400">{championPick.window_rates.w5_rate_pct}%</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                {(championPick.wheel_slips || [championPick.predicted_numbers]).slice(0, 10).map((slip: number[], idx: number) => (
+                  <div
+                    key={idx}
+                    className={`p-2.5 rounded-xl border flex items-center justify-between ${
+                      idx === 0
+                        ? "bg-yellow-500/15 border-yellow-400/50"
+                        : "bg-black/40 border-white/10"
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold text-gray-400">#{idx + 1}</span>
+                    <div className="flex items-center gap-1">
+                      {slip.map((n: number, bIdx: number) => (
+                        <span
+                          key={bIdx}
+                          className="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 font-black text-[11px] flex items-center justify-center"
+                        >
+                          {n}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Quick Metrics Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono">
             <div className="p-4 rounded-xl bg-slate-900/60 border border-yellow-500/20 space-y-1">

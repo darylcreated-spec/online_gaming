@@ -9,6 +9,7 @@ import { computePick4Quant100Engine, Pick4DrawRecord } from "@/lib/pick4_quant10
 import { computeCashPotQuant100Engine, CashPotDrawRecord } from "@/lib/cashpot_quant100_engine";
 import { computeLottoQuant100Engine, LottoDrawRecord } from "@/lib/lotto_quant100_engine";
 import { computeWinForLifeQuant100Engine, WinForLifeDrawRecord } from "@/lib/winforlife_quant100_engine";
+import { computeWinForLifeDiff28Engine } from "@/lib/winforlife_diff28_engine";
 import {
   generatePlayWheFormulaPick,
   generatePick4FormulaPick,
@@ -542,6 +543,79 @@ function mergeDistinctSlips(primary: number[][], covering: number[][], limit: nu
     }
   }
   return out;
+}
+
+/**
+ * Turan 3-Tuple Super-Pool Greedy Covering Selector:
+ * Selects `limit` distinct slips from the combined multi-engine pool that maximize newly covered
+ * 3-ball triples C(k,3) and 2-ball pairs C(k,2) while enforcing pairwise overlap diversity.
+ */
+export function selectMax3TuplePortfolio(
+  candidates: number[][],
+  limit: number,
+  maxPairOverlap: number,
+  ballWeights?: Map<number, number>
+): number[][] {
+  const unique: number[][] = [];
+  const seen = new Set<string>();
+  for (const c of candidates) {
+    if (!Array.isArray(c) || c.length < 5) continue;
+    const s = [...c].sort((a, b) => a - b);
+    const k = s.join("-");
+    if (!seen.has(k)) {
+      seen.add(k);
+      unique.push(s);
+    }
+  }
+  if (unique.length <= limit) return unique;
+
+  const selected: number[][] = [unique[0]];
+  const coveredTriples = new Set<string>();
+  const coveredPairs = new Set<string>();
+  const recordSlip = (slip: number[]) => {
+    for (let i = 0; i < slip.length; i++) {
+      for (let j = i + 1; j < slip.length; j++) {
+        coveredPairs.add(`${slip[i]}-${slip[j]}`);
+        for (let k = j + 1; k < slip.length; k++) {
+          coveredTriples.add(`${slip[i]}-${slip[j]}-${slip[k]}`);
+        }
+      }
+    }
+  };
+  recordSlip(unique[0]);
+
+  while (selected.length < limit) {
+    let bestIdx = -1;
+    let bestScore = -Infinity;
+    for (let idx = 1; idx < unique.length; idx++) {
+      const cand = unique[idx];
+      if (selected.some(s => s.join("-") === cand.join("-"))) continue;
+      const maxOv = Math.max(...selected.map(s => cand.filter(x => s.includes(x)).length));
+      let newTriples = 0;
+      let newPairs = 0;
+      let weightSum = 0;
+      for (let i = 0; i < cand.length; i++) {
+        if (ballWeights) weightSum += ballWeights.get(cand[i]) || 1;
+        for (let j = i + 1; j < cand.length; j++) {
+          if (!coveredPairs.has(`${cand[i]}-${cand[j]}`)) newPairs++;
+          for (let k = j + 1; k < cand.length; k++) {
+            if (!coveredTriples.has(`${cand[i]}-${cand[j]}-${cand[k]}`)) newTriples++;
+          }
+        }
+      }
+      const ovPenalty = maxOv > maxPairOverlap ? (maxOv - maxPairOverlap) * 10 : 0;
+      const rankBonus = Math.max(0, (25 - idx) * 0.25);
+      const score = newTriples * 2.5 + newPairs * 0.5 + (ballWeights ? weightSum * 0.35 : rankBonus) - ovPenalty;
+      if (score > bestScore) {
+        bestScore = score;
+        bestIdx = idx;
+      }
+    }
+    if (bestIdx === -1) break;
+    selected.push(unique[bestIdx]);
+    recordSlip(unique[bestIdx]);
+  }
+  return selected;
 }
 
 /**
@@ -1251,25 +1325,22 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             recordedCount++;
           }
 
-          // 4. APEX CHAMPION MASTER CONSENSUS (Honest 10-Slip Orthogonal + Mandel Portfolio)
+          // 4. APEX CHAMPION MASTER CONSENSUS (Turán 3-Tuple Super-Pool + Mandel Portfolio)
           if (forensic.nextCandidateSets?.[0]) {
-            const apexCashPot5Lines = buildMultiBallApex5(
-              draws.map(d => d.numbers),
-              20,
-              5,
-              forensic.nextCandidateSets.map(c => c.numbers),
-              quantCpLines
-            );
-            const distinctCp = mergeDistinctSlips(
-              apexCashPot5Lines,
-              forensic.invariantSubspace?.coveringTickets || [],
-              10
+            const distinctCp = selectMax3TuplePortfolio(
+              [
+                ...forensic.nextCandidateSets.map(c => c.numbers),
+                ...quantCpLines,
+                ...(forensic.invariantSubspace?.coveringTickets || [])
+              ],
+              10,
+              2
             );
             await insertOrUpdateEngineLog({
               game_key: "cashpot",
               engine_key: "apex-master",
               engine_name: "Apex Champion Consensus",
-              strategy_name: "10-Slip Orthogonal Core + Mandel Covering Portfolio",
+              strategy_name: "10-Slip Turán 3-Tuple Super-Pool & Mandel Covering Portfolio",
               target_draw_number: targetDraw,
               predicted_numbers: distinctCp[0],
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
@@ -1472,27 +1543,31 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             recordedCount++;
           }
 
-          // 4. APEX CHAMPION MASTER CONSENSUS (Honest 10-Slip Orthogonal + Mandel Portfolio)
+          // 4. APEX CHAMPION MASTER CONSENSUS (Turán 3-Tuple Super-Pool + Mandel Portfolio)
           if (forensic.nextCandidateSets?.[0]) {
-            const apexWfl5Lines = buildMultiBallApex5(
-              draws.map(d => d.numbers),
-              28,
-              6,
-              forensic.nextCandidateSets.map(c => c.numbers),
-              quantWflLines
+            const d28Wfl = computeWinForLifeDiff28Engine([...quantWflRows].reverse() as any);
+            const fSlips = forensic.nextCandidateSets.map(c => c.numbers);
+            const dSlips = (d28Wfl?.nextDrawPredictions?.sets || []).map(s => s.numbers);
+            const mSlips = forensic.invariantSubspace?.coveringTickets || [];
+            const voteMap = new Map<number, number>();
+            for (const s of [...quantWflLines, ...fSlips.slice(0, 5), ...dSlips]) {
+              for (const b of s) voteMap.set(b, (voteMap.get(b) || 0) + 1);
+            }
+            const distinctWfl = selectMax3TuplePortfolio(
+              [...quantWflLines, ...dSlips, ...fSlips, ...mSlips],
+              10,
+              3,
+              voteMap
             );
-            const distinctWfl = mergeDistinctSlips(
-              apexWfl5Lines,
-              forensic.invariantSubspace?.coveringTickets || [],
-              10
-            );
+            const wflApexCb = buildDynamicBonusBallRotation(draws.map(d => d.cash_ball), 3).primary;
             await insertOrUpdateEngineLog({
               game_key: "win-for-life",
               engine_key: "apex-master",
               engine_name: "Apex Champion Consensus",
-              strategy_name: "10-Slip Orthogonal Core + Stefan Mandel Covering Portfolio",
+              strategy_name: "10-Slip Turán 3-Tuple Super-Pool & Mandel Covering Portfolio",
               target_draw_number: targetDraw,
               predicted_numbers: distinctWfl[0],
+              predicted_powerball: wflApexCb,
               wheel_slips: distinctWfl,
               simulated_bet_tt: distinctWfl.length
             });
@@ -2326,27 +2401,24 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: 5.0
             });
 
-            // APEX CHAMPION MASTER CONSENSUS (Cash Pot 5 Orthogonal Playable Lines)
-            const apexCashPot5Lines = buildMultiBallApex5(
-              hist.map(d => d.numbers),
-              20,
-              5,
-              forensic.nextCandidateSets.map(c => c.numbers),
-              quantCpLines
-            );
-            const distinctCp = mergeDistinctSlips(
-              apexCashPot5Lines,
-              forensic.invariantSubspace?.coveringTickets || [],
-              10
+            // APEX CHAMPION MASTER CONSENSUS (Cash Pot 10-Slip Turán 3-Tuple Super-Pool)
+            const distinctCp = selectMax3TuplePortfolio(
+              [
+                ...forensic.nextCandidateSets.map(c => c.numbers),
+                ...quantCpLines,
+                ...(forensic.invariantSubspace?.coveringTickets || [])
+              ],
+              10,
+              2
             );
             await upsertVerifiedWalkForwardLog({
               game_key: "cashpot",
               engine_key: "apex-master",
               engine_name: "Apex Champion Consensus",
-              strategy_name: "10-Slip Orthogonal Core + Mandel Covering Portfolio",
+              strategy_name: "10-Slip Turán 3-Tuple Super-Pool & Mandel Covering Portfolio",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
-              predicted_numbers: distinctCp[0] || apexCashPot5Lines[0],
+              predicted_numbers: distinctCp[0] || forensic5Lines[0],
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
               wheel_slips: distinctCp,
               actual_numbers: actual.numbers,
@@ -2578,27 +2650,29 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: 5.0
             });
 
-            // APEX CHAMPION MASTER CONSENSUS (Win For Life 5 Orthogonal Playable Lines)
-            const apexWfl5Lines = buildMultiBallApex5(
-              hist.map(d => d.numbers),
-              28,
-              6,
-              forensic.nextCandidateSets.map(c => c.numbers),
-              quantWflLines
-            );
-            const distinctWfl = mergeDistinctSlips(
-              apexWfl5Lines,
-              forensic.invariantSubspace?.coveringTickets || [],
-              10
+            // APEX CHAMPION MASTER CONSENSUS (Win For Life 10-Slip Turán 3-Tuple Super-Pool)
+            const d28Wfl = computeWinForLifeDiff28Engine([...quantWflHist].reverse() as any);
+            const fSlips = forensic.nextCandidateSets.map(c => c.numbers);
+            const dSlips = (d28Wfl?.nextDrawPredictions?.sets || []).map(s => s.numbers);
+            const mSlips = forensic.invariantSubspace?.coveringTickets || [];
+            const voteMap = new Map<number, number>();
+            for (const s of [...quantWflLines, ...fSlips.slice(0, 5), ...dSlips]) {
+              for (const b of s) voteMap.set(b, (voteMap.get(b) || 0) + 1);
+            }
+            const distinctWfl = selectMax3TuplePortfolio(
+              [...quantWflLines, ...dSlips, ...fSlips, ...mSlips],
+              10,
+              3,
+              voteMap
             );
             await upsertVerifiedWalkForwardLog({
               game_key: "win-for-life",
               engine_key: "apex-master",
               engine_name: "Apex Champion Consensus",
-              strategy_name: "10-Slip Orthogonal Core + Stefan Mandel Covering Portfolio",
+              strategy_name: "10-Slip Turán 3-Tuple Super-Pool & Mandel Covering Portfolio",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
-              predicted_numbers: distinctWfl[0] || apexWfl5Lines[0],
+              predicted_numbers: distinctWfl[0] || forensic5Lines[0],
               wheel_slips: distinctWfl,
               actual_numbers: actual.numbers,
               actual_powerball: actual.cash_ball,
@@ -2968,7 +3042,7 @@ export async function getEngineLeaderboardStats(
       let bonusRotation: number[] | undefined = undefined;
       try {
         if (g === "lotto-plus" || g === "cashpot" || g === "win-for-life") {
-          const maxVal = g === "lotto-plus" ? 10 : (g === "cashpot" ? 5 : 10);
+          const maxVal = g === "lotto-plus" ? 10 : (g === "cashpot" ? 5 : 3);
           let bonusHistory: number[] = [];
           if (g === "lotto-plus") {
             const pbRows = await query<any>("SELECT powerball FROM draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 30").catch(() =>
