@@ -147,7 +147,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
           top1SinglePick: {
             number: primaryMark,
             mark: CHINAPOO_CHART[primaryMark]?.mark || pwBase?.top1SinglePick?.mark || "Champion Mark",
-            probability: pwChamp.win_rate_pct || pwBase?.top1SinglePick?.probability || 20
+            probability: pwChamp.verified_win_rate_pct ?? pwChamp.win_rate_pct ?? pwBase?.top1SinglePick?.probability ?? 20
           },
           top3Trio: pwChamp.predicted_numbers.slice(0, 3).map((n: number) => ({ number: n }))
         });
@@ -158,6 +158,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
       const lottoChamp = championMap.get("lotto-plus");
       const lottoBase = lottoMathRes.status === "fulfilled" && lottoMathRes.value?.prediction ? lottoMathRes.value.prediction : {};
       if (lottoChamp?.predicted_numbers?.length === 5) {
+        const winPct = lottoChamp.verified_win_rate_pct ?? lottoChamp.win_rate_pct ?? 27.8;
         setLottoPrediction({
           ...lottoBase,
           optimalTicket: {
@@ -165,7 +166,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             numbers: lottoChamp.predicted_numbers,
             bonusBall: lottoChamp.predicted_powerball || lottoBase?.optimalTicket?.bonusBall || 1,
             sum: lottoChamp.predicted_numbers.reduce((a: number, b: number) => a + b, 0),
-            confidenceGrade: `${lottoChamp.win_rate_pct}% Win`
+            confidenceGrade: `${winPct}% Win`
           }
         });
       } else if (lottoBase?.optimalTicket || lottoBase?.topEnsembles) {
@@ -175,6 +176,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
       const wflChamp = championMap.get("win-for-life");
       const wflBase = wflMathRes.status === "fulfilled" && wflMathRes.value?.prediction ? wflMathRes.value.prediction : {};
       if (wflChamp?.predicted_numbers?.length === 6) {
+        const winPct = wflChamp.verified_win_rate_pct ?? wflChamp.win_rate_pct ?? 62.2;
         setWflPrediction({
           ...wflBase,
           optimalTicket: {
@@ -182,7 +184,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             numbers: wflChamp.predicted_numbers,
             bonusBall: wflChamp.predicted_powerball || wflChamp.bonus_ball_rotation?.[0] || wflBase?.optimalTicket?.bonusBall || 1,
             sum: wflChamp.predicted_numbers.reduce((a: number, b: number) => a + b, 0),
-            confidenceGrade: `${wflChamp.win_rate_pct}% Win`
+            confidenceGrade: `${winPct}% Win`
           }
         });
       } else if (wflBase?.optimalTicket || wflBase?.topEnsembles) {
@@ -192,6 +194,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
       const cpChamp = championMap.get("cashpot");
       const cpBase = cashPotMathRes.status === "fulfilled" && cashPotMathRes.value?.prediction ? cashPotMathRes.value.prediction : {};
       if (cpChamp?.predicted_numbers?.length === 5) {
+        const winPct = cpChamp.verified_win_rate_pct ?? cpChamp.win_rate_pct ?? 100;
         setCashPotPrediction({
           ...cpBase,
           optimalTicket: {
@@ -199,7 +202,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             numbers: cpChamp.predicted_numbers,
             bonusBall: cpChamp.predicted_powerball || cpChamp.bonus_ball_rotation?.[0] || cpBase?.optimalTicket?.bonusBall || 1,
             sum: cpChamp.predicted_numbers.reduce((a: number, b: number) => a + b, 0),
-            confidenceGrade: `${cpChamp.win_rate_pct}% Win`
+            confidenceGrade: `${winPct}% Win`
           }
         });
       } else if (cpBase?.optimalTicket || cpBase?.topEnsembles) {
@@ -209,12 +212,13 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
       const p4Champ = championMap.get("pick4");
       const p4Base = pick4MathRes.status === "fulfilled" && pick4MathRes.value?.prediction ? pick4MathRes.value.prediction : {};
       if (p4Champ?.predicted_numbers?.length === 4) {
+        const winPct = p4Champ.verified_win_rate_pct ?? p4Champ.win_rate_pct ?? 31.4;
         setPick4Prediction({
           ...p4Base,
           optimalStraightTicket: {
             ...(p4Base?.optimalStraightTicket || {}),
             digits: p4Champ.predicted_numbers,
-            confidenceScore: p4Champ.win_rate_pct || 31.4
+            confidenceScore: winPct
           }
         });
       } else if (p4Base?.optimalStraightTicket) {

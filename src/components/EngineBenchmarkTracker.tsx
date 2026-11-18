@@ -28,7 +28,14 @@ import {
   Share2
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
-import { EngineLeaderboardRow, EngineLogEntry, CalibrationDiagnostic, ChampionMasterPick } from "@/lib/engine_tracker";
+import {
+  EngineLeaderboardRow,
+  EngineLogEntry,
+  CalibrationDiagnostic,
+  ChampionMasterPick,
+  MultiDrawPlayCampaign,
+  MultiDrawGameSummary
+} from "@/lib/engine_tracker";
 import type { EngineCalibrationProfile } from "@/lib/engine_calibrator";
 
 interface EngineTrackerResponse {
@@ -40,6 +47,8 @@ interface EngineTrackerResponse {
   diagnostics: CalibrationDiagnostic[];
   calibrationProfiles?: EngineCalibrationProfile[];
   championPicks?: ChampionMasterPick[];
+  multiDrawCampaigns?: MultiDrawPlayCampaign[];
+  multiDrawSummary?: MultiDrawGameSummary[];
   totalEvaluated: number;
   overallWinRatePct: number;
   totalSimulatedNetProfitTT: number;
@@ -61,6 +70,9 @@ export default function EngineBenchmarkTracker() {
   const [expandedWheelGame, setExpandedWheelGame] = useState<string | null>(null);
   const [copiedGame, setCopiedGame] = useState<string | null>(null);
   const [copiedSyndicateGame, setCopiedSyndicateGame] = useState<string | null>(null);
+  const [multiDrawViewMode, setMultiDrawViewMode] = useState<"stepper" | "ledger">("stepper");
+  const [multiDrawFilterState, setMultiDrawFilterState] = useState<"ALL" | "ACTIVE" | "COMPLETED">("ALL");
+  const [lockingGame, setLockingGame] = useState<string | null>(null);
 
   const fetchData = async (game = selectedGame, horizon = selectedHorizon) => {
     setLoading(true);
@@ -93,11 +105,14 @@ export default function EngineBenchmarkTracker() {
   }, [selectedGame, selectedHorizon]);
 
   const handleManualAction = async (
-    action: "reconcile" | "snapshot" | "reconcile_and_snapshot" | "calibrate",
-    targetGame?: string
+    action: "reconcile" | "snapshot" | "reconcile_and_snapshot" | "calibrate" | "lock_campaign",
+    targetGame?: string,
+    anchorDrawNumber?: number
   ) => {
     if (action === "calibrate") {
       setCalibrating(true);
+    } else if (action === "lock_campaign") {
+      setLockingGame(targetGame || "all");
     } else {
       setActionLoading(true);
     }
@@ -108,7 +123,7 @@ export default function EngineBenchmarkTracker() {
       const res = await fetch("/api/engine-tracker", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, game: gameParam })
+        body: JSON.stringify({ action, game: gameParam, anchorDrawNumber })
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to execute action.");
@@ -127,6 +142,7 @@ export default function EngineBenchmarkTracker() {
     } finally {
       setActionLoading(false);
       setCalibrating(false);
+      setLockingGame(null);
     }
   };
 
@@ -810,6 +826,15 @@ export default function EngineBenchmarkTracker() {
                       {isSyndicateCopied ? "Copied Portfolio!" : "Syndicate Quick Export"}
                     </button>
                     <button
+                      onClick={() => handleManualAction("lock_campaign", pick.game_key, pick.target_draw_number)}
+                      disabled={lockingGame === pick.game_key}
+                      className="py-1.5 px-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-mono font-semibold transition-colors flex items-center gap-1"
+                      title="Pin and track this suggested play across its upcoming 3-Draw and 5-Draw windows"
+                    >
+                      <Target className="w-3.5 h-3.5" />
+                      {lockingGame === pick.game_key ? "Locking..." : "Track 3 & 5 Draws"}
+                    </button>
+                    <button
                       onClick={() => setSelectedGame(pick.game_key === selectedGame ? "all" : pick.game_key)}
                       className="py-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono transition-colors"
                     >
@@ -820,6 +845,334 @@ export default function EngineBenchmarkTracker() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* 2.8. MULTI-DRAW PLAY WINDOW VERIFICATION TRACKER (1-Draw, 3-Draw & 5-Draw Horizon Audit) */}
+      {data?.multiDrawSummary && data.multiDrawSummary.length > 0 && (
+        <div className="bg-[#0f1418] rounded-2xl border border-cyan-500/30 p-5 space-y-5 shadow-[0_0_30px_rgba(6,182,212,0.06)]">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Target className="w-5 h-5 text-cyan-400" />
+                <h2 className="font-bold text-white text-base sm:text-lg">
+                  Multi-Draw Suggested Play Tracker — 1-Draw, 3-Draw &amp; 5-Draw Window Verification
+                </h2>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  WALK-FORWARD &amp; LIVE HORIZON TRACKER
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                Tracks each suggested Champion play anchored at Draw #T across Draw #T (1-Draw), Draws #T..#T+2 (3-Draw Window), and Draws #T..#T+4 (5-Draw Window) to verify multi-draw persistence and prize capture.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center bg-[#171c20] rounded-lg p-0.5 border border-slate-800 text-xs font-mono">
+                <button
+                  onClick={() => setMultiDrawViewMode("stepper")}
+                  className={`px-3 py-1.5 rounded text-[11px] font-semibold transition-all ${
+                    multiDrawViewMode === "stepper"
+                      ? "bg-cyan-500 text-slate-950 font-bold"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  5-Draw Step-by-Step Tracker
+                </button>
+                <button
+                  onClick={() => setMultiDrawViewMode("ledger")}
+                  className={`px-3 py-1.5 rounded text-[11px] font-semibold transition-all ${
+                    multiDrawViewMode === "ledger"
+                      ? "bg-emerald-500 text-slate-950 font-bold"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  3 &amp; 5 Draw Verification Table
+                </button>
+              </div>
+
+              <div className="flex items-center bg-[#171c20] rounded-lg p-0.5 border border-slate-800 text-xs font-mono">
+                {(["ALL", "ACTIVE", "COMPLETED"] as const).map(st => (
+                  <button
+                    key={st}
+                    onClick={() => setMultiDrawFilterState(st)}
+                    className={`px-2.5 py-1.5 rounded text-[11px] font-semibold transition-all ${
+                      multiDrawFilterState === st
+                        ? "bg-slate-700 text-white font-bold"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    {st === "ALL" ? "All Windows" : st === "ACTIVE" ? "In-Progress (1–4/5)" : "Completed (5/5)"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Empirical 1-Draw vs 3-Draw vs 5-Draw Summary Strip */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 font-mono">
+            {data.multiDrawSummary.map(sum => (
+              <div
+                key={sum.game_key}
+                className="p-3.5 rounded-xl bg-[#14191f] border border-slate-800 space-y-2.5 flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between gap-1">
+                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                    {getGameLabel(sum.game_key)}
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Avg Hit: <strong className="text-emerald-400">{sum.avg_draws_to_first_hit}d</strong>
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-[11px]">
+                  <div className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/80 border border-slate-800/80">
+                    <span className="text-slate-400">1-Draw Hit:</span>
+                    <span className="text-white font-bold">
+                      {sum.w1_slip_win_rate_pct}% <span className="text-[10px] text-cyan-400">({sum.w1_core_hit_rate_pct}% Core)</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between px-2 py-1 rounded bg-cyan-950/30 border border-cyan-500/30">
+                    <span className="text-cyan-300 font-semibold">3-Draw Win:</span>
+                    <span className="text-cyan-200 font-bold">
+                      {sum.w3_slip_win_rate_pct}% <span className="text-[10px] text-emerald-400">({sum.w3_core_hit_rate_pct}% Core)</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between px-2 py-1 rounded bg-emerald-950/30 border border-emerald-500/30">
+                    <span className="text-emerald-300 font-semibold">5-Draw Win:</span>
+                    <span className="text-emerald-300 font-bold">
+                      {sum.w5_slip_win_rate_pct}% <span className="text-[10px] text-emerald-400">({sum.w5_core_hit_rate_pct}% Core)</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/70">
+                  <span>{sum.total_campaigns_evaluated} Verified Windows</span>
+                  <span className="text-amber-400 font-semibold">{sum.active_campaigns_count} Active</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Campaign List / Table */}
+          {(() => {
+            const campaigns = (data.multiDrawCampaigns || []).filter(c => {
+              if (selectedGame !== "all" && c.game_key !== selectedGame) return false;
+              if (multiDrawFilterState === "ACTIVE") return c.campaign_state === "ACTIVE_IN_PROGRESS";
+              if (multiDrawFilterState === "COMPLETED") return c.campaign_state === "COMPLETED_5_DRAWS";
+              return true;
+            });
+
+            if (campaigns.length === 0) {
+              return (
+                <div className="p-6 text-center text-slate-400 font-mono text-xs">
+                  No multi-draw campaigns match your current filter.
+                </div>
+              );
+            }
+
+            if (multiDrawViewMode === "stepper") {
+              return (
+                <div className="space-y-3.5 max-h-[640px] overflow-y-auto pr-1">
+                  {campaigns.slice(0, 20).map(camp => (
+                    <div
+                      key={camp.campaign_id}
+                      className="p-4 rounded-xl bg-[#13181d] border border-slate-800 space-y-3 font-mono"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-800 text-cyan-300 border border-slate-700">
+                            {getGameLabel(camp.game_key)}
+                          </span>
+                          <span className="text-xs font-bold text-white">
+                            Suggested at Draw #{camp.anchor_draw_number}
+                            {camp.anchor_draw_date ? ` (${camp.anchor_draw_date})` : ""}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            • Window #{camp.anchor_draw_number} → #{camp.anchor_draw_number + 4}
+                          </span>
+                          <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold">
+                            Anchor: {camp.predicted_numbers.map(n => (camp.game_key === "pick4" ? String(n) : String(n).padStart(2, "0"))).join("-")}
+                            {camp.predicted_powerball ? ` + PB/Mult ${camp.predicted_powerball}` : ""}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            camp.window_3.slip_prize_hit
+                              ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
+                              : camp.window_3.completed
+                              ? "bg-slate-900 border-slate-700 text-slate-400"
+                              : "bg-cyan-950/70 border-cyan-500/40 text-cyan-300"
+                          }`}>
+                            3-Draw Window: {camp.window_3.slip_prize_hit ? `HIT (${camp.window_3.slip_win_count}/3 Won • $${camp.window_3.cumulative_payout_tt} TT)` : camp.window_3.completed ? "0/3" : `In Progress (${camp.window_3.draws_completed}/3)`}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            camp.window_5.slip_prize_hit
+                              ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
+                              : camp.window_5.completed
+                              ? "bg-slate-900 border-slate-700 text-slate-400"
+                              : "bg-amber-950/70 border-amber-500/40 text-amber-300"
+                          }`}>
+                            5-Draw Window: {camp.window_5.slip_prize_hit ? `HIT (${camp.window_5.slip_win_count}/5 Won • $${camp.window_5.cumulative_payout_tt} TT)` : camp.window_5.completed ? "0/5" : `In Progress (${camp.window_5.draws_completed}/5)`}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 5-Step Consecutive Draw Progress Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+                        {camp.steps.map(st => {
+                          const isVerified = st.status === "VERIFIED";
+                          const isWin = st.is_prize_winner;
+                          const isMilestone3 = st.step === 3;
+                          const isMilestone5 = st.step === 5;
+                          return (
+                            <div
+                              key={st.step}
+                              className={`p-2.5 rounded-lg border flex flex-col justify-between space-y-1.5 ${
+                                !isVerified
+                                  ? "bg-slate-950/60 border-slate-800/80 border-dashed text-slate-500"
+                                  : isWin
+                                  ? "bg-emerald-950/35 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.12)]"
+                                  : st.is_core_target_hit
+                                  ? "bg-cyan-950/30 border-cyan-500/40"
+                                  : "bg-slate-900/70 border-slate-800"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="font-bold text-slate-300">
+                                  Draw {st.step}/5 {isMilestone3 ? "(3D)" : isMilestone5 ? "(5D)" : st.step === 1 ? "(1D)" : ""}
+                                </span>
+                                <span className="text-cyan-400 font-bold">#{st.target_draw_number}</span>
+                              </div>
+
+                              {isVerified ? (
+                                <>
+                                  <div className="text-[10px] text-slate-400 truncate">
+                                    {st.draw_date} • Actual: <strong className="text-slate-200">{(st.actual_numbers || []).join("-")}</strong>
+                                  </div>
+                                  <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-800/80">
+                                    <span className={isWin ? "text-emerald-300 font-bold" : "text-slate-400"}>
+                                      Slip Match: {st.best_slip_match} | Core: {st.core_pool_hits}
+                                    </span>
+                                    <span className={isWin ? "text-emerald-400 font-bold" : "text-slate-500"}>
+                                      {isWin ? `+$${st.payout_tt}` : "No Prize"}
+                                    </span>
+                                  </div>
+                                  <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded text-center ${
+                                    isWin
+                                      ? "bg-emerald-500/20 text-emerald-300"
+                                      : st.is_core_target_hit
+                                      ? "bg-cyan-500/20 text-cyan-300"
+                                      : "bg-slate-800 text-slate-400"
+                                  }`}>
+                                    {isWin ? st.prize_tier : st.is_core_target_hit ? "3+/4+ CORE HIT" : "MISS"}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="py-3 text-center text-[10px] text-amber-400/80 font-semibold">
+                                  Awaiting Draw #{st.target_draw_number}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+
+            return (
+              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="bg-[#171c20] border-b border-slate-800 text-[11px] text-slate-400 uppercase sticky top-0">
+                    <tr>
+                      <th className="py-3 px-3">Anchor Draw</th>
+                      <th className="py-3 px-3">Game &amp; Play</th>
+                      <th className="py-3 px-3 text-center">Progress</th>
+                      <th className="py-3 px-3">1-Draw (#T)</th>
+                      <th className="py-3 px-3">3-Draw Window (#T..#T+2)</th>
+                      <th className="py-3 px-3">5-Draw Window (#T..#T+4)</th>
+                      <th className="py-3 px-3 text-right">5D Payout</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {campaigns.slice(0, 35).map(camp => (
+                      <tr key={camp.campaign_id} className="hover:bg-slate-900/40">
+                        <td className="py-2.5 px-3 font-bold text-white whitespace-nowrap">
+                          {camp.anchor_draw_date && (
+                            <span className="block text-[10px] text-cyan-400 font-normal">{camp.anchor_draw_date}</span>
+                          )}
+                          #{camp.anchor_draw_number} → #{camp.anchor_draw_number + 4}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-cyan-300 mr-1.5">
+                            {getGameLabel(camp.game_key)}
+                          </span>
+                          <span className="text-emerald-300 font-bold">
+                            {camp.predicted_numbers.map(n => (camp.game_key === "pick4" ? String(n) : String(n).padStart(2, "0"))).join("-")}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            camp.draws_completed === 5
+                              ? "bg-emerald-950/70 text-emerald-300 border border-emerald-500/30"
+                              : "bg-amber-950/70 text-amber-300 border border-amber-500/30"
+                          }`}>
+                            {camp.draws_completed}/5 Draws
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          {camp.window_1.completed ? (
+                            <span className={camp.window_1.slip_prize_hit ? "text-emerald-400 font-bold" : "text-slate-400"}>
+                              {camp.window_1.slip_prize_hit ? camp.window_1.best_prize : `Match ${camp.window_1.best_match}`}
+                            </span>
+                          ) : (
+                            <span className="text-amber-400/80">Pending</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            camp.window_3.slip_prize_hit
+                              ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
+                              : camp.window_3.core_target_hit
+                              ? "bg-cyan-950/80 text-cyan-300 border border-cyan-500/40"
+                              : "bg-slate-900 text-slate-400"
+                          }`}>
+                            {camp.window_3.slip_prize_hit
+                              ? `WIN (${camp.window_3.slip_win_count}/3 Draws • Hit Draw #${camp.window_3.first_hit_step})`
+                              : camp.window_3.core_target_hit
+                              ? "3+/4+ Core Hit"
+                              : `${camp.window_3.draws_completed}/3 Done`}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            camp.window_5.slip_prize_hit
+                              ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
+                              : camp.window_5.core_target_hit
+                              ? "bg-cyan-950/80 text-cyan-300 border border-cyan-500/40"
+                              : "bg-slate-900 text-slate-400"
+                          }`}>
+                            {camp.window_5.slip_prize_hit
+                              ? `WIN (${camp.window_5.slip_win_count}/5 Draws • Hit Draw #${camp.window_5.first_hit_step})`
+                              : camp.window_5.core_target_hit
+                              ? "3+/4+ Core Hit"
+                              : `${camp.window_5.draws_completed}/5 Done`}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-bold text-emerald-400">
+                          ${camp.window_5.cumulative_payout_tt.toLocaleString()} TT
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
         </div>
       )}
 

@@ -686,7 +686,7 @@ export default function WinForLifeTab() {
                   </span>
                   {championPick && (
                     <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[9px] font-black font-mono">
-                      {championPick.win_rate_pct}% WIN RATE
+                      {championPick.verified_win_rate_pct ?? championPick.win_rate_pct}% WIN RATE
                     </span>
                   )}
                 </div>
@@ -744,7 +744,7 @@ export default function WinForLifeTab() {
                       Engines Tab #1 Verified Champion Portfolio — {championPick.engine_name}
                     </span>
                     <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">
-                      {championPick.win_rate_pct}% 3+ BALL PRIZE WIN RATE ({championPick.roi_pct >= 0 ? "+" : ""}{championPick.roi_pct}% ROI)
+                      {championPick.verified_win_rate_pct ?? championPick.win_rate_pct}% 3+ BALL PRIZE WIN RATE ({(championPick.verified_roi_pct ?? championPick.roi_pct) >= 0 ? "+" : ""}{championPick.verified_roi_pct ?? championPick.roi_pct}% ROI)
                     </span>
                     {championPick.bonus_ball_rotation?.length > 0 && (
                       <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 text-amber-200 text-[10px] font-bold">
@@ -767,28 +767,28 @@ export default function WinForLifeTab() {
                 </button>
               </div>
 
-              {championPick.window_rates && (
+              {championPick.multi_draw_window_rates && (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-gray-400 uppercase block">1-Draw Window ({championPick.window_rates.tier_label})</span>
-                      <span className="text-[9px] text-gray-500">{championPick.window_rates.unique_pool_size}-Ball Invariant Core</span>
+                      <span className="text-[10px] text-gray-400 uppercase block">1-Draw Window</span>
+                      <span className="text-[9px] text-gray-500">{championPick.multi_draw_window_rates.description}</span>
                     </div>
-                    <span className="text-base font-black text-emerald-400">{championPick.window_rates.w1_rate_pct}%</span>
+                    <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_1_draw}%</span>
                   </div>
                   <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-gray-400 uppercase block">3-Draw Rolling Window</span>
                       <span className="text-[9px] text-gray-500">4+ Prize Ball Capture</span>
                     </div>
-                    <span className="text-base font-black text-emerald-400">{championPick.window_rates.w3_rate_pct}%</span>
+                    <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_3_draw}%</span>
                   </div>
                   <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-gray-400 uppercase block">5-Draw Saturation Window</span>
                       <span className="text-[9px] text-gray-500">Multi-Draw Convergence</span>
                     </div>
-                    <span className="text-base font-black text-emerald-400">{championPick.window_rates.w5_rate_pct}%</span>
+                    <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_5_draw}%</span>
                   </div>
                 </div>
               )}

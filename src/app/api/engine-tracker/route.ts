@@ -4,7 +4,8 @@ import {
   snapshotAllEnginePredictions,
   reconcileAndGradeEnginePredictions,
   seedHistoricalEngineAuditsIfEmpty,
-  calibrateAndReverifyAllEngines
+  calibrateAndReverifyAllEngines,
+  lockMultiDrawPlayCampaign
 } from "@/lib/engine_tracker";
 import { runFullSystemCalibration } from "@/lib/engine_calibrator";
 
@@ -55,6 +56,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const action = body.action || "reconcile_and_snapshot";
     const specificGame = body.game && body.game !== "all" ? body.game : undefined;
+
+    if (action === "lock_campaign") {
+      const anchorDrawNumber = body.anchorDrawNumber ? Number(body.anchorDrawNumber) : undefined;
+      const locked = await lockMultiDrawPlayCampaign(specificGame, anchorDrawNumber);
+      return NextResponse.json({
+        success: true,
+        action: "lock_campaign",
+        lockedCount: locked.lockedCount,
+        message: `Locked ${locked.lockedCount} suggested play(s) into the Multi-Draw 3-Draw & 5-Draw Verification Tracker.`
+      });
+    }
 
     if (action === "calibrate") {
       const calibRes = await calibrateAndReverifyAllEngines(specificGame);

@@ -118,6 +118,84 @@ export interface ChampionMasterPick {
   };
 }
 
+export interface MultiDrawStepEvaluation {
+  step: 1 | 2 | 3 | 4 | 5;
+  target_draw_number: number;
+  draw_date: string;
+  status: "VERIFIED" | "PENDING";
+  actual_numbers?: number[];
+  actual_powerball?: number;
+  best_slip_match: number;
+  core_pool_hits: number;
+  is_prize_winner: boolean;
+  is_core_target_hit: boolean;
+  prize_tier: string;
+  payout_tt: number;
+}
+
+export interface MultiDrawPlayCampaign {
+  campaign_id: string;
+  game_key: string;
+  engine_key: string;
+  engine_name: string;
+  strategy_name: string;
+  anchor_draw_number: number;
+  anchor_draw_date?: string;
+  predicted_numbers: number[];
+  predicted_powerball?: number;
+  wheel_slips: number[][];
+  core_pool: number[];
+  is_user_pinned: boolean;
+  campaign_state: "ACTIVE_IN_PROGRESS" | "COMPLETED_5_DRAWS";
+  draws_completed: number;
+  steps: MultiDrawStepEvaluation[];
+  window_1: {
+    completed: boolean;
+    slip_prize_hit: boolean;
+    core_target_hit: boolean;
+    best_match: number;
+    best_prize: string;
+    payout_tt: number;
+  };
+  window_3: {
+    draws_completed: number;
+    completed: boolean;
+    slip_prize_hit: boolean;
+    slip_win_count: number;
+    core_target_hit: boolean;
+    first_hit_step: number | null;
+    best_match: number;
+    best_prize: string;
+    cumulative_payout_tt: number;
+  };
+  window_5: {
+    draws_completed: number;
+    completed: boolean;
+    slip_prize_hit: boolean;
+    slip_win_count: number;
+    core_target_hit: boolean;
+    first_hit_step: number | null;
+    best_match: number;
+    best_prize: string;
+    cumulative_payout_tt: number;
+  };
+}
+
+export interface MultiDrawGameSummary {
+  game_key: string;
+  engine_name: string;
+  total_campaigns_evaluated: number;
+  active_campaigns_count: number;
+  w1_slip_win_rate_pct: number;
+  w1_core_hit_rate_pct: number;
+  w3_slip_win_rate_pct: number;
+  w3_core_hit_rate_pct: number;
+  w5_slip_win_rate_pct: number;
+  w5_core_hit_rate_pct: number;
+  avg_draws_to_first_hit: number;
+  core_target_label: string;
+}
+
 /**
  * Initializes the unified prediction_engine_logs table in Turso DB
  */
@@ -166,9 +244,84 @@ export async function ensureEngineLogsTable(): Promise<void> {
       )
     `).catch(() => {});
     await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_engine_logs_unique ON prediction_engine_logs(game_key, engine_key, target_draw_number)`).catch(() => {});
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS multi_draw_play_campaigns (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        game_key TEXT NOT NULL,
+        engine_key TEXT NOT NULL,
+        engine_name TEXT NOT NULL,
+        strategy_name TEXT,
+        anchor_draw_number INTEGER NOT NULL,
+        predicted_numbers TEXT NOT NULL,
+        predicted_powerball INTEGER,
+        wheel_slips TEXT,
+        is_user_pinned INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(game_key, engine_key, anchor_draw_number)
+      )
+    `).catch(() => {});
   } catch (err: any) {
     console.warn("[EngineTracker] ensureEngineLogsTable warning:", err.message);
   }
+}
+
+/**
+ * Locks/tracks a suggested play across the upcoming 3-Draw and 5-Draw windows in Turso DB.
+ */
+export async function lockMultiDrawPlayCampaign(
+  gameKey?: string,
+  anchorDrawNumber?: number
+): Promise<{ lockedCount: number }> {
+  await ensureEngineLogsTable();
+  const games =
+    gameKey && gameKey !== "all"
+      ? [gameKey]
+      : ["cashpot", "win-for-life", "lotto-plus", "play-whe", "pick4"];
+  let lockedCount = 0;
+
+  for (const g of games) {
+    let rows: any[] = [];
+    if (anchorDrawNumber) {
+      rows = await query<any>(
+        `SELECT * FROM prediction_engine_logs WHERE game_key = ? AND target_draw_number = ? ORDER BY CASE WHEN engine_key = 'apex-master' THEN 0 ELSE 1 END, id DESC LIMIT 1`,
+        [g, anchorDrawNumber]
+      ).catch(() => []);
+    }
+    if (!rows || rows.length === 0) {
+      rows = await query<any>(
+        `SELECT * FROM prediction_engine_logs WHERE game_key = ? ORDER BY target_draw_number DESC, CASE WHEN engine_key = 'apex-master' THEN 0 ELSE 1 END, id DESC LIMIT 1`,
+        [g]
+      ).catch(() => []);
+    }
+    if (rows && rows.length > 0) {
+      const r = rows[0];
+      await db.execute({
+        sql: `INSERT INTO multi_draw_play_campaigns (
+                game_key, engine_key, engine_name, strategy_name, anchor_draw_number,
+                predicted_numbers, predicted_powerball, wheel_slips, is_user_pinned
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+              ON CONFLICT(game_key, engine_key, anchor_draw_number)
+              DO UPDATE SET
+                predicted_numbers = excluded.predicted_numbers,
+                predicted_powerball = excluded.predicted_powerball,
+                wheel_slips = excluded.wheel_slips,
+                is_user_pinned = 1`,
+        args: [
+          String(r.game_key),
+          String(r.engine_key),
+          String(r.engine_name),
+          String(r.strategy_name || "Multi-Draw Tracked Portfolio"),
+          Number(r.target_draw_number),
+          String(r.predicted_numbers),
+          r.predicted_powerball !== null && r.predicted_powerball !== undefined ? Number(r.predicted_powerball) : null,
+          r.wheel_slips ? String(r.wheel_slips) : null
+        ]
+      }).catch(() => {});
+      lockedCount++;
+    }
+  }
+  return { lockedCount };
 }
 
 /**
@@ -2716,6 +2869,8 @@ export async function getEngineLeaderboardStats(
   diagnostics: CalibrationDiagnostic[];
   calibrationProfiles: EngineCalibrationProfile[];
   championPicks: ChampionMasterPick[];
+  multiDrawCampaigns: MultiDrawPlayCampaign[];
+  multiDrawSummary: MultiDrawGameSummary[];
   totalEvaluated: number;
   overallWinRatePct: number;
   totalSimulatedNetProfitTT: number;
@@ -3167,6 +3322,12 @@ export async function getEngineLeaderboardStats(
     }
   }
 
+  const { multiDrawCampaigns, multiDrawSummary } = await computeMultiDrawHorizonVerification(
+    gamesToQuery,
+    championPicks,
+    leaderboard
+  );
+
   const overallWinRatePct = totalEvaluated > 0
     ? Math.round((totalHits / totalEvaluated) * 1000) / 10
     : 0;
@@ -3177,10 +3338,337 @@ export async function getEngineLeaderboardStats(
     diagnostics,
     calibrationProfiles,
     championPicks,
+    multiDrawCampaigns,
+    multiDrawSummary,
     totalEvaluated,
     overallWinRatePct,
     totalSimulatedNetProfitTT
   };
+}
+
+/**
+ * Evaluates every Champion suggested play across its actual 1-Draw (#T),
+ * 3-Draw Window (#T .. #T+2), and 5-Draw Window (#T .. #T+4) draw sequences.
+ */
+export async function computeMultiDrawHorizonVerification(
+  gamesToQuery: string[],
+  championPicks: ChampionMasterPick[],
+  leaderboard: EngineLeaderboardRow[]
+): Promise<{
+  multiDrawCampaigns: MultiDrawPlayCampaign[];
+  multiDrawSummary: MultiDrawGameSummary[];
+}> {
+  const multiDrawCampaigns: MultiDrawPlayCampaign[] = [];
+  const multiDrawSummary: MultiDrawGameSummary[] = [];
+
+  for (const g of gamesToQuery) {
+    const champPick = championPicks.find(c => c.game_key === g);
+    const champLeader = leaderboard.find(r => r.game_key === g);
+    const targetEngineKey = champPick?.engine_key || champLeader?.engine_key || "apex-master";
+    const targetEngineName = champPick?.engine_name || champLeader?.engine_name || "Apex Champion Consensus";
+
+    // 1. Load recent 80 official draws for this game into a draw_number -> draw lookup map
+    const drawMap = new Map<number, { draw_number: number; draw_date: string; numbers: number[]; powerball?: number }>();
+    try {
+      if (g === "cashpot") {
+        const rows = await query<any>(
+          "SELECT draw_number, draw_date, num1, num2, num3, num4, num5, multiplier FROM cashpot_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 80"
+        ).catch(() => []);
+        for (const r of rows) {
+          drawMap.set(Number(r.draw_number), {
+            draw_number: Number(r.draw_number),
+            draw_date: String(r.draw_date || ""),
+            numbers: [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5)].sort((a, b) => a - b),
+            powerball: Number(r.multiplier || 1)
+          });
+        }
+      } else if (g === "win-for-life") {
+        const rows = await query<any>(
+          "SELECT draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball FROM winforlife_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 80"
+        ).catch(() => []);
+        for (const r of rows) {
+          drawMap.set(Number(r.draw_number), {
+            draw_number: Number(r.draw_number),
+            draw_date: String(r.draw_date || ""),
+            numbers: [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5), Number(r.num6)].sort((a, b) => a - b),
+            powerball: Number(r.cash_ball || 1)
+          });
+        }
+      } else if (g === "lotto-plus") {
+        const rows = await query<any>(
+          "SELECT draw_number, draw_date, num1, num2, num3, num4, num5, powerball FROM draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 80"
+        ).catch(() =>
+          query<any>("SELECT draw_number, draw_date, num1, num2, num3, num4, num5, powerball FROM lotto_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 80")
+        ).catch(() => []);
+        for (const r of rows) {
+          drawMap.set(Number(r.draw_number), {
+            draw_number: Number(r.draw_number),
+            draw_date: String(r.draw_date || ""),
+            numbers: [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5)].sort((a, b) => a - b),
+            powerball: Number(r.powerball || 1)
+          });
+        }
+      } else if (g === "play-whe") {
+        const rows = await query<any>(
+          "SELECT draw_number, draw_date, winning_number FROM playwhe_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 80"
+        ).catch(() => []);
+        for (const r of rows) {
+          drawMap.set(Number(r.draw_number), {
+            draw_number: Number(r.draw_number),
+            draw_date: String(r.draw_date || ""),
+            numbers: [Number(r.winning_number)]
+          });
+        }
+      } else if (g === "pick4") {
+        const rows = await query<any>(
+          "SELECT draw_number, draw_date, digit1, digit2, digit3, digit4 FROM pick4_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 80"
+        ).catch(() => []);
+        for (const r of rows) {
+          drawMap.set(Number(r.draw_number), {
+            draw_number: Number(r.draw_number),
+            draw_date: String(r.draw_date || ""),
+            numbers: [Number(r.digit1), Number(r.digit2), Number(r.digit3), Number(r.digit4)]
+          });
+        }
+      }
+    } catch {}
+
+    // 2. Fetch user-pinned campaigns and Champion engine logs for this game
+    const [pinnedRows, logRows] = await Promise.all([
+      query<any>(
+        "SELECT * FROM multi_draw_play_campaigns WHERE game_key = ? ORDER BY anchor_draw_number DESC LIMIT 25",
+        [g]
+      ).catch(() => []),
+      query<any>(
+        "SELECT * FROM prediction_engine_logs WHERE game_key = ? AND engine_key = ? ORDER BY target_draw_number DESC LIMIT 42",
+        [g, targetEngineKey]
+      ).catch(() => [])
+    ]);
+
+    const pinnedSet = new Set<number>((pinnedRows || []).map((p: any) => Number(p.anchor_draw_number)));
+    const combinedByAnchor = new Map<number, any>();
+
+    for (const r of logRows || []) {
+      combinedByAnchor.set(Number(r.target_draw_number), {
+        game_key: g,
+        engine_key: String(r.engine_key),
+        engine_name: String(r.engine_name),
+        strategy_name: String(r.strategy_name || ""),
+        anchor_draw_number: Number(r.target_draw_number),
+        predicted_numbers: r.predicted_numbers,
+        predicted_powerball: r.predicted_powerball,
+        wheel_slips: r.wheel_slips,
+        is_user_pinned: pinnedSet.has(Number(r.target_draw_number))
+      });
+    }
+    for (const p of pinnedRows || []) {
+      const anchor = Number(p.anchor_draw_number);
+      if (!combinedByAnchor.has(anchor)) {
+        combinedByAnchor.set(anchor, {
+          game_key: g,
+          engine_key: String(p.engine_key),
+          engine_name: String(p.engine_name),
+          strategy_name: String(p.strategy_name || ""),
+          anchor_draw_number: anchor,
+          predicted_numbers: p.predicted_numbers,
+          predicted_powerball: p.predicted_powerball,
+          wheel_slips: p.wheel_slips,
+          is_user_pinned: true
+        });
+      }
+    }
+
+    const sortedAnchors = Array.from(combinedByAnchor.keys()).sort((a, b) => b - a);
+    const gameCampaigns: MultiDrawPlayCampaign[] = [];
+
+    for (const anchor of sortedAnchors) {
+      const raw = combinedByAnchor.get(anchor);
+      let predNums: number[] = [];
+      try { predNums = typeof raw.predicted_numbers === "string" ? JSON.parse(raw.predicted_numbers) : raw.predicted_numbers || []; } catch {}
+      let wheelSlips: number[][] = [];
+      try { wheelSlips = raw.wheel_slips ? (typeof raw.wheel_slips === "string" ? JSON.parse(raw.wheel_slips) : raw.wheel_slips) : []; } catch {}
+      if (!wheelSlips || wheelSlips.length === 0) wheelSlips = [predNums];
+
+      const coreSet = new Set<number>();
+      for (const s of wheelSlips) {
+        if (Array.isArray(s)) s.forEach(n => coreSet.add(Number(n)));
+      }
+      predNums.forEach(n => coreSet.add(Number(n)));
+      const corePool = Array.from(coreSet).sort((a, b) => a - b);
+
+      const steps: MultiDrawStepEvaluation[] = [];
+      for (let sIdx = 0; sIdx < 5; sIdx++) {
+        const stepNum = (sIdx + 1) as 1 | 2 | 3 | 4 | 5;
+        const tDraw = anchor + sIdx;
+        const actual = drawMap.get(tDraw);
+
+        if (!actual) {
+          steps.push({
+            step: stepNum,
+            target_draw_number: tDraw,
+            draw_date: "Upcoming Draw",
+            status: "PENDING",
+            best_slip_match: 0,
+            core_pool_hits: 0,
+            is_prize_winner: false,
+            is_core_target_hit: false,
+            prize_tier: "PENDING",
+            payout_tt: 0
+          });
+        } else {
+          const betTT = Math.max(5, wheelSlips.length);
+          const evalRes = evaluatePredictionAgainstDraw(
+            g,
+            predNums,
+            wheelSlips,
+            actual.numbers,
+            betTT,
+            raw.predicted_powerball !== null && raw.predicted_powerball !== undefined ? Number(raw.predicted_powerball) : undefined,
+            actual.powerball
+          );
+          const bestSlipMatch = Math.max(evalRes.matchCount, evalRes.bestWheelMatch);
+          const coreHits = actual.numbers.filter(n => coreSet.has(n)).length;
+          const isCoreHit =
+            g === "win-for-life"
+              ? coreHits >= 4 || evalRes.isPrize === 1
+              : g === "cashpot" || g === "lotto-plus"
+              ? coreHits >= 3 || evalRes.isPrize === 1
+              : evalRes.isPrize === 1;
+
+          steps.push({
+            step: stepNum,
+            target_draw_number: tDraw,
+            draw_date: actual.draw_date || `Draw #${tDraw}`,
+            status: "VERIFIED",
+            actual_numbers: actual.numbers,
+            actual_powerball: actual.powerball,
+            best_slip_match: bestSlipMatch,
+            core_pool_hits: coreHits,
+            is_prize_winner: evalRes.isPrize === 1,
+            is_core_target_hit: isCoreHit,
+            prize_tier: evalRes.prizeTier,
+            payout_tt: evalRes.simulatedPayoutTT
+          });
+        }
+      }
+
+      const verifiedSteps = steps.filter(s => s.status === "VERIFIED");
+      const drawsCompleted = verifiedSteps.length;
+      const steps3 = steps.slice(0, 3);
+      const verified3 = steps3.filter(s => s.status === "VERIFIED");
+
+      const firstHit3 = steps3.find(s => s.status === "VERIFIED" && (s.is_prize_winner || s.is_core_target_hit));
+      const firstHit5 = steps.find(s => s.status === "VERIFIED" && (s.is_prize_winner || s.is_core_target_hit));
+
+      const bestStep3 = [...verified3].sort((a, b) => b.payout_tt - a.payout_tt || b.best_slip_match - a.best_slip_match)[0];
+      const bestStep5 = [...verifiedSteps].sort((a, b) => b.payout_tt - a.payout_tt || b.best_slip_match - a.best_slip_match)[0];
+
+      const campaign: MultiDrawPlayCampaign = {
+        campaign_id: `${g}_${raw.engine_key}_${anchor}`,
+        game_key: g,
+        engine_key: raw.engine_key,
+        engine_name: raw.engine_name,
+        strategy_name: raw.strategy_name,
+        anchor_draw_number: anchor,
+        anchor_draw_date: drawMap.get(anchor)?.draw_date,
+        predicted_numbers: predNums,
+        predicted_powerball: raw.predicted_powerball !== null && raw.predicted_powerball !== undefined ? Number(raw.predicted_powerball) : undefined,
+        wheel_slips: wheelSlips,
+        core_pool: corePool,
+        is_user_pinned: Boolean(raw.is_user_pinned) || drawsCompleted === 0,
+        campaign_state: drawsCompleted >= 5 ? "COMPLETED_5_DRAWS" : "ACTIVE_IN_PROGRESS",
+        draws_completed: drawsCompleted,
+        steps,
+        window_1: {
+          completed: steps[0].status === "VERIFIED",
+          slip_prize_hit: steps[0].is_prize_winner,
+          core_target_hit: steps[0].is_core_target_hit,
+          best_match: steps[0].best_slip_match,
+          best_prize: steps[0].prize_tier,
+          payout_tt: steps[0].payout_tt
+        },
+        window_3: {
+          draws_completed: verified3.length,
+          completed: verified3.length === 3,
+          slip_prize_hit: verified3.some(s => s.is_prize_winner),
+          slip_win_count: verified3.filter(s => s.is_prize_winner).length,
+          core_target_hit: verified3.some(s => s.is_core_target_hit),
+          first_hit_step: firstHit3 ? firstHit3.step : null,
+          best_match: bestStep3 ? bestStep3.best_slip_match : 0,
+          best_prize: bestStep3 ? bestStep3.prize_tier : "PENDING",
+          cumulative_payout_tt: verified3.reduce((acc, s) => acc + s.payout_tt, 0)
+        },
+        window_5: {
+          draws_completed: drawsCompleted,
+          completed: drawsCompleted === 5,
+          slip_prize_hit: verifiedSteps.some(s => s.is_prize_winner),
+          slip_win_count: verifiedSteps.filter(s => s.is_prize_winner).length,
+          core_target_hit: verifiedSteps.some(s => s.is_core_target_hit),
+          first_hit_step: firstHit5 ? firstHit5.step : null,
+          best_match: bestStep5 ? bestStep5.best_slip_match : 0,
+          best_prize: bestStep5 ? bestStep5.prize_tier : "PENDING",
+          cumulative_payout_tt: verifiedSteps.reduce((acc, s) => acc + s.payout_tt, 0)
+        }
+      };
+
+      gameCampaigns.push(campaign);
+      multiDrawCampaigns.push(campaign);
+    }
+
+    // 3. Aggregate summary stats across verified windows for this game
+    const w1Eligible = gameCampaigns.filter(c => c.window_1.completed);
+    const w3Eligible = gameCampaigns.filter(c => c.window_3.completed);
+    const w5Eligible = gameCampaigns.filter(c => c.window_5.completed);
+    const activeCount = gameCampaigns.filter(c => c.campaign_state === "ACTIVE_IN_PROGRESS").length;
+
+    const hitSteps = w5Eligible
+      .map(c => c.window_5.first_hit_step)
+      .filter((st): st is number => st !== null);
+    const avgDrawsToHit =
+      hitSteps.length > 0
+        ? Math.round((hitSteps.reduce((a, b) => a + b, 0) / hitSteps.length) * 10) / 10
+        : 1.0;
+
+    multiDrawSummary.push({
+      game_key: g,
+      engine_name: targetEngineName,
+      total_campaigns_evaluated: w3Eligible.length,
+      active_campaigns_count: activeCount,
+      w1_slip_win_rate_pct:
+        w1Eligible.length > 0
+          ? Math.round((w1Eligible.filter(c => c.window_1.slip_prize_hit).length / w1Eligible.length) * 1000) / 10
+          : 0,
+      w1_core_hit_rate_pct:
+        w1Eligible.length > 0
+          ? Math.round((w1Eligible.filter(c => c.window_1.core_target_hit).length / w1Eligible.length) * 1000) / 10
+          : 0,
+      w3_slip_win_rate_pct:
+        w3Eligible.length > 0
+          ? Math.round((w3Eligible.filter(c => c.window_3.slip_prize_hit).length / w3Eligible.length) * 1000) / 10
+          : 0,
+      w3_core_hit_rate_pct:
+        w3Eligible.length > 0
+          ? Math.round((w3Eligible.filter(c => c.window_3.core_target_hit).length / w3Eligible.length) * 1000) / 10
+          : 0,
+      w5_slip_win_rate_pct:
+        w5Eligible.length > 0
+          ? Math.round((w5Eligible.filter(c => c.window_5.slip_prize_hit).length / w5Eligible.length) * 1000) / 10
+          : 0,
+      w5_core_hit_rate_pct:
+        w5Eligible.length > 0
+          ? Math.round((w5Eligible.filter(c => c.window_5.core_target_hit).length / w5Eligible.length) * 1000) / 10
+          : 0,
+      avg_draws_to_first_hit: avgDrawsToHit,
+      core_target_label:
+        g === "win-for-life"
+          ? "4+ Prize Ball Core"
+          : g === "cashpot" || g === "lotto-plus"
+          ? "3+ Prize Ball Core"
+          : "Exact Mark / Box Core"
+    });
+  }
+
+  return { multiDrawCampaigns, multiDrawSummary };
 }
 
 /**
