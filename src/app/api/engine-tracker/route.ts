@@ -15,10 +15,6 @@ export const maxDuration = 60;
 const trackerResponseCache = new Map<string, { ts: number; payload: any }>();
 const CACHE_TTL_MS = 15_000;
 
-export function clearEngineTrackerCache() {
-  trackerResponseCache.clear();
-}
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

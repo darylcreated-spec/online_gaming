@@ -112,7 +112,7 @@ export default function Home() {
   // Dashboard Stats States
   const [timeframe, setTimeframe] = useState("alltime");
   const [stats, setStats] = useState<any>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(false);
   
   // History Draws States
   const [draws, setDraws] = useState<any[]>([]);
@@ -239,13 +239,12 @@ export default function Home() {
     }
   };
 
-  // Lazy-load Lotto Plus stats & history only when Lotto Plus tab is active
+  // Trigger stats reload on mount & timeframe change
   useEffect(() => {
-    if (activeTab === "lotto-plus") {
-      fetchStats();
-    }
-  }, [activeTab, timeframe]);
+    fetchStats();
+  }, [timeframe]);
 
+  // Lazy-load Lotto Plus history table when Lotto Plus tab is active
   useEffect(() => {
     if (activeTab === "lotto-plus") {
       fetchHistoryDraws(pagination.page);

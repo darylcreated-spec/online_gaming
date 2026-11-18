@@ -32,14 +32,12 @@ export default function AppSplashScreen({ onComplete, isLoading }: AppSplashScre
     }, 1300);
 
     const timer4 = setTimeout(() => {
-      if (!isLoading) {
-        setIsFadingOut(true);
-        setTimeout(() => {
-          setIsMounted(false);
-          if (onComplete) onComplete();
-        }, 600);
-      }
-    }, 1600);
+      setIsFadingOut(true);
+      setTimeout(() => {
+        setIsMounted(false);
+        if (onComplete) onComplete();
+      }, 450);
+    }, 1450);
 
     return () => {
       clearTimeout(timer1);
@@ -47,7 +45,7 @@ export default function AppSplashScreen({ onComplete, isLoading }: AppSplashScre
       clearTimeout(timer3);
       clearTimeout(timer4);
     };
-  }, [isLoading, onComplete]);
+  }, [onComplete]);
 
   // If loading finishes later, trigger fade out
   useEffect(() => {
