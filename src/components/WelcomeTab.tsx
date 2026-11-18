@@ -82,7 +82,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
     };
   }, [clock]);
 
-  // Fetch draws and mathematical engine predictions
+  // Fetch draws and verified Champion predictions (6 parallel lightweight requests instead of 11)
   const fetchAllData = async () => {
     setLoadingResults(true);
     try {
@@ -93,11 +93,6 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         wflRes,
         cashPotRes,
         pick4Res,
-        playWheMathRes,
-        lottoMathRes,
-        wflMathRes,
-        cashPotMathRes,
-        pick4MathRes,
         trackerRes
       ] = await Promise.allSettled([
         fetch(`/api/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
@@ -105,11 +100,6 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         fetch(`/api/winforlife/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
         fetch(`/api/cashpot/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
         fetch(`/api/pick4/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
-        fetch(`/api/playwhe/math-engine?sampleSize=50&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
-        fetch(`/api/lotto/math-engine?game=lotto-plus&sampleSize=50&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
-        fetch(`/api/lotto/math-engine?game=win-for-life&sampleSize=50&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
-        fetch(`/api/cashpot/math-engine?sampleSize=50&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
-        fetch(`/api/pick4/math-engine?sampleSize=50&_t=${now}`, { cache: "no-store" }).then(r => r.json()),
         fetch(`/api/engine-tracker?game=all&depth=100&_t=${now}`, { cache: "no-store" }).then(r => r.json())
       ]);
 
@@ -137,92 +127,74 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         setLatestPick4(pick4Res.value.draws[0]);
       }
 
-      // Populate mathematical predictions (synchronized with Engines Tab #1 Champion Picks when available)
+      // Populate predictions directly from Engines Tab #1 Verified Champion Picks
       const pwChamp = championMap.get("play-whe");
-      const pwBase = playWheMathRes.status === "fulfilled" && playWheMathRes.value?.prediction ? playWheMathRes.value.prediction : {};
       if (pwChamp?.predicted_numbers?.length) {
         const primaryMark = pwChamp.predicted_numbers[0];
         setPlayWhePrediction({
-          ...pwBase,
           top1SinglePick: {
             number: primaryMark,
-            mark: CHINAPOO_CHART[primaryMark]?.mark || pwBase?.top1SinglePick?.mark || "Champion Mark",
-            probability: pwChamp.verified_win_rate_pct ?? pwChamp.win_rate_pct ?? pwBase?.top1SinglePick?.probability ?? 20
+            mark: CHINAPOO_CHART[primaryMark]?.mark || "Champion Mark",
+            probability: pwChamp.verified_win_rate_pct ?? pwChamp.win_rate_pct ?? 20
           },
           top3Trio: pwChamp.predicted_numbers.slice(0, 3).map((n: number) => ({ number: n }))
         });
-      } else if (pwBase?.top1SinglePick) {
-        setPlayWhePrediction(pwBase);
       }
 
       const lottoChamp = championMap.get("lotto-plus");
-      const lottoBase = lottoMathRes.status === "fulfilled" && lottoMathRes.value?.prediction ? lottoMathRes.value.prediction : {};
       if (lottoChamp?.predicted_numbers?.length === 5) {
         const winPct = lottoChamp.verified_win_rate_pct ?? lottoChamp.win_rate_pct ?? 27.8;
         setLottoPrediction({
-          ...lottoBase,
           optimalTicket: {
-            ...(lottoBase?.optimalTicket || {}),
             numbers: lottoChamp.predicted_numbers,
-            bonusBall: lottoChamp.predicted_powerball || lottoBase?.optimalTicket?.bonusBall || 1,
+            bonusBall: lottoChamp.predicted_powerball || 1,
             sum: lottoChamp.predicted_numbers.reduce((a: number, b: number) => a + b, 0),
             confidenceGrade: `${winPct}% Win`
           }
         });
-      } else if (lottoBase?.optimalTicket || lottoBase?.topEnsembles) {
-        setLottoPrediction(lottoBase);
       }
 
       const wflChamp = championMap.get("win-for-life");
-      const wflBase = wflMathRes.status === "fulfilled" && wflMathRes.value?.prediction ? wflMathRes.value.prediction : {};
       if (wflChamp?.predicted_numbers?.length === 6) {
         const winPct = wflChamp.verified_win_rate_pct ?? wflChamp.win_rate_pct ?? 62.2;
         setWflPrediction({
-          ...wflBase,
           optimalTicket: {
-            ...(wflBase?.optimalTicket || {}),
             numbers: wflChamp.predicted_numbers,
-            bonusBall: wflChamp.predicted_powerball || wflChamp.bonus_ball_rotation?.[0] || wflBase?.optimalTicket?.bonusBall || 1,
+            bonusBall: wflChamp.predicted_powerball || wflChamp.bonus_ball_rotation?.[0] || 1,
             sum: wflChamp.predicted_numbers.reduce((a: number, b: number) => a + b, 0),
             confidenceGrade: `${winPct}% Win`
           }
         });
-      } else if (wflBase?.optimalTicket || wflBase?.topEnsembles) {
-        setWflPrediction(wflBase);
       }
 
       const cpChamp = championMap.get("cashpot");
-      const cpBase = cashPotMathRes.status === "fulfilled" && cashPotMathRes.value?.prediction ? cashPotMathRes.value.prediction : {};
       if (cpChamp?.predicted_numbers?.length === 5) {
         const winPct = cpChamp.verified_win_rate_pct ?? cpChamp.win_rate_pct ?? 100;
         setCashPotPrediction({
-          ...cpBase,
           optimalTicket: {
-            ...(cpBase?.optimalTicket || {}),
             numbers: cpChamp.predicted_numbers,
-            bonusBall: cpChamp.predicted_powerball || cpChamp.bonus_ball_rotation?.[0] || cpBase?.optimalTicket?.bonusBall || 1,
+            bonusBall: cpChamp.predicted_powerball || cpChamp.bonus_ball_rotation?.[0] || 1,
             sum: cpChamp.predicted_numbers.reduce((a: number, b: number) => a + b, 0),
             confidenceGrade: `${winPct}% Win`
           }
         });
-      } else if (cpBase?.optimalTicket || cpBase?.topEnsembles) {
-        setCashPotPrediction(cpBase);
       }
 
       const p4Champ = championMap.get("pick4");
-      const p4Base = pick4MathRes.status === "fulfilled" && pick4MathRes.value?.prediction ? pick4MathRes.value.prediction : {};
       if (p4Champ?.predicted_numbers?.length === 4) {
         const winPct = p4Champ.verified_win_rate_pct ?? p4Champ.win_rate_pct ?? 31.4;
+        const sortedBox = [...p4Champ.predicted_numbers].sort((a, b) => a - b).join("");
         setPick4Prediction({
-          ...p4Base,
           optimalStraightTicket: {
-            ...(p4Base?.optimalStraightTicket || {}),
             digits: p4Champ.predicted_numbers,
             confidenceScore: winPct
+          },
+          optimalBoxTickets: {
+            twentyFourWay: {
+              digitsString: sortedBox
+            }
           }
         });
-      } else if (p4Base?.optimalStraightTicket) {
-        setPick4Prediction(p4Base);
       }
     } catch (e) {
       console.error("Error fetching live dashboard metrics:", e);

@@ -473,124 +473,36 @@ export default function WinForLifeTab() {
       />
       
       {/* Sub-Navigation Menu */}
-      <div className="flex bg-slate-900/60 p-1 rounded-xl border border-emerald-500/20 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
-        <button
-          onClick={() => setSubTab("dashboard")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            subTab === "dashboard"
-              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
-              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
-          }`}
-        >
-          <BarChart2 className="w-3.5 h-3.5" />
-          DASHBOARD & STATS
-        </button>
-        <button
-          onClick={() => setSubTab("math-engine")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            subTab === "math-engine"
-              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
-              : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
-          }`}
-        >
-          <Brain className="w-3.5 h-3.5" />
-          MATHEMATICAL ENGINE
-        </button>
-        <button
-          onClick={() => setSubTab("diff-28")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            subTab === "diff-28"
-              ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.4)]"
-              : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
-          }`}
-        >
-          <Binary className="w-3.5 h-3.5" />
-          SUM-28 QUANT ENGINE
-        </button>
-        <button
-          onClick={() => setSubTab("quant-100")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            subTab === "quant-100"
-              ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.4)]"
-              : "text-emerald-300 hover:text-white hover:bg-emerald-500/20 border border-emerald-500/30"
-          }`}
-        >
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          100% QUANT ENGINE
-        </button>
-        <button
-          onClick={() => setSubTab("forensic")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            subTab === "forensic"
-              ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.5)] border border-amber-300"
-              : "text-amber-300 hover:text-white hover:bg-amber-500/20 border border-amber-500/30"
-          }`}
-        >
-          <Binary className="w-3.5 h-3.5 text-amber-400" />
-          <span>FORENSIC QUANT ENGINE</span>
-          <span className={`px-1.5 py-0.5 rounded text-[9px] font-black border ${
-            subTab === "forensic"
-              ? "bg-slate-950 text-amber-300 border-slate-900"
-              : "bg-amber-500/20 text-amber-200 border-amber-400/40"
-          }`}>
-            COMPILED
-          </span>
-        </button>
-        <button
-          onClick={() => setSubTab("builder")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            subTab === "builder"
-              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
-              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
-          }`}
-        >
-          <ClipboardList className="w-3.5 h-3.5" />
-          ODDS REDUCTION & WHEELING
-        </button>
-        <button
-          onClick={() => setSubTab("history")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            subTab === "history"
-              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
-              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
-          }`}
-        >
-          <Calendar className="w-3.5 h-3.5" />
-          DRAW LOG ARCHIVE
-        </button>
-        <button
-          onClick={() => setSubTab("network")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            subTab === "network"
-              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
-              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
-          }`}
-        >
-          <GitBranch className="w-3.5 h-3.5" />
-          SUCCESSOR MATRIX
-        </button>
-        <button
-          onClick={() => setSubTab("predictions")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            subTab === "predictions"
-              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
-              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
-          }`}
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          PREDICTION HITS
-        </button>
-        <button
-          onClick={() => setSubTab("explain")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            subTab === "explain"
-              ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.3)]"
-              : "text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10"
-          }`}
-        >
-          <HelpCircle className="w-3.5 h-3.5" />
-          HOW IT WORKS
-        </button>
+      <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
+        {[
+          { id: "dashboard", label: "DASHBOARD & STATS", icon: BarChart2 },
+          { id: "math-engine", label: "MATHEMATICAL ENGINE", icon: Brain },
+          { id: "diff-28", label: "SUM-28 QUANT ENGINE", icon: Binary },
+          { id: "quant-100", label: "100% QUANT ENGINE", icon: ShieldCheck },
+          { id: "forensic", label: "FORENSIC ENGINE", icon: Cpu },
+          { id: "builder", label: "WHEELING BUILDER", icon: ClipboardList },
+          { id: "history", label: "DRAW ARCHIVE", icon: Calendar },
+          { id: "network", label: "SUCCESSOR MATRIX", icon: GitBranch },
+          { id: "predictions", label: "PREDICTION HITS", icon: RefreshCw },
+          { id: "explain", label: "METHODOLOGY", icon: HelpCircle },
+        ].map((tabItem) => {
+          const IconComp = tabItem.icon;
+          const isActive = subTab === tabItem.id;
+          return (
+            <button
+              key={tabItem.id}
+              onClick={() => setSubTab(tabItem.id as any)}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                isActive
+                  ? "bg-emerald-500 text-slate-950 font-black shadow-sm"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/70"
+              }`}
+            >
+              <IconComp className="w-3.5 h-3.5" />
+              {tabItem.label}
+            </button>
+          );
+        })}
       </div>
 
       {subTab === "dashboard" && (
@@ -829,9 +741,9 @@ export default function WinForLifeTab() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-emerald-400 animate-pulse" />
+                  <Brain className="w-5 h-5 text-emerald-400" />
                   <h3 className="text-base font-black uppercase tracking-wider text-white font-mono">
-                    MEV Engine — Maximum Expected Value AI
+                    Expected Value (EV) Combinatorial Optimizer
                   </h3>
                   <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black uppercase border border-emerald-500/30">
                     {mevStats ? `${mevStats.drawsAnalyzed} DRAWS` : "459+ DRAWS"}
@@ -1119,7 +1031,7 @@ export default function WinForLifeTab() {
                       ? "bg-amber-950/40 border-amber-500/30 text-amber-300"
                       : "bg-slate-900/40 border-white/5 text-gray-400"
                   }`}>
-                    {stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom ? "⚡ Non-Random Pattern" : "✓ Uniform Distribution"}
+                    {stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom ? "Non-Random Pattern" : "Uniform Distribution"}
                   </div>
                   {(() => {
                     const ratio = stats.advancedStats.entropy?.mainNumbers?.ratio || 0;
@@ -1464,7 +1376,7 @@ export default function WinForLifeTab() {
                           }}
                           className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 rounded-lg text-xs font-bold tracking-wider uppercase transition flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          <span>⚡ Load Into Wheel Builder</span>
+                          <span>Load Into Wheel Builder</span>
                         </button>
                         <button
                           onClick={() => {
@@ -1474,7 +1386,7 @@ export default function WinForLifeTab() {
                           }}
                           className="w-full py-2 bg-slate-900 hover:bg-slate-800 border border-white/10 text-gray-300 rounded-lg text-xs font-bold tracking-wider uppercase transition flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          <span>🕸 Explore Node #{nums[0]} In Network</span>
+                          <span>Explore Node #{nums[0]} In Network</span>
                         </button>
                       </div>
                     </div>

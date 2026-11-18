@@ -239,20 +239,21 @@ export default function Home() {
     }
   };
 
-  // Trigger stats reload on timeframe change
+  // Lazy-load Lotto Plus stats & history only when Lotto Plus tab is active
   useEffect(() => {
-    fetchStats();
-  }, [timeframe]);
+    if (activeTab === "lotto-plus") {
+      fetchStats();
+    }
+  }, [activeTab, timeframe]);
 
-  // Trigger history reload on search or filter change
   useEffect(() => {
-    fetchHistoryDraws(pagination.page);
-  }, [pagination.page, historySearch, historyNumberFilter]);
+    if (activeTab === "lotto-plus") {
+      fetchHistoryDraws(pagination.page);
+    }
+  }, [activeTab, pagination.page, historySearch, historyNumberFilter]);
 
-  // Load initial data on mount & register PWA Service Worker
+  // Register PWA Service Worker on mount
   useEffect(() => {
-    fetchHistoryDraws(1);
-
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
@@ -617,106 +618,35 @@ export default function Home() {
               }
             />
 
-            <div className="flex bg-slate-900/60 p-1 rounded-xl border border-sky-500/20 w-full md:w-fit overflow-x-auto flex-nowrap sleek-scrollbar gap-1">
-              <button
-                onClick={() => setLottoSubTab("dashboard")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                  lottoSubTab === "dashboard"
-                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
-                    : "text-gray-400 hover:text-sky-300 hover:bg-sky-500/10"
-                }`}
-              >
-                <BarChart2 className="w-3.5 h-3.5" />
-                DASHBOARD & STATS
-              </button>
-              <button
-                onClick={() => setLottoSubTab("math-engine")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                  lottoSubTab === "math-engine"
-                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
-                    : "text-sky-400/90 hover:text-sky-300 hover:bg-sky-500/10"
-                }`}
-              >
-                <Brain className="w-3.5 h-3.5" />
-                MATHEMATICAL ENGINE
-              </button>
-              <button
-                onClick={() => setLottoSubTab("diff-35")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                  lottoSubTab === "diff-35"
-                    ? "bg-cyan-400 text-slate-950 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]"
-                    : "text-cyan-400/90 hover:text-cyan-300 hover:bg-cyan-500/10"
-                }`}
-              >
-                <Binary className="w-3.5 h-3.5" />
-                SUM-35 QUANT ENGINE
-              </button>
-              <button
-                onClick={() => setLottoSubTab("quant-100")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                  lottoSubTab === "quant-100"
-                    ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.4)]"
-                    : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                100% QUANT ENGINE
-              </button>
-              <button
-                onClick={() => setLottoSubTab("forensic")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                  lottoSubTab === "forensic"
-                    ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.4)]"
-                    : "text-amber-400/90 hover:text-amber-300 hover:bg-amber-500/10"
-                }`}
-              >
-                <Cpu className="w-3.5 h-3.5" />
-                FORENSIC ENGINE
-              </button>
-              <button
-                onClick={() => setLottoSubTab("audit")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                  lottoSubTab === "audit"
-                    ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.4)]"
-                    : "text-purple-400/90 hover:text-purple-300 hover:bg-purple-500/10"
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                AUDIT & VERIFICATION SYSTEM
-              </button>
-              <button
-                onClick={() => setLottoSubTab("builder")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                  lottoSubTab === "builder"
-                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
-                    : "text-gray-400 hover:text-sky-300 hover:bg-sky-500/10"
-                }`}
-              >
-                <ClipboardList className="w-3.5 h-3.5" />
-                ODDS REDUCTION & WHEELING
-              </button>
-              <button
-                onClick={() => setLottoSubTab("history")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                  lottoSubTab === "history"
-                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
-                    : "text-gray-400 hover:text-sky-300 hover:bg-sky-500/10"
-                }`}
-              >
-                <Calendar className="w-3.5 h-3.5" />
-                DRAW LOG ARCHIVE
-              </button>
-              <button
-                onClick={() => setLottoSubTab("explain")}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                  lottoSubTab === "explain"
-                    ? "bg-sky-500 text-slate-950 font-black shadow-[0_0_15px_rgba(56,189,248,0.3)]"
-                    : "text-gray-400 hover:text-sky-300 hover:bg-sky-500/10"
-                }`}
-              >
-                <HelpCircle className="w-3.5 h-3.5" />
-                HOW IT WORKS
-              </button>
+            <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 w-full md:w-fit overflow-x-auto flex-nowrap sleek-scrollbar gap-1">
+              {[
+                { id: "dashboard", label: "DASHBOARD & STATS", icon: BarChart2 },
+                { id: "math-engine", label: "MATHEMATICAL ENGINE", icon: Brain },
+                { id: "diff-35", label: "SUM-35 QUANT ENGINE", icon: Binary },
+                { id: "quant-100", label: "100% QUANT ENGINE", icon: ShieldCheck },
+                { id: "forensic", label: "FORENSIC ENGINE", icon: Cpu },
+                { id: "audit", label: "AUDIT & VERIFICATION", icon: ShieldCheck },
+                { id: "builder", label: "WHEELING BUILDER", icon: ClipboardList },
+                { id: "history", label: "DRAW ARCHIVE", icon: Calendar },
+                { id: "explain", label: "METHODOLOGY", icon: HelpCircle },
+              ].map((tabItem) => {
+                const IconComp = tabItem.icon;
+                const isActive = lottoSubTab === tabItem.id;
+                return (
+                  <button
+                    key={tabItem.id}
+                    onClick={() => setLottoSubTab(tabItem.id as any)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                      isActive
+                        ? "bg-sky-500 text-slate-950 font-black shadow-sm"
+                        : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/70"
+                    }`}
+                  >
+                    <IconComp className="w-3.5 h-3.5" />
+                    {tabItem.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

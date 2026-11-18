@@ -287,7 +287,7 @@ export default function EngineBenchmarkTracker() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="px-2.5 py-0.5 rounded text-[11px] font-mono tracking-wider font-semibold bg-cyan-950/80 border border-cyan-500/40 text-cyan-400">
-                NLCB QUANTUM // MULTI-ENGINE BENCHMARK
+                NLCB QUANTITATIVE // MULTI-ENGINE BENCHMARK
               </span>
               <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />

@@ -281,29 +281,29 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
     if (!selectedSyndicate) return "";
 
     const lines = [
-      `🎰 *THE WIN CONCEPT — SYNDICATE PLAYSLIP* 🎰`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━`,
-      `🏷️ *Pool:* ${selectedSyndicate.name}`,
-      `🔑 *Invite Code:* ${selectedSyndicate.code}`,
-      `🎲 *Game:* ${selectedSyndicate.game_type.toUpperCase()}`,
-      `📅 *Target Draw:* ${selectedSyndicate.target_draw_date}`,
-      `💰 *Total Stake:* $${selectedSyndicate.total_stake?.toFixed(2)} TT`,
-      `👥 *Members (${selectedSyndicate.members?.length || 0}):*`,
+      `[THE WIN CONCEPT — SYNDICATE PLAYSLIP]`,
+      `----------------------------------------`,
+      `Pool: ${selectedSyndicate.name}`,
+      `Invite Code: ${selectedSyndicate.code}`,
+      `Game: ${selectedSyndicate.game_type.toUpperCase()}`,
+      `Target Draw: ${selectedSyndicate.target_draw_date}`,
+      `Total Stake: $${selectedSyndicate.total_stake?.toFixed(2)} TT`,
+      `Members (${selectedSyndicate.members?.length || 0}):`,
     ];
 
     selectedSyndicate.members?.forEach((m: any, i: number) => {
       lines.push(`  ${i + 1}. ${m.member_name} — $${m.contribution_amount?.toFixed(2)} (${m.share_percentage}%)`);
     });
 
-    lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━`);
-    lines.push(`🎟️ *POOLED TICKETS (${selectedSyndicate.tickets?.length || 0}):*`);
+    lines.push(`----------------------------------------`);
+    lines.push(`POOLED TICKETS (${selectedSyndicate.tickets?.length || 0}):`);
     selectedSyndicate.tickets?.forEach((t: any, i: number) => {
       lines.push(`  Line ${i + 1}: [ ${t.numbers} ] ${t.bonus ? `PB: ${t.bonus}` : ""}`);
     });
 
-    lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━`);
-    lines.push(`⚡ *Verified by The Win Concept Combinatorial Engine*`);
-    lines.push(`🔗 Join & view live slip at: https://thewinconcept.tt/?pool=${selectedSyndicate.code}`);
+    lines.push(`----------------------------------------`);
+    lines.push(`Verified by The Win Concept Combinatorial Engine`);
+    lines.push(`Join & view live slip at: https://onlinegaming-tawny.vercel.app/?pool=${selectedSyndicate.code}`);
 
     return lines.join("\n");
   };

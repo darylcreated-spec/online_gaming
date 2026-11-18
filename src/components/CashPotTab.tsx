@@ -203,102 +203,34 @@ export default function CashPotTab() {
       />
 
       {/* Subtab Navigator */}
-      <div className="flex bg-slate-900/60 p-1 rounded-xl border border-yellow-500/20 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
-        <button
-          onClick={() => setActiveSubTab("dashboard")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            activeSubTab === "dashboard"
-              ? "bg-yellow-500 text-slate-950 font-black shadow-[0_0_15px_rgba(250,204,21,0.3)]"
-              : "text-gray-400 hover:text-yellow-300 hover:bg-yellow-500/10"
-          }`}
-        >
-          <BarChart2 className="w-3.5 h-3.5" />
-          DASHBOARD & STATS
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab("math")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            activeSubTab === "math"
-              ? "bg-yellow-500 text-slate-950 font-black shadow-[0_0_15px_rgba(250,204,21,0.3)]"
-              : "text-yellow-400/90 hover:text-yellow-300 hover:bg-yellow-500/10"
-          }`}
-        >
-          <Brain className="w-3.5 h-3.5" />
-          MATHEMATICAL ENGINE
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab("diff")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            activeSubTab === "diff"
-              ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.4)]"
-              : "text-amber-400/90 hover:text-amber-300 hover:bg-amber-400/10"
-          }`}
-        >
-          <Sigma className="w-3.5 h-3.5" />
-          SUM-28 / DIFF ENGINE
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab("audit")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            activeSubTab === "audit"
-              ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.4)]"
-              : "text-purple-400/90 hover:text-purple-300 hover:bg-purple-500/10"
-          }`}
-        >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          100% QUANT AUDIT &amp; VERIFICATION
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab("forensic")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            activeSubTab === "forensic"
-              ? "bg-cyan-400 text-slate-950 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]"
-              : "text-cyan-400/90 hover:text-cyan-300 hover:bg-cyan-500/10"
-          }`}
-        >
-          <Cpu className="w-3.5 h-3.5" />
-          FORENSIC ENGINE
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab("wheeling")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            activeSubTab === "wheeling"
-              ? "bg-yellow-500 text-slate-950 font-black shadow-[0_0_15px_rgba(250,204,21,0.3)]"
-              : "text-gray-400 hover:text-yellow-300 hover:bg-yellow-500/10"
-          }`}
-        >
-          <ClipboardList className="w-3.5 h-3.5" />
-          ODDS REDUCTION & WHEELING
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab("archive")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            activeSubTab === "archive"
-              ? "bg-yellow-500 text-slate-950 font-black shadow-[0_0_15px_rgba(250,204,21,0.3)]"
-              : "text-gray-400 hover:text-yellow-300 hover:bg-yellow-500/10"
-          }`}
-        >
-          <Calendar className="w-3.5 h-3.5" />
-          DRAW LOG ARCHIVE
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab("explain")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-            activeSubTab === "explain"
-              ? "bg-yellow-500 text-slate-950 font-black shadow-[0_0_15px_rgba(250,204,21,0.3)]"
-              : "text-gray-400 hover:text-yellow-300 hover:bg-yellow-500/10"
-          }`}
-        >
-          <HelpCircle className="w-3.5 h-3.5" />
-          HOW IT WORKS
-        </button>
+      <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
+        {[
+          { id: "dashboard", label: "DASHBOARD & STATS", icon: BarChart2 },
+          { id: "math", label: "MATHEMATICAL ENGINE", icon: Brain },
+          { id: "diff", label: "SUM-28 / DIFF ENGINE", icon: Sigma },
+          { id: "audit", label: "100% QUANT AUDIT", icon: ShieldCheck },
+          { id: "forensic", label: "FORENSIC ENGINE", icon: Cpu },
+          { id: "wheeling", label: "WHEELING BUILDER", icon: ClipboardList },
+          { id: "archive", label: "DRAW ARCHIVE", icon: Calendar },
+          { id: "explain", label: "METHODOLOGY", icon: HelpCircle },
+        ].map((tabItem) => {
+          const IconComp = tabItem.icon;
+          const isActive = activeSubTab === tabItem.id;
+          return (
+            <button
+              key={tabItem.id}
+              onClick={() => setActiveSubTab(tabItem.id as any)}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                isActive
+                  ? "bg-yellow-500 text-slate-950 font-black shadow-sm"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/70"
+              }`}
+            >
+              <IconComp className="w-3.5 h-3.5" />
+              {tabItem.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Subtab Content: Dashboard & Stats */}

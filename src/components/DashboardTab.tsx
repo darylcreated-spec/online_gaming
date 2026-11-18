@@ -72,15 +72,26 @@ export default function DashboardTab({
   // Saved Slips States
   const [savedSlips, setSavedSlips] = useState<any[]>([]);
   const [loadingSlips, setLoadingSlips] = useState(false);
+  const [championPick, setChampionPick] = useState<any>(null);
 
-  // Fetch saved slips
+  // Fetch saved slips & Engines Tab Champion Pick
   const fetchSlips = async () => {
     try {
       setLoadingSlips(true);
-      const res = await fetch("/api/slips");
+      const [res, trackerRes] = await Promise.all([
+        fetch("/api/slips"),
+        fetch("/api/engine-tracker?game=lotto-plus&depth=100", { cache: "no-store" }).catch(() => null)
+      ]);
       const data = await res.json();
       if (data.success) {
         setSavedSlips(data.slips || []);
+      }
+      if (trackerRes && trackerRes.ok) {
+        const tData = await trackerRes.json();
+        const lpChamp = tData?.championPicks?.find((c: any) => c.game_key === "lotto-plus") || tData?.championPicks?.[0];
+        if (lpChamp) {
+          setChampionPick(lpChamp);
+        }
       }
     } catch (err) {
       console.error("Error fetching saved slips:", err);
@@ -346,16 +357,102 @@ export default function DashboardTab({
         </div>
       </div>
 
+      {/* Connected Engines Tab #1 Verified Champion Portfolio & Multi-Draw Window Telemetry */}
+      {championPick && (
+        <div className="p-5 rounded-2xl bg-gradient-to-br from-sky-950/30 via-slate-900/90 to-slate-950 border border-sky-500/40 shadow-[0_0_25px_rgba(56,189,248,0.1)] space-y-4 font-mono">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-sky-500/20 pb-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Shield className="w-4 h-4 text-sky-400" />
+                <span className="text-xs font-black uppercase tracking-wider text-sky-300">
+                  Engines Tab #1 Verified Champion Portfolio — {championPick.engine_name}
+                </span>
+                <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">
+                  {championPick.verified_win_rate_pct ?? championPick.win_rate_pct}% WIN RATE ({(championPick.verified_roi_pct ?? championPick.roi_pct) >= 0 ? "+" : ""}{championPick.verified_roi_pct ?? championPick.roi_pct}% ROI)
+                </span>
+                {championPick.bonus_ball_rotation?.length > 0 && (
+                  <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-400/40 text-purple-200 text-[10px] font-bold">
+                    Top-3 Renewal PB: {championPick.bonus_ball_rotation.join(", ")}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-gray-400">
+                {championPick.strategy_name} • Target Draw #{championPick.target_draw_number} • Synchronized live with the Engines Tab audit ledger
+              </p>
+            </div>
+          </div>
+
+          {championPick.multi_draw_window_rates && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-gray-400 uppercase block">1-Draw Window</span>
+                  <span className="text-[9px] text-gray-500">{championPick.multi_draw_window_rates.description}</span>
+                </div>
+                <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_1_draw}%</span>
+              </div>
+              <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-gray-400 uppercase block">3-Draw Rolling Window</span>
+                  <span className="text-[9px] text-gray-500">3+ Ball Hit Capture</span>
+                </div>
+                <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_3_draw}%</span>
+              </div>
+              <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-gray-400 uppercase block">5-Draw Saturation Window</span>
+                  <span className="text-[9px] text-gray-500">Multi-Draw Convergence</span>
+                </div>
+                <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_5_draw}%</span>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+            {(championPick.wheel_slips || [championPick.predicted_numbers]).slice(0, 10).map((slip: number[], idx: number) => {
+              const slipPb = championPick.line_powerballs?.[idx % (championPick.line_powerballs.length || 1)] || championPick.predicted_powerball;
+              return (
+                <div
+                  key={idx}
+                  className={`p-2.5 rounded-xl border flex items-center justify-between ${
+                    idx === 0
+                      ? "bg-sky-500/15 border-sky-400/50"
+                      : "bg-black/40 border-white/10"
+                  }`}
+                >
+                  <span className="text-[10px] font-bold text-gray-400">#{idx + 1}</span>
+                  <div className="flex items-center gap-1">
+                    {slip.map((n: number, bIdx: number) => (
+                      <span
+                        key={bIdx}
+                        className="w-5 h-5 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-200 font-black text-[10px] flex items-center justify-center"
+                      >
+                        {n}
+                      </span>
+                    ))}
+                    {slipPb && (
+                      <span className="w-5 h-5 rounded-full bg-purple-500/30 border border-purple-400 text-purple-200 font-black text-[10px] flex items-center justify-center ml-0.5">
+                        {slipPb}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ═══════════════════════════════════════════════════════════════════
-          MEV ENGINE — Maximum Expected Value AI Optimizer
+          Expected Value (EV) Combinatorial Optimizer
           ═══════════════════════════════════════════════════════════════════ */}
       <div className="glass-panel rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/20 via-slate-950/60 to-transparent p-6 space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-emerald-400 animate-pulse" />
+              <Brain className="w-5 h-5 text-emerald-400" />
               <h3 className="text-base font-black uppercase tracking-wider text-white font-mono">
-                MEV Engine — Maximum Expected Value AI
+                Expected Value (EV) Combinatorial Optimizer
               </h3>
               <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black uppercase border border-emerald-500/30">
                 {mevStats ? `${mevStats.drawsAnalyzed} DRAWS` : "857+ DRAWS"}

@@ -12,12 +12,33 @@ import { runFullSystemCalibration } from "@/lib/engine_calibrator";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+const trackerResponseCache = new Map<string, { ts: number; payload: any }>();
+const CACHE_TTL_MS = 15_000;
+
+export function clearEngineTrackerCache() {
+  trackerResponseCache.clear();
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const game = searchParams.get("game") || "all";
     const depthParam = searchParams.get("depth") || "100";
+    const forceFresh = searchParams.get("fresh") === "1";
     const horizon = depthParam === "all" ? 1000 : parseInt(depthParam, 10) || 100;
+    const cacheKey = `${game}:${horizon}`;
+
+    if (!forceFresh) {
+      const cached = trackerResponseCache.get(cacheKey);
+      if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+        return NextResponse.json(cached.payload, {
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache"
+          }
+        });
+      }
+    }
 
     // 1. Check if initial seeding/snapshotting is needed
     await seedHistoricalEngineAuditsIfEmpty();
@@ -27,16 +48,19 @@ export async function GET(request: NextRequest) {
     if (reconciled.verifiedCount > 0) {
       await runFullSystemCalibration();
       await snapshotAllEnginePredictions();
+      trackerResponseCache.clear();
     }
 
     const stats = await getEngineLeaderboardStats(game, horizon);
-
-    return NextResponse.json({
+    const payload = {
       success: true,
       game,
       horizon,
       ...stats
-    }, {
+    };
+    trackerResponseCache.set(cacheKey, { ts: Date.now(), payload });
+
+    return NextResponse.json(payload, {
       headers: {
         "Cache-Control": "no-store, no-cache, must-revalidate",
         "Pragma": "no-cache"
@@ -53,6 +77,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    trackerResponseCache.clear();
     const body = await request.json().catch(() => ({}));
     const action = body.action || "reconcile_and_snapshot";
     const specificGame = body.game && body.game !== "all" ? body.game : undefined;

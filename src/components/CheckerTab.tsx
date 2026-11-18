@@ -1806,7 +1806,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
             <div className="bg-green-500/10 border border-green-500/25 p-5 rounded-xl text-center space-y-4 pulse-glow-green">
               <div>
                 <h4 className="text-lg font-black text-green-400 tracking-wider uppercase font-mono">
-                  🎉 WINNING TICKET DETECTED!
+                  WINNING TICKET VERIFIED
                 </h4>
                 <p className="text-[10px] text-gray-400 mt-1">
                   {selectedGame === "play-whe"

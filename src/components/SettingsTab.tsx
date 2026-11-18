@@ -447,7 +447,7 @@ export default function SettingsTab() {
               }`}
             >
               <RefreshCw className={`w-4 h-4 ${syncingGame === "all" ? "animate-spin" : ""}`} />
-              <span>{syncingGame === "all" ? "Scraping NLCB..." : "⚡ Sync All Games Now"}</span>
+              <span>{syncingGame === "all" ? "Scraping NLCB..." : "Sync All Games Now"}</span>
             </button>
           </div>
 

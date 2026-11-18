@@ -2023,7 +2023,7 @@ export default function PlayWheTab({
                     Top Lag-3 Cycle Signals: {Array.isArray(stats?.advancedStats?.autocorrelation?.lag3) ? stats.advancedStats.autocorrelation.lag3.slice(0, 4).map((a: any) => `#${a.number}`).join(", ") : "Active"}
                   </p>
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold font-mono bg-cyan-950/40 border-cyan-500/30 text-cyan-300">
-                    ⚡ Lag-3 &amp; Lag-4 ACF Active
+                    Lag-3 &amp; Lag-4 ACF Active
                   </div>
                 </div>
 
@@ -2136,7 +2136,7 @@ export default function PlayWheTab({
             {showMicHelp && (
               <div className="bg-slate-950/80 border border-white/5 rounded-lg p-4 text-[10px] text-gray-400 font-mono space-y-2 animate-ticket-slide">
                 <div className="font-bold text-white uppercase text-[9px] tracking-wider pb-1.5 border-b border-white/5 flex justify-between items-center">
-                  <span>🎤 Microphone Access Troubleshooting Guide</span>
+                  <span>Microphone Access Troubleshooting Guide</span>
                   <button 
                     onClick={() => setShowMicHelp(false)} 
                     className="text-red-400 hover:text-red-300 font-bold"
@@ -2217,7 +2217,7 @@ export default function PlayWheTab({
 
                 {matchedDreamMarks.length > 0 && (
                   <div className="text-[9px] text-primary/70 font-mono italic mt-2">
-                    💡 Tip: Click any matched mark above to load its successors & companion statistics in the Relationship Map!
+                    Note: Click any matched mark above to load its successors &amp; companion statistics in the Relationship Map.
                   </div>
                 )}
               </div>

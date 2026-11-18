@@ -3097,9 +3097,9 @@ export async function getEngineLeaderboardStats(
         engine_key: row.engine_key,
         engine_name: row.engine_name,
         severity: "OPTIMAL",
-        title: `Optimal Convexity Achieved: ${row.engine_name}`,
-        anomalyDescription: `Super-linear performance verified: ${row.prize_win_rate_pct}% prize hit rate with ${row.roi_pct >= 0 ? "+" : ""}${row.roi_pct}% simulated ROI.`,
-        recommendation: `Bayesian posterior weights are locked onto the active chamber regime. Maintain prime capital allocation.`,
+        title: `Active Regime Verified: ${row.engine_name}`,
+        anomalyDescription: `Out-of-sample walk-forward verification: ${row.prize_win_rate_pct}% prize hit rate with ${row.roi_pct >= 0 ? "+" : ""}${row.roi_pct}% simulated ROI.`,
+        recommendation: `Bayesian posterior weights are aligned with the active draw distribution. Maintain current portfolio weighting.`,
         suggestedAction: `Re-Verify & Lock Regime`
       });
     }
@@ -3361,15 +3361,16 @@ export async function computeMultiDrawHorizonVerification(
   const multiDrawCampaigns: MultiDrawPlayCampaign[] = [];
   const multiDrawSummary: MultiDrawGameSummary[] = [];
 
-  for (const g of gamesToQuery) {
-    const champPick = championPicks.find(c => c.game_key === g);
-    const champLeader = leaderboard.find(r => r.game_key === g);
-    const targetEngineKey = champPick?.engine_key || champLeader?.engine_key || "apex-master";
-    const targetEngineName = champPick?.engine_name || champLeader?.engine_name || "Apex Champion Consensus";
+  await Promise.all(
+    gamesToQuery.map(async (g) => {
+      const champPick = championPicks.find(c => c.game_key === g);
+      const champLeader = leaderboard.find(r => r.game_key === g);
+      const targetEngineKey = champPick?.engine_key || champLeader?.engine_key || "apex-master";
+      const targetEngineName = champPick?.engine_name || champLeader?.engine_name || "Apex Champion Consensus";
 
-    // 1. Load recent 80 official draws for this game into a draw_number -> draw lookup map
-    const drawMap = new Map<number, { draw_number: number; draw_date: string; numbers: number[]; powerball?: number }>();
-    try {
+      // 1. Load recent 80 official draws for this game into a draw_number -> draw lookup map
+      const drawMap = new Map<number, { draw_number: number; draw_date: string; numbers: number[]; powerball?: number }>();
+      try {
       if (g === "cashpot") {
         const rows = await query<any>(
           "SELECT draw_number, draw_date, num1, num2, num3, num4, num5, multiplier FROM cashpot_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 80"
@@ -3666,7 +3667,8 @@ export async function computeMultiDrawHorizonVerification(
           ? "3+ Prize Ball Core"
           : "Exact Mark / Box Core"
     });
-  }
+    })
+  );
 
   return { multiDrawCampaigns, multiDrawSummary };
 }
