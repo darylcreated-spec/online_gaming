@@ -75,6 +75,7 @@ export default function EngineBenchmarkTracker() {
   const [lockingGame, setLockingGame] = useState<string | null>(null);
   const [showLeaderboardDrawer, setShowLeaderboardDrawer] = useState<boolean>(false);
   const [showDiagnosticsDrawer, setShowDiagnosticsDrawer] = useState<boolean>(false);
+  const [multiDrawGameFilter, setMultiDrawGameFilter] = useState<string>("all");
 
   const fetchData = async (game = selectedGame, horizon = selectedHorizon) => {
     setLoading(true);
@@ -911,59 +912,137 @@ export default function EngineBenchmarkTracker() {
             </div>
           </div>
 
-          {/* Empirical 1-Draw vs 3-Draw vs 5-Draw Summary Strip */}
+          {/* Dedicated Multi-Draw Game Switcher Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-[#13181d] p-2 rounded-xl border border-slate-800 font-mono">
+            <span className="text-[11px] text-slate-400 px-2 font-semibold uppercase">
+              Switch Tracked Game:
+            </span>
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+              {[
+                { id: "all", label: "All Games (Interleaved)" },
+                { id: "cashpot", label: "Cash Pot" },
+                { id: "win-for-life", label: "Win For Life" },
+                { id: "lotto-plus", label: "Lotto Plus" },
+                { id: "play-whe", label: "Play Whe" },
+                { id: "pick4", label: "Pick 4" },
+              ].map(gItem => {
+                const activeGame = selectedGame !== "all" ? selectedGame : multiDrawGameFilter;
+                const isSelected = activeGame === gItem.id;
+                return (
+                  <button
+                    key={gItem.id}
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      if (selectedGame !== "all" && gItem.id !== selectedGame) {
+                        setSelectedGame("all");
+                      }
+                      setMultiDrawGameFilter(gItem.id);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-cyan-500 text-slate-950 font-black shadow-sm"
+                        : "bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800"
+                    }`}
+                  >
+                    {gItem.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Empirical 1-Draw vs 3-Draw vs 5-Draw Summary Strip (Click any card to switch game) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 font-mono">
-            {data.multiDrawSummary.map(sum => (
-              <div
-                key={sum.game_key}
-                className="p-3.5 rounded-xl bg-[#14191f] border border-slate-800 space-y-2.5 flex flex-col justify-between"
-              >
-                <div className="flex items-center justify-between gap-1">
-                  <span className="px-2 py-0.5 rounded text-xs font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                    {getGameLabel(sum.game_key)}
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    Avg Hit: <strong className="text-emerald-400">{sum.avg_draws_to_first_hit}d</strong>
-                  </span>
-                </div>
+            {data.multiDrawSummary.map(sum => {
+              const activeGame = selectedGame !== "all" ? selectedGame : multiDrawGameFilter;
+              const isCardSelected = activeGame === sum.game_key;
+              return (
+                <button
+                  key={sum.game_key}
+                  onClick={() => {
+                    triggerHaptic("selection");
+                    if (selectedGame !== "all") setSelectedGame("all");
+                    setMultiDrawGameFilter(isCardSelected ? "all" : sum.game_key);
+                  }}
+                  className={`p-3.5 rounded-xl border text-left space-y-2.5 flex flex-col justify-between transition-all cursor-pointer ${
+                    isCardSelected
+                      ? "bg-cyan-950/35 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.18)]"
+                      : "bg-[#14191f] border-slate-800 hover:border-cyan-500/40"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1 w-full">
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
+                      isCardSelected
+                        ? "bg-cyan-500 text-slate-950 border-cyan-400"
+                        : "bg-cyan-500/15 text-cyan-300 border-cyan-500/30"
+                    }`}>
+                      {getGameLabel(sum.game_key)}
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      Avg Hit: <strong className="text-emerald-400">{sum.avg_draws_to_first_hit}d</strong>
+                    </span>
+                  </div>
 
-                <div className="space-y-1.5 text-[11px]">
-                  <div className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/80 border border-slate-800/80">
-                    <span className="text-slate-400">1-Draw Hit:</span>
-                    <span className="text-white font-bold">
-                      {sum.w1_slip_win_rate_pct}% <span className="text-[10px] text-cyan-400">({sum.w1_core_hit_rate_pct}% Core)</span>
-                    </span>
+                  <div className="space-y-1.5 text-[11px] w-full">
+                    <div className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/80 border border-slate-800/80">
+                      <span className="text-slate-400">1-Draw Hit:</span>
+                      <span className="text-white font-bold">
+                        {sum.w1_slip_win_rate_pct}% <span className="text-[10px] text-cyan-400">({sum.w1_core_hit_rate_pct}% Core)</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between px-2 py-1 rounded bg-cyan-950/30 border border-cyan-500/30">
+                      <span className="text-cyan-300 font-semibold">3-Draw Win:</span>
+                      <span className="text-cyan-200 font-bold">
+                        {sum.w3_slip_win_rate_pct}% <span className="text-[10px] text-emerald-400">({sum.w3_core_hit_rate_pct}% Core)</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between px-2 py-1 rounded bg-emerald-950/30 border border-emerald-500/30">
+                      <span className="text-emerald-300 font-semibold">5-Draw Win:</span>
+                      <span className="text-emerald-300 font-bold">
+                        {sum.w5_slip_win_rate_pct}% <span className="text-[10px] text-emerald-400">({sum.w5_core_hit_rate_pct}% Core)</span>
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between px-2 py-1 rounded bg-cyan-950/30 border border-cyan-500/30">
-                    <span className="text-cyan-300 font-semibold">3-Draw Win:</span>
-                    <span className="text-cyan-200 font-bold">
-                      {sum.w3_slip_win_rate_pct}% <span className="text-[10px] text-emerald-400">({sum.w3_core_hit_rate_pct}% Core)</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between px-2 py-1 rounded bg-emerald-950/30 border border-emerald-500/30">
-                    <span className="text-emerald-300 font-semibold">5-Draw Win:</span>
-                    <span className="text-emerald-300 font-bold">
-                      {sum.w5_slip_win_rate_pct}% <span className="text-[10px] text-emerald-400">({sum.w5_core_hit_rate_pct}% Core)</span>
-                    </span>
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/70">
-                  <span>{sum.total_campaigns_evaluated} Verified Windows</span>
-                  <span className="text-amber-400 font-semibold">{sum.active_campaigns_count} Active</span>
-                </div>
-              </div>
-            ))}
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/70 w-full">
+                    <span>{sum.total_campaigns_evaluated} Verified Windows</span>
+                    <span className={isCardSelected ? "text-cyan-300 font-bold" : "text-amber-400 font-semibold"}>
+                      {isCardSelected ? "Showing Game" : `${sum.active_campaigns_count} Active`}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {/* Campaign List / Table */}
           {(() => {
-            const campaigns = (data.multiDrawCampaigns || []).filter(c => {
-              if (selectedGame !== "all" && c.game_key !== selectedGame) return false;
+            const activeGame = selectedGame !== "all" ? selectedGame : multiDrawGameFilter;
+            const filteredRaw = (data.multiDrawCampaigns || []).filter(c => {
+              if (activeGame !== "all" && c.game_key !== activeGame) return false;
               if (multiDrawFilterState === "ACTIVE") return c.campaign_state === "ACTIVE_IN_PROGRESS";
               if (multiDrawFilterState === "COMPLETED") return c.campaign_state === "COMPLETED_5_DRAWS";
               return true;
             });
+
+            // Interleave across games when viewing "all" so Cash Pot doesn't push other games out of the top 20
+            let campaigns = filteredRaw;
+            if (activeGame === "all") {
+              const byGame: Record<string, MultiDrawPlayCampaign[]> = {};
+              for (const c of filteredRaw) {
+                if (!byGame[c.game_key]) byGame[c.game_key] = [];
+                byGame[c.game_key].push(c);
+              }
+              const interleaved: MultiDrawPlayCampaign[] = [];
+              const gameKeys = Object.keys(byGame);
+              let maxLen = Math.max(0, ...gameKeys.map(k => byGame[k].length));
+              for (let i = 0; i < maxLen; i++) {
+                for (const k of gameKeys) {
+                  if (byGame[k][i]) interleaved.push(byGame[k][i]);
+                }
+              }
+              campaigns = interleaved;
+            }
 
             if (campaigns.length === 0) {
               return (
