@@ -71,6 +71,7 @@ export default function CashPotTab() {
   const [wheelStrategy, setWheelStrategy] = useState<"abbreviated-4-4" | "abbreviated-3-3" | "full">("abbreviated-4-4");
   const [generatedTickets, setGeneratedTickets] = useState<number[][]>([]);
   const [championPick, setChampionPick] = useState<any>(null);
+  const [showChampionDrawer, setShowChampionDrawer] = useState<boolean>(false);
 
   const fetchStats = async () => {
     try {
@@ -236,88 +237,98 @@ export default function CashPotTab() {
       {/* Subtab Content: Dashboard & Stats */}
       {activeSubTab === "dashboard" && (
         <div className="space-y-6">
-          {/* Connected Engines Tab #1 Verified Champion Portfolio & Multi-Draw Window Telemetry */}
+          {/* Connected Engines Tab #1 Verified Champion Portfolio Drawer */}
           {championPick && (
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-yellow-950/30 via-slate-900/90 to-slate-950 border border-yellow-500/40 shadow-[0_0_25px_rgba(250,204,21,0.12)] space-y-4 font-mono">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-yellow-500/20 pb-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <ShieldCheck className="w-4 h-4 text-yellow-400" />
-                    <span className="text-xs font-black uppercase tracking-wider text-yellow-300">
-                      Engines Tab #1 Verified Champion — {championPick.engine_name}
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">
-                      {championPick.verified_win_rate_pct ?? championPick.win_rate_pct}% WIN RATE ({(championPick.verified_roi_pct ?? championPick.roi_pct) >= 0 ? "+" : ""}{championPick.verified_roi_pct ?? championPick.roi_pct}% ROI)
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 text-[10px] font-bold">
-                      Target Draw #{championPick.target_draw_number}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-gray-400">
-                    {championPick.strategy_name} • Synchronized live with the Engines Tab walk-forward audit ledger
-                  </p>
+            <div className="rounded-2xl bg-slate-900/80 border border-yellow-500/30 overflow-hidden font-mono">
+              <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <ShieldCheck className="w-4 h-4 text-yellow-400" />
+                  <span className="text-xs font-black uppercase tracking-wider text-yellow-300">
+                    Verified Champion Engine — {championPick.engine_name}
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">
+                    {championPick.verified_win_rate_pct ?? championPick.win_rate_pct}% WIN RATE ({(championPick.verified_roi_pct ?? championPick.roi_pct) >= 0 ? "+" : ""}{championPick.verified_roi_pct ?? championPick.roi_pct}% ROI)
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 text-[10px] font-bold">
+                    Target Draw #{championPick.target_draw_number}
+                  </span>
                 </div>
-                <button
-                  onClick={() => {
-                    triggerHaptic("selection");
-                    setActiveSubTab("wheeling");
-                  }}
-                  className="px-3.5 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-[11px] uppercase tracking-wider transition cursor-pointer shrink-0"
-                >
-                  Open Champion Core in Wheeling ({selectedPool.length} Balls)
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      setShowChampionDrawer(!showChampionDrawer);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-yellow-300 text-[11px] font-bold transition cursor-pointer"
+                  >
+                    {showChampionDrawer ? "Close Champion Drawer" : "Open 10-Slip & Window Drawer"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      setActiveSubTab("wheeling");
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-[11px] uppercase tracking-wider transition cursor-pointer"
+                  >
+                    Wheeling ({selectedPool.length} Balls)
+                  </button>
+                </div>
               </div>
 
-              {championPick.multi_draw_window_rates && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-gray-400 uppercase block">1-Draw Window</span>
-                      <span className="text-[9px] text-gray-500">{championPick.multi_draw_window_rates.description}</span>
+              {showChampionDrawer && (
+                <div className="p-4 border-t border-yellow-500/20 space-y-4 bg-slate-950/60">
+                  {championPick.multi_draw_window_rates && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] text-gray-400 uppercase block">1-Draw Window</span>
+                          <span className="text-[9px] text-gray-500">{championPick.multi_draw_window_rates.description}</span>
+                        </div>
+                        <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_1_draw}%</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] text-gray-400 uppercase block">3-Draw Rolling Window</span>
+                          <span className="text-[9px] text-gray-500">3+ Ball Hit Capture</span>
+                        </div>
+                        <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_3_draw}%</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] text-gray-400 uppercase block">5-Draw Saturation Window</span>
+                          <span className="text-[9px] text-gray-500">Multi-Draw Convergence</span>
+                        </div>
+                        <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_5_draw}%</span>
+                      </div>
                     </div>
-                    <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_1_draw}%</span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-gray-400 uppercase block">3-Draw Rolling Window</span>
-                      <span className="text-[9px] text-gray-500">3+ Ball Hit Capture</span>
-                    </div>
-                    <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_3_draw}%</span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-gray-400 uppercase block">5-Draw Saturation Window</span>
-                      <span className="text-[9px] text-gray-500">Multi-Draw Convergence</span>
-                    </div>
-                    <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_5_draw}%</span>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+                    {(championPick.wheel_slips || [championPick.predicted_numbers]).slice(0, 10).map((slip: number[], idx: number) => (
+                      <div
+                        key={idx}
+                        className={`p-2.5 rounded-xl border flex items-center justify-between ${
+                          idx === 0
+                            ? "bg-yellow-500/15 border-yellow-400/50"
+                            : "bg-black/40 border-white/10"
+                        }`}
+                      >
+                        <span className="text-[10px] font-bold text-gray-400">#{idx + 1}</span>
+                        <div className="flex items-center gap-1">
+                          {slip.map((n: number, bIdx: number) => (
+                            <span
+                              key={bIdx}
+                              className="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 font-black text-[11px] flex items-center justify-center"
+                            >
+                              {n}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-                {(championPick.wheel_slips || [championPick.predicted_numbers]).slice(0, 10).map((slip: number[], idx: number) => (
-                  <div
-                    key={idx}
-                    className={`p-2.5 rounded-xl border flex items-center justify-between ${
-                      idx === 0
-                        ? "bg-yellow-500/15 border-yellow-400/50"
-                        : "bg-black/40 border-white/10"
-                    }`}
-                  >
-                    <span className="text-[10px] font-bold text-gray-400">#{idx + 1}</span>
-                    <div className="flex items-center gap-1">
-                      {slip.map((n: number, bIdx: number) => (
-                        <span
-                          key={bIdx}
-                          className="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 font-black text-[11px] flex items-center justify-center"
-                        >
-                          {n}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 

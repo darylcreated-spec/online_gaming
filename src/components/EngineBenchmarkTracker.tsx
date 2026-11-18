@@ -73,6 +73,8 @@ export default function EngineBenchmarkTracker() {
   const [multiDrawViewMode, setMultiDrawViewMode] = useState<"stepper" | "ledger">("stepper");
   const [multiDrawFilterState, setMultiDrawFilterState] = useState<"ALL" | "ACTIVE" | "COMPLETED">("ALL");
   const [lockingGame, setLockingGame] = useState<string | null>(null);
+  const [showLeaderboardDrawer, setShowLeaderboardDrawer] = useState<boolean>(false);
+  const [showDiagnosticsDrawer, setShowDiagnosticsDrawer] = useState<boolean>(false);
 
   const fetchData = async (game = selectedGame, horizon = selectedHorizon) => {
     setLoading(true);
@@ -1176,297 +1178,339 @@ export default function EngineBenchmarkTracker() {
         </div>
       )}
 
-      {/* 3. Engine Performance Leaderboard */}
+      {/* 3. Collapsible Drawer: Verified Champion Engine Systems & Comparative Leaderboard */}
       <div className="bg-[#0f1418] rounded-2xl border border-slate-800 overflow-hidden shadow-lg">
-        <div className="px-5 py-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <button
+          onClick={() => {
+            triggerHaptic("selection");
+            setShowLeaderboardDrawer(!showLeaderboardDrawer);
+          }}
+          className="w-full px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left hover:bg-slate-900/40 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5 flex-wrap">
             <Trophy className="w-5 h-5 text-amber-400" />
             <h2 className="font-bold text-white text-base">
               {championOnlyMode
                 ? "Verified #1 Champion Engine Systems (1 Per Game)"
                 : "Comparative Engine Performance Leaderboard (All Tracked Engines)"}
             </h2>
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 border border-slate-700 text-slate-300">
+              {displayedLeaderboard.length} Systems
+            </span>
           </div>
-          <span className="text-xs font-mono text-slate-400">
-            {championOnlyMode
-              ? "Showing only the highest-performing refined system per game"
-              : "Ranked by Prize Win Rate & ROI"}
-          </span>
-        </div>
-
-        {loading ? (
-          <div className="p-8 text-center text-slate-400 font-mono text-xs flex flex-col items-center justify-center gap-2">
-            <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
-            Evaluating multi-engine backtest and live draw logs...
+          <div className="flex items-center gap-2 text-xs font-mono text-cyan-400">
+            <span>{showLeaderboardDrawer ? "Close Drawer" : "Open Leaderboard Drawer"}</span>
+            {showLeaderboardDrawer ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
-        ) : !data || displayedLeaderboard.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 font-mono text-xs">
-            No verified engine records available for this game horizon yet. Click "Reconcile & Snapshot N+1" to start tracking.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#171c20]/80 border-b border-slate-800 text-[11px] font-mono text-slate-400 uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">Rank / Engine</th>
-                  <th className="py-3 px-4">Game</th>
-                  <th className="py-3 px-4 text-center">Evaluated</th>
-                  <th className="py-3 px-4 text-center">Prize Win Rate</th>
-                  <th className="py-3 px-4 text-center">Any Match %</th>
-                  <th className="py-3 px-4 text-right">Net Profit TT$</th>
-                  <th className="py-3 px-4 text-right">ROI %</th>
-                  <th className="py-3 px-4">Best Prize Captured</th>
-                  <th className="py-3 px-4 text-center">Engine Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
-                {displayedLeaderboard.map((row, idx) => {
-                  const isPrime = row.status === "ACTIVE PRIME";
-                  const isDrift = row.status === "REGIME DRIFT ALERT";
-                  const isCalib = row.status === "NEEDS CALIBRATION";
+        </button>
 
-                  return (
-                    <tr key={`${row.engine_key}_${row.game_key}_${idx}`} className="hover:bg-slate-900/40 transition-colors">
-                      <td className="py-3.5 px-4 font-sans">
-                        <div className="flex items-center gap-2.5">
-                          <span className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold font-mono ${
-                            idx === 0 ? "bg-amber-500/20 text-amber-300 border border-amber-500/40" :
-                            idx === 1 ? "bg-slate-400/20 text-slate-300 border border-slate-400/40" :
-                            idx === 2 ? "bg-amber-700/20 text-amber-500 border border-amber-700/40" :
-                            "bg-slate-800 text-slate-400"
-                          }`}>
-                            {idx + 1}
-                          </span>
-                          <div>
-                            <span className="font-semibold text-white block">{row.engine_name}</span>
-                            <span className="text-[11px] text-slate-400">{row.engine_key}</span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        <span className="px-2 py-0.5 rounded text-[11px] bg-slate-800 border border-slate-700 text-slate-300">
-                          {getGameLabel(row.game_key)}
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4 text-center text-slate-300">
-                        {row.total_evaluated}
-                      </td>
-
-                      <td className="py-3.5 px-4 text-center font-bold text-sm">
-                        <span className={row.prize_win_rate_pct >= 25 ? "text-emerald-400" : row.prize_win_rate_pct >= 15 ? "text-cyan-400" : "text-rose-400"}>
-                          {row.prize_win_rate_pct}%
-                        </span>
-                        <span className="block text-[10px] text-slate-400 font-normal">({row.prize_hits} hits)</span>
-                      </td>
-
-                      <td className="py-3.5 px-4 text-center text-slate-300">
-                        {row.any_match_rate_pct}%
-                      </td>
-
-                      <td className={`py-3.5 px-4 text-right font-semibold ${
-                        row.net_profit_tt >= 0 ? "text-emerald-400" : "text-rose-400"
-                      }`}>
-                        ${row.net_profit_tt.toLocaleString()} TT
-                      </td>
-
-                      <td className={`py-3.5 px-4 text-right font-bold ${
-                        row.roi_pct >= 0 ? "text-emerald-400" : "text-rose-400"
-                      }`}>
-                        {row.roi_pct >= 0 ? `+${row.roi_pct}%` : `${row.roi_pct}%`}
-                      </td>
-
-                      <td className="py-3.5 px-4 font-sans text-slate-200">
-                        <span className="text-xs bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                          {row.best_prize !== "NONE" ? row.best_prize : "No Cash Tier"}
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4 text-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                          isPrime ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40" :
-                          isDrift ? "bg-rose-950/80 text-rose-300 border border-rose-500/40" :
-                          isCalib ? "bg-amber-950/80 text-amber-300 border border-amber-500/40" :
-                          "bg-cyan-950/60 text-cyan-300 border border-cyan-500/30"
-                        }`}>
-                          {row.status}
-                        </span>
-                      </td>
+        {showLeaderboardDrawer && (
+          <div className="border-t border-slate-800 animate-fade-in">
+            {loading ? (
+              <div className="p-8 text-center text-slate-400 font-mono text-xs flex flex-col items-center justify-center gap-2">
+                <RefreshCw className="w-5 h-5 animate-spin text-cyan-400" />
+                Evaluating multi-engine backtest and live draw logs...
+              </div>
+            ) : !data || displayedLeaderboard.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 font-mono text-xs">
+                No verified engine records available for this game horizon yet. Click "Reconcile &amp; Snapshot N+1" to start tracking.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#171c20]/80 border-b border-slate-800 text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3 px-4">Rank / Engine</th>
+                      <th className="py-3 px-4">Game</th>
+                      <th className="py-3 px-4 text-center">Evaluated</th>
+                      <th className="py-3 px-4 text-center">Prize Win Rate</th>
+                      <th className="py-3 px-4 text-center">Any Match %</th>
+                      <th className="py-3 px-4 text-right">Net Profit TT$</th>
+                      <th className="py-3 px-4 text-right">ROI %</th>
+                      <th className="py-3 px-4">Best Prize Captured</th>
+                      <th className="py-3 px-4 text-center">Engine Status</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 font-mono">
+                    {displayedLeaderboard.map((row, idx) => {
+                      const isPrime = row.status === "ACTIVE PRIME";
+                      const isDrift = row.status === "REGIME DRIFT ALERT";
+                      const isCalib = row.status === "NEEDS CALIBRATION";
+
+                      return (
+                        <tr key={`${row.engine_key}_${row.game_key}_${idx}`} className="hover:bg-slate-900/40 transition-colors">
+                          <td className="py-3.5 px-4 font-sans">
+                            <div className="flex items-center gap-2.5">
+                              <span className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold font-mono ${
+                                idx === 0 ? "bg-amber-500/20 text-amber-300 border border-amber-500/40" :
+                                idx === 1 ? "bg-slate-400/20 text-slate-300 border border-slate-400/40" :
+                                idx === 2 ? "bg-amber-700/20 text-amber-500 border border-amber-700/40" :
+                                "bg-slate-800 text-slate-400"
+                              }`}>
+                                {idx + 1}
+                              </span>
+                              <div>
+                                <span className="font-semibold text-white block">{row.engine_name}</span>
+                                <span className="text-[11px] text-slate-400">{row.engine_key}</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="py-3.5 px-4">
+                            <span className="px-2 py-0.5 rounded text-[11px] bg-slate-800 border border-slate-700 text-slate-300">
+                              {getGameLabel(row.game_key)}
+                            </span>
+                          </td>
+
+                          <td className="py-3.5 px-4 text-center text-slate-300">
+                            {row.total_evaluated}
+                          </td>
+
+                          <td className="py-3.5 px-4 text-center font-bold text-sm">
+                            <span className={row.prize_win_rate_pct >= 25 ? "text-emerald-400" : row.prize_win_rate_pct >= 15 ? "text-cyan-400" : "text-rose-400"}>
+                              {row.prize_win_rate_pct}%
+                            </span>
+                            <span className="block text-[10px] text-slate-400 font-normal">({row.prize_hits} hits)</span>
+                          </td>
+
+                          <td className="py-3.5 px-4 text-center text-slate-300">
+                            {row.any_match_rate_pct}%
+                          </td>
+
+                          <td className={`py-3.5 px-4 text-right font-semibold ${
+                            row.net_profit_tt >= 0 ? "text-emerald-400" : "text-rose-400"
+                          }`}>
+                            ${row.net_profit_tt.toLocaleString()} TT
+                          </td>
+
+                          <td className={`py-3.5 px-4 text-right font-bold ${
+                            row.roi_pct >= 0 ? "text-emerald-400" : "text-rose-400"
+                          }`}>
+                            {row.roi_pct >= 0 ? `+${row.roi_pct}%` : `${row.roi_pct}%`}
+                          </td>
+
+                          <td className="py-3.5 px-4 font-sans text-slate-200">
+                            <span className="text-xs bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                              {row.best_prize !== "NONE" ? row.best_prize : "No Cash Tier"}
+                            </span>
+                          </td>
+
+                          <td className="py-3.5 px-4 text-center">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                              isPrime ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40" :
+                              isDrift ? "bg-rose-950/80 text-rose-300 border border-rose-500/40" :
+                              isCalib ? "bg-amber-950/80 text-amber-300 border border-amber-500/40" :
+                              "bg-cyan-950/60 text-cyan-300 border border-cyan-500/30"
+                            }`}>
+                              {row.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* 3.5. Closed-Loop Bayesian Calibration Telemetry */}
-      {data?.calibrationProfiles && data.calibrationProfiles.length > 0 && (
-        <div className="bg-[#0f1418] rounded-2xl border border-emerald-500/20 p-5 space-y-4 shadow-[0_0_25px_rgba(16,185,129,0.04)]">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <div className="flex items-center gap-2">
-                <Binary className="w-5 h-5 text-emerald-400" />
-                <h2 className="font-bold text-white text-base">
-                  Closed-Loop Bayesian Walk-Forward Calibration Profiles
-                </h2>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Empirically optimized sub-model posterior weights, sum corridors, and walk-forward test-verification lift across historical winning combinations.
-              </p>
+      {/* 4. Collapsible Drawer: Mathematical Calibration Profiles & Diagnostic Advisories */}
+      {((data?.calibrationProfiles && data.calibrationProfiles.length > 0) || (data?.diagnostics && data.diagnostics.length > 0)) && (
+        <div className="bg-[#0f1418] rounded-2xl border border-slate-800 overflow-hidden shadow-lg">
+          <button
+            onClick={() => {
+              triggerHaptic("selection");
+              setShowDiagnosticsDrawer(!showDiagnosticsDrawer);
+            }}
+            className="w-full px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left hover:bg-slate-900/40 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <Sliders className="w-5 h-5 text-cyan-400" />
+              <h2 className="font-bold text-white text-base">
+                Mathematical Calibration &amp; Diagnostic Advisories
+              </h2>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-300">
+                {data?.calibrationProfiles?.length || 0} Calibrated Regimes • {data?.diagnostics?.length || 0} Advisories
+              </span>
             </div>
-            <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 self-start sm:self-auto">
-              MULTIPLICATIVE WEIGHTS + SOFTMAX POSTERIOR
-            </span>
-          </div>
+            <div className="flex items-center gap-2 text-xs font-mono text-cyan-400">
+              <span>{showDiagnosticsDrawer ? "Close Drawer" : "Open Calibration & Diagnostics Drawer"}</span>
+              {showDiagnosticsDrawer ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
+          </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {data.calibrationProfiles
-              .filter(p => selectedGame === "all" || p.game_key === selectedGame)
-              .map(profile => (
-                <div
-                  key={profile.game_key}
-                  className="p-4 rounded-xl bg-[#14191e] border border-slate-800 flex flex-col justify-between space-y-3"
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="px-2.5 py-0.5 rounded text-xs font-bold font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                        {getGameLabel(profile.game_key)}
-                      </span>
-                      <span className="text-[11px] font-mono text-emerald-400 font-bold">
-                        {profile.calibration_lift_pct >= 0
-                          ? `+${profile.calibration_lift_pct}% Lift`
-                          : `${profile.calibration_lift_pct}% Lift`}
-                      </span>
+          {showDiagnosticsDrawer && (
+            <div className="p-5 border-t border-slate-800 space-y-6 animate-fade-in">
+              {/* Bayesian Walk-Forward Calibration Profiles */}
+              {data?.calibrationProfiles && data.calibrationProfiles.length > 0 && (
+                <div className="space-y-3.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Binary className="w-4 h-4 text-emerald-400" />
+                        <h3 className="font-bold text-white text-sm">
+                          Closed-Loop Bayesian Walk-Forward Calibration Profiles
+                        </h3>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Empirically optimized sub-model posterior weights, sum corridors, and walk-forward test-verification lift across historical winning combinations.
+                      </p>
                     </div>
+                    <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 self-start sm:self-auto">
+                      MULTIPLICATIVE WEIGHTS + SOFTMAX POSTERIOR
+                    </span>
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-2 my-2 p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 text-[11px] font-mono">
-                      <div>
-                        <span className="text-slate-500 block">Pre-Calib Win Rate</span>
-                        <span className="text-slate-300 font-semibold">{profile.pre_calibration_win_rate_pct}%</span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 block">Calibrated Win Rate</span>
-                        <span className="text-emerald-400 font-bold">{profile.post_calibration_win_rate_pct}%</span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 block">Optimal Sum Band</span>
-                        <span className="text-cyan-300 font-semibold">
-                          {profile.optimal_sum_min} – {profile.optimal_sum_max}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 block">Carryover / Window</span>
-                        <span className="text-amber-300 font-semibold">
-                          {profile.empirical_carryover_rate_pct}% ({profile.window_size}d)
-                        </span>
-                      </div>
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                    {data.calibrationProfiles
+                      .filter(p => selectedGame === "all" || p.game_key === selectedGame)
+                      .map(profile => (
+                        <div
+                          key={profile.game_key}
+                          className="p-4 rounded-xl bg-[#14191e] border border-slate-800 flex flex-col justify-between space-y-3"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className="px-2.5 py-0.5 rounded text-xs font-bold font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                                {getGameLabel(profile.game_key)}
+                              </span>
+                              <span className="text-[11px] font-mono text-emerald-400 font-bold">
+                                {profile.calibration_lift_pct >= 0
+                                  ? `+${profile.calibration_lift_pct}% Lift`
+                                  : `${profile.calibration_lift_pct}% Lift`}
+                              </span>
+                            </div>
 
-                    <div className="space-y-1.5 mt-2.5">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
-                        Calibrated Sub-Model Weights (Top Regimes)
-                      </span>
-                      {profile.sub_model_weights.slice(0, 4).map(sw => (
-                        <div key={sw.modelKey} className="space-y-0.5">
-                          <div className="flex items-center justify-between text-[11px] font-mono">
-                            <span className="text-slate-300 truncate max-w-[175px]" title={sw.modelName}>
-                              {sw.modelName}
-                            </span>
-                            <span className="text-emerald-400 font-semibold">
-                              {Math.round(sw.weight * 100)}% ({sw.liftMultiplier}x)
-                            </span>
+                            <div className="grid grid-cols-2 gap-2 my-2 p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 text-[11px] font-mono">
+                              <div>
+                                <span className="text-slate-500 block">Pre-Calib Win Rate</span>
+                                <span className="text-slate-300 font-semibold">{profile.pre_calibration_win_rate_pct}%</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 block">Calibrated Win Rate</span>
+                                <span className="text-emerald-400 font-bold">{profile.post_calibration_win_rate_pct}%</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 block">Optimal Sum Band</span>
+                                <span className="text-cyan-300 font-semibold">
+                                  {profile.optimal_sum_min} – {profile.optimal_sum_max}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 block">Carryover / Window</span>
+                                <span className="text-amber-300 font-semibold">
+                                  {profile.empirical_carryover_rate_pct}% ({profile.window_size}d)
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5 mt-2.5">
+                              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                                Calibrated Sub-Model Weights (Top Regimes)
+                              </span>
+                              {profile.sub_model_weights.slice(0, 4).map(sw => (
+                                <div key={sw.modelKey} className="space-y-0.5">
+                                  <div className="flex items-center justify-between text-[11px] font-mono">
+                                    <span className="text-slate-300 truncate max-w-[175px]" title={sw.modelName}>
+                                      {sw.modelName}
+                                    </span>
+                                    <span className="text-emerald-400 font-semibold">
+                                      {Math.round(sw.weight * 100)}% ({sw.liftMultiplier}x)
+                                    </span>
+                                  </div>
+                                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full"
+                                      style={{ width: `${Math.min(100, Math.round(sw.weight * 100 * 1.6))}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full"
-                              style={{ width: `${Math.min(100, Math.round(sw.weight * 100 * 1.6))}%` }}
-                            />
+
+                          <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                            <span className="truncate max-w-[180px]" title={profile.dominant_strategy}>
+                              Lead: <strong className="text-slate-200">{profile.dominant_strategy}</strong>
+                            </span>
+                            <button
+                              onClick={() => handleManualAction("calibrate", profile.game_key)}
+                              disabled={calibrating}
+                              className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-0.5 disabled:opacity-50"
+                            >
+                              Recalibrate
+                              <ArrowUpRight className="w-3 h-3" />
+                            </button>
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
-                    <span className="truncate max-w-[180px]" title={profile.dominant_strategy}>
-                      Lead: <strong className="text-slate-200">{profile.dominant_strategy}</strong>
-                    </span>
-                    <button
-                      onClick={() => handleManualAction("calibrate", profile.game_key)}
-                      disabled={calibrating}
-                      className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-0.5 disabled:opacity-50"
-                    >
-                      Recalibrate
-                      <ArrowUpRight className="w-3 h-3" />
-                    </button>
                   </div>
                 </div>
-              ))}
-          </div>
-        </div>
-      )}
+              )}
 
-      {/* 4. Calibration Diagnostics & Improvement Alerts */}
-      {data?.diagnostics && data.diagnostics.length > 0 && (
-        <div className="bg-[#0f1418] rounded-2xl border border-slate-800 p-5 space-y-4">
-          <div className="flex items-center gap-2">
-            <Sliders className="w-5 h-5 text-cyan-400" />
-            <h2 className="font-bold text-white text-base">Mathematical Calibration & Diagnostic Advisories</h2>
-          </div>
-          <p className="text-xs text-slate-400">
-            Automated recommendations based on empirical hit rates and mathematical regime shifts.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {data.diagnostics.map((diag) => {
-              const isCrit = diag.severity === "CRITICAL";
-              const isOpt = diag.severity === "OPTIMAL";
-
-              return (
-                <div
-                  key={diag.id}
-                  className={`p-4 rounded-xl border flex flex-col justify-between ${
-                    isCrit ? "bg-rose-950/20 border-rose-500/30" :
-                    isOpt ? "bg-emerald-950/20 border-emerald-500/30" :
-                    "bg-amber-950/20 border-amber-500/30"
-                  }`}
-                >
+              {/* Diagnostic Advisories */}
+              {data?.diagnostics && data.diagnostics.length > 0 && (
+                <div className="space-y-3 pt-2 border-t border-slate-800/80">
                   <div>
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                        isCrit ? "bg-rose-500/20 text-rose-300" :
-                        isOpt ? "bg-emerald-500/20 text-emerald-300" :
-                        "bg-amber-500/20 text-amber-300"
-                      }`}>
-                        {diag.severity}
-                      </span>
-                      <span className="text-[11px] font-mono text-slate-400">
-                        {getGameLabel(diag.game_key)}
-                      </span>
-                    </div>
-
-                    <h3 className="font-semibold text-white text-sm mb-1.5">{diag.title}</h3>
-                    <p className="text-xs text-slate-300 mb-2 leading-relaxed">{diag.anomalyDescription}</p>
-                    <p className="text-xs text-slate-400 italic mb-4">
-                      <span className="font-semibold text-slate-200">Recommendation:</span> {diag.recommendation}
+                    <h3 className="font-bold text-white text-sm">Diagnostic Advisories &amp; Regime Alerts</h3>
+                    <p className="text-xs text-slate-400">
+                      Automated recommendations based on empirical hit rates and mathematical regime shifts.
                     </p>
                   </div>
 
-                  <button
-                    onClick={() => handleManualAction("calibrate", diag.game_key)}
-                    disabled={calibrating}
-                    className="pt-2 border-t border-slate-800 flex items-center justify-between w-full text-left hover:opacity-90 transition-opacity disabled:opacity-50"
-                  >
-                    <span className="text-[11px] font-mono text-cyan-400 font-semibold">{diag.suggestedAction}</span>
-                    <ArrowUpRight className="w-4 h-4 text-cyan-400" />
-                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                    {data.diagnostics.map((diag) => {
+                      const isCrit = diag.severity === "CRITICAL";
+                      const isOpt = diag.severity === "OPTIMAL";
+
+                      return (
+                        <div
+                          key={diag.id}
+                          className={`p-4 rounded-xl border flex flex-col justify-between ${
+                            isCrit ? "bg-rose-950/20 border-rose-500/30" :
+                            isOpt ? "bg-emerald-950/20 border-emerald-500/30" :
+                            "bg-amber-950/20 border-amber-500/30"
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                                isCrit ? "bg-rose-500/20 text-rose-300" :
+                                isOpt ? "bg-emerald-500/20 text-emerald-300" :
+                                "bg-amber-500/20 text-amber-300"
+                              }`}>
+                                {diag.severity}
+                              </span>
+                              <span className="text-[11px] font-mono text-slate-400">
+                                {getGameLabel(diag.game_key)}
+                              </span>
+                            </div>
+
+                            <h3 className="font-semibold text-white text-sm mb-1.5">{diag.title}</h3>
+                            <p className="text-xs text-slate-300 mb-2 leading-relaxed">{diag.anomalyDescription}</p>
+                            <p className="text-xs text-slate-400 italic mb-4">
+                              <span className="font-semibold text-slate-200">Recommendation:</span> {diag.recommendation}
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={() => handleManualAction("calibrate", diag.game_key)}
+                            disabled={calibrating}
+                            className="pt-2 border-t border-slate-800 flex items-center justify-between w-full text-left hover:opacity-90 transition-opacity disabled:opacity-50"
+                          >
+                            <span className="text-[11px] font-mono text-cyan-400 font-semibold">{diag.suggestedAction}</span>
+                            <ArrowUpRight className="w-4 h-4 text-cyan-400" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
