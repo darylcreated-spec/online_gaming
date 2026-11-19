@@ -86,7 +86,7 @@ export default function EngineBenchmarkTracker() {
   const getGamePortfolioNotice = (gameKey: string, slipCount: number) => {
     switch (gameKey) {
       case "cashpot":
-        return `Grades all ${slipCount} slips together ($${slipCount} TT/draw). Any Match 2 ($5 TT) or Match 3+ ($25+ TT) counts as a win. Playing only Slip #1 covers 1 of ${slipCount} lines. Past audit results do not guarantee future draws.`;
+        return `Grades all ${slipCount} slips together ($5.00 TT/slip = $${slipCount * 5}.00 TT/draw with Mult). Any Match 2 ($5 TT base) or Match 3+ ($25+ TT base) counts as a win. Playing only Slip #1 ($5.00 TT) covers 1 of ${slipCount} lines. Past audit results do not guarantee future draws.`;
       case "win-for-life":
         return `Grades all ${slipCount} slips together ($${slipCount} TT/draw). Prizes start at Match 3 ($25 TT) up to Match 6. Playing only Slip #1 covers 1 of ${slipCount} lines. Past audit results do not guarantee future draws.`;
       case "lotto-plus":
