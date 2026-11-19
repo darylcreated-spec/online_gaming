@@ -973,7 +973,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             </button>
           </div>
 
-          {/* CARD 6: FAST CASH (RAPID 5-MIN DRAWS) */}
+          {/* CARD 6: FAST CASH (RAPID 3-MIN DRAWS) */}
           <div className="p-5 rounded-2xl bg-gradient-to-b from-cyan-950/25 via-slate-950/90 to-slate-950 border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(6,182,212,0.18)] flex flex-col justify-between">
             <div className="space-y-3.5">
               {/* Card Header */}
@@ -989,12 +989,12 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                       Fast Cash
                     </h3>
                     <span className="text-xs text-gray-300 font-semibold block">
-                      {latestFastCash ? `Draw #${latestFastCash.draw_number}` : "Every 5 Minutes"}
+                      {latestFastCash ? `Draw #${latestFastCash.draw_number}` : "Every 3 Minutes"}
                     </span>
                   </div>
                 </div>
                 <span className="text-[10px] px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/30">
-                  From $5 TT
+                  From $1.00 TT
                 </span>
               </div>
 
@@ -1003,7 +1003,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 opacity-80" />
                   <span className="text-[10px] font-mono font-medium text-gray-200">
-                    Rapid 5-Minute Draws Daily
+                    Rapid 3-Minute Draws Daily
                   </span>
                 </div>
                 <span className="text-[10px] font-black text-emerald-300 px-2 py-0.5 rounded bg-black/50 border border-white/10">
@@ -1038,7 +1038,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                       ))}
                   </div>
                 ) : (
-                  <span className="text-xs text-gray-400 font-sans">Open Fast Cash tab to sync latest 5-min draws</span>
+                  <span className="text-xs text-gray-400 font-sans">Open Fast Cash tab to sync latest 3-min draws</span>
                 )}
               </div>
 
@@ -1048,7 +1048,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                   How It Works:
                 </span>
                 <p className="text-[11px] text-gray-300 font-sans leading-snug">
-                  Track hot &amp; overdue 5-minute draw momentum and test spot combinations before playing at an NLCB Fast Cash terminal.
+                  Track hot &amp; overdue 3-minute draw momentum and test spot combinations before playing ($1.00 TT base) at an NLCB Fast Cash terminal.
                 </p>
               </div>
             </div>

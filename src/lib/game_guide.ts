@@ -107,18 +107,18 @@ export const NLCB_GAME_GUIDE: GameGuideInfo[] = [
   {
     key: "fast-cash",
     name: "Fast Cash",
-    tagline: "Rapid 5-minute NLCB draws",
-    costPerPlay: "From $5.00 TT / play",
-    costDetail: "Fast-paced 5-minute draw intervals available at NLCB Fast Cash terminals.",
+    tagline: "Rapid 3-minute NLCB draws",
+    costPerPlay: "From $1.00 TT / play",
+    costDetail: "Base play starts at $1.00 TT per slip, with fast-paced 3-minute draw intervals at NLCB Fast Cash terminals.",
     topPrize: "Instant tiered payouts",
     odds: "Varies by spot selection",
-    schedule: "Every 5 minutes daily",
+    schedule: "Every 3 minutes daily",
     howToPlay: [
-      "Select your spot numbers based on recent 5-minute draw momentum.",
-      "Place your slip at an NLCB Fast Cash booth before the 5-minute cutoff.",
+      "Select your spot numbers based on recent 3-minute draw momentum.",
+      "Place your $1.00 TT+ slip at an NLCB Fast Cash booth before the 3-minute cutoff.",
       "Track live draws and hit frequency right inside the Fast Cash tab."
     ],
-    bestFor: "Rapid-fire 5-minute draw tracking",
+    bestFor: "Rapid-fire 3-minute draw tracking",
     themeColor: "cyan",
     iconSrc: "/images/fast_cash_icon.png"
   }
