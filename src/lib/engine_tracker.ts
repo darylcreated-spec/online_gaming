@@ -125,6 +125,8 @@ export interface MultiDrawStepEvaluation {
   status: "VERIFIED" | "PENDING";
   actual_numbers?: number[];
   actual_powerball?: number;
+  best_slip_index?: number;
+  best_slip_numbers?: number[];
   best_slip_match: number;
   core_pool_hits: number;
   is_prize_winner: boolean;
@@ -3528,6 +3530,24 @@ export async function computeMultiDrawHorizonVerification(
             actual.powerball
           );
           const bestSlipMatch = Math.max(evalRes.matchCount, evalRes.bestWheelMatch);
+          const actualSet = new Set(actual.numbers);
+          let bestSlipIndex = 1;
+          let bestSlipNumbers = predNums;
+          let bestScore = -1;
+          const allSlips = wheelSlips.length > 0 ? wheelSlips : [predNums];
+          allSlips.forEach((slip, sIdx2) => {
+            if (!Array.isArray(slip)) return;
+            const sc =
+              g === "pick4"
+                ? slip.filter((d, pos) => actual.numbers[pos] === d).length * 2 +
+                  slip.filter(d => actualSet.has(d)).length
+                : slip.filter(n => actualSet.has(n)).length;
+            if (sc > bestScore) {
+              bestScore = sc;
+              bestSlipIndex = sIdx2 + 1;
+              bestSlipNumbers = slip;
+            }
+          });
           const coreHits = actual.numbers.filter(n => coreSet.has(n)).length;
           const isCoreHit =
             g === "win-for-life"
@@ -3543,6 +3563,8 @@ export async function computeMultiDrawHorizonVerification(
             status: "VERIFIED",
             actual_numbers: actual.numbers,
             actual_powerball: actual.powerball,
+            best_slip_index: bestSlipIndex,
+            best_slip_numbers: bestSlipNumbers,
             best_slip_match: bestSlipMatch,
             core_pool_hits: coreHits,
             is_prize_winner: evalRes.isPrize === 1,

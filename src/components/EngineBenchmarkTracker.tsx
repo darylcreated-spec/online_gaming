@@ -76,6 +76,7 @@ export default function EngineBenchmarkTracker() {
   const [showLeaderboardDrawer, setShowLeaderboardDrawer] = useState<boolean>(false);
   const [showDiagnosticsDrawer, setShowDiagnosticsDrawer] = useState<boolean>(false);
   const [multiDrawGameFilter, setMultiDrawGameFilter] = useState<string>("all");
+  const [expandedCampaignId, setExpandedCampaignId] = useState<string | null>(null);
 
   const fetchData = async (game = selectedGame, horizon = selectedHorizon) => {
     setLoading(true);
@@ -851,7 +852,7 @@ export default function EngineBenchmarkTracker() {
         </div>
       )}
 
-      {/* 2.8. MULTI-DRAW PLAY WINDOW VERIFICATION TRACKER (1-Draw, 3-Draw & 5-Draw Horizon Audit) */}
+      {/* 2.8. MULTI-DRAW PLAY WINDOW VERIFICATION TRACKER (Simplified 1-Draw, 3-Draw & 5-Draw Tracker) */}
       {data?.multiDrawSummary && data.multiDrawSummary.length > 0 && (
         <div className="bg-[#0f1418] rounded-2xl border border-cyan-500/30 p-5 space-y-5 shadow-[0_0_30px_rgba(6,182,212,0.06)]">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
@@ -859,14 +860,11 @@ export default function EngineBenchmarkTracker() {
               <div className="flex items-center gap-2 flex-wrap">
                 <Target className="w-5 h-5 text-cyan-400" />
                 <h2 className="font-bold text-white text-base sm:text-lg">
-                  Multi-Draw Suggested Play Tracker — 1-Draw, 3-Draw &amp; 5-Draw Window Verification
+                  Multi-Draw Play Tracker (1-Draw, 3-Draw &amp; 5-Draw Windows)
                 </h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                  WALK-FORWARD &amp; LIVE HORIZON TRACKER
-                </span>
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                Tracks each suggested Champion play anchored at Draw #T across Draw #T (1-Draw), Draws #T..#T+2 (3-Draw Window), and Draws #T..#T+4 (5-Draw Window) to verify multi-draw persistence and prize capture.
+                Follows one suggested Champion portfolio across 5 consecutive draws to verify whether it wins on Draw 1, within 3 Draws, or within 5 Draws. Click any game card below to filter.
               </p>
             </div>
 
@@ -880,7 +878,7 @@ export default function EngineBenchmarkTracker() {
                       : "text-slate-400 hover:text-white"
                   }`}
                 >
-                  5-Draw Step-by-Step Tracker
+                  Draw-by-Draw Cards
                 </button>
                 <button
                   onClick={() => setMultiDrawViewMode("ledger")}
@@ -890,7 +888,7 @@ export default function EngineBenchmarkTracker() {
                       : "text-slate-400 hover:text-white"
                   }`}
                 >
-                  3 &amp; 5 Draw Verification Table
+                  Summary Table
                 </button>
               </div>
 
@@ -905,54 +903,27 @@ export default function EngineBenchmarkTracker() {
                         : "text-slate-400 hover:text-white"
                     }`}
                   >
-                    {st === "ALL" ? "All Windows" : st === "ACTIVE" ? "In-Progress (1–4/5)" : "Completed (5/5)"}
+                    {st === "ALL" ? "All" : st === "ACTIVE" ? "In-Progress" : "Completed"}
                   </button>
                 ))}
               </div>
+
+              {(selectedGame !== "all" || multiDrawGameFilter !== "all") && (
+                <button
+                  onClick={() => {
+                    if (selectedGame !== "all") setSelectedGame("all");
+                    setMultiDrawGameFilter("all");
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-mono text-cyan-300 font-semibold cursor-pointer"
+                >
+                  Show All Games
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Dedicated Multi-Draw Game Switcher Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 bg-[#13181d] p-2 rounded-xl border border-slate-800 font-mono">
-            <span className="text-[11px] text-slate-400 px-2 font-semibold uppercase">
-              Switch Tracked Game:
-            </span>
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-              {[
-                { id: "all", label: "All Games (Interleaved)" },
-                { id: "cashpot", label: "Cash Pot" },
-                { id: "win-for-life", label: "Win For Life" },
-                { id: "lotto-plus", label: "Lotto Plus" },
-                { id: "play-whe", label: "Play Whe" },
-                { id: "pick4", label: "Pick 4" },
-              ].map(gItem => {
-                const activeGame = selectedGame !== "all" ? selectedGame : multiDrawGameFilter;
-                const isSelected = activeGame === gItem.id;
-                return (
-                  <button
-                    key={gItem.id}
-                    onClick={() => {
-                      triggerHaptic("selection");
-                      if (selectedGame !== "all" && gItem.id !== selectedGame) {
-                        setSelectedGame("all");
-                      }
-                      setMultiDrawGameFilter(gItem.id);
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                      isSelected
-                        ? "bg-cyan-500 text-slate-950 font-black shadow-sm"
-                        : "bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800"
-                    }`}
-                  >
-                    {gItem.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Empirical 1-Draw vs 3-Draw vs 5-Draw Summary Strip (Click any card to switch game) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 font-mono">
+          {/* Clickable 5-Game Summary Cards (Click any card to switch game) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 font-mono">
             {data.multiDrawSummary.map(sum => {
               const activeGame = selectedGame !== "all" ? selectedGame : multiDrawGameFilter;
               const isCardSelected = activeGame === sum.game_key;
@@ -985,29 +956,23 @@ export default function EngineBenchmarkTracker() {
 
                   <div className="space-y-1.5 text-[11px] w-full">
                     <div className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/80 border border-slate-800/80">
-                      <span className="text-slate-400">1-Draw Hit:</span>
-                      <span className="text-white font-bold">
-                        {sum.w1_slip_win_rate_pct}% <span className="text-[10px] text-cyan-400">({sum.w1_core_hit_rate_pct}% Core)</span>
-                      </span>
+                      <span className="text-slate-400">1-Draw Win:</span>
+                      <span className="text-white font-bold">{sum.w1_slip_win_rate_pct}%</span>
                     </div>
                     <div className="flex items-center justify-between px-2 py-1 rounded bg-cyan-950/30 border border-cyan-500/30">
                       <span className="text-cyan-300 font-semibold">3-Draw Win:</span>
-                      <span className="text-cyan-200 font-bold">
-                        {sum.w3_slip_win_rate_pct}% <span className="text-[10px] text-emerald-400">({sum.w3_core_hit_rate_pct}% Core)</span>
-                      </span>
+                      <span className="text-cyan-200 font-bold">{sum.w3_slip_win_rate_pct}%</span>
                     </div>
                     <div className="flex items-center justify-between px-2 py-1 rounded bg-emerald-950/30 border border-emerald-500/30">
                       <span className="text-emerald-300 font-semibold">5-Draw Win:</span>
-                      <span className="text-emerald-300 font-bold">
-                        {sum.w5_slip_win_rate_pct}% <span className="text-[10px] text-emerald-400">({sum.w5_core_hit_rate_pct}% Core)</span>
-                      </span>
+                      <span className="text-emerald-300 font-bold">{sum.w5_slip_win_rate_pct}%</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/70 w-full">
-                    <span>{sum.total_campaigns_evaluated} Verified Windows</span>
+                    <span>{sum.total_campaigns_evaluated} Windows</span>
                     <span className={isCardSelected ? "text-cyan-300 font-bold" : "text-amber-400 font-semibold"}>
-                      {isCardSelected ? "Showing Game" : `${sum.active_campaigns_count} Active`}
+                      {isCardSelected ? "Selected" : "Click to Filter"}
                     </span>
                   </div>
                 </button>
@@ -1025,7 +990,7 @@ export default function EngineBenchmarkTracker() {
               return true;
             });
 
-            // Interleave across games when viewing "all" so Cash Pot doesn't push other games out of the top 20
+            // Interleave across games when viewing "all" so Cash Pot doesn't push other games out of view
             let campaigns = filteredRaw;
             if (activeGame === "all") {
               const byGame: Record<string, MultiDrawPlayCampaign[]> = {};
@@ -1035,7 +1000,7 @@ export default function EngineBenchmarkTracker() {
               }
               const interleaved: MultiDrawPlayCampaign[] = [];
               const gameKeys = Object.keys(byGame);
-              let maxLen = Math.max(0, ...gameKeys.map(k => byGame[k].length));
+              const maxLen = Math.max(0, ...gameKeys.map(k => byGame[k].length));
               for (let i = 0; i < maxLen; i++) {
                 for (const k of gameKeys) {
                   if (byGame[k][i]) interleaved.push(byGame[k][i]);
@@ -1052,115 +1017,139 @@ export default function EngineBenchmarkTracker() {
               );
             }
 
+            const fmtNums = (gKey: string, arr: number[]) =>
+              arr.map(n => (gKey === "pick4" ? String(n) : String(n).padStart(2, "0"))).join("-");
+
             if (multiDrawViewMode === "stepper") {
               return (
                 <div className="space-y-3.5 max-h-[640px] overflow-y-auto pr-1">
-                  {campaigns.slice(0, 20).map(camp => (
-                    <div
-                      key={camp.campaign_id}
-                      className="p-4 rounded-xl bg-[#13181d] border border-slate-800 space-y-3 font-mono"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-800 text-cyan-300 border border-slate-700">
-                            {getGameLabel(camp.game_key)}
-                          </span>
-                          <span className="text-xs font-bold text-white">
-                            Suggested at Draw #{camp.anchor_draw_number}
-                            {camp.anchor_draw_date ? ` (${camp.anchor_draw_date})` : ""}
-                          </span>
-                          <span className="text-[11px] text-slate-400">
-                            • Window #{camp.anchor_draw_number} → #{camp.anchor_draw_number + 4}
-                          </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold">
-                            Anchor: {camp.predicted_numbers.map(n => (camp.game_key === "pick4" ? String(n) : String(n).padStart(2, "0"))).join("-")}
-                            {camp.predicted_powerball ? ` + PB/Mult ${camp.predicted_powerball}` : ""}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                            camp.window_3.slip_prize_hit
-                              ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
-                              : camp.window_3.completed
-                              ? "bg-slate-900 border-slate-700 text-slate-400"
-                              : "bg-cyan-950/70 border-cyan-500/40 text-cyan-300"
-                          }`}>
-                            3-Draw Window: {camp.window_3.slip_prize_hit ? `HIT (${camp.window_3.slip_win_count}/3 Won • $${camp.window_3.cumulative_payout_tt} TT)` : camp.window_3.completed ? "0/3" : `In Progress (${camp.window_3.draws_completed}/3)`}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                            camp.window_5.slip_prize_hit
-                              ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
-                              : camp.window_5.completed
-                              ? "bg-slate-900 border-slate-700 text-slate-400"
-                              : "bg-amber-950/70 border-amber-500/40 text-amber-300"
-                          }`}>
-                            5-Draw Window: {camp.window_5.slip_prize_hit ? `HIT (${camp.window_5.slip_win_count}/5 Won • $${camp.window_5.cumulative_payout_tt} TT)` : camp.window_5.completed ? "0/5" : `In Progress (${camp.window_5.draws_completed}/5)`}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 5-Step Consecutive Draw Progress Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
-                        {camp.steps.map(st => {
-                          const isVerified = st.status === "VERIFIED";
-                          const isWin = st.is_prize_winner;
-                          const isMilestone3 = st.step === 3;
-                          const isMilestone5 = st.step === 5;
-                          return (
-                            <div
-                              key={st.step}
-                              className={`p-2.5 rounded-lg border flex flex-col justify-between space-y-1.5 ${
-                                !isVerified
-                                  ? "bg-slate-950/60 border-slate-800/80 border-dashed text-slate-500"
-                                  : isWin
-                                  ? "bg-emerald-950/35 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.12)]"
-                                  : st.is_core_target_hit
-                                  ? "bg-cyan-950/30 border-cyan-500/40"
-                                  : "bg-slate-900/70 border-slate-800"
-                              }`}
+                  {campaigns.slice(0, 15).map(camp => {
+                    const isSlipsOpen = expandedCampaignId === camp.campaign_id;
+                    return (
+                      <div
+                        key={camp.campaign_id}
+                        className="p-4 rounded-xl bg-[#13181d] border border-slate-800 space-y-3 font-mono"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-800 text-cyan-300 border border-slate-700">
+                              {getGameLabel(camp.game_key)}
+                            </span>
+                            <span className="text-xs font-bold text-white">
+                              Play Locked at Draw #{camp.anchor_draw_number}
+                              {camp.anchor_draw_date ? ` (${camp.anchor_draw_date})` : ""}
+                            </span>
+                            <button
+                              onClick={() => setExpandedCampaignId(isSlipsOpen ? null : camp.campaign_id)}
+                              className="px-2 py-0.5 rounded text-[10px] bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 font-semibold cursor-pointer"
                             >
-                              <div className="flex items-center justify-between text-[10px]">
-                                <span className="font-bold text-slate-300">
-                                  Draw {st.step}/5 {isMilestone3 ? "(3D)" : isMilestone5 ? "(5D)" : st.step === 1 ? "(1D)" : ""}
-                                </span>
-                                <span className="text-cyan-400 font-bold">#{st.target_draw_number}</span>
-                              </div>
+                              {isSlipsOpen ? "Hide Played Slips" : `View ${camp.wheel_slips.length} Played Slips`}
+                            </button>
+                          </div>
 
-                              {isVerified ? (
-                                <>
-                                  <div className="text-[10px] text-slate-400 truncate">
-                                    {st.draw_date} • Actual: <strong className="text-slate-200">{(st.actual_numbers || []).join("-")}</strong>
-                                  </div>
-                                  <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-800/80">
-                                    <span className={isWin ? "text-emerald-300 font-bold" : "text-slate-400"}>
-                                      Slip Match: {st.best_slip_match} | Core: {st.core_pool_hits}
-                                    </span>
-                                    <span className={isWin ? "text-emerald-400 font-bold" : "text-slate-500"}>
-                                      {isWin ? `+$${st.payout_tt}` : "No Prize"}
-                                    </span>
-                                  </div>
-                                  <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded text-center ${
-                                    isWin
-                                      ? "bg-emerald-500/20 text-emerald-300"
-                                      : st.is_core_target_hit
-                                      ? "bg-cyan-500/20 text-cyan-300"
-                                      : "bg-slate-800 text-slate-400"
-                                  }`}>
-                                    {isWin ? st.prize_tier : st.is_core_target_hit ? "3+/4+ CORE HIT" : "MISS"}
-                                  </div>
-                                </>
-                              ) : (
-                                <div className="py-3 text-center text-[10px] text-amber-400/80 font-semibold">
-                                  Awaiting Draw #{st.target_draw_number}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                              camp.window_3.slip_prize_hit
+                                ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
+                                : camp.window_3.completed
+                                ? "bg-slate-900 border-slate-700 text-slate-400"
+                                : "bg-cyan-950/70 border-cyan-500/40 text-cyan-300"
+                            }`}>
+                              3-Draw: {camp.window_3.slip_prize_hit ? `WON ${camp.window_3.slip_win_count}/3 ($${camp.window_3.cumulative_payout_tt} TT)` : camp.window_3.completed ? "0/3 Won" : `${camp.window_3.draws_completed}/3 Draws`}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                              camp.window_5.slip_prize_hit
+                                ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
+                                : camp.window_5.completed
+                                ? "bg-slate-900 border-slate-700 text-slate-400"
+                                : "bg-amber-950/70 border-amber-500/40 text-amber-300"
+                            }`}>
+                              5-Draw: {camp.window_5.slip_prize_hit ? `WON ${camp.window_5.slip_win_count}/5 ($${camp.window_5.cumulative_payout_tt} TT)` : camp.window_5.completed ? "0/5 Won" : `${camp.window_5.draws_completed}/5 Draws`}
+                            </span>
+                          </div>
+                        </div>
+
+                        {isSlipsOpen && (
+                          <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1.5 text-[10px]">
+                            {camp.wheel_slips.map((sl, slIdx) => (
+                              <div key={slIdx} className="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                <span className="text-slate-500">Slip #{slIdx + 1}</span>
+                                <span className="text-emerald-300 font-bold">{fmtNums(camp.game_key, sl)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* 5-Step Consecutive Draw Progress Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+                          {camp.steps.map(st => {
+                            const isVerified = st.status === "VERIFIED";
+                            const isWin = st.is_prize_winner;
+                            const actualSet = new Set(st.actual_numbers || []);
+                            const bestSlip = st.best_slip_numbers || camp.predicted_numbers;
+                            return (
+                              <div
+                                key={st.step}
+                                className={`p-2.5 rounded-lg border flex flex-col justify-between space-y-1.5 ${
+                                  !isVerified
+                                    ? "bg-slate-950/60 border-slate-800/80 border-dashed text-slate-500"
+                                    : isWin
+                                    ? "bg-emerald-950/35 border-emerald-500/50"
+                                    : "bg-slate-900/70 border-slate-800"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between text-[10px]">
+                                  <span className="font-bold text-slate-300">
+                                    Draw {st.step} {st.step === 1 ? "(1D)" : st.step === 3 ? "(3D)" : st.step === 5 ? "(5D)" : ""}
+                                  </span>
+                                  <span className="text-cyan-400 font-bold">#{st.target_draw_number}</span>
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
+
+                                {isVerified ? (
+                                  <>
+                                    <div className="text-[10px] text-slate-400">
+                                      Result: <strong className="text-white">{fmtNums(camp.game_key, st.actual_numbers || [])}</strong>
+                                    </div>
+                                    <div className="text-[10px]">
+                                      <span className="text-slate-500 block">Best Slip #{st.best_slip_index || 1}:</span>
+                                      <div className="flex flex-wrap gap-0.5 mt-0.5">
+                                        {bestSlip.map((n, bIdx) => {
+                                          const hit = camp.game_key === "pick4"
+                                            ? st.actual_numbers?.[bIdx] === n || actualSet.has(n)
+                                            : actualSet.has(n);
+                                          return (
+                                            <span
+                                              key={bIdx}
+                                              className={`px-1 rounded text-[10px] font-bold ${
+                                                hit ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/40" : "bg-slate-800 text-slate-400"
+                                              }`}
+                                            >
+                                              {camp.game_key === "pick4" ? String(n) : String(n).padStart(2, "0")}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                    <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded text-center ${
+                                      isWin
+                                        ? "bg-emerald-500/20 text-emerald-300"
+                                        : "bg-slate-800 text-slate-400"
+                                    }`}>
+                                      {isWin ? `WON $${st.payout_tt} • ${st.prize_tier.split("(")[0].trim()}` : `No Prize (${st.best_slip_match} Match)`}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="py-4 text-center text-[10px] text-amber-400/80 font-semibold">
+                                    Awaiting Draw #{st.target_draw_number}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               );
             }
@@ -1660,6 +1649,22 @@ export default function EngineBenchmarkTracker() {
               <tbody className="divide-y divide-slate-800/60 font-mono">
                 {filteredAudits.map((audit) => {
                   const actualSet = new Set(audit.actual_numbers || []);
+                  const allSlips = audit.wheel_slips && audit.wheel_slips.length > 0 ? audit.wheel_slips : [audit.predicted_numbers];
+                  let bestSlipIdx = 0;
+                  let bestSlipScore = -1;
+                  allSlips.forEach((sl, sIdx) => {
+                    if (!Array.isArray(sl)) return;
+                    const sc =
+                      audit.game_key === "pick4"
+                        ? sl.filter((d, pos) => audit.actual_numbers?.[pos] === d).length * 2 +
+                          sl.filter(d => actualSet.has(d)).length
+                        : sl.filter(n => actualSet.has(n)).length;
+                    if (sc > bestSlipScore) {
+                      bestSlipScore = sc;
+                      bestSlipIdx = sIdx;
+                    }
+                  });
+                  const displayedSlip = allSlips[bestSlipIdx] || audit.predicted_numbers;
 
                   return (
                     <tr key={audit.id} className="hover:bg-slate-900/40 transition-colors">
@@ -1689,29 +1694,36 @@ export default function EngineBenchmarkTracker() {
                       </td>
 
                       <td className="py-3 px-4">
-                        <div className="flex flex-wrap gap-1">
-                          {audit.predicted_numbers.map((n, nIdx) => {
-                            const isMatch = audit.game_key === "pick4"
-                              ? audit.actual_numbers?.[nIdx] === n || actualSet.has(n)
-                              : actualSet.has(n);
-                            return (
-                              <span
-                                key={nIdx}
-                                className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                                  isMatch
-                                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
-                                    : "bg-slate-800 text-slate-400"
-                                }`}
-                              >
-                                {audit.game_key === "pick4" ? String(n) : String(n).padStart(2, "0")}
-                              </span>
-                            );
-                          })}
-                          {audit.predicted_powerball !== undefined && (
-                            <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                              PB {audit.predicted_powerball}
+                        <div className="space-y-1">
+                          {allSlips.length > 1 && (
+                            <span className="text-[10px] text-cyan-400 block">
+                              {bestSlipIdx === 0 ? `Slip #1 of ${allSlips.length}` : `Winning Slip #${bestSlipIdx + 1} of ${allSlips.length}`}
                             </span>
                           )}
+                          <div className="flex flex-wrap gap-1">
+                            {displayedSlip.map((n, nIdx) => {
+                              const isMatch = audit.game_key === "pick4"
+                                ? audit.actual_numbers?.[nIdx] === n || actualSet.has(n)
+                                : actualSet.has(n);
+                              return (
+                                <span
+                                  key={nIdx}
+                                  className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
+                                    isMatch
+                                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                                      : "bg-slate-800 text-slate-400"
+                                  }`}
+                                >
+                                  {audit.game_key === "pick4" ? String(n) : String(n).padStart(2, "0")}
+                                </span>
+                              );
+                            })}
+                            {audit.predicted_powerball !== undefined && (
+                              <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                PB {audit.predicted_powerball}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
 

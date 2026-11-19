@@ -472,7 +472,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-sky-300 uppercase tracking-wider flex items-center gap-1">
                     <Calculator className="w-3 h-3 text-sky-400" />
-                    Suggested Ensemble Ticket:
+                    Champion Line #1 (10-Slip Portfolio):
                   </span>
                   <span className="text-[9px] text-sky-400 font-bold px-1.5 py-0.2 rounded bg-sky-500/15 border border-sky-500/30">
                     Grade {(lottoPrediction?.optimalTicket || lottoPrediction?.topEnsembles?.[0])?.confidenceGrade || "A+"}
@@ -600,7 +600,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1">
                     <Calculator className="w-3 h-3 text-emerald-400" />
-                    Mathematical 6+1 Selection:
+                    Champion Line #1 (10-Slip Portfolio):
                   </span>
                   <span className="text-[9px] text-emerald-400 font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30">
                     Grade {(wflPrediction?.optimalTicket || wflPrediction?.topEnsembles?.[0])?.confidenceGrade || "A+"}
@@ -728,7 +728,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-bold text-yellow-300 uppercase tracking-wider flex items-center gap-1">
                     <Calculator className="w-3 h-3 text-yellow-400" />
-                    Statistical 5-Ball Quintet:
+                    Champion Line #1 (10-Slip Portfolio):
                   </span>
                   <span className="text-[9px] text-yellow-400 font-bold px-1.5 py-0.2 rounded bg-yellow-500/15 border border-yellow-500/30">
                     Grade {(cashPotPrediction?.optimalTicket || cashPotPrediction?.topEnsembles?.[0])?.confidenceGrade || "A+"}
