@@ -63,7 +63,12 @@ export default function MemberCheckInPill() {
       </button>
 
       {open && (
-        <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-72 p-4 rounded-xl bg-slate-950 border border-cyan-500/30 shadow-2xl z-[80] font-mono space-y-3">
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-[75] sm:hidden"
+            onClick={() => setOpen(false)}
+          />
+          <div className="fixed inset-x-4 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-72 p-4 rounded-xl bg-slate-950 border border-cyan-500/30 shadow-2xl z-[80] font-mono space-y-3">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2">
             <span className="text-xs font-bold text-white uppercase">Member Check-In (Free)</span>
             <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-white">
@@ -102,6 +107,7 @@ export default function MemberCheckInPill() {
             </button>
           </form>
         </div>
+        </>
       )}
     </div>
   );

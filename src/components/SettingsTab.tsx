@@ -444,7 +444,7 @@ export default function SettingsTab() {
                 Synchronization Guide & Control Actions
               </h4>
               <p className="text-xs text-gray-400 leading-relaxed">
-                Due to hosting firewall limits, automated servers (like Vercel) are blocked by NLCB. To pull latest numbers, trigger a direct update below or run <code className="text-primary mx-1 px-1 bg-slate-950 rounded font-semibold">npm run sync-cloud</code> in your terminal.
+                Tap <strong className="text-primary">Sync Recent All</strong> below to check for the latest NLCB draw results and refresh your local stats.
               </p>
               <div className="border-t border-white/5 pt-2 mt-1 space-y-1.5 text-xs text-gray-400">
                 <div>

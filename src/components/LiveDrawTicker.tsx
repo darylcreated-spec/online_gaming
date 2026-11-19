@@ -257,8 +257,8 @@ export default function LiveDrawTicker({
         {/* Cloud Database Connected Badge */}
         <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/60 text-[10px] text-emerald-400 font-bold uppercase tracking-wider shadow-sm">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-          <span className="hidden sm:inline">Cloud Database Connected</span>
-          <span className="sm:hidden">Turso Live</span>
+          <span className="hidden sm:inline">Live Results Synced</span>
+          <span className="sm:hidden">Live</span>
         </div>
 
         {/* Live Cloud Auto-Sync Button */}

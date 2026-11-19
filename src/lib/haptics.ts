@@ -14,6 +14,12 @@ export function triggerHaptic(style: HapticStyle = "light"): void {
     return;
   }
 
+  // Avoid Chrome intervention warning before the user has interacted with the page
+  const ua = (navigator as Navigator & { userActivation?: { hasBeenActive?: boolean } }).userActivation;
+  if (ua && !ua.hasBeenActive) {
+    return;
+  }
+
   try {
     if (typeof style === "number" || Array.isArray(style)) {
       navigator.vibrate(style);

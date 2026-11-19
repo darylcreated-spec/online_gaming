@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, Calendar, Database, TrendingUp, RefreshCw } from "lucide-react";
+import { Clock, Calendar, Database, ChevronDown, ChevronUp, DollarSign, HelpCircle } from "lucide-react";
 import { calculateNextDrawCountdown, DrawCountdown, SupportedGameKey } from "@/lib/draw_schedule";
+import { GAME_GUIDE_MAP } from "@/lib/game_guide";
 
 export interface GameHeaderBannerProps {
   game: SupportedGameKey;
@@ -30,16 +31,22 @@ export default function GameHeaderBanner({
   totalDrawsCount,
   loading = false,
 }: GameHeaderBannerProps) {
+  const [mounted, setMounted] = useState(false);
+  const [showPlayGuide, setShowPlayGuide] = useState(false);
   const [countdown, setCountdown] = useState<DrawCountdown>(() =>
-    calculateNextDrawCountdown(game, new Date())
+    calculateNextDrawCountdown(game, new Date(0))
   );
 
   useEffect(() => {
+    setMounted(true);
+    setCountdown(calculateNextDrawCountdown(game, new Date()));
     const timer = setInterval(() => {
       setCountdown(calculateNextDrawCountdown(game, new Date()));
     }, 1000);
     return () => clearInterval(timer);
   }, [game]);
+
+  const guide = GAME_GUIDE_MAP[game as keyof typeof GAME_GUIDE_MAP];
 
   const colorStyles = {
     amber: {
@@ -137,27 +144,27 @@ export default function GameHeaderBanner({
               <Clock className="w-3 h-3 text-sky-400" />
               <span>Next Draw: {countdown.targetLabel}</span>
             </div>
-            <div className="text-xs text-gray-300 font-bold">{countdown.targetDateStr}</div>
+            <div className="text-xs text-gray-300 font-bold">{mounted ? countdown.targetDateStr : "Calculating..."}</div>
           </div>
 
           <div className="flex items-center gap-1 ml-2">
             <div className="flex flex-col items-center">
               <span className={`px-2.5 py-1 rounded-lg text-sm font-black border font-mono shadow-sm ${colorStyles.timeBg}`}>
-                {countdown.hours}
+                {mounted ? countdown.hours : "--"}
               </span>
               <span className="text-[8px] uppercase tracking-tighter text-gray-500 font-sans mt-0.5 font-bold">hrs</span>
             </div>
             <span className="text-xs font-bold text-gray-400 pb-3">:</span>
             <div className="flex flex-col items-center">
               <span className={`px-2.5 py-1 rounded-lg text-sm font-black border font-mono shadow-sm ${colorStyles.timeBg}`}>
-                {countdown.minutes}
+                {mounted ? countdown.minutes : "--"}
               </span>
               <span className="text-[8px] uppercase tracking-tighter text-gray-500 font-sans mt-0.5 font-bold">min</span>
             </div>
             <span className="text-xs font-bold text-gray-400 pb-3">:</span>
             <div className="flex flex-col items-center">
               <span className={`px-2.5 py-1 rounded-lg text-sm font-black border font-mono shadow-sm ${colorStyles.timeBg}`}>
-                {countdown.seconds}
+                {mounted ? countdown.seconds : "--"}
               </span>
               <span className="text-[8px] uppercase tracking-tighter text-gray-500 font-sans mt-0.5 font-bold">sec</span>
             </div>
@@ -187,6 +194,52 @@ export default function GameHeaderBanner({
           </div>
         )}
       </div>
+
+      {/* Cost, Odds & How-to-Play Strip for First-Time Players */}
+      {guide && (
+        <div className="pt-3 border-t border-white/5 space-y-2.5 font-mono">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2 text-[11px]">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 font-bold">
+                <DollarSign className="w-3 h-3" />
+                {guide.costPerPlay}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-white/10 text-gray-300 font-semibold">
+                Top Prize: <strong className="text-white">{guide.topPrize}</strong>
+              </span>
+              <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-900/80 border border-white/10 text-gray-400">
+                Odds: {guide.odds}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowPlayGuide((v) => !v)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-bold text-gray-200 transition cursor-pointer"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-sky-400" />
+              <span>How to Play &amp; Pay</span>
+              {showPlayGuide ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+
+          {showPlayGuide && (
+            <div className="p-3.5 rounded-xl bg-slate-950/80 border border-white/10 space-y-2 text-xs">
+              <p className="text-gray-300 font-sans leading-relaxed">
+                <strong className="text-white">Cost &amp; Options:</strong> {guide.costDetail}
+              </p>
+              <ol className="space-y-1 text-gray-300 font-sans list-decimal list-inside">
+                {guide.howToPlay.map((step, idx) => (
+                  <li key={idx}>{step}</li>
+                ))}
+              </ol>
+              <p className="text-[11px] text-amber-300/90 pt-1">
+                Note: This app generates and analyzes picks for free. Buy your physical tickets at any official NLCB Lotto booth.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

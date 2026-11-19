@@ -335,7 +335,7 @@ export default function DashboardTab({
             <div className="space-y-0.5">
               <span className="text-xs font-semibold tracking-wider text-gray-400 uppercase font-mono">Estimated Jackpot</span>
               <div className="text-2xl font-black font-mono text-primary pulse-glow uppercase">
-                {statsLoading ? "..." : (stats?.nextJackpot || stats?.latestDraw?.jackpot || "$10.2 MILLION").replace(/^\$/, "")}
+                {statsLoading ? "..." : `$${(stats?.nextJackpot || stats?.latestDraw?.jackpot || "$10.2 MILLION").toString().replace(/^\$/, "")}`}
               </div>
             </div>
             
@@ -892,7 +892,7 @@ export default function DashboardTab({
                 <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-amber-400">Shannon Entropy</span>
               </div>
               {(() => {
-                const ent = stats.advancedStats.entropy?.mainNumbers?.entropyNormalized;
+                const ent = stats.advancedStats.entropy?.mainNumbers?.ratio ?? stats.advancedStats.entropy?.mainNumbers?.entropyNormalized;
                 const pct = ent ? Math.round(ent * 100) : 0;
                 return (
                   <>

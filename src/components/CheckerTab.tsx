@@ -1381,14 +1381,14 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-36)</label>
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-35)</label>
                         <div className="flex gap-2">
                           {ticketNumbers.slice(0, 5).map((num, idx) => (
                             <input
                               key={idx}
                               type="number"
                               min="1"
-                              max="36"
+                              max="35"
                               value={num}
                               onChange={(e) => {
                                 const newNums = [...ticketNumbers];
