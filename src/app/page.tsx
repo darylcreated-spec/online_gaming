@@ -263,12 +263,14 @@ export default function Home() {
     }
   }, [activeTab, pagination.page, historySearch, historyNumberFilter]);
 
-  // Register PWA Service Worker on mount
+  // Register PWA Service Worker on mount & trigger immediate update check
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
-        .then((reg) => console.log("PWA Service Worker registered:", reg.scope))
+        .then((reg) => {
+          reg.update().catch(() => {});
+        })
         .catch((err) => console.error("PWA Service Worker registration failed:", err));
     }
   }, []);
