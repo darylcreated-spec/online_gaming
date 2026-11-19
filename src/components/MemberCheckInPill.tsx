@@ -51,14 +51,33 @@ export default function MemberCheckInPill() {
     }
   };
 
+  const handleSignOut = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("win_concept_display_name");
+      localStorage.removeItem("win_concept_email");
+    }
+    setName("");
+    setEmail("");
+    setSavedName(null);
+    setOpen(false);
+  };
+
   return (
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 text-[11px] font-mono font-semibold text-slate-300 hover:text-white transition cursor-pointer"
-        title="Free Member Check-In (Optional Name & Email)"
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-semibold transition cursor-pointer border whitespace-nowrap ${
+          savedName
+            ? "bg-slate-900/90 hover:bg-slate-800 border-emerald-500/40 text-white"
+            : "bg-cyan-500/15 hover:bg-cyan-500/25 border-cyan-400/50 text-cyan-200"
+        }`}
+        title="Free Member Login / Check-In (Optional Name & Email)"
       >
-        <Users className="w-3.5 h-3.5 text-cyan-400" />
+        {savedName ? (
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+        ) : (
+          <Users className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+        )}
         <span className="max-w-[90px] truncate">{savedName || "Sign In"}</span>
       </button>
 
@@ -105,6 +124,15 @@ export default function MemberCheckInPill() {
               <CheckCircle2 className="w-3.5 h-3.5" />
               {saving ? "Saving..." : savedName ? "Update Profile" : "Save & Check In"}
             </button>
+            {savedName && (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-300 text-[11px] font-bold uppercase cursor-pointer"
+              >
+                Sign Out
+              </button>
+            )}
           </form>
         </div>
         </>

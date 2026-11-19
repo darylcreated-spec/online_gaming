@@ -468,6 +468,19 @@ export default function Home() {
               )}
             </div>
 
+            {/* ENGINES */}
+            <button
+              onClick={() => handleTabChange("engine-tracker")}
+              className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                activeTab === "engine-tracker"
+                  ? "bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]"
+                  : "text-gray-400 hover:text-cyan-300 border border-transparent hover:bg-cyan-500/10"
+              }`}
+            >
+              <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span>ENGINES</span>
+            </button>
+
             {/* SCANNER */}
             <button
               onClick={() => handleTabChange("scanner")}
@@ -492,19 +505,6 @@ export default function Home() {
             >
               <img src="/images/syndicate_icon.png" alt="Pools" className="w-4 h-4 object-contain rounded shrink-0" />
               <span>POOLS</span>
-            </button>
-
-            {/* ENGINES */}
-            <button
-              onClick={() => handleTabChange("engine-tracker")}
-              className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                activeTab === "engine-tracker"
-                  ? "bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]"
-                  : "text-gray-400 hover:text-cyan-300 border border-transparent hover:bg-cyan-500/10"
-              }`}
-            >
-              <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
-              <span>ENGINES</span>
             </button>
 
             {/* SETTINGS */}
@@ -952,8 +952,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* Mobile Sticky Bottom Tab Bar (5 Thumb-Zone Tabs, Zero Horizontal Overflow) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070b19]/95 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 grid grid-cols-5 gap-1 shadow-[0_-5px_25px_rgba(0,0,0,0.6)]">
+      {/* Mobile Sticky Bottom Tab Bar (6 Thumb-Zone Tabs: Engines before Scan & Pools) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070b19]/95 backdrop-blur-xl border-t border-white/10 px-1.5 py-1.5 grid grid-cols-6 gap-1 shadow-[0_-5px_25px_rgba(0,0,0,0.6)]">
         <button
           onClick={() => handleTabChange("welcome")}
           className={`h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
@@ -963,7 +963,7 @@ export default function Home() {
           }`}
         >
           <img src="/images/welcome_icon.png" alt="Home" className="w-5 h-5 object-contain rounded" />
-          <span className="text-[9px] font-mono tracking-wider">HOME</span>
+          <span className="text-[8.5px] font-mono tracking-tight">HOME</span>
         </button>
 
         <button
@@ -975,7 +975,19 @@ export default function Home() {
           }`}
         >
           <Gamepad2 className="w-5 h-5" />
-          <span className="text-[9px] font-mono tracking-wider">GAMES</span>
+          <span className="text-[8.5px] font-mono tracking-tight">GAMES</span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange("engine-tracker")}
+          className={`h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
+            activeTab === "engine-tracker" && !mobileSheet
+              ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 font-bold"
+              : "text-gray-400 border-transparent hover:bg-white/5"
+          }`}
+        >
+          <Cpu className="w-5 h-5 text-cyan-400" />
+          <span className="text-[8.5px] font-mono tracking-tight">ENGINES</span>
         </button>
 
         <button
@@ -987,7 +999,7 @@ export default function Home() {
           }`}
         >
           <img src="/images/scanner_icon.png" alt="Scan" className="w-5 h-5 object-contain rounded" />
-          <span className="text-[9px] font-mono tracking-wider">SCAN</span>
+          <span className="text-[8.5px] font-mono tracking-tight">SCAN</span>
         </button>
 
         <button
@@ -999,19 +1011,19 @@ export default function Home() {
           }`}
         >
           <img src="/images/syndicate_icon.png" alt="Pools" className="w-5 h-5 object-contain rounded" />
-          <span className="text-[9px] font-mono tracking-wider">POOLS</span>
+          <span className="text-[8.5px] font-mono tracking-tight">POOLS</span>
         </button>
 
         <button
-          onClick={() => setMobileSheet(mobileSheet === "more" ? null : "more")}
+          onClick={() => handleTabChange("settings")}
           className={`h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
-            activeTab === "engine-tracker" || activeTab === "settings" || mobileSheet === "more"
-              ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 font-bold"
+            activeTab === "settings" && !mobileSheet
+              ? "bg-slate-700/40 border-slate-400 text-slate-200 font-bold"
               : "text-gray-400 border-transparent hover:bg-white/5"
           }`}
         >
-          <Menu className="w-5 h-5" />
-          <span className="text-[9px] font-mono tracking-wider">MORE</span>
+          <img src="/images/settings_icon.png" alt="Settings" className="w-5 h-5 object-contain rounded" />
+          <span className="text-[8.5px] font-mono tracking-tight">SETTINGS</span>
         </button>
       </nav>
 
