@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { RefreshCw, Database, Terminal, CheckCircle2, AlertTriangle, Play, HelpCircle, Bell, ShieldCheck } from "lucide-react";
+import { RefreshCw, Database, Terminal, CheckCircle2, AlertTriangle, Play, HelpCircle, Bell, ShieldCheck, Users, Globe } from "lucide-react";
 import SystemAuditCenter from "@/components/SystemAuditCenter";
 
 export default function SettingsTab() {
@@ -17,8 +17,36 @@ export default function SettingsTab() {
   const [logs, setLogs] = useState<string[]>([]);
   const [syncSuccess, setSyncSuccess] = useState<boolean | null>(null);
   const [activeStep, setActiveStep] = useState<string>("");
-  const [settingsTab, setSettingsTab] = useState<"sync" | "install" | "notifications" | "audit">("sync");
+  const [settingsTab, setSettingsTab] = useState<"sync" | "visitors" | "install" | "notifications" | "audit">("sync");
   const [notificationPermission, setNotificationPermission] = useState<string>("default");
+  const [visitorData, setVisitorData] = useState<any>(null);
+  const [visitorLoading, setVisitorLoading] = useState(false);
+  const [deviceNameInput, setDeviceNameInput] = useState("");
+
+  const fetchVisitorAnalytics = async () => {
+    try {
+      setVisitorLoading(true);
+      const res = await fetch("/api/analytics/visitors", { cache: "no-store" });
+      const data = await res.json();
+      if (data.success) setVisitorData(data);
+    } catch (e) {
+      console.error("Error fetching visitor analytics:", e);
+    } finally {
+      setVisitorLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setDeviceNameInput(localStorage.getItem("win_concept_display_name") || "");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (settingsTab === "visitors") {
+      fetchVisitorAnalytics();
+    }
+  }, [settingsTab]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -381,6 +409,17 @@ export default function SettingsTab() {
         >
           <Bell className="w-3.5 h-3.5" />
           PWA NOTIFICATIONS
+        </button>
+        <button
+          onClick={() => setSettingsTab("visitors")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap ${
+            settingsTab === "visitors"
+              ? "bg-cyan-400 text-slate-950 font-black"
+              : "text-cyan-400/90 hover:text-cyan-300 hover:bg-cyan-500/10"
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" />
+          VISITOR ANALYTICS
         </button>
         <button
           onClick={() => setSettingsTab("audit")}
@@ -935,6 +974,182 @@ export default function SettingsTab() {
       {/* MASTER SYSTEM AUDIT & ACCURACY VERIFIER */}
       {settingsTab === "audit" && (
         <SystemAuditCenter />
+      )}
+
+      {/* FREE SELF-HOSTED VISITOR & USER ANALYTICS */}
+      {settingsTab === "visitors" && (
+        <div className="space-y-6 font-mono">
+          <div className="glass-panel p-5 rounded-xl border border-cyan-500/20 bg-slate-950/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                <Users className="w-4 h-4 text-cyan-400" />
+                Live Visitor &amp; Active User Telemetry ($0 / Free Self-Hosted)
+              </h3>
+              <p className="text-xs text-gray-400 mt-1">
+                Powered by your existing Turso DB + Vercel geo headers. Tracks unique devices, active users, location, device/browser, and most-used games with zero paid services.
+              </p>
+            </div>
+            <button
+              onClick={fetchVisitorAnalytics}
+              disabled={visitorLoading}
+              className="px-3.5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs uppercase flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${visitorLoading ? "animate-spin" : ""}`} />
+              Refresh Live Counts
+            </button>
+          </div>
+
+          {/* KPI Strip */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="p-4 rounded-xl bg-slate-900/70 border border-emerald-500/30">
+              <span className="text-[10px] text-gray-400 uppercase block">Active Now (5m)</span>
+              <span className="text-2xl font-black text-emerald-400">{visitorData?.summary?.activeNow ?? 0}</span>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-900/70 border border-cyan-500/30">
+              <span className="text-[10px] text-gray-400 uppercase block">Last 24 Hours</span>
+              <span className="text-2xl font-black text-cyan-300">{visitorData?.summary?.last24Hours ?? 0}</span>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-900/70 border border-white/10">
+              <span className="text-[10px] text-gray-400 uppercase block">Last 7 Days</span>
+              <span className="text-2xl font-black text-white">{visitorData?.summary?.last7Days ?? 0}</span>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-900/70 border border-white/10">
+              <span className="text-[10px] text-gray-400 uppercase block">Total Unique Devices</span>
+              <span className="text-2xl font-black text-white">{visitorData?.summary?.totalUniqueVisitors ?? 0}</span>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-900/70 border border-white/10">
+              <span className="text-[10px] text-gray-400 uppercase block">Total Sessions</span>
+              <span className="text-2xl font-black text-amber-300">{visitorData?.summary?.totalSessions ?? 0}</span>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-900/70 border border-white/10">
+              <span className="text-[10px] text-gray-400 uppercase block">Syndicate Members</span>
+              <span className="text-2xl font-black text-purple-300">{visitorData?.summary?.namedSyndicateMembers ?? 0}</span>
+            </div>
+          </div>
+
+          {/* Tag This Device + Privacy/Who Reality Note */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl bg-slate-900/60 border border-white/10 space-y-2.5">
+              <h4 className="text-xs font-bold text-white uppercase">Label Your Own Device (Exclude or Identify Yourself)</h4>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={deviceNameInput}
+                  onChange={e => setDeviceNameInput(e.target.value)}
+                  placeholder="e.g. Daryl (Admin Phone)"
+                  className="flex-1 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white"
+                />
+                <button
+                  onClick={async () => {
+                    if (typeof window === "undefined") return;
+                    localStorage.setItem("win_concept_display_name", deviceNameInput.trim());
+                    const visitorId = localStorage.getItem("win_concept_visitor_id") || "admin";
+                    await fetch("/api/analytics/visitors", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ visitorId, displayName: deviceNameInput.trim(), activeTab: "settings" })
+                    }).catch(() => {});
+                    fetchVisitorAnalytics();
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs uppercase cursor-pointer"
+                >
+                  Save Label
+                </button>
+              </div>
+              <p className="text-[10px] text-gray-400 leading-relaxed">
+                Note on &quot;Who&quot;: Anonymous web analytics shows Location (City/Country), Device/OS/Browser, and Game Tabs for free. To know every user&apos;s real name or email, add a free login provider (such as Clerk Free Tier or Google Sign-In via NextAuth).
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900/60 border border-white/10 space-y-2.5">
+              <h4 className="text-xs font-bold text-white uppercase flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                Top Locations &amp; Most-Visited Tabs
+              </h4>
+              <div className="grid grid-cols-2 gap-3 text-[11px]">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-gray-400 uppercase block">Countries</span>
+                  {(visitorData?.countryBreakdown || []).slice(0, 5).map((c: any, i: number) => (
+                    <div key={i} className="flex justify-between text-slate-300">
+                      <span>{c.country}</span>
+                      <span className="text-cyan-300 font-bold">{c.cnt}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] text-gray-400 uppercase block">Last Active Tab</span>
+                  {(visitorData?.tabBreakdown || []).slice(0, 5).map((t: any, i: number) => (
+                    <div key={i} className="flex justify-between text-slate-300">
+                      <span>{t.last_tab}</span>
+                      <span className="text-emerald-300 font-bold">{t.cnt}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Live Visitor Log Table */}
+          <div className="rounded-xl bg-slate-900/60 border border-white/10 overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+              <h4 className="text-xs font-bold text-white uppercase">Recent Visitors &amp; Devices (Latest 50)</h4>
+              <span className="text-[10px] text-gray-400">Push Subscribers: {visitorData?.summary?.pushSubscribers ?? 0}</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-950/80 border-b border-white/10 text-[10px] text-gray-400 uppercase">
+                  <tr>
+                    <th className="py-2.5 px-3">Visitor / Label</th>
+                    <th className="py-2.5 px-3">Location</th>
+                    <th className="py-2.5 px-3">Device / Browser</th>
+                    <th className="py-2.5 px-3">Last Tab</th>
+                    <th className="py-2.5 px-3 text-center">Visits</th>
+                    <th className="py-2.5 px-3 text-right">Last Seen (UTC)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {(visitorData?.recentVisitors || []).map((v: any) => (
+                    <tr key={v.visitor_id} className="hover:bg-white/[0.02]">
+                      <td className="py-2 px-3 font-bold text-white">
+                        {v.display_name || `Guest-${String(v.visitor_id).slice(0, 6)}`}
+                      </td>
+                      <td className="py-2 px-3 text-cyan-300">
+                        {v.city !== "Unknown" ? `${v.city}, ${v.country}` : v.country}
+                      </td>
+                      <td className="py-2 px-3 text-gray-300">
+                        {v.device_type} · {v.os} ({v.browser})
+                      </td>
+                      <td className="py-2 px-3 text-emerald-300">{v.last_tab}</td>
+                      <td className="py-2 px-3 text-center text-amber-300 font-bold">{v.visit_count}</td>
+                      <td className="py-2 px-3 text-right text-gray-400">{v.last_seen}</td>
+                    </tr>
+                  ))}
+                  {(!visitorData?.recentVisitors || visitorData.recentVisitors.length === 0) && (
+                    <tr>
+                      <td colSpan={6} className="py-6 text-center text-gray-500">
+                        No visitor sessions recorded yet. Browse tabs to start logging.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Named Syndicate Members */}
+          {(visitorData?.syndicateMembers || []).length > 0 && (
+            <div className="rounded-xl bg-slate-900/60 border border-white/10 p-4 space-y-2">
+              <h4 className="text-xs font-bold text-purple-300 uppercase">Known Named Users (Syndicate Members)</h4>
+              <div className="flex flex-wrap gap-2">
+                {visitorData.syndicateMembers.map((m: any, idx: number) => (
+                  <span key={idx} className="px-2.5 py-1 rounded-lg bg-purple-950/40 border border-purple-500/30 text-xs text-purple-200">
+                    {m.member_name} ({m.role || "Member"})
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

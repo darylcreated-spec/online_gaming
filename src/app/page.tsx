@@ -261,6 +261,27 @@ export default function Home() {
     }
   }, []);
 
+  // Free privacy-friendly visitor & active tab telemetry (Turso DB)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let visitorId = localStorage.getItem("win_concept_visitor_id");
+    if (!visitorId) {
+      visitorId = typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `v_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+      localStorage.setItem("win_concept_visitor_id", visitorId);
+    }
+    const isNewSession = !sessionStorage.getItem("win_concept_session_counted");
+    if (isNewSession) sessionStorage.setItem("win_concept_session_counted", "1");
+    const displayName = localStorage.getItem("win_concept_display_name") || undefined;
+
+    fetch("/api/analytics/visitors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId, displayName, activeTab, isNewSession })
+    }).catch(() => {});
+  }, [activeTab]);
+
   // Lazy-load all draws only when Builder tab is active (avoids 500KB+ fetch on every page load)
   useEffect(() => {
     if (activeTab === "lotto-plus" && lottoSubTab === "builder" && allDraws.length === 0) {
