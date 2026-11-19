@@ -23,6 +23,7 @@ import LottoForensicPanel from "@/components/LottoForensicPanel";
 import EngineBenchmarkTracker from "@/components/EngineBenchmarkTracker";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PushNotificationBell from "@/components/PushNotificationBell";
+import MemberCheckInPill from "@/components/MemberCheckInPill";
 import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck, Cpu, Zap } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { getCacheItem, setCacheItem } from "@/lib/idb_cache";
@@ -385,13 +386,15 @@ export default function Home() {
               Your Online Gaming Resource
             </p>
           </div>
-          <div className="hidden sm:block ml-2">
+          <div className="hidden sm:flex items-center gap-2 ml-2">
             <PushNotificationBell />
+            <MemberCheckInPill />
           </div>
         </div>
 
-        {/* Mobile Push Notification Bell */}
-        <div className="sm:hidden flex items-center">
+        {/* Mobile Push Notification Bell & Member Check-In */}
+        <div className="sm:hidden flex items-center gap-1.5">
+          <MemberCheckInPill />
           <PushNotificationBell />
         </div>
 

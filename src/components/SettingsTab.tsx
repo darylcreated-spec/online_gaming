@@ -1111,7 +1111,10 @@ export default function SettingsTab() {
                   {(visitorData?.recentVisitors || []).map((v: any) => (
                     <tr key={v.visitor_id} className="hover:bg-white/[0.02]">
                       <td className="py-2 px-3 font-bold text-white">
-                        {v.display_name || `Guest-${String(v.visitor_id).slice(0, 6)}`}
+                        <span>{v.display_name || `Guest-${String(v.visitor_id).slice(0, 6)}`}</span>
+                        {v.email && (
+                          <span className="block text-[10px] text-cyan-400 font-normal">{v.email}</span>
+                        )}
                       </td>
                       <td className="py-2 px-3 text-cyan-300">
                         {v.city !== "Unknown" ? `${v.city}, ${v.country}` : v.country}

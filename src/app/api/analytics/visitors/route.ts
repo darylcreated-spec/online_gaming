@@ -8,6 +8,7 @@ async function ensureVisitorTable() {
     CREATE TABLE IF NOT EXISTS app_visitor_sessions (
       visitor_id TEXT PRIMARY KEY,
       display_name TEXT,
+      email TEXT,
       country TEXT,
       city TEXT,
       region TEXT,
@@ -20,6 +21,7 @@ async function ensureVisitorTable() {
       last_seen TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `).catch(() => {});
+  await db.execute(`ALTER TABLE app_visitor_sessions ADD COLUMN email TEXT`).catch(() => {});
   await db.execute(
     `CREATE INDEX IF NOT EXISTS idx_visitors_last_seen ON app_visitor_sessions(last_seen)`
   ).catch(() => {});
@@ -57,6 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     const displayName = body.displayName ? String(body.displayName).trim().slice(0, 50) : null;
+    const email = body.email ? String(body.email).trim().slice(0, 80) : null;
     const lastTab = String(body.activeTab || "welcome").trim().slice(0, 40);
     const isNewSession = Boolean(body.isNewSession);
 
@@ -69,11 +72,12 @@ export async function POST(request: NextRequest) {
 
     await db.execute({
       sql: `INSERT INTO app_visitor_sessions (
-              visitor_id, display_name, country, city, region,
+              visitor_id, display_name, email, country, city, region,
               device_type, browser, os, last_tab, visit_count, first_seen, last_seen
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, datetime('now'), datetime('now'))
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, datetime('now'), datetime('now'))
             ON CONFLICT(visitor_id) DO UPDATE SET
               display_name = COALESCE(excluded.display_name, app_visitor_sessions.display_name),
+              email = COALESCE(excluded.email, app_visitor_sessions.email),
               country = CASE WHEN excluded.country != 'Local / Unknown' THEN excluded.country ELSE app_visitor_sessions.country END,
               city = CASE WHEN excluded.city != 'Unknown' THEN excluded.city ELSE app_visitor_sessions.city END,
               region = CASE WHEN excluded.region != '' THEN excluded.region ELSE app_visitor_sessions.region END,
@@ -86,6 +90,7 @@ export async function POST(request: NextRequest) {
       args: [
         visitorId,
         displayName,
+        email,
         country,
         city,
         region,
