@@ -303,7 +303,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
 
     lines.push(`----------------------------------------`);
     lines.push(`Verified by The Win Concept Combinatorial Engine`);
-    lines.push(`Join & view live slip at: https://onlinegaming-tawny.vercel.app/?pool=${selectedSyndicate.code}`);
+    lines.push(`Join & view live slip at: https://ttonlinegaming.vercel.app/?pool=${selectedSyndicate.code}`);
 
     return lines.join("\n");
   };
