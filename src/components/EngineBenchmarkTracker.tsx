@@ -77,6 +77,72 @@ export default function EngineBenchmarkTracker() {
   const [showDiagnosticsDrawer, setShowDiagnosticsDrawer] = useState<boolean>(false);
   const [multiDrawGameFilter, setMultiDrawGameFilter] = useState<string>("all");
   const [expandedCampaignId, setExpandedCampaignId] = useState<string | null>(null);
+  const [expandedRulesGame, setExpandedRulesGame] = useState<string | null>(null);
+  const [showCustomTrackerDrawer, setShowCustomTrackerDrawer] = useState<boolean>(false);
+  const [customGameKey, setCustomGameKey] = useState<string>("cashpot");
+  const [customGroupInput, setCustomGroupInput] = useState<string>("");
+  const [customLocking, setCustomLocking] = useState<boolean>(false);
+
+  const getGamePortfolioNotice = (gameKey: string, slipCount: number) => {
+    switch (gameKey) {
+      case "cashpot":
+        return `Grades all ${slipCount} slips together ($${slipCount} TT/draw). Any Match 2 ($5 TT) or Match 3+ ($25+ TT) counts as a win. Playing only Slip #1 covers 1 of ${slipCount} lines. Past audit results do not guarantee future draws.`;
+      case "win-for-life":
+        return `Grades all ${slipCount} slips together ($${slipCount} TT/draw). Prizes start at Match 3 ($25 TT) up to Match 6. Playing only Slip #1 covers 1 of ${slipCount} lines. Past audit results do not guarantee future draws.`;
+      case "lotto-plus":
+        return `Grades all ${slipCount} slips together ($${slipCount} TT/draw). Prizes start at Match 1+PB ($5 TT) or Match 3 ($25 TT). Playing only Slip #1 covers 1 of ${slipCount} lines. Past audit results do not guarantee future draws.`;
+      case "play-whe":
+        return `Grades 5 Tactical Marks ($5 TT/draw total). Any 1 of the 5 marks hitting pays $26 TT. Past audit results do not guarantee future draws.`;
+      case "pick4":
+        return `Grades ${slipCount} Box/Twin card sets. Straight pays $5,000, Box pays $200–$1,200, Front/Back 3 pays $500, Pair pays $50. Past audit results do not guarantee future draws.`;
+      default:
+        return `Grades the full ${slipCount}-slip portfolio together. Past audit results do not guarantee future draws.`;
+    }
+  };
+
+  const handleLockCustomGroup = async () => {
+    const rawLines = customGroupInput
+      .split(/\n+/)
+      .map(l => l.trim())
+      .filter(Boolean);
+    const parsedSlips: number[][] = [];
+    for (const line of rawLines) {
+      const nums = (line.match(/\d+/g) || []).map(Number);
+      if (nums.length > 0) parsedSlips.push(nums);
+    }
+    if (parsedSlips.length === 0) {
+      setError("Enter at least one line of numbers (e.g. 2, 3, 5, 11, 17).");
+      return;
+    }
+    setCustomLocking(true);
+    setError(null);
+    setActionBanner(null);
+    try {
+      triggerHaptic("selection");
+      const res = await fetch("/api/engine-tracker", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "lock_campaign",
+          game: customGameKey,
+          customSlips: parsedSlips
+        })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to lock custom group.");
+      triggerHaptic("success");
+      setActionBanner(json.message);
+      setCustomGroupInput("");
+      setShowCustomTrackerDrawer(false);
+      setMultiDrawGameFilter(customGameKey);
+      await fetchData(selectedGame, selectedHorizon);
+    } catch (err: any) {
+      setError("Error: " + err.message);
+      triggerHaptic("warning");
+    } finally {
+      setCustomLocking(false);
+    }
+  };
 
   const fetchData = async (game = selectedGame, horizon = selectedHorizon) => {
     setLoading(true);
@@ -798,6 +864,65 @@ export default function EngineBenchmarkTracker() {
                       )}
                     </div>
 
+                    {/* Per-Game Portfolio Rules & 5-Draw Group Tracker Drawer */}
+                    <div className="pt-1">
+                      <button
+                        onClick={() => setExpandedRulesGame(expandedRulesGame === pick.game_key ? null : pick.game_key)}
+                        className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-amber-500/30 text-amber-300 text-[11px] font-mono font-semibold transition-all flex items-center justify-between cursor-pointer"
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Target className="w-3.5 h-3.5 text-amber-400" />
+                          {expandedRulesGame === pick.game_key ? "Hide Portfolio Rules & 5-Draw Tracker" : "Play Rules & 5-Draw Group Tracker"}
+                        </span>
+                        {expandedRulesGame === pick.game_key ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+
+                      {expandedRulesGame === pick.game_key && (() => {
+                        const slipCount = pick.wheel_slips?.length || pick.condensed_wheel?.length || 1;
+                        const gameLatestCamp = (data?.multiDrawCampaigns || []).find(c => c.game_key === pick.game_key);
+                        return (
+                          <div className="mt-2 p-3 rounded-xl bg-slate-950/90 border border-amber-500/25 space-y-2.5 font-mono text-[11px]">
+                            <div className="text-[10px] text-amber-200/90 leading-relaxed bg-amber-950/20 border border-amber-500/20 rounded-lg p-2">
+                              <strong className="text-amber-300 uppercase block mb-0.5">
+                                {getGameLabel(pick.game_key)} Portfolio Scope:
+                              </strong>
+                              {getGamePortfolioNotice(pick.game_key, slipCount)}
+                            </div>
+
+                            {gameLatestCamp && (
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between text-[10px]">
+                                  <span className="text-slate-400">
+                                    Tracked Group (Draw #{gameLatestCamp.anchor_draw_number} → #{gameLatestCamp.anchor_draw_number + 4}):
+                                  </span>
+                                  <span className="text-emerald-300 font-bold">
+                                    {gameLatestCamp.draws_completed}/5 Verified
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-5 gap-1">
+                                  {gameLatestCamp.steps.map(st => (
+                                    <div
+                                      key={st.step}
+                                      className={`p-1.5 rounded border text-center text-[9px] ${
+                                        st.status !== "VERIFIED"
+                                          ? "bg-slate-900/50 border-slate-800 border-dashed text-slate-500"
+                                          : st.is_prize_winner
+                                          ? "bg-emerald-950/50 border-emerald-500/50 text-emerald-300 font-bold"
+                                          : "bg-slate-900 border-slate-800 text-slate-400"
+                                      }`}
+                                    >
+                                      <div className="font-bold">D{st.step}</div>
+                                      <div>{st.status === "VERIFIED" ? (st.is_prize_winner ? `+$${st.payout_tt}` : `${st.best_slip_match}m`) : "Wait"}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+
                     {/* Calibrated Corridor & Contributing Models */}
                     <div className="text-[11px] font-mono text-slate-400 space-y-1 pt-1">
                       <div className="flex items-center justify-between">
@@ -919,8 +1044,64 @@ export default function EngineBenchmarkTracker() {
                   Show All Games
                 </button>
               )}
+
+              <button
+                onClick={() => setShowCustomTrackerDrawer(!showCustomTrackerDrawer)}
+                className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-mono text-amber-300 font-bold cursor-pointer flex items-center gap-1"
+              >
+                <Target className="w-3.5 h-3.5" />
+                {showCustomTrackerDrawer ? "Close Custom Tracker" : "Track Custom Group (5 Draws)"}
+              </button>
             </div>
           </div>
+
+          {showCustomTrackerDrawer && (
+            <div className="p-4 rounded-xl bg-slate-950/80 border border-amber-500/30 space-y-3 font-mono">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-xs font-bold text-amber-300 uppercase">
+                    Track Your Group of Numbers (Up to 5 Consecutive Draws)
+                  </h3>
+                  <p className="text-[11px] text-slate-400">
+                    Enter 1 or more lines (one slip per line, comma or space separated). The tracker will automatically grade all lines as each of the next 5 draws completes.
+                  </p>
+                </div>
+                <select
+                  value={customGameKey}
+                  onChange={e => setCustomGameKey(e.target.value)}
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white font-bold"
+                >
+                  <option value="cashpot">Cash Pot (5 of 20)</option>
+                  <option value="win-for-life">Win For Life (6 of 28)</option>
+                  <option value="lotto-plus">Lotto Plus (5 of 35)</option>
+                  <option value="play-whe">Play Whe (Marks 1–36)</option>
+                  <option value="pick4">Pick 4 (4 Digits)</option>
+                </select>
+              </div>
+              <textarea
+                rows={3}
+                value={customGroupInput}
+                onChange={e => setCustomGroupInput(e.target.value)}
+                placeholder={"Example (one ticket per line):\n2, 3, 5, 11, 17\n4, 9, 12, 16, 20"}
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400"
+              />
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => setShowCustomTrackerDrawer(false)}
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLockCustomGroup}
+                  disabled={customLocking}
+                  className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase cursor-pointer disabled:opacity-50"
+                >
+                  {customLocking ? "Locking..." : "Lock & Track for 5 Draws"}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Clickable 5-Game Summary Cards (Click any card to switch game) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 font-mono">

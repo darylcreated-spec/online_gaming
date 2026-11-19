@@ -273,7 +273,9 @@ export async function ensureEngineLogsTable(): Promise<void> {
  */
 export async function lockMultiDrawPlayCampaign(
   gameKey?: string,
-  anchorDrawNumber?: number
+  anchorDrawNumber?: number,
+  customSlips?: number[][],
+  customPowerball?: number
 ): Promise<{ lockedCount: number }> {
   await ensureEngineLogsTable();
   const games =
@@ -283,6 +285,40 @@ export async function lockMultiDrawPlayCampaign(
   let lockedCount = 0;
 
   for (const g of games) {
+    if (customSlips && customSlips.length > 0 && gameKey && gameKey !== "all") {
+      let targetDraw = anchorDrawNumber;
+      if (!targetDraw) {
+        const latestRows = await query<any>(
+          `SELECT target_draw_number FROM prediction_engine_logs WHERE game_key = ? ORDER BY target_draw_number DESC LIMIT 1`,
+          [g]
+        ).catch(() => []);
+        targetDraw = latestRows?.[0]?.target_draw_number ? Number(latestRows[0].target_draw_number) : 1;
+      }
+      await db.execute({
+        sql: `INSERT INTO multi_draw_play_campaigns (
+                game_key, engine_key, engine_name, strategy_name, anchor_draw_number,
+                predicted_numbers, predicted_powerball, wheel_slips, is_user_pinned
+              ) VALUES (?, 'user-custom', 'Custom Tracked Group', ?, ?, ?, ?, ?, 1)
+              ON CONFLICT(game_key, engine_key, anchor_draw_number)
+              DO UPDATE SET
+                predicted_numbers = excluded.predicted_numbers,
+                predicted_powerball = excluded.predicted_powerball,
+                wheel_slips = excluded.wheel_slips,
+                strategy_name = excluded.strategy_name,
+                is_user_pinned = 1`,
+        args: [
+          g,
+          `Custom ${customSlips.length}-Slip Group (5-Draw Tracker)`,
+          targetDraw,
+          JSON.stringify(customSlips[0]),
+          customPowerball !== undefined && !Number.isNaN(customPowerball) ? Number(customPowerball) : null,
+          JSON.stringify(customSlips)
+        ]
+      }).catch(() => {});
+      lockedCount++;
+      continue;
+    }
+
     let rows: any[] = [];
     if (anchorDrawNumber) {
       rows = await query<any>(
@@ -3448,11 +3484,14 @@ export async function computeMultiDrawHorizonVerification(
       ).catch(() => [])
     ]);
 
-    const pinnedSet = new Set<number>((pinnedRows || []).map((p: any) => Number(p.anchor_draw_number)));
-    const combinedByAnchor = new Map<number, any>();
+    const pinnedSet = new Set<string>(
+      (pinnedRows || []).map((p: any) => `${String(p.engine_key)}:${Number(p.anchor_draw_number)}`)
+    );
+    const combinedByKey = new Map<string, any>();
 
     for (const r of logRows || []) {
-      combinedByAnchor.set(Number(r.target_draw_number), {
+      const k = `${String(r.engine_key)}:${Number(r.target_draw_number)}`;
+      combinedByKey.set(k, {
         game_key: g,
         engine_key: String(r.engine_key),
         engine_name: String(r.engine_name),
@@ -3461,13 +3500,14 @@ export async function computeMultiDrawHorizonVerification(
         predicted_numbers: r.predicted_numbers,
         predicted_powerball: r.predicted_powerball,
         wheel_slips: r.wheel_slips,
-        is_user_pinned: pinnedSet.has(Number(r.target_draw_number))
+        is_user_pinned: pinnedSet.has(k)
       });
     }
     for (const p of pinnedRows || []) {
       const anchor = Number(p.anchor_draw_number);
-      if (!combinedByAnchor.has(anchor)) {
-        combinedByAnchor.set(anchor, {
+      const k = `${String(p.engine_key)}:${anchor}`;
+      if (!combinedByKey.has(k)) {
+        combinedByKey.set(k, {
           game_key: g,
           engine_key: String(p.engine_key),
           engine_name: String(p.engine_name),
@@ -3481,11 +3521,15 @@ export async function computeMultiDrawHorizonVerification(
       }
     }
 
-    const sortedAnchors = Array.from(combinedByAnchor.keys()).sort((a, b) => b - a);
+    const sortedEntries = Array.from(combinedByKey.values()).sort(
+      (a, b) =>
+        Number(b.anchor_draw_number) - Number(a.anchor_draw_number) ||
+        (a.engine_key === "user-custom" ? -1 : b.engine_key === "user-custom" ? 1 : 0)
+    );
     const gameCampaigns: MultiDrawPlayCampaign[] = [];
 
-    for (const anchor of sortedAnchors) {
-      const raw = combinedByAnchor.get(anchor);
+    for (const raw of sortedEntries) {
+      const anchor = Number(raw.anchor_draw_number);
       let predNums: number[] = [];
       try { predNums = typeof raw.predicted_numbers === "string" ? JSON.parse(raw.predicted_numbers) : raw.predicted_numbers || []; } catch {}
       let wheelSlips: number[][] = [];

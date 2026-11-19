@@ -80,12 +80,16 @@ export async function POST(request: NextRequest) {
 
     if (action === "lock_campaign") {
       const anchorDrawNumber = body.anchorDrawNumber ? Number(body.anchorDrawNumber) : undefined;
-      const locked = await lockMultiDrawPlayCampaign(specificGame, anchorDrawNumber);
+      const customSlips = Array.isArray(body.customSlips) ? body.customSlips : undefined;
+      const customPowerball = body.customPowerball !== undefined ? Number(body.customPowerball) : undefined;
+      const locked = await lockMultiDrawPlayCampaign(specificGame, anchorDrawNumber, customSlips, customPowerball);
       return NextResponse.json({
         success: true,
         action: "lock_campaign",
         lockedCount: locked.lockedCount,
-        message: `Locked ${locked.lockedCount} suggested play(s) into the Multi-Draw 3-Draw & 5-Draw Verification Tracker.`
+        message: customSlips
+          ? `Locked your custom ${customSlips.length}-slip group into the 5-Draw Verification Tracker.`
+          : `Locked ${locked.lockedCount} suggested play(s) into the Multi-Draw 3-Draw & 5-Draw Verification Tracker.`
       });
     }
 
