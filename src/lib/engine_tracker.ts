@@ -482,31 +482,47 @@ export function evaluatePredictionAgainstDraw(
       }
     }
   } else if (gameKey === "cashpot") {
-    const maxEvalLines = simulatedBetTT >= 6 ? Math.min(10, Math.round(simulatedBetTT)) : 5;
+    const maxEvalLines = (wheelSlips && wheelSlips.length > 5) || simulatedBetTT >= 30 ? Math.min(10, wheelSlips?.length || 10) : 5;
     const playableLines = buildPlayableLines(predNums, wheelSlips || [], maxEvalLines, 5);
     matchCount = predNums.filter(n => actualSet.has(n)).length;
+    const mult = actualPowerball && actualPowerball >= 1 ? actualPowerball : 1;
+
+    let highestMatch = matchCount;
+    let totalCashPayout = 0;
+    let winningSlipCount = 0;
     playableLines.forEach(line => {
       const m = line.filter(n => actualSet.has(n)).length;
       if (m > bestWheelMatch) bestWheelMatch = m;
+      if (m > highestMatch) highestMatch = m;
+      if (m === 5) {
+        totalCashPayout += 20000.0;
+        winningSlipCount++;
+      } else if (m === 4) {
+        totalCashPayout += 250.0 * mult;
+        winningSlipCount++;
+      } else if (m === 3) {
+        totalCashPayout += 25.0 * mult;
+        winningSlipCount++;
+      } else if (m === 2) {
+        totalCashPayout += 5.0 * mult;
+        winningSlipCount++;
+      }
     });
-    const effectiveMatch = Math.max(matchCount, bestWheelMatch);
 
-    if (effectiveMatch === 5) {
+    if (highestMatch >= 2) {
       isPrize = 1;
-      prizeTier = "MATCH 5 JACKPOT ($20,000+ TT)";
-      simulatedPayoutTT = 20000.0;
-    } else if (effectiveMatch === 4) {
-      isPrize = 1;
-      prizeTier = "MATCH 4 ($250 TT)";
-      simulatedPayoutTT = 250.0;
-    } else if (effectiveMatch === 3) {
-      isPrize = 1;
-      prizeTier = "MATCH 3 ($25 TT)";
-      simulatedPayoutTT = 25.0;
-    } else if (effectiveMatch === 2) {
-      isPrize = 1;
-      prizeTier = "MATCH 2 ($5 TT)";
-      simulatedPayoutTT = 5.0;
+      simulatedPayoutTT = totalCashPayout;
+      const multTag = mult > 1 ? ` x${mult}` : "";
+      const slipTag = winningSlipCount > 1 ? ` [${winningSlipCount} Slips]` : "";
+      if (highestMatch === 5) {
+        prizeTier = `MATCH 5 JACKPOT ($20,000+ TT)${slipTag}`;
+      } else if (highestMatch === 4) {
+        prizeTier = `MATCH 4 ($250 TT${multTag})${slipTag}`;
+      } else if (highestMatch === 3) {
+        prizeTier = `MATCH 3 ($25 TT${multTag})${slipTag}`;
+      } else {
+        prizeTier = `MATCH 2 ($5 TT${multTag})${slipTag}`;
+      }
     }
   } else if (gameKey === "lotto-plus") {
     const maxEvalLines = simulatedBetTT >= 6 ? Math.min(10, Math.round(simulatedBetTT)) : 5;
@@ -1466,7 +1482,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_numbers: forensic5Lines[0],
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
               wheel_slips: forensic5Lines,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 25.0
             });
             recordedCount++;
           }
@@ -1494,7 +1510,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_numbers: quantCpLines[0],
               predicted_powerball: forensic.nextCandidateSets?.[0]?.multiplier,
               wheel_slips: quantCpLines,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 25.0
             });
             recordedCount++;
           }
@@ -1511,7 +1527,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               target_draw_number: targetDraw,
               predicted_numbers: formula.predictedNumbers,
               wheel_slips: wf5Lines,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: wf5Lines.length * 5.0
             });
             recordedCount++;
           }
@@ -1536,7 +1552,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_numbers: distinctCp[0],
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
               wheel_slips: distinctCp,
-              simulated_bet_tt: distinctCp.length
+              simulated_bet_tt: distinctCp.length * 5.0
             });
             recordedCount++;
           }
@@ -2541,7 +2557,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               wheel_slips: forensic5Lines,
               actual_numbers: actual.numbers,
               actual_powerball: actual.multiplier,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 25.0
             });
 
             const quantCpHist: CashPotDrawRecord[] = hist.map(d => ({
@@ -2569,7 +2585,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
                 wheel_slips: quantCpLines,
                 actual_numbers: actual.numbers,
                 actual_powerball: actual.multiplier,
-                simulated_bet_tt: 5.0
+                simulated_bet_tt: 25.0
               });
             }
 
@@ -2589,7 +2605,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               wheel_slips: wf5Lines,
               actual_numbers: actual.numbers,
               actual_powerball: actual.multiplier,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: wf5Lines.length * 5.0
             });
 
             // APEX CHAMPION MASTER CONSENSUS (Cash Pot 10-Slip Turán 3-Tuple Super-Pool)
@@ -2614,7 +2630,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               wheel_slips: distinctCp,
               actual_numbers: actual.numbers,
               actual_powerball: actual.multiplier,
-              simulated_bet_tt: distinctCp.length
+              simulated_bet_tt: distinctCp.length * 5.0
             });
           }
         }
@@ -3563,7 +3579,7 @@ export async function computeMultiDrawHorizonVerification(
             payout_tt: 0
           });
         } else {
-          const betTT = Math.max(5, wheelSlips.length);
+          const betTT = g === "cashpot" ? wheelSlips.length * 5 : Math.max(5, wheelSlips.length);
           const evalRes = evaluatePredictionAgainstDraw(
             g,
             predNums,
