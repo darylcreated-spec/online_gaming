@@ -877,19 +877,19 @@ export default function Home() {
 
       {/* Mobile Slide-Up Sheet for Games & More */}
       {mobileSheet && (
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
+        <div className="md:hidden fixed inset-0 z-50 flex items-center justify-center p-4 pb-20">
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setMobileSheet(null)}
           />
-          <div className="relative z-10 bg-slate-950 border-t border-white/15 rounded-t-3xl p-5 pb-24 space-y-4 shadow-2xl max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-sm font-black font-mono uppercase tracking-wider text-white">
+          <div className="relative z-10 w-full max-w-md bg-slate-950 border border-white/15 rounded-3xl p-5 space-y-4 shadow-2xl max-h-[78vh] overflow-y-auto">
+            <div className="relative flex items-center justify-center border-b border-white/10 pb-3">
+              <h3 className="text-sm font-black font-mono uppercase tracking-wider text-white text-center">
                 {mobileSheet === "games" ? "Choose NLCB Game" : "Tools & Settings"}
               </h3>
               <button
                 onClick={() => setMobileSheet(null)}
-                className="p-1.5 rounded-lg bg-white/5 text-gray-400 hover:text-white cursor-pointer"
+                className="absolute right-0 p-1.5 rounded-lg bg-white/5 text-gray-400 hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
