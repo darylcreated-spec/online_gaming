@@ -699,8 +699,12 @@ export default function EngineBenchmarkTracker() {
                         {pick.bonus_ball_rotation && pick.bonus_ball_rotation.length > 0 && (
                           <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-xs font-mono">
                             <Target className="w-3 h-3 text-amber-400" />
-                            <span className="text-amber-300 font-semibold">
-                              {pick.game_key === "cashpot" ? "Top-3 Mult:" : "Top-3 Renewal PB:"}
+                            <span className="text-amber-300 font-semibold font-sans">
+                              {pick.game_key === "cashpot"
+                                ? "Top 3 Multipliers:"
+                                : pick.game_key === "win-for-life"
+                                ? "Top 3 Cash Balls:"
+                                : "Top 3 Powerballs:"}
                             </span>
                             <span className="text-amber-200 font-bold">
                               {pick.bonus_ball_rotation.join(", ")}
@@ -1081,8 +1085,8 @@ export default function EngineBenchmarkTracker() {
                         <span className="text-cyan-300 font-semibold">{pick.sum_corridor}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span>Best Verified Capture:</span>
-                        <span className="text-emerald-300 font-semibold">{pick.best_prize}</span>
+                        <span>Best Verified Prize:</span>
+                        <span className="text-emerald-300 font-semibold">{formatPlainStrategy(pick.best_prize)}</span>
                       </div>
                     </div>
                   </div>
@@ -1467,7 +1471,7 @@ export default function EngineBenchmarkTracker() {
                                         ? "bg-emerald-500/20 text-emerald-300"
                                         : "bg-slate-800 text-slate-400"
                                     }`}>
-                                      {isWin ? `WON $${st.payout_tt} (${st.prize_tier.split("(")[0].trim()})` : `No Prize (${st.best_slip_match} Match)`}
+                                      {isWin ? `WON $${st.payout_tt} (${formatPlainStrategy(st.prize_tier.split("(")[0].trim())})` : `No Prize (${st.best_slip_match} Match)`}
                                     </div>
                                   </>
                                 ) : (
@@ -1529,7 +1533,7 @@ export default function EngineBenchmarkTracker() {
                         <td className="py-2.5 px-3">
                           {camp.window_1.completed ? (
                             <span className={camp.window_1.slip_prize_hit ? "text-emerald-400 font-bold" : "text-slate-400"}>
-                              {camp.window_1.slip_prize_hit ? camp.window_1.best_prize : `Match ${camp.window_1.best_match}`}
+                              {camp.window_1.slip_prize_hit ? formatPlainStrategy(camp.window_1.best_prize) : `Match ${camp.window_1.best_match}`}
                             </span>
                           ) : (
                             <span className="text-amber-400/80">Pending</span>
@@ -2093,7 +2097,7 @@ export default function EngineBenchmarkTracker() {
                             ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 font-bold"
                             : "bg-slate-900 text-slate-400 border border-slate-800"
                         }`}>
-                          {audit.prize_tier}
+                          {formatPlainStrategy(audit.prize_tier)}
                         </span>
                       </td>
 
