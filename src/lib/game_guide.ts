@@ -44,7 +44,7 @@ export const NLCB_GAME_GUIDE: GameGuideInfo[] = [
     costDetail: "$4.00 TT base + $1.00 TT Multiplier ($5.00 TT/slip). Mon/Thu/Sat are Sure Call days (100% 2x–4x Multiplier).",
     topPrize: "Pari-Mutuel Jackpot (5/5)",
     odds: "1 in 15,504 (5/5)",
-    schedule: "Mon–Sat: 7:00 PM (and morning draws)",
+    schedule: "Daily at 7:00 PM (except religious holidays)",
     whatWins: "Match 3 ($5 base × mult), Match 4 (pari-mutuel × mult), Match 5 Jackpot (no mult).",
     whatPaysZero: "Match 0, 1, or 2 pays $0 TT.",
     mathEdgeSummary: "Steiner-Johnson Zero-Pair-Overlap packing (MaxOverlap ≤ 1, 20/20 balls) hits the exact 63.34% Match 3+ ceiling on 10 slips (+9.5% vs overlapping cores), while Mon/Thu/Sat Sure Call boosts expected Multiplier payout by +56%.",

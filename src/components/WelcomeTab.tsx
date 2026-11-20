@@ -159,24 +159,24 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                 The Win Concept
               </h1>
               <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-900 border border-white/10 text-slate-300">
-                Free NLCB Analytics
+                NLCB ANALYTICS
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-400 font-sans leading-snug">
-              Understand exact odds, compare ticket budgets, and generate zero-overlap covering slips — then play in person at any official NLCB booth.
+              Understand exact odds, compare ticket budgets, and remove overlapping plays.
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2 shrink-0 text-[10px] sm:text-[11px] font-mono">
           <div className="px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] text-slate-300">
-            <span className="text-sky-400 font-bold">01</span> Pick Budget
+            <span className="text-sky-400 font-bold">01</span> Pick Game
           </div>
           <div className="px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] text-slate-300">
             <span className="text-emerald-400 font-bold">02</span> Check Odds
           </div>
           <div className="px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] text-slate-300">
-            <span className="text-amber-400 font-bold">03</span> Play at NLCB
+            <span className="text-amber-400 font-bold">03</span> Play
           </div>
         </div>
       </header>
