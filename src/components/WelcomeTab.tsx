@@ -169,15 +169,39 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         </div>
 
         <div className="grid grid-cols-3 gap-2 shrink-0 text-[10px] sm:text-[11px] font-mono">
-          <div className="px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] text-slate-300">
-            <span className="text-sky-400 font-bold">01</span> Pick Game
-          </div>
-          <div className="px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] text-slate-300">
-            <span className="text-emerald-400 font-bold">02</span> Check Odds
-          </div>
-          <div className="px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] text-slate-300">
-            <span className="text-amber-400 font-bold">03</span> Play
-          </div>
+          {[
+            {
+              num: "01",
+              label: "Pick Game",
+              color: "text-sky-400",
+              desc: "Compare Cash Pot, Lotto Plus, Win For Life, Play Whe, Pick 4, and Fast Cash costs & schedules."
+            },
+            {
+              num: "02",
+              label: "Check Odds",
+              color: "text-emerald-400",
+              desc: "See exact mathematical prize odds, $0-return risk, and the zero-overlap Steiner budget curve."
+            },
+            {
+              num: "03",
+              label: "Play",
+              color: "text-amber-400",
+              desc: "Copy, download, or print Panel A–E sheets and play at any official NLCB Lotto booth."
+            }
+          ].map((step) => (
+            <div
+              key={step.num}
+              className="relative group px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] md:hover:border-white/20 text-slate-300 transition cursor-default"
+            >
+              <span className={`${step.color} font-bold`}>{step.num}</span> {step.label}
+              <div className="hidden md:block pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-56 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-40 font-sans text-[11px] text-slate-300 leading-snug">
+                <div className="font-mono font-bold text-white mb-0.5">
+                  <span className={step.color}>{step.num}</span> {step.label}
+                </div>
+                {step.desc}
+              </div>
+            </div>
+          ))}
         </div>
       </header>
 

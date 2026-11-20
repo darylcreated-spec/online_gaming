@@ -42,6 +42,9 @@ export default function BudgetOddsExplorer({
   const [showExportModal, setShowExportModal] = useState(false);
   const [copiedSlips, setCopiedSlips] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [hoveredGameKey, setHoveredGameKey] = useState<GameGuideInfo["key"] | null>(null);
+  const [hoveredTierIdx, setHoveredTierIdx] = useState<number | null>(null);
+  const [hoveredCurveIdx, setHoveredCurveIdx] = useState<number | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -196,8 +199,11 @@ export default function BudgetOddsExplorer({
         </div>
       </div>
 
-      {/* Step 1: 6-Game Clean Segmented Bar */}
-      <div className="px-4 sm:px-6 py-3 bg-slate-950/60 border-b border-white/[0.06]">
+      {/* Step 1: 6-Game Clean Segmented Bar (with Desktop Hover Preview Popup) */}
+      <div
+        className="relative px-4 sm:px-6 py-3 bg-slate-950/60 border-b border-white/[0.06]"
+        onMouseLeave={() => setHoveredGameKey(null)}
+      >
         <div className="flex items-center gap-2 overflow-x-auto sleek-scrollbar pb-0.5">
           {NLCB_GAME_GUIDE.map((g) => {
             const isSelected = g.key === game.key;
@@ -206,6 +212,7 @@ export default function BudgetOddsExplorer({
                 key={g.key}
                 type="button"
                 onClick={() => handleSelectGameTab(g.key)}
+                onMouseEnter={() => setHoveredGameKey(g.key)}
                 className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-left transition-all cursor-pointer ${
                   isSelected
                     ? "bg-slate-800/95 border-sky-400/60 text-white shadow-[0_0_0_1px_rgba(56,189,248,0.2)]"
@@ -227,12 +234,41 @@ export default function BudgetOddsExplorer({
             );
           })}
         </div>
+
+        {/* Desktop-only Game Tab Hover Content Popup */}
+        {hoveredGameKey && (() => {
+          const hg = NLCB_GAME_GUIDE.find((x) => x.key === hoveredGameKey);
+          if (!hg) return null;
+          return (
+            <div className="hidden md:block pointer-events-none absolute left-6 right-6 top-full mt-1.5 z-40 rounded-xl bg-[#0d1424]/95 border border-sky-400/30 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.9)] backdrop-blur-md p-3.5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <img src={hg.iconSrc} alt={hg.name} className="w-8 h-8 rounded-lg object-contain border border-white/10 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white font-sans">{hg.name}</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        {hg.costPerPlay}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">{hg.schedule}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 font-sans mt-0.5 truncate">{hg.whatWins}</p>
+                  </div>
+                </div>
+                <div className="text-right font-mono shrink-0">
+                  <div className="text-[10px] text-slate-400 uppercase">Top Prize</div>
+                  <div className="text-xs font-bold text-amber-300">{hg.topPrize}</div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Main Content Area */}
       <div className="p-4 sm:p-6 space-y-5">
-        {/* Step 2: Budget Tier Selector */}
-        <div className="space-y-2">
+        {/* Step 2: Budget Tier Selector (with Desktop Hover Breakdown Popup) */}
+        <div className="space-y-2 relative" onMouseLeave={() => setHoveredTierIdx(null)}>
           <div className="flex items-center justify-between text-[11px] font-mono">
             <span className="text-slate-400 uppercase tracking-wider font-semibold">
               Choose Your {game.name} Budget
@@ -247,10 +283,11 @@ export default function BudgetOddsExplorer({
                   key={`${game.key}-${pt.label}`}
                   type="button"
                   onClick={() => handleSelectTier(idx)}
+                  onMouseEnter={() => setHoveredTierIdx(idx)}
                   className={`px-3 py-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                     active
                       ? "bg-emerald-500/12 border-emerald-400/70 text-white"
-                      : "bg-slate-900/60 border-white/[0.07] text-slate-300 hover:border-white/20 hover:bg-slate-900"
+                      : "bg-slate-900/60 border-white/[0.07] text-slate-300 hover:border-sky-400/40 hover:bg-slate-900"
                   }`}
                 >
                   <div className="flex items-baseline justify-between gap-1">
@@ -270,6 +307,36 @@ export default function BudgetOddsExplorer({
               );
             })}
           </div>
+
+          {/* Desktop-only Budget Tier Hover Popup */}
+          {hoveredTierIdx !== null && points[hoveredTierIdx] && (() => {
+            const hp = points[hoveredTierIdx];
+            const hZero = Math.max(0, Math.round((100 - hp.anyPrizePct) * 10) / 10);
+            const h3 = Math.round((1 - Math.pow(1 - hp.anyPrizePct / 100, 3)) * 1000) / 10;
+            const hDelta =
+              hp.naiveOverlapPct !== undefined && hp.anyPrizePct > hp.naiveOverlapPct
+                ? Math.round((hp.anyPrizePct - hp.naiveOverlapPct) * 10) / 10
+                : null;
+            return (
+              <div className="hidden md:flex pointer-events-none absolute left-0 right-0 top-full mt-1.5 z-30 rounded-xl bg-[#0d1424]/95 border border-emerald-400/30 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.9)] backdrop-blur-md px-4 py-2.5 items-center justify-between gap-4 text-xs">
+                <div className="font-sans text-slate-300 min-w-0">
+                  <span className="font-mono font-bold text-white mr-2">
+                    {hp.label} (${hp.costTT} TT):
+                  </span>
+                  <span>{hp.note}</span>
+                </div>
+                <div className="flex items-center gap-3 font-mono text-[11px] shrink-0 tabular-nums">
+                  <span className="text-emerald-300 font-bold">
+                    {hp.anyPrizePct.toFixed(hp.anyPrizePct < 1 ? 2 : 2)}% Win
+                    {hDelta !== null ? ` (+${hDelta}%)` : ""}
+                  </span>
+                  <span className="text-slate-400">{hZero}% $0</span>
+                  <span className="text-sky-300">3-Draw: {h3}%</span>
+                  <span className="text-amber-300">{hp.jackpotOdds}</span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Step 3: Split Metrics + Precision SVG Budget Curve */}
@@ -399,7 +466,48 @@ export default function BudgetOddsExplorer({
               )}
             </div>
 
-            <div className="w-full">
+            <div className="w-full relative" onMouseLeave={() => setHoveredCurveIdx(null)}>
+              {/* Desktop-only SVG Data Point Hover Tooltip */}
+              {hoveredCurveIdx !== null && points[hoveredCurveIdx] && (() => {
+                const hp = points[hoveredCurveIdx];
+                const leftPct = Math.min(62, Math.max(4, (getX(hoveredCurveIdx) / svgW) * 100 - 16));
+                const gain =
+                  hp.naiveOverlapPct !== undefined && hp.anyPrizePct > hp.naiveOverlapPct
+                    ? Math.round((hp.anyPrizePct - hp.naiveOverlapPct) * 10) / 10
+                    : null;
+                return (
+                  <div
+                    className="hidden md:block pointer-events-none absolute top-0 z-30 w-52 rounded-xl bg-[#0d1424]/95 border border-sky-400/40 shadow-2xl backdrop-blur-md p-2.5 font-mono text-[10.5px] space-y-1"
+                    style={{ left: `${leftPct}%` }}
+                  >
+                    <div className="flex items-center justify-between border-b border-white/10 pb-1">
+                      <span className="font-bold text-white">{hp.label}</span>
+                      <span className="text-emerald-300 font-bold">${hp.costTT} TT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Optimal Prize:</span>
+                      <span className="text-emerald-300 font-bold">
+                        {hp.anyPrizePct.toFixed(hp.anyPrizePct < 1 ? 2 : 2)}%
+                      </span>
+                    </div>
+                    {gain !== null && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Overlap Gain:</span>
+                        <span className="text-sky-300 font-bold">+{gain}%</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Chance of $0:</span>
+                      <span className="text-slate-200">{(100 - hp.anyPrizePct).toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Top Odds:</span>
+                      <span className="text-amber-300 font-bold">{hp.jackpotOdds}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <svg
                 viewBox={`0 0 ${svgW} ${svgH}`}
                 className="w-full h-auto select-none overflow-visible"
@@ -477,11 +585,12 @@ export default function BudgetOddsExplorer({
                 {points.map((pt, idx) => {
                   const cx = getX(idx);
                   const cy = getY(pt.anyPrizePct);
-                  const isActive = idx === activeTierIdx;
+                  const isActive = idx === activeTierIdx || idx === hoveredCurveIdx;
                   return (
                     <g
                       key={pt.label}
                       onClick={() => handleSelectTier(idx)}
+                      onMouseEnter={() => setHoveredCurveIdx(idx)}
                       className="cursor-pointer"
                     >
                       {/* Larger invisible hit area for mobile thumbs */}

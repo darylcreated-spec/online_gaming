@@ -405,20 +405,30 @@ export default function Home() {
         <div className="hidden md:flex items-center gap-1.5 relative">
           <nav className="flex items-center gap-1 p-1 bg-slate-900/90 rounded-xl border border-white/10">
             {/* HOME */}
-            <button
-              onClick={() => handleTabChange("welcome")}
-              className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                activeTab === "welcome"
-                  ? "bg-sky-500/20 border border-sky-400 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]"
-                  : "text-gray-400 hover:text-sky-300 border border-transparent hover:bg-sky-500/10"
-              }`}
-            >
-              <img src="/images/welcome_icon.png" alt="Home" className="w-4 h-4 object-contain rounded shrink-0" />
-              <span>HOME</span>
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => handleTabChange("welcome")}
+                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === "welcome"
+                    ? "bg-sky-500/20 border border-sky-400 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]"
+                    : "text-gray-400 hover:text-sky-300 border border-transparent hover:bg-sky-500/10"
+                }`}
+              >
+                <img src="/images/welcome_icon.png" alt="Home" className="w-4 h-4 object-contain rounded shrink-0" />
+                <span>HOME</span>
+              </button>
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-52 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-[11px] font-sans text-slate-300 leading-snug">
+                <div className="font-mono font-bold text-white mb-0.5">Home Overview</div>
+                Compare exact odds, budget curves, and latest results across all 6 NLCB games.
+              </div>
+            </div>
 
-            {/* GAMES DROPDOWN */}
-            <div className="relative">
+            {/* GAMES DROPDOWN (Opens on Hover & Click on Desktop) */}
+            <div
+              className="relative"
+              onMouseEnter={() => setDesktopGamesOpen(true)}
+              onMouseLeave={() => setDesktopGamesOpen(false)}
+            >
               <button
                 onClick={() => setDesktopGamesOpen((v) => !v)}
                 className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
@@ -437,9 +447,8 @@ export default function Home() {
               </button>
 
               {desktopGamesOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setDesktopGamesOpen(false)} />
-                  <div className="absolute left-0 top-full mt-2 w-80 p-2 rounded-2xl bg-slate-950/95 border border-white/15 shadow-2xl z-50 space-y-1 backdrop-blur-xl">
+                <div className="absolute left-0 top-full pt-2 w-80 z-50">
+                  <div className="p-2 rounded-2xl bg-[#0d1424]/95 border border-white/15 shadow-2xl space-y-1 backdrop-blur-xl">
                     <div className="px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-gray-400 border-b border-white/5">
                       Select NLCB Game
                     </div>
@@ -466,61 +475,85 @@ export default function Home() {
                       </button>
                     ))}
                   </div>
-                </>
+                </div>
               )}
             </div>
 
             {/* ENGINES */}
-            <button
-              onClick={() => handleTabChange("engine-tracker")}
-              className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                activeTab === "engine-tracker"
-                  ? "bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]"
-                  : "text-gray-400 hover:text-cyan-300 border border-transparent hover:bg-cyan-500/10"
-              }`}
-            >
-              <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
-              <span>ENGINES</span>
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => handleTabChange("engine-tracker")}
+                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === "engine-tracker"
+                    ? "bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]"
+                    : "text-gray-400 hover:text-cyan-300 border border-transparent hover:bg-cyan-500/10"
+                }`}
+              >
+                <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span>ENGINES</span>
+              </button>
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-56 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-[11px] font-sans text-slate-300 leading-snug">
+                <div className="font-mono font-bold text-cyan-300 mb-0.5">Steiner-Johnson Engines</div>
+                Live zero-overlap covering slips, Sure Call timing, and honest out-of-sample audits.
+              </div>
+            </div>
 
             {/* SCANNER */}
-            <button
-              onClick={() => handleTabChange("scanner")}
-              className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                activeTab === "scanner"
-                  ? "bg-purple-500/20 border border-purple-400 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.2)]"
-                  : "text-gray-400 hover:text-purple-300 border border-transparent hover:bg-purple-500/10"
-              }`}
-            >
-              <img src="/images/scanner_icon.png" alt="Scanner" className="w-4 h-4 object-contain rounded shrink-0" />
-              <span>SCANNER</span>
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => handleTabChange("scanner")}
+                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === "scanner"
+                    ? "bg-purple-500/20 border border-purple-400 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.2)]"
+                    : "text-gray-400 hover:text-purple-300 border border-transparent hover:bg-purple-500/10"
+                }`}
+              >
+                <img src="/images/scanner_icon.png" alt="Scanner" className="w-4 h-4 object-contain rounded shrink-0" />
+                <span>SCANNER</span>
+              </button>
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-56 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-[11px] font-sans text-slate-300 leading-snug">
+                <div className="font-mono font-bold text-purple-300 mb-0.5">Ticket Scanner &amp; Ask DB</div>
+                Verify printed NLCB tickets or query 22,500+ historical draws in plain English.
+              </div>
+            </div>
 
             {/* POOLS */}
-            <button
-              onClick={() => handleTabChange("syndicate")}
-              className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                activeTab === "syndicate"
-                  ? "bg-violet-500/20 border border-violet-400 text-violet-300 shadow-[0_0_12px_rgba(167,139,250,0.2)]"
-                  : "text-gray-400 hover:text-violet-300 border border-transparent hover:bg-violet-500/10"
-              }`}
-            >
-              <img src="/images/syndicate_icon.png" alt="Pools" className="w-4 h-4 object-contain rounded shrink-0" />
-              <span>POOLS</span>
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => handleTabChange("syndicate")}
+                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === "syndicate"
+                    ? "bg-violet-500/20 border border-violet-400 text-violet-300 shadow-[0_0_12px_rgba(167,139,250,0.2)]"
+                    : "text-gray-400 hover:text-violet-300 border border-transparent hover:bg-violet-500/10"
+                }`}
+              >
+                <img src="/images/syndicate_icon.png" alt="Pools" className="w-4 h-4 object-contain rounded shrink-0" />
+                <span>POOLS</span>
+              </button>
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-56 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-[11px] font-sans text-slate-300 leading-snug">
+                <div className="font-mono font-bold text-violet-300 mb-0.5">Syndicate Pools</div>
+                Split 15-slip ($75) or 20-slip ($100) wheels with friends and share via WhatsApp.
+              </div>
+            </div>
 
             {/* SETTINGS */}
-            <button
-              onClick={() => handleTabChange("settings")}
-              className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                activeTab === "settings"
-                  ? "bg-slate-700/40 border border-slate-400 text-slate-200 shadow-[0_0_12px_rgba(148,163,184,0.2)]"
-                  : "text-gray-400 hover:text-slate-200 border border-transparent hover:bg-slate-700/20"
-              }`}
-            >
-              <img src="/images/settings_icon.png" alt="Settings" className="w-4 h-4 object-contain rounded shrink-0" />
-              <span>SETTINGS</span>
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => handleTabChange("settings")}
+                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  activeTab === "settings"
+                    ? "bg-slate-700/40 border border-slate-400 text-slate-200 shadow-[0_0_12px_rgba(148,163,184,0.2)]"
+                    : "text-gray-400 hover:text-slate-200 border border-transparent hover:bg-slate-700/20"
+                }`}
+              >
+                <img src="/images/settings_icon.png" alt="Settings" className="w-4 h-4 object-contain rounded shrink-0" />
+                <span>SETTINGS</span>
+              </button>
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-52 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-[11px] font-sans text-slate-300 leading-snug">
+                <div className="font-mono font-bold text-slate-200 mb-0.5">Settings &amp; Usage</div>
+                Sync latest draws, inspect system audit status, and view visitor analytics.
+              </div>
+            </div>
           </nav>
         </div>
 
