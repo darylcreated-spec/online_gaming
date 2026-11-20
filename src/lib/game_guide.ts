@@ -312,19 +312,19 @@ export const NLCB_GAME_GUIDE: GameGuideInfo[] = [
     name: "Pick 4",
     shortName: "Pick 4",
     tagline: "4 digits (0–9) Straight or Box",
-    costPerPlay: "From $2.00 TT / play",
-    unitCostTT: 2,
-    costDetail: "Play Straight (exact order, 1 in 10,000) or 24-Way / 12-Way Box (any order) at $2, $5, or $10 TT.",
+    costPerPlay: "From $1.00 TT / play",
+    unitCostTT: 1,
+    costDetail: "Play Straight (exact order, 1 in 10,000) or 24-Way / 12-Way Box (any order) starting from $1.00 TT ($1, $2, $5, $10+).",
     topPrize: "Up to $5,000 TT (Straight)",
     odds: "1 in 10,000 (Straight) · 1 in 417 (24-Box)",
     schedule: "Mon–Sat: 10:30 AM, 1:00 PM, 4:00 PM, 7:00 PM",
     whatWins: "Straight (exact order), Box (any order of your 4 digits), or Front/Back Pair plays.",
     whatPaysZero: "Non-matching digit orders (on Straight) or non-matching digit multisets (on Box) pay $0 TT.",
-    mathEdgeSummary: "Switching from Straight (0.01%) to a 24-Way Box (4 distinct digits) multiplies your hit probability by 24x (0.24% per slip). Four disjoint 24-Way Boxes cover 96 of 10,000 outcomes (0.96%).",
+    mathEdgeSummary: "Switching from Straight (0.01%) to a 24-Way Box (4 distinct digits) multiplies your hit probability by 24x (0.24% per slip). Four disjoint 24-Way Boxes ($4 TT) cover 96 of 10,000 outcomes (0.96%).",
     howToPlay: [
       "Choose 4 digits from 0 to 9 and decide between Straight (exact order) or Box (any order).",
       "For 24-Way Box, pick 4 distinct digits (e.g., 1-4-7-9) to maximize permutation coverage (24 ways).",
-      "Place your $2–$10 TT slip at an NLCB booth for any of the 4 daily draws."
+      "Place your $1.00 TT+ slip at an NLCB booth for any of the 4 daily draws."
     ],
     bestFor: "Choosing between big Straight payout or 24x easier Box hits",
     themeColor: "purple",
@@ -334,42 +334,42 @@ export const NLCB_GAME_GUIDE: GameGuideInfo[] = [
       {
         slips: 1,
         label: "1 Straight",
-        costTT: 2,
+        costTT: 1,
         anyPrizePct: 0.01,
         tier2Pct: 0.01,
         tier2Label: "Exact Order",
         jackpotOdds: "1 in 10,000",
-        note: "Highest payout per dollar, exact order required (1 in 10,000)."
+        note: "Highest payout per dollar ($1.00 TT base), exact order required (1 in 10,000)."
       },
       {
         slips: 1,
         label: "1 Box (24-Way)",
-        costTT: 2,
+        costTT: 1,
         anyPrizePct: 0.24,
         tier2Pct: 0.24,
         tier2Label: "Any Order",
         jackpotOdds: "1 in 417",
-        note: "4 distinct digits in any order — 24x higher hit rate than Straight."
+        note: "4 distinct digits in any order ($1.00 TT base) — 24x higher hit rate than Straight."
       },
       {
         slips: 4,
         label: "4 Disjoint Boxes",
-        costTT: 8,
+        costTT: 4,
         anyPrizePct: 0.96,
         tier2Pct: 0.96,
         tier2Label: "96 Permutations",
         jackpotOdds: "1 in 104",
-        note: "4 unique 24-Way Boxes ($2 each = $8 TT) covering 96 of 10,000 draws."
+        note: "4 unique 24-Way Boxes ($1 each = $4 TT) covering 96 of 10,000 draws."
       },
       {
         slips: 10,
         label: "10 Disjoint Boxes",
-        costTT: 20,
+        costTT: 10,
         anyPrizePct: 2.40,
         tier2Pct: 2.40,
         tier2Label: "240 Permutations",
         jackpotOdds: "1 in 42",
-        note: "10 unique 24-Way Boxes ($2 each = $20 TT) covering 240 of 10,000 draws."
+        note: "10 unique 24-Way Boxes ($1 each = $10 TT) covering 240 of 10,000 draws."
       }
     ]
   },

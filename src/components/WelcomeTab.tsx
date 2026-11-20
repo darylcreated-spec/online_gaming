@@ -534,7 +534,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                   </div>
                 </div>
                 <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
-                  From $2
+                  From $1
                 </span>
               </div>
 
