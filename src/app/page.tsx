@@ -417,7 +417,7 @@ export default function Home() {
                 <img src="/images/welcome_icon.png" alt="Home" className="w-4 h-4 object-contain rounded shrink-0" />
                 <span>Home</span>
               </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-xs font-sans text-slate-300 leading-relaxed">
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0b1120] border border-white/15 shadow-2xl z-50 text-xs font-sans text-slate-300 leading-relaxed">
                 <div className="text-sm font-bold text-white mb-1">Home Overview</div>
                 Compare exact odds, ticket budgets, and latest results across all 6 NLCB games.
               </div>
@@ -492,7 +492,7 @@ export default function Home() {
                 <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
                 <span>Engines</span>
               </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-xs font-sans text-slate-300 leading-relaxed">
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0b1120] border border-white/15 shadow-2xl z-50 text-xs font-sans text-slate-300 leading-relaxed">
                 <div className="text-sm font-bold text-cyan-300 mb-1">Number Covering Engines</div>
                 View non-overlapping ticket sets, Cash Pot Sure Call timing, and verified past results.
               </div>
@@ -511,7 +511,7 @@ export default function Home() {
                 <img src="/images/scanner_icon.png" alt="Scanner" className="w-4 h-4 object-contain rounded shrink-0" />
                 <span>Scanner</span>
               </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-xs font-sans text-slate-300 leading-relaxed">
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0b1120] border border-white/15 shadow-2xl z-50 text-xs font-sans text-slate-300 leading-relaxed">
                 <div className="text-sm font-bold text-purple-300 mb-1">Ticket Scanner and Search</div>
                 Check printed NLCB tickets or ask questions across over 22,500 past draws.
               </div>
@@ -530,7 +530,7 @@ export default function Home() {
                 <img src="/images/syndicate_icon.png" alt="Pools" className="w-4 h-4 object-contain rounded shrink-0" />
                 <span>Pools</span>
               </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-xs font-sans text-slate-300 leading-relaxed">
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0b1120] border border-white/15 shadow-2xl z-50 text-xs font-sans text-slate-300 leading-relaxed">
                 <div className="text-sm font-bold text-violet-300 mb-1">Group Pools</div>
                 Split 15-slip ($75) or 20-slip ($100) sets with friends and share via WhatsApp.
               </div>
@@ -549,7 +549,7 @@ export default function Home() {
                 <img src="/images/settings_icon.png" alt="Settings" className="w-4 h-4 object-contain rounded shrink-0" />
                 <span>Settings</span>
               </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-xs font-sans text-slate-300 leading-relaxed">
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0b1120] border border-white/15 shadow-2xl z-50 text-xs font-sans text-slate-300 leading-relaxed">
                 <div className="text-sm font-bold text-slate-200 mb-1">Settings and Sync</div>
                 Refresh latest draws, check system status, and view app activity.
               </div>

@@ -129,10 +129,10 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
 
   const renderCountdownRow = (cd: DrawCountdown) => (
     <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#070b14] border border-white/[0.06] text-xs font-sans">
-      <div className="flex items-center gap-1.5 text-slate-400 min-w-0 truncate">
+      <div className="flex items-center gap-1.5 text-slate-400 min-w-0">
         <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
         <span className="truncate">
-          Next draw: <strong className="text-slate-200 font-semibold">{mounted ? cd.targetLabel : "Loading"}</strong>
+          Next: <strong className="text-slate-200 font-semibold">{mounted ? cd.targetLabel.replace(" Draw ", " ") : "Loading"}</strong>
         </span>
       </div>
       <span className="font-mono tabular-nums font-bold text-slate-100 shrink-0">
@@ -255,10 +255,10 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               {renderCountdownRow(countdowns.cashPot)}
 
               <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
-                <div className="flex items-center justify-between text-xs font-sans text-slate-400 font-medium">
+                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs font-sans text-slate-400 font-medium">
                   <span>Last 5 Winning Numbers (1 to 20)</span>
                   {latestCashPot?.multiplier && (
-                    <span className="text-amber-300 font-bold">
+                    <span className="text-amber-300 font-bold whitespace-nowrap">
                       {String(latestCashPot.multiplier).replace(/x$/i, "")} times Multiplier
                     </span>
                   )}

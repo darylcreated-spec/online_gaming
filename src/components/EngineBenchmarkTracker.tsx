@@ -95,6 +95,19 @@ export default function EngineBenchmarkTracker() {
     unitCostTT: number;
   } | null>(null);
 
+  const formatPlainStrategy = (raw?: string | null) => {
+    if (!raw) return "";
+    return raw
+      .replace(/J\*\(\d+,\d+(?:;\d+)?\)/g, "Non-Overlapping")
+      .replace(/Max-Coverage Packing/g, "Coverage Set")
+      .replace(/Exact 3\+ Ceiling/g, "3 or More Win Chance")
+      .replace(/MaxOverlap\s*=\s*(\d+)/gi, "At Most $1 Shared")
+      .replace(/Anti-Crowding/g, "Uncommon Numbers")
+      .replace(/\bPB\b/g, "Powerball")
+      .replace(/\bCB\b/g, "Cash Ball")
+      .replace(/Steiner-Johnson/g, "Non-Overlapping");
+  };
+
   const getGamePortfolioNotice = (gameKey: string, slipCount: number) => {
     switch (gameKey) {
       case "cashpot":
@@ -368,23 +381,23 @@ export default function EngineBenchmarkTracker() {
       <div className="relative overflow-hidden rounded-2xl bg-[#0f1418] border border-cyan-500/20 p-5 sm:p-6 shadow-[0_0_30px_rgba(56,189,248,0.06)]">
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-sky-400 to-emerald-500" />
         
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 font-sans">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded text-xs font-mono tracking-wider font-semibold bg-cyan-950/80 border border-cyan-500/40 text-cyan-400">
-                NLCB QUANTITATIVE // MULTI-ENGINE BENCHMARK
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+              <span className="px-2.5 py-0.5 rounded text-xs tracking-wider font-semibold bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 uppercase">
+                NLCB Engine Performance
               </span>
-              <span className="px-2 py-0.5 rounded text-xs font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                BAYESIAN CALIBRATOR ACTIVE
+              <span className="px-2.5 py-0.5 rounded text-xs bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 flex items-center gap-1.5 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                Live Tracking Active
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              <Cpu className="w-6 h-6 text-cyan-400" />
-              Engine Prediction & Closed-Loop Calibration Tracker
+              <Cpu className="w-6 h-6 text-cyan-400 shrink-0" />
+              <span>Number Covering Engines and Past Results</span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-              Walk-forward Bayesian weight optimization, multi-slip wheel grading, and comparative hit leaderboards across all 5 NLCB games.
+            <p className="text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Verified out-of-sample results, non-overlapping ticket sets, and side-by-side comparisons across all 5 main NLCB games.
             </p>
           </div>
 
@@ -393,24 +406,24 @@ export default function EngineBenchmarkTracker() {
             <button
               onClick={() => handleManualAction("calibrate")}
               disabled={calibrating || actionLoading || loading}
-              className="px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] flex items-center gap-1.5 disabled:opacity-50"
+              className="px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               <Sliders className={`w-3.5 h-3.5 ${calibrating ? "animate-spin" : ""}`} />
-              {calibrating ? "Calibrating Regimes..." : "Auto-Calibrate All Engines"}
+              {calibrating ? "Recalibrating..." : "Recalibrate Models"}
             </button>
             <button
               onClick={() => handleManualAction("reconcile_and_snapshot")}
               disabled={actionLoading || calibrating || loading}
-              className="px-3.5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs transition-all shadow-[0_0_15px_rgba(56,189,248,0.3)] flex items-center gap-1.5 disabled:opacity-50"
+              className="px-3.5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${actionLoading ? "animate-spin" : ""}`} />
-              Reconcile & Snapshot N+1
+              Update and Check Results
             </button>
             <button
               onClick={() => fetchData()}
               disabled={loading || calibrating}
-              className="p-2 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white transition-colors"
-              title="Refresh Dashboard"
+              className="p-2 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title="Refresh page"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </button>
@@ -466,10 +479,10 @@ export default function EngineBenchmarkTracker() {
         </div>
       </div>
 
-      {/* 2. Game Selector Bar & Horizon Controls */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#13171b] p-2 rounded-xl border border-slate-800">
+      {/* 2. Game Selector Bar and Horizon Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 bg-[#13171b] p-2.5 rounded-xl border border-slate-800">
         {/* Game filter pills */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+        <div className="flex flex-wrap items-center gap-1.5">
           {[
             { id: "all", label: "All Games" },
             { id: "play-whe", label: "Play Whe" },
@@ -481,10 +494,10 @@ export default function EngineBenchmarkTracker() {
             <button
               key={game.id}
               onClick={() => setSelectedGame(game.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                 selectedGame === game.id
                   ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[0_0_10px_rgba(56,189,248,0.15)] font-semibold"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
+                  : "text-slate-300 hover:text-white hover:bg-slate-800/60"
               }`}
             >
               {game.label}
@@ -601,15 +614,21 @@ export default function EngineBenchmarkTracker() {
                             </div>
                           </div>
                           <div className="p-2 rounded-lg bg-sky-950/40 border border-sky-500/30">
-                            <div className="text-xs text-sky-300/90 font-semibold">4+ / Shared</div>
-                            <div className="text-sm font-bold font-mono text-sky-300">
-                              {pick.steiner_meta.exact_match4_pct}% (max {pick.steiner_meta.max_pair_overlap})
+                            <div className="text-xs text-sky-300/90 font-semibold">4 or More</div>
+                            <div className="text-sm font-bold font-mono text-sky-300 whitespace-nowrap">
+                              {pick.steiner_meta.exact_match4_pct}%
+                            </div>
+                            <div className="text-xs text-sky-200/80 whitespace-nowrap">
+                              Max {pick.steiner_meta.max_pair_overlap} shared
                             </div>
                           </div>
                           <div className="p-2 rounded-lg bg-amber-950/40 border border-amber-500/30">
-                            <div className="text-xs text-amber-300/90 font-semibold">Covered</div>
-                            <div className="text-sm font-bold font-mono text-amber-300">
-                              {pick.steiner_meta.covered_balls} ({pick.steiner_meta.anti_crowding_score}%)
+                            <div className="text-xs text-amber-300/90 font-semibold">Numbers</div>
+                            <div className="text-sm font-bold font-mono text-amber-300 whitespace-nowrap">
+                              {pick.steiner_meta.covered_balls}
+                            </div>
+                            <div className="text-xs text-amber-200/80 whitespace-nowrap">
+                              {pick.steiner_meta.anti_crowding_score}% unique
                             </div>
                           </div>
                         </div>
@@ -856,14 +875,14 @@ export default function EngineBenchmarkTracker() {
                                   key={sIdx}
                                   className="px-2 py-1 rounded bg-slate-950/90 border border-slate-800 flex items-center justify-between text-xs font-mono"
                                 >
-                                  <span className="text-slate-400 text-xs">Steiner Slip #{sIdx + 1}:</span>
+                                  <span className="text-slate-400 text-xs font-sans">Slip {sIdx + 1}:</span>
                                   <div className="flex items-center gap-1.5">
                                     <span className="text-emerald-300 font-bold">
                                       {slip.map(n => String(n).padStart(2, "0")).join(" - ")}
                                     </span>
                                     {linePb !== undefined && (
-                                      <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-bold">
-                                        {pick.game_key === "win-for-life" ? `CB ${linePb}` : `PB ${linePb}`}
+                                      <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-sans font-bold">
+                                        {pick.game_key === "win-for-life" ? `Cash Ball ${linePb}` : `Powerball ${linePb}`}
                                       </span>
                                     )}
                                   </div>
@@ -980,8 +999,8 @@ export default function EngineBenchmarkTracker() {
                                             : slip.map(n => String(n).padStart(2, "0")).join(" - ")}
                                         </span>
                                         {slipPb !== undefined && (
-                                          <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-bold">
-                                            {pick.game_key === "win-for-life" ? `CB ${slipPb}` : `PB ${slipPb}`}
+                                          <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-sans font-bold">
+                                            {pick.game_key === "win-for-life" ? `Cash Ball ${slipPb}` : `Powerball ${slipPb}`}
                                           </span>
                                         )}
                                       </div>
@@ -2003,14 +2022,14 @@ export default function EngineBenchmarkTracker() {
 
                       <td className="py-3 px-4 font-sans">
                         <span className="font-semibold text-white block">{audit.engine_name}</span>
-                        <span className="text-xs text-slate-400">{audit.strategy_name}</span>
+                        <span className="text-xs text-slate-400">{formatPlainStrategy(audit.strategy_name)}</span>
                       </td>
 
                       <td className="py-3 px-4">
                         <div className="space-y-1">
                           {allSlips.length > 1 && (
                             <span className="text-xs text-cyan-400 block">
-                              {bestSlipIdx === 0 ? `Slip #1 of ${allSlips.length}` : `Winning Slip #${bestSlipIdx + 1} of ${allSlips.length}`}
+                              {bestSlipIdx === 0 ? `Slip 1 of ${allSlips.length}` : `Winning Slip ${bestSlipIdx + 1} of ${allSlips.length}`}
                             </span>
                           )}
                           <div className="flex flex-wrap gap-1">
@@ -2032,8 +2051,8 @@ export default function EngineBenchmarkTracker() {
                               );
                             })}
                             {audit.predicted_powerball !== undefined && (
-                              <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                                PB {audit.predicted_powerball}
+                              <span className="px-2 py-0.5 rounded text-xs font-sans font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                {audit.game_key === "win-for-life" ? `Cash Ball ${audit.predicted_powerball}` : `Powerball ${audit.predicted_powerball}`}
                               </span>
                             )}
                           </div>
@@ -2049,8 +2068,8 @@ export default function EngineBenchmarkTracker() {
                               </span>
                             ))}
                             {audit.actual_powerball && (
-                              <span className="px-1 py-0.5 rounded text-xs bg-slate-900 text-amber-400">
-                                PB {audit.actual_powerball}
+                              <span className="px-2 py-0.5 rounded text-xs font-sans bg-slate-900 text-amber-300">
+                                {audit.game_key === "win-for-life" ? `Cash Ball ${audit.actual_powerball}` : `Powerball ${audit.actual_powerball}`}
                               </span>
                             )}
                           </div>
