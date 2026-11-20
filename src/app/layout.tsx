@@ -21,10 +21,33 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ttonlinegaming.vercel.app"),
   title: "The Win Concept | NLCB Analytics",
   description: "Understand exact odds, compare ticket budgets, and remove overlapping plays across Cash Pot, Lotto Plus, Win For Life, Play Whe, Pick 4, and Fast Cash in Trinidad and Tobago.",
   keywords: ["NLCB", "Cash Pot", "Lotto Plus", "Win For Life", "Play Whe", "Pick 4", "Fast Cash", "Trinidad and Tobago", "The Win Concept"],
   authors: [{ name: "The Win Concept" }],
+  openGraph: {
+    title: "The Win Concept | NLCB Analytics",
+    description: "Understand exact odds, compare ticket budgets, and remove overlapping plays across all 6 NLCB games in Trinidad and Tobago.",
+    url: "https://ttonlinegaming.vercel.app/",
+    siteName: "The Win Concept",
+    locale: "en_TT",
+    type: "website",
+    images: [
+      {
+        url: "/images/pwa-icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "The Win Concept - NLCB Analytics"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary",
+    title: "The Win Concept | NLCB Analytics",
+    description: "Understand exact odds, compare ticket budgets, and remove overlapping plays across all 6 NLCB games.",
+    images: ["/images/pwa-icon-512.png"]
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

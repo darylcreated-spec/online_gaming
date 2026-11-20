@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Clock, Calendar, RefreshCw } from "lucide-react";
+import ShareAppButton from "@/components/ShareAppButton";
 
 interface NextDrawInfo {
   game: "Play Whe" | "Pick 4" | "Cash Pot" | "Lotto Plus" | "Win for Life";
@@ -237,6 +238,8 @@ export default function LiveDrawTicker({
             {syncStatus === "syncing" ? "Updating" : syncStatus === "success" ? "Updated" : "Refresh"}
           </span>
         </button>
+
+        <ShareAppButton />
       </div>
     </div>
   );
