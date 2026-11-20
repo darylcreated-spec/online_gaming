@@ -25,8 +25,10 @@ import {
   Flame,
   Award,
   Copy,
-  Share2
+  Share2,
+  Printer
 } from "lucide-react";
+import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { triggerHaptic } from "@/lib/haptics";
 import {
   EngineLeaderboardRow,
@@ -84,6 +86,14 @@ export default function EngineBenchmarkTracker() {
   const [customGroupInput, setCustomGroupInput] = useState<string>("");
   const [customLocking, setCustomLocking] = useState<boolean>(false);
   const [cashPotBudgetTier, setCashPotBudgetTier] = useState<5 | 10 | 15 | 20>(10);
+  const [exportSlipPayload, setExportSlipPayload] = useState<{
+    gameKey: "cashpot" | "lotto-plus" | "win-for-life";
+    gameName: string;
+    targetDrawNumber?: number;
+    slips: number[][];
+    bonusBalls?: number[];
+    unitCostTT: number;
+  } | null>(null);
 
   const getGamePortfolioNotice = (gameKey: string, slipCount: number) => {
     switch (gameKey) {
@@ -920,11 +930,32 @@ export default function EngineBenchmarkTracker() {
                                   </div>
                                 </div>
                               )}
-                              <div className="flex items-center justify-between pb-1 border-b border-slate-800 text-[10px] text-slate-400 uppercase tracking-wider">
+                              <div className="flex items-center justify-between gap-2 pb-1 border-b border-slate-800 text-[10px] text-slate-400 uppercase tracking-wider">
                                 <span>Steiner-Johnson J* Packing (Ov ≤ {scaledSteiner ? scaledSteiner.maxPairOverlap : (pick.steiner_meta?.max_pair_overlap ?? 1)})</span>
-                                <span className="text-emerald-400 font-bold">
-                                  {activePct3 ? `${activePct3}% Exact 3+` : "Zero Pair Collision"}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-emerald-400 font-bold">
+                                    {activePct3 ? `${activePct3}% Exact 3+` : "Zero Pair Collision"}
+                                  </span>
+                                  {(pick.game_key === "cashpot" || pick.game_key === "lotto-plus" || pick.game_key === "win-for-life") && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setExportSlipPayload({
+                                          gameKey: pick.game_key as "cashpot" | "lotto-plus" | "win-for-life",
+                                          gameName: getGameLabel(pick.game_key),
+                                          targetDrawNumber: pick.target_draw_number,
+                                          slips: activeWheelSlips,
+                                          bonusBalls: pick.line_powerballs,
+                                          unitCostTT: unitCost
+                                        })
+                                      }
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 font-bold normal-case cursor-pointer"
+                                    >
+                                      <Printer className="w-3 h-3" />
+                                      <span>Print / Export</span>
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                               <div className="space-y-1 max-h-56 overflow-y-auto pr-1">
                                 {activeWheelSlips.map((slip, slipIdx) => {
@@ -2113,6 +2144,20 @@ export default function EngineBenchmarkTracker() {
           </div>
         </div>
       </div>
+
+      {exportSlipPayload && (
+        <BetSlipExportModal
+          isOpen={true}
+          onClose={() => setExportSlipPayload(null)}
+          gameKey={exportSlipPayload.gameKey}
+          gameName={exportSlipPayload.gameName}
+          targetDrawNumber={exportSlipPayload.targetDrawNumber}
+          slips={exportSlipPayload.slips}
+          bonusBalls={exportSlipPayload.bonusBalls}
+          unitCostTT={exportSlipPayload.unitCostTT}
+          multiplierIncluded={exportSlipPayload.gameKey === "cashpot"}
+        />
+      )}
     </div>
   );
 }

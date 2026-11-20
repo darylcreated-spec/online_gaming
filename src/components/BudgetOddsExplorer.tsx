@@ -11,8 +11,10 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
-  Info
+  Info,
+  Printer
 } from "lucide-react";
+import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { NLCB_GAME_GUIDE, GameGuideInfo } from "@/lib/game_guide";
 import {
   generateOptimalSteinerPortfolio,
@@ -37,6 +39,7 @@ export default function BudgetOddsExplorer({
     return init;
   });
   const [showSlipsDrawer, setShowSlipsDrawer] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [copiedSlips, setCopiedSlips] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -632,23 +635,36 @@ export default function BudgetOddsExplorer({
                   {steinerPortfolio.totalBalls} Balls Covered · Anti-Crowding {steinerPortfolio.antiCrowdingScore}%
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={handleCopySlips}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-xs font-mono font-semibold text-white transition cursor-pointer self-start sm:self-auto"
-              >
-                {copiedSlips ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-300">Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Copy All {steinerPortfolio.slips.length} Slips</span>
-                  </>
-                )}
-              </button>
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("selection");
+                    setShowExportModal(true);
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-mono font-bold transition cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print / Export</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopySlips}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-xs font-mono font-semibold text-white transition cursor-pointer"
+                >
+                  {copiedSlips ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-emerald-300">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Copy All {steinerPortfolio.slips.length}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-72 overflow-y-auto pr-1">
@@ -682,6 +698,20 @@ export default function BudgetOddsExplorer({
           </div>
         )}
       </div>
+
+      {steinerPortfolio && (
+        <BetSlipExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          gameKey={game.key as "cashpot" | "lotto-plus" | "win-for-life"}
+          gameName={game.name}
+          targetDrawNumber={targetDrawNumbers[game.key]}
+          slips={steinerPortfolio.slips}
+          bonusBalls={steinerPortfolio.bonusBalls}
+          unitCostTT={game.unitCostTT}
+          multiplierIncluded={game.key === "cashpot"}
+        />
+      )}
     </section>
   );
 }
