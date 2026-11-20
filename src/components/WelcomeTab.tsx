@@ -1,59 +1,48 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { 
-  Info, 
-  Heart, 
-  ArrowRight, 
-  Sigma,
-  Network,
-  Scale,
-  Hourglass,
-  Trophy, 
-  Clock, 
-  Calendar, 
-  Activity, 
-  Calculator,
-  TrendingUp,
-  BarChart3,
-  ChevronRight, 
-  Zap, 
-  Mail, 
-  Copy, 
-  Check, 
-  Layers, 
-  RefreshCw,
-  Compass,
-  DollarSign,
-  Flame,
-  Cpu,
-  Database,
+import {
+  Info,
+  Heart,
+  ArrowRight,
+  Clock,
   Camera,
+  Database,
+  Layers,
+  Mail,
+  Copy,
+  Check,
   ShieldCheck
 } from "lucide-react";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
-import QuickPickEngine, { QuickPickGame } from "@/components/QuickPickEngine";
+import QuickPickEngine from "@/components/QuickPickEngine";
 import WinConceptLogoEmblem from "@/components/WinConceptLogoEmblem";
+import BudgetOddsExplorer from "@/components/BudgetOddsExplorer";
 import { calculateNextDrawCountdown, DrawCountdown } from "@/lib/draw_schedule";
 import { triggerHaptic } from "@/lib/haptics";
-import { NLCB_GAME_GUIDE, GAME_GUIDE_MAP } from "@/lib/game_guide";
 
-export type GameKey = "welcome" | "lotto-plus" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "fast-cash" | "syndicate" | "scanner" | "settings";
+export type GameKey =
+  | "welcome"
+  | "lotto-plus"
+  | "play-whe"
+  | "win-for-life"
+  | "cashpot"
+  | "pick4"
+  | "fast-cash"
+  | "syndicate"
+  | "scanner"
+  | "settings";
 
 interface WelcomeTabProps {
   onSelectGame?: (game: GameKey) => void;
 }
 
 export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
-  // Hydration-safe clock for live countdowns
   const [mounted, setMounted] = useState(false);
   const [clock, setClock] = useState<Date>(() => new Date(0));
-  const [showCostGuide, setShowCostGuide] = useState(true);
-  const [showMathArch, setShowMathArch] = useState(false);
-
   const [emailCopied, setEmailCopied] = useState(false);
 
-  // Latest winning draws
+  // Latest official draws across all 6 NLCB games
   const [latestLotto, setLatestLotto] = useState<any>(null);
   const [latestPlayWhe, setLatestPlayWhe] = useState<any>(null);
   const [latestWinForLife, setLatestWinForLife] = useState<any>(null);
@@ -62,20 +51,10 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
   const [latestFastCash, setLatestFastCash] = useState<any>(null);
   const [loadingResults, setLoadingResults] = useState(true);
 
-  // Mathematical Suggestions
-  const [playWhePrediction, setPlayWhePrediction] = useState<any>(null);
-  const [lottoPrediction, setLottoPrediction] = useState<any>(null);
-  const [wflPrediction, setWflPrediction] = useState<any>(null);
-  const [cashPotPrediction, setCashPotPrediction] = useState<any>(null);
-  const [pick4Prediction, setPick4Prediction] = useState<any>(null);
-
-  // Live countdown timer hook - updates state every 1000ms
   useEffect(() => {
     setMounted(true);
     setClock(new Date());
-    const timer = setInterval(() => {
-      setClock(new Date());
-    }, 1000);
+    const timer = setInterval(() => setClock(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -89,564 +68,336 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
     };
   }, [clock]);
 
-  // Fetch latest draws immediately, and load Champion predictions independently so cards never block on heavy backtests
-  const fetchAllData = async () => {
+  const fetchLatestDraws = () => {
     setLoadingResults(true);
     const now = Date.now();
-
-    const drawTasks = [
+    const tasks = [
       fetch(`/api/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" })
-        .then(r => r.json())
-        .then(d => { if (d?.draws?.[0]) setLatestLotto(d.draws[0]); })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.draws?.[0]) setLatestLotto(d.draws[0]);
+        })
         .catch(() => {}),
       fetch(`/api/playwhe/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" })
-        .then(r => r.json())
-        .then(d => { if (d?.draws?.[0]) setLatestPlayWhe(d.draws[0]); })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.draws?.[0]) setLatestPlayWhe(d.draws[0]);
+        })
         .catch(() => {}),
       fetch(`/api/winforlife/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" })
-        .then(r => r.json())
-        .then(d => { if (d?.draws?.[0]) setLatestWinForLife(d.draws[0]); })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.draws?.[0]) setLatestWinForLife(d.draws[0]);
+        })
         .catch(() => {}),
       fetch(`/api/cashpot/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" })
-        .then(r => r.json())
-        .then(d => { if (d?.draws?.[0]) setLatestCashPot(d.draws[0]); })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.draws?.[0]) setLatestCashPot(d.draws[0]);
+        })
         .catch(() => {}),
       fetch(`/api/pick4/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" })
-        .then(r => r.json())
-        .then(d => { if (d?.draws?.[0]) setLatestPick4(d.draws[0]); })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.draws?.[0]) setLatestPick4(d.draws[0]);
+        })
         .catch(() => {}),
       fetch(`/api/fastcash/engine?limit=1&_t=${now}`, { cache: "no-store" })
-        .then(r => r.json())
-        .then(d => { if (d?.latestDraw) setLatestFastCash(d.latestDraw); })
-        .catch(() => {}),
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.latestDraw) setLatestFastCash(d.latestDraw);
+        })
+        .catch(() => {})
     ];
-
-    Promise.allSettled(drawTasks).finally(() => setLoadingResults(false));
-
-    try {
-      const trackerRes = await fetch(`/api/engine-tracker?game=all&depth=100&_t=${now}`, { cache: "no-store" }).then(r => r.json());
-      const championMap = new Map<string, any>();
-      if (Array.isArray(trackerRes?.championPicks)) {
-        for (const c of trackerRes.championPicks) {
-          championMap.set(c.game_key, c);
-        }
-      }
-
-      // Populate predictions directly from Engines Tab #1 Verified Champion Picks
-      const pwChamp = championMap.get("play-whe");
-      if (pwChamp?.predicted_numbers?.length) {
-        const primaryMark = pwChamp.predicted_numbers[0];
-        setPlayWhePrediction({
-          top1SinglePick: {
-            number: primaryMark,
-            mark: CHINAPOO_CHART[primaryMark]?.mark || "Champion Mark",
-            probability: pwChamp.verified_win_rate_pct ?? pwChamp.win_rate_pct ?? 20
-          },
-          top3Trio: pwChamp.predicted_numbers.slice(0, 3).map((n: number) => ({ number: n }))
-        });
-      }
-
-      const lottoChamp = championMap.get("lotto-plus");
-      if (lottoChamp?.predicted_numbers?.length === 5) {
-        const winPct = lottoChamp.verified_win_rate_pct ?? lottoChamp.win_rate_pct ?? 27.8;
-        setLottoPrediction({
-          optimalTicket: {
-            numbers: lottoChamp.predicted_numbers,
-            bonusBall: lottoChamp.predicted_powerball || 1,
-            sum: lottoChamp.predicted_numbers.reduce((a: number, b: number) => a + b, 0),
-            confidenceGrade: `${winPct}% Hit`
-          }
-        });
-      }
-
-      const wflChamp = championMap.get("win-for-life");
-      if (wflChamp?.predicted_numbers?.length === 6) {
-        const winPct = wflChamp.verified_win_rate_pct ?? wflChamp.win_rate_pct ?? 62.2;
-        setWflPrediction({
-          optimalTicket: {
-            numbers: wflChamp.predicted_numbers,
-            bonusBall: wflChamp.predicted_powerball || wflChamp.bonus_ball_rotation?.[0] || 1,
-            sum: wflChamp.predicted_numbers.reduce((a: number, b: number) => a + b, 0),
-            confidenceGrade: `${winPct}% Hit`
-          }
-        });
-      }
-
-      const cpChamp = championMap.get("cashpot");
-      if (cpChamp?.predicted_numbers?.length === 5) {
-        const winPct = cpChamp.verified_win_rate_pct ?? cpChamp.win_rate_pct ?? 72.0;
-        setCashPotPrediction({
-          optimalTicket: {
-            numbers: cpChamp.predicted_numbers,
-            bonusBall: cpChamp.predicted_powerball || cpChamp.bonus_ball_rotation?.[0] || 1,
-            sum: cpChamp.predicted_numbers.reduce((a: number, b: number) => a + b, 0),
-            confidenceGrade: `${winPct}% Hit`
-          }
-        });
-      }
-
-      const p4Champ = championMap.get("pick4");
-      if (p4Champ?.predicted_numbers?.length === 4) {
-        const winPct = p4Champ.verified_win_rate_pct ?? p4Champ.win_rate_pct ?? 31.4;
-        const sortedBox = [...p4Champ.predicted_numbers].sort((a, b) => a - b).join("");
-        setPick4Prediction({
-          optimalStraightTicket: {
-            digits: p4Champ.predicted_numbers,
-            confidenceScore: winPct
-          },
-          optimalBoxTickets: {
-            twentyFourWay: {
-              digitsString: sortedBox
-            }
-          }
-        });
-      }
-    } catch (e) {
-      console.error("Error fetching champion predictions:", e);
-    }
+    Promise.allSettled(tasks).finally(() => setLoadingResults(false));
   };
 
   useEffect(() => {
-    fetchAllData();
-
-    const handleSyncEvent = () => {
-      fetchAllData();
-    };
-    window.addEventListener("win_concept_sync_completed", handleSyncEvent);
-    return () => window.removeEventListener("win_concept_sync_completed", handleSyncEvent);
+    fetchLatestDraws();
+    const handleSync = () => fetchLatestDraws();
+    window.addEventListener("win_concept_sync_completed", handleSync);
+    return () => window.removeEventListener("win_concept_sync_completed", handleSync);
   }, []);
 
+  const targetDrawNumbers = useMemo(
+    () => ({
+      cashpot: latestCashPot ? Number(latestCashPot.draw_number) + 1 : 7972,
+      "lotto-plus": latestLotto ? Number(latestLotto.draw_number) + 1 : 2586,
+      "win-for-life": latestWinForLife ? Number(latestWinForLife.draw_number) + 1 : 483
+    }),
+    [latestCashPot, latestLotto, latestWinForLife]
+  );
 
-  // Helper for countdown display badge
-  const renderCountdownBadge = (cd: DrawCountdown, colorTheme: "sky" | "amber" | "emerald" | "purple" | "yellow" | "cyan") => {
-    const themeStyles = {
-      sky: "border-sky-500/30 bg-sky-950/40 text-sky-300",
-      amber: "border-amber-500/30 bg-amber-950/40 text-amber-300",
-      emerald: "border-emerald-500/30 bg-emerald-950/40 text-emerald-300",
-      purple: "border-purple-500/30 bg-purple-950/40 text-purple-300",
-      yellow: "border-yellow-500/30 bg-yellow-950/40 text-yellow-300",
-      cyan: "border-cyan-500/30 bg-cyan-950/40 text-cyan-300"
-    };
-
-    return (
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl border ${themeStyles[colorTheme]} backdrop-blur-md`}>
-        <div className="flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 opacity-80 shrink-0" />
-          <span className="text-[10px] font-mono font-medium tracking-wide text-gray-300">
-            Next: <strong className="text-white font-bold">{mounted ? cd.targetLabel : "Loading"}</strong>{" "}
-            {mounted ? `(${cd.targetDateStr})` : ""}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 font-mono">
-          <div className="flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-md border border-white/10 font-mono">
-            <span className={`w-1.5 h-1.5 rounded-full ${mounted && cd.isUrgent ? "bg-red-400 animate-ping" : "bg-emerald-400 animate-pulse"}`} />
-            <span className="text-xs font-black tracking-wider text-white tabular-nums">
-              {mounted ? `${cd.hours}:${cd.minutes}:${cd.seconds}` : "--:--:--"}
-            </span>
-          </div>
-        </div>
+  const renderCountdownRow = (cd: DrawCountdown) => (
+    <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#070b14] border border-white/[0.06] font-mono text-[11px]">
+      <div className="flex items-center gap-1.5 text-slate-400 min-w-0 truncate">
+        <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+        <span className="truncate">
+          Next: <strong className="text-slate-200">{mounted ? cd.targetLabel : "—"}</strong>
+        </span>
       </div>
-    );
+      <span className="tabular-nums font-bold text-slate-100 shrink-0">
+        {mounted ? `${cd.hours}:${cd.minutes}:${cd.seconds}` : "--:--:--"}
+      </span>
+    </div>
+  );
+
+  const navigate = (key: GameKey) => {
+    triggerHaptic("selection");
+    if (onSelectGame) onSelectGame(key);
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 font-mono pb-8">
-      
-      {/* 1. First-Time User Hero Banner */}
-      <div className="glass-panel p-5 sm:p-7 rounded-2xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-950/90 to-sky-950/25 relative overflow-hidden shadow-2xl space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
-          <WinConceptLogoEmblem size="lg" className="shrink-0" />
-          <div className="space-y-2 flex-1">
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-300 text-[10px] font-bold uppercase tracking-wider">
-              Free NLCB Analytics &amp; Ticket Guide
+    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-8">
+      {/* 1. Minimalist Editorial Orientation Strip */}
+      <header className="rounded-2xl bg-[#0a0f1a] border border-white/[0.08] px-4 sm:px-6 py-4 sm:py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <WinConceptLogoEmblem size="md" className="shrink-0" />
+          <div className="space-y-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-base sm:text-xl font-bold tracking-tight text-white font-sans">
+                The Win Concept
+              </h1>
+              <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-900 border border-white/10 text-slate-300">
+                Free NLCB Analytics
+              </span>
             </div>
-            <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-white">
-              Smarter NLCB Number Picks &amp; Cost Planner
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-300 font-sans leading-relaxed max-w-3xl">
-              Compare Trinidad &amp; Tobago lottery costs, odds, and live draw results in one place. Generate data-backed number picks here for free, then play your chosen numbers at any official NLCB Lotto booth.
+            <p className="text-xs sm:text-sm text-slate-400 font-sans leading-snug">
+              Understand exact odds, compare ticket budgets, and generate zero-overlap covering slips — then play in person at any official NLCB booth.
             </p>
           </div>
         </div>
 
-        {/* 3-Step How It Works Strip */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-black/40 border border-white/5">
-            <span className="w-6 h-6 rounded-lg bg-sky-500/20 border border-sky-400/40 text-sky-300 font-black text-xs flex items-center justify-center shrink-0">1</span>
-            <div className="font-sans">
-              <div className="text-xs font-bold text-white">Compare Cost &amp; Odds</div>
-              <div className="text-[11px] text-gray-400">Pick a game from $1 to $10 TT per play based on your budget.</div>
-            </div>
+        <div className="grid grid-cols-3 gap-2 shrink-0 text-[10px] sm:text-[11px] font-mono">
+          <div className="px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] text-slate-300">
+            <span className="text-sky-400 font-bold">01</span> Pick Budget
           </div>
-          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-black/40 border border-white/5">
-            <span className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-black text-xs flex items-center justify-center shrink-0">2</span>
-            <div className="font-sans">
-              <div className="text-xs font-bold text-white">Generate Your Picks</div>
-              <div className="text-[11px] text-gray-400">Use Quick Pick or a budget covering wheel inside any game tab.</div>
-            </div>
+          <div className="px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] text-slate-300">
+            <span className="text-emerald-400 font-bold">02</span> Check Odds
           </div>
-          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-black/40 border border-white/5">
-            <span className="w-6 h-6 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300 font-black text-xs flex items-center justify-center shrink-0">3</span>
-            <div className="font-sans">
-              <div className="text-xs font-bold text-white">Play at NLCB &amp; Scan</div>
-              <div className="text-[11px] text-gray-400">Buy your physical slip at an NLCB agent, then scan it here to check wins.</div>
-            </div>
+          <div className="px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] text-slate-300">
+            <span className="text-amber-400 font-bold">03</span> Play at NLCB
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* 1B. Game Cost, Odds & How-to-Play Comparison */}
-      <div className="glass-panel rounded-2xl border border-white/10 bg-slate-950/70 overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setShowCostGuide((v) => !v)}
-          className="w-full px-5 py-3.5 flex items-center justify-between gap-3 bg-slate-900/60 hover:bg-slate-900/90 transition cursor-pointer text-left"
-        >
-          <div className="flex items-center gap-2.5">
-            <DollarSign className="w-4 h-4 text-emerald-400 shrink-0" />
-            <div>
-              <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
-                What Does Each Game Cost &amp; How Do I Play?
-              </h2>
-              <p className="text-[11px] text-gray-400 font-sans">
-                Side-by-side ticket prices, top prizes, odds &amp; draw times across all 6 NLCB games
-              </p>
-            </div>
+      {/* 2. Interactive Global Budget Curve & Exact Odds Planner (Centerpiece) */}
+      <BudgetOddsExplorer
+        onSelectGame={(g) => navigate(g)}
+        targetDrawNumbers={targetDrawNumbers}
+      />
+
+      {/* 3. Live Official NLCB Draw Results (All 6 Games, Clean Institutional Grid) */}
+      <section aria-label="Live Official NLCB Draw Results" className="space-y-3.5">
+        <div className="flex items-end justify-between px-0.5">
+          <div>
+            <h2 className="text-sm sm:text-base font-bold text-white font-sans tracking-tight">
+              Latest Official NLCB Results
+            </h2>
+            <p className="text-xs text-slate-400 font-sans">
+              Verified results from the live database · Tap any game for full history &amp; covering tools
+            </p>
           </div>
-          <span className="text-[11px] font-bold text-sky-300 shrink-0">
-            {showCostGuide ? "Hide Guide" : "Show Guide"}
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            6 Games Active
           </span>
-        </button>
-
-        {showCostGuide && (
-          <div className="p-4 sm:p-5 border-t border-white/5">
-            {/* Mobile Compact Cost Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {NLCB_GAME_GUIDE.map((g) => (
-                <button
-                  key={g.key}
-                  type="button"
-                  onClick={() => onSelectGame && onSelectGame(g.key)}
-                  className="text-left p-3.5 rounded-xl bg-black/45 hover:bg-slate-900/80 border border-white/10 hover:border-sky-400/40 transition flex flex-col justify-between gap-2 cursor-pointer group"
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <img src={g.iconSrc} alt={g.name} className="w-7 h-7 rounded-lg object-contain border border-white/10" />
-                        <span className="text-xs font-black text-white uppercase">{g.name}</span>
-                      </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
-                        {g.costPerPlay}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-300 font-sans leading-snug">{g.costDetail}</p>
-                  </div>
-                  <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-gray-400 font-sans">
-                    <span>Top: <strong className="text-gray-200">{g.topPrize}</strong></span>
-                    <span className="text-sky-400 font-bold group-hover:translate-x-0.5 transition-transform">Open →</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 2. THE 6-GAME LIVE COMMAND CENTER GRID */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-            Live Draw Results &amp; Top Picks
-          </h2>
-          <span className="text-[10px] text-gray-400 font-sans">Tap any game to open full tools</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          
-          {/* CARD 1: PLAY WHE */}
-          <div className="p-5 rounded-2xl bg-gradient-to-b from-amber-950/25 via-slate-950/90 to-slate-950 border border-amber-500/30 hover:border-amber-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(251,191,36,0.18)] flex flex-col justify-between">
-            <div className="space-y-3.5">
-              {/* Card Header */}
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3.5">
-                  <img 
-                    src="/images/play_whe_icon.png" 
-                    alt="Play Whe" 
-                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(251,191,36,0.35)] border border-amber-500/40 shrink-0" 
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* CARD 1: CASH POT */}
+          <article className="rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-white/20 transition-colors p-4 sm:p-5 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/images/cash_pot_icon.png"
+                    alt="Cash Pot"
+                    className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
-                  <div className="space-y-0.5">
-                    <h3 className="text-lg sm:text-xl font-black text-amber-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(251,191,36,0.45)]">
-                      Play Whe
-                    </h3>
-                    <span className="text-xs text-gray-300 font-semibold block">
-                      {latestPlayWhe ? `${latestPlayWhe.draw_time_slot || "Draw"} #${latestPlayWhe.draw_number}` : "Loading Draw..."}
+                  <div>
+                    <h3 className="text-sm font-bold text-white font-sans">Cash Pot</h3>
+                    <span className="text-[11px] font-mono text-slate-400">
+                      {latestCashPot ? `Draw #${latestCashPot.draw_number} · ${latestCashPot.draw_date}` : "Syncing..."}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-300 font-bold border border-amber-500/30">
-                  {latestPlayWhe?.draw_date || "Official"}
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
+                  $5 / slip
                 </span>
               </div>
 
-              {/* Countdown Timer */}
-              {renderCountdownBadge(countdowns.playWhe, "amber")}
+              {renderCountdownRow(countdowns.cashPot)}
 
-              {/* Section A: Last Winning Result */}
-              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
-                  Last Winning Mark & Ball:
-                </span>
-                {loadingResults && !latestPlayWhe ? (
-                  <div className="flex items-center gap-3 animate-pulse py-1">
-                    <div className="w-10 h-10 rounded-full bg-slate-800" />
-                    <div className="space-y-1">
-                      <div className="w-16 h-3 bg-slate-800 rounded" />
-                      <div className="w-24 h-2 bg-slate-800 rounded" />
-                    </div>
-                  </div>
-                ) : latestPlayWhe ? (
-                  <div className="flex items-center gap-3 py-1">
-                    <div className="w-11 h-11 rounded-full bg-amber-400 text-slate-950 font-black text-base flex items-center justify-center shadow-[0_0_15px_rgba(251,191,36,0.5)] shrink-0 font-mono">
-                      {latestPlayWhe.winning_number}
-                    </div>
-                    <div className="space-y-0.5">
-                      <div className="text-xs font-black text-white uppercase tracking-wider">
-                        {CHINAPOO_CHART[latestPlayWhe.winning_number]?.mark || "Unknown"}
-                      </div>
-                      <div className="text-[10px] text-gray-400 truncate max-w-[170px]">
-                        {CHINAPOO_CHART[latestPlayWhe.winning_number]?.keywords?.slice(0, 3).join(", ") || "Tradition Mark"}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <span className="text-xs text-gray-500 italic">No draw data found</span>
-                )}
-              </div>
-
-              {/* Section B: App Suggested Numbers */}
-              <div className="space-y-1.5 bg-amber-950/20 p-3 rounded-xl border border-amber-500/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
-                    <Calculator className="w-3 h-3 text-amber-400" />
-                    Mathematical Next Pick:
-                  </span>
-                  <span className="text-[9px] text-amber-400/80 font-mono">
-                    {playWhePrediction ? `Markov/MAP: ${(Number(playWhePrediction.top1SinglePick?.probability) || 0).toFixed(1)}%` : "Calculating..."}
-                  </span>
-                </div>
-                
-                {playWhePrediction?.top1SinglePick ? (
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full bg-amber-400/20 border-2 border-amber-400 text-amber-300 font-black text-sm flex items-center justify-center font-mono">
-                        {playWhePrediction.top1SinglePick.number}
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-bold text-white uppercase">
-                          {playWhePrediction.top1SinglePick.mark}
-                        </span>
-                        <span className="text-[9px] text-gray-400 block">
-                          Optimal Single Pick
-                        </span>
-                      </div>
-                    </div>
-                    {playWhePrediction.top3Trio && (
-                      <div className="text-right">
-                        <span className="text-[9px] text-gray-400 block">Top Trio</span>
-                        <span className="text-xs font-bold text-amber-300 font-mono">
-                          {playWhePrediction.top3Trio.map((t: any) => t.number).join(", ")}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 py-1 text-xs text-gray-400 animate-pulse">
-                    <span>Compiling Markov transition chains...</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* CTA Button */}
-            <button
-              onClick={() => onSelectGame && onSelectGame("play-whe")}
-              className="w-full py-2.5 bg-amber-500/15 hover:bg-amber-500 border border-amber-500/40 text-amber-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-amber-500 group-hover:text-slate-950 group-hover:border-transparent"
-            >
-              <span>Launch Play Whe Analytics</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-            </button>
-          </div>
-
-          {/* CARD 2: LOTTO PLUS */}
-          <div className="p-5 rounded-2xl bg-gradient-to-b from-sky-950/25 via-slate-950/90 to-slate-950 border border-sky-500/30 hover:border-sky-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(56,189,248,0.18)] flex flex-col justify-between">
-            <div className="space-y-3.5">
-              {/* Card Header */}
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3.5">
-                  <img 
-                    src="/images/lotto_plus_icon.png" 
-                    alt="Lotto Plus" 
-                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(56,189,248,0.35)] border border-sky-500/40 shrink-0" 
-                  />
-                  <div className="space-y-0.5">
-                    <h3 className="text-lg sm:text-xl font-black text-sky-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]">
-                      Lotto Plus
-                    </h3>
-                    <span className="text-xs text-gray-300 font-semibold block">
-                      {latestLotto ? `Draw #${latestLotto.draw_number}` : "Loading Draw..."}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[10px] px-2.5 py-1 rounded-md bg-sky-500/10 text-sky-300 font-bold border border-sky-500/30">
-                  {latestLotto?.draw_date || "Official"}
-                </span>
-              </div>
-
-              {/* Countdown Timer */}
-              {renderCountdownBadge(countdowns.lotto, "sky")}
-
-              {/* Section A: Last Winning Result */}
-              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
-                <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
-                    Last Winning Combination:
-                  </span>
-                  {latestLotto?.multiplier && (
-                    <span className="text-[9px] text-sky-300 font-bold">
-                      Mult: {String(latestLotto.multiplier).replace(/x$/i, "")}X
+              <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                  <span>Last Winning 5 Balls (1–20)</span>
+                  {latestCashPot?.multiplier && (
+                    <span className="text-amber-300 font-bold">
+                      {String(latestCashPot.multiplier).replace(/x$/i, "")}X Mult
                     </span>
                   )}
                 </div>
-
-                {loadingResults && !latestLotto ? (
-                  <div className="flex gap-1.5 animate-pulse py-1">
+                {loadingResults && !latestCashPot ? (
+                  <div className="flex gap-1.5 animate-pulse py-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
                     ))}
-                    <div className="w-7 h-7 rounded-full bg-purple-900/40 ml-1" />
+                  </div>
+                ) : latestCashPot ? (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[latestCashPot.num1, latestCashPot.num2, latestCashPot.num3, latestCashPot.num4, latestCashPot.num5].map(
+                      (num: number, i: number) => (
+                        <span
+                          key={i}
+                          className="w-7 h-7 rounded-full bg-amber-400/15 border border-amber-400/45 text-amber-200 font-mono font-bold text-xs flex items-center justify-center tabular-nums"
+                        >
+                          {num}
+                        </span>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-xs text-slate-500">No draw data</span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
+                <span>10-Slip Exact Ceiling</span>
+                <span className="text-emerald-300 font-bold">63.34% Match 3+ · 20/20</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("cashpot")}
+              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
+            >
+              <span>Open Cash Pot Analytics</span>
+              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+            </button>
+          </article>
+
+          {/* CARD 2: LOTTO PLUS */}
+          <article className="rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-white/20 transition-colors p-4 sm:p-5 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/images/lotto_plus_icon.png"
+                    alt="Lotto Plus"
+                    className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
+                  />
+                  <div>
+                    <h3 className="text-sm font-bold text-white font-sans">Lotto Plus</h3>
+                    <span className="text-[11px] font-mono text-slate-400">
+                      {latestLotto ? `Draw #${latestLotto.draw_number} · ${latestLotto.draw_date}` : "Syncing..."}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
+                  $5 / play
+                </span>
+              </div>
+
+              {renderCountdownRow(countdowns.lotto)}
+
+              <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                  <span>Last Winning (5/35 + PB)</span>
+                  {latestLotto?.multiplier && (
+                    <span className="text-sky-300 font-bold">
+                      {String(latestLotto.multiplier).replace(/x$/i, "")}X Mult
+                    </span>
+                  )}
+                </div>
+                {loadingResults && !latestLotto ? (
+                  <div className="flex gap-1.5 animate-pulse py-0.5">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
+                    ))}
                   </div>
                 ) : latestLotto ? (
-                  <div className="flex flex-wrap items-center gap-1.5 py-1">
-                    {[latestLotto.num1, latestLotto.num2, latestLotto.num3, latestLotto.num4, latestLotto.num5].map((num: number, i: number) => (
-                      <div
-                        key={i}
-                        className="w-7 h-7 rounded-full bg-sky-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(56,189,248,0.3)] font-mono"
-                      >
-                        {num}
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[latestLotto.num1, latestLotto.num2, latestLotto.num3, latestLotto.num4, latestLotto.num5].map(
+                      (num: number, i: number) => (
+                        <span
+                          key={i}
+                          className="w-7 h-7 rounded-full bg-sky-400/15 border border-sky-400/45 text-sky-200 font-mono font-bold text-xs flex items-center justify-center tabular-nums"
+                        >
+                          {num}
+                        </span>
+                      )
+                    )}
                     {latestLotto.powerball && (
                       <>
-                        <span className="text-gray-600 font-bold">|</span>
-                        <div
-                          className="w-7 h-7 rounded-full bg-purple-600 border border-purple-400 text-white font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(168,85,247,0.4)] font-mono"
+                        <span className="text-slate-600 font-mono text-xs">+</span>
+                        <span
                           title="Powerball"
+                          className="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-200 font-mono font-bold text-xs flex items-center justify-center tabular-nums"
                         >
                           {latestLotto.powerball}
-                        </div>
+                        </span>
                       </>
                     )}
                   </div>
                 ) : (
-                  <span className="text-xs text-gray-500 italic">No draw data found</span>
+                  <span className="text-xs text-slate-500">No draw data</span>
                 )}
               </div>
 
-              {/* Section B: App Suggested Numbers */}
-              <div className="space-y-1.5 bg-sky-950/20 p-3 rounded-xl border border-sky-500/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-sky-300 uppercase tracking-wider flex items-center gap-1">
-                    <Calculator className="w-3 h-3 text-sky-400" />
-                    Champion Line #1 (10-Slip Portfolio):
-                  </span>
-                  <span className="text-[9px] text-sky-400 font-bold px-1.5 py-0.2 rounded bg-sky-500/15 border border-sky-500/30">
-                    {(lottoPrediction?.optimalTicket || lottoPrediction?.topEnsembles?.[0])?.confidenceGrade || "Top Pick"}
-                  </span>
-                </div>
-
-                {(lottoPrediction?.optimalTicket || lottoPrediction?.topEnsembles?.[0]) ? (
-                  <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
-                    <div className="flex items-center gap-1">
-                      {(lottoPrediction.optimalTicket || lottoPrediction.topEnsembles[0]).numbers.map((num: number, idx: number) => (
-                        <div
-                          key={idx}
-                          className="w-6 h-6 rounded-md bg-sky-500/20 border border-sky-400 text-sky-300 font-black text-[11px] flex items-center justify-center font-mono"
-                        >
-                          {num}
-                        </div>
-                      ))}
-                      <span className="text-purple-400 font-bold text-xs mx-0.5">+</span>
-                      <div
-                        className="w-6 h-6 rounded-md bg-purple-600/40 border border-purple-400 text-purple-200 font-black text-[11px] flex items-center justify-center font-mono"
-                        title="Powerball"
-                      >
-                        {(lottoPrediction.optimalTicket || lottoPrediction.topEnsembles[0]).bonusBall}
-                      </div>
-                    </div>
-                    <span className="text-[9px] text-gray-400">
-                      Sum: {(lottoPrediction.optimalTicket || lottoPrediction.topEnsembles[0]).sum}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 py-1 text-xs text-gray-400 animate-pulse">
-                    <span>Optimizing combinatorial wheel...</span>
-                  </div>
-                )}
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
+                <span>10-Play Stratified (1–10 PB)</span>
+                <span className="text-emerald-300 font-bold">62.93% Any Prize</span>
               </div>
             </div>
 
-            {/* CTA Button */}
             <button
-              onClick={() => onSelectGame && onSelectGame("lotto-plus")}
-              className="w-full py-2.5 bg-sky-500/15 hover:bg-sky-500 border border-sky-500/40 text-sky-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-sky-500 group-hover:text-slate-950 group-hover:border-transparent"
+              type="button"
+              onClick={() => navigate("lotto-plus")}
+              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Explore Lotto Plus Wheels</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+              <span>Open Lotto Plus Wheels</span>
+              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
             </button>
-          </div>
+          </article>
 
           {/* CARD 3: WIN FOR LIFE */}
-          <div className="p-5 rounded-2xl bg-gradient-to-b from-emerald-950/25 via-slate-950/90 to-slate-950 border border-emerald-500/30 hover:border-emerald-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(52,211,153,0.18)] flex flex-col justify-between">
-            <div className="space-y-3.5">
-              {/* Card Header */}
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3.5">
-                  <img 
-                    src="/images/win_for_life_icon.png" 
-                    alt="Win For Life" 
-                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(52,211,153,0.35)] border border-emerald-500/40 shrink-0" 
+          <article className="rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-white/20 transition-colors p-4 sm:p-5 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/images/win_for_life_icon.png"
+                    alt="Win For Life"
+                    className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
-                  <div className="space-y-0.5">
-                    <h3 className="text-lg sm:text-xl font-black text-emerald-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(52,211,153,0.45)]">
-                      Win For Life
-                    </h3>
-                    <span className="text-xs text-gray-300 font-semibold block">
-                      {latestWinForLife ? `Draw #${latestWinForLife.draw_number}` : "Loading Draw..."}
+                  <div>
+                    <h3 className="text-sm font-bold text-white font-sans">Win For Life</h3>
+                    <span className="text-[11px] font-mono text-slate-400">
+                      {latestWinForLife ? `Draw #${latestWinForLife.draw_number} · ${latestWinForLife.draw_date}` : "Syncing..."}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/30">
-                  {latestWinForLife?.draw_date || "Official"}
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
+                  $10 / line
                 </span>
               </div>
 
-              {/* Countdown Timer */}
-              {renderCountdownBadge(countdowns.winForLife, "emerald")}
+              {renderCountdownRow(countdowns.winForLife)}
 
-              {/* Section A: Last Winning Result */}
-              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
-                  Last Winning 6 Balls + Cash Ball:
-                </span>
-
+              <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                  Last Winning (6/28 + Cash Ball)
+                </div>
                 {loadingResults && !latestWinForLife ? (
-                  <div className="flex gap-1 animate-pulse py-1">
+                  <div className="flex gap-1 animate-pulse py-0.5">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="w-6 h-6 rounded-full bg-slate-800" />
                     ))}
-                    <div className="w-6 h-6 rounded-full bg-emerald-900/40 ml-1" />
                   </div>
                 ) : latestWinForLife ? (
-                  <div className="flex flex-wrap items-center gap-1 py-1">
+                  <div className="flex items-center gap-1 flex-wrap">
                     {[
                       latestWinForLife.num1,
                       latestWinForLife.num2,
@@ -655,722 +406,375 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                       latestWinForLife.num5,
                       latestWinForLife.num6
                     ].map((num: number, i: number) => (
-                      <div
+                      <span
                         key={i}
-                        className="w-6 h-6 rounded-full bg-emerald-400 text-slate-950 font-black text-[10px] flex items-center justify-center shadow-[0_0_8px_rgba(52,211,153,0.3)] font-mono"
+                        className="w-6 h-6 rounded-full bg-emerald-400/15 border border-emerald-400/45 text-emerald-200 font-mono font-bold text-[11px] flex items-center justify-center tabular-nums"
                       >
                         {num}
-                      </div>
+                      </span>
                     ))}
                     {latestWinForLife.cash_ball && (
                       <>
-                        <span className="text-gray-600 font-bold text-xs mx-0.5">|</span>
-                        <div
-                          className="w-6 h-6 rounded-full bg-emerald-600 border border-emerald-400 text-white font-black text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.4)] font-mono"
+                        <span className="text-slate-600 font-mono text-xs">+</span>
+                        <span
                           title="Cash Ball"
+                          className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-200 font-mono font-bold text-[11px] flex items-center justify-center tabular-nums"
                         >
                           {latestWinForLife.cash_ball}
-                        </div>
+                        </span>
                       </>
                     )}
                   </div>
                 ) : (
-                  <span className="text-xs text-gray-500 italic">No draw data found</span>
+                  <span className="text-xs text-slate-500">No draw data</span>
                 )}
               </div>
 
-              {/* Section B: App Suggested Numbers */}
-              <div className="space-y-1.5 bg-emerald-950/20 p-3 rounded-xl border border-emerald-500/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1">
-                    <Calculator className="w-3 h-3 text-emerald-400" />
-                    Champion Line #1 (10-Slip Portfolio):
-                  </span>
-                  <span className="text-[9px] text-emerald-400 font-bold px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30">
-                    Grade {(wflPrediction?.optimalTicket || wflPrediction?.topEnsembles?.[0])?.confidenceGrade || "A+"}
-                  </span>
-                </div>
-
-                {(wflPrediction?.optimalTicket || wflPrediction?.topEnsembles?.[0]) ? (
-                  <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
-                    <div className="flex items-center gap-1">
-                      {(wflPrediction.optimalTicket || wflPrediction.topEnsembles[0]).numbers.map((num: number, idx: number) => (
-                        <div
-                          key={idx}
-                          className="w-6 h-6 rounded-md bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-black text-[10px] flex items-center justify-center font-mono"
-                        >
-                          {num}
-                        </div>
-                      ))}
-                      <span className="text-emerald-400 font-bold text-xs mx-0.5">+</span>
-                      <div
-                        className="w-6 h-6 rounded-md bg-emerald-600/40 border border-emerald-400 text-emerald-200 font-black text-[10px] flex items-center justify-center font-mono"
-                        title="Cash Ball"
-                      >
-                        {(wflPrediction.optimalTicket || wflPrediction.topEnsembles[0]).bonusBall}
-                      </div>
-                    </div>
-                    <span className="text-[9px] text-gray-400">
-                      Top Prize: $20K/Mo
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 py-1 text-xs text-gray-400 animate-pulse">
-                    <span>Computing renewal hazard models...</span>
-                  </div>
-                )}
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
+                <span>10-Line Exact Ceiling</span>
+                <span className="text-emerald-300 font-bold">72.13% Match 3+ · 28/28</span>
               </div>
             </div>
 
-            {/* CTA Button */}
             <button
-              onClick={() => onSelectGame && onSelectGame("win-for-life")}
-              className="w-full py-2.5 bg-emerald-500/15 hover:bg-emerald-500 border border-emerald-500/40 text-emerald-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-emerald-500 group-hover:text-slate-950 group-hover:border-transparent"
+              type="button"
+              onClick={() => navigate("win-for-life")}
+              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Explore Win For Life</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+              <span>Open Win For Life</span>
+              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
             </button>
-          </div>
+          </article>
 
-          {/* CARD 4: CASHPOT (5 OF 20) */}
-          <div className="p-5 rounded-2xl bg-gradient-to-b from-yellow-950/25 via-slate-950/90 to-slate-950 border border-yellow-500/30 hover:border-yellow-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(250,204,21,0.18)] flex flex-col justify-between">
-            <div className="space-y-3.5">
-              {/* Card Header */}
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3.5">
-                  <img 
-                    src="/images/cash_pot_icon.png" 
-                    alt="Cash Pot" 
-                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(250,204,21,0.35)] border border-yellow-500/40 shrink-0" 
+          {/* CARD 4: PLAY WHE */}
+          <article className="rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-white/20 transition-colors p-4 sm:p-5 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/images/play_whe_icon.png"
+                    alt="Play Whe"
+                    className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
-                  <div className="space-y-0.5">
-                    <h3 className="text-lg sm:text-xl font-black text-yellow-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(250,204,21,0.45)]">
-                      Cash Pot
-                    </h3>
-                    <span className="text-xs text-gray-300 font-semibold block">
-                      {latestCashPot ? `Draw #${latestCashPot.draw_number}` : "Loading Draw..."}
+                  <div>
+                    <h3 className="text-sm font-bold text-white font-sans">Play Whe</h3>
+                    <span className="text-[11px] font-mono text-slate-400">
+                      {latestPlayWhe
+                        ? `${latestPlayWhe.draw_time_slot || "Draw"} #${latestPlayWhe.draw_number}`
+                        : "Syncing..."}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] px-2.5 py-1 rounded-md bg-yellow-500/10 text-yellow-300 font-bold border border-yellow-500/30">
-                  {latestCashPot?.draw_date || "Official"}
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
+                  From $1
                 </span>
               </div>
 
-              {/* Countdown Timer */}
-              {renderCountdownBadge(countdowns.cashPot, "yellow")}
+              {renderCountdownRow(countdowns.playWhe)}
 
-              {/* Section A: Last Winning Result */}
-              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
-                <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
-                    Last Winning 5 Balls (1–20):
-                  </span>
-                  {latestCashPot?.multiplier && (
-                    <span className="text-[9px] text-yellow-300 font-bold">
-                      Mult: {String(latestCashPot.multiplier).replace(/x$/i, "")}X
-                    </span>
-                  )}
+              <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-1.5">
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                  Last Winning Mark (1–36)
                 </div>
-
-                {loadingResults && !latestCashPot ? (
-                  <div className="flex gap-1.5 animate-pulse py-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
-                    ))}
-                    <div className="w-7 h-7 rounded-full bg-yellow-900/40 ml-1" />
+                {loadingResults && !latestPlayWhe ? (
+                  <div className="flex items-center gap-2.5 animate-pulse py-0.5">
+                    <div className="w-8 h-8 rounded-full bg-slate-800" />
+                    <div className="w-24 h-3 bg-slate-800 rounded" />
                   </div>
-                ) : latestCashPot ? (
-                  <div className="flex flex-wrap items-center gap-1.5 py-1">
-                    {[latestCashPot.num1, latestCashPot.num2, latestCashPot.num3, latestCashPot.num4, latestCashPot.num5].map((num: number, i: number) => (
-                      <div
-                        key={i}
-                        className="w-7 h-7 rounded-full bg-yellow-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(250,204,21,0.35)] font-mono"
-                      >
-                        {num}
+                ) : latestPlayWhe ? (
+                  <div className="flex items-center gap-3">
+                    <span className="w-9 h-9 rounded-full bg-amber-400/15 border border-amber-400/50 text-amber-200 font-mono font-bold text-sm flex items-center justify-center shrink-0 tabular-nums">
+                      {latestPlayWhe.winning_number}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-white uppercase font-sans truncate">
+                        {CHINAPOO_CHART[latestPlayWhe.winning_number]?.mark || "Official Mark"}
                       </div>
-                    ))}
-                    {latestCashPot.multiplier && (
-                      <>
-                        <span className="text-gray-600 font-bold">|</span>
-                        <div
-                          className="w-7 h-7 rounded-full bg-amber-500 border border-amber-300 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(245,158,11,0.4)] font-mono"
-                          title="Multiplier"
-                        >
-                          {latestCashPot.multiplier}X
-                        </div>
-                      </>
-                    )}
+                      <div className="text-[11px] text-slate-400 font-sans truncate">
+                        {CHINAPOO_CHART[latestPlayWhe.winning_number]?.keywords?.slice(0, 3).join(", ") || ""}
+                      </div>
+                    </div>
                   </div>
                 ) : (
-                  <span className="text-xs text-gray-500 italic">No draw data found</span>
+                  <span className="text-xs text-slate-500">No draw data</span>
                 )}
               </div>
 
-              {/* Section B: App Suggested Numbers */}
-              <div className="space-y-1.5 bg-yellow-950/20 p-3 rounded-xl border border-yellow-500/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-yellow-300 uppercase tracking-wider flex items-center gap-1">
-                    <Calculator className="w-3 h-3 text-yellow-400" />
-                    Champion Line #1 (10-Slip Portfolio):
-                  </span>
-                  <span className="text-[9px] text-yellow-400 font-bold px-1.5 py-0.2 rounded bg-yellow-500/15 border border-yellow-500/30">
-                    {(cashPotPrediction?.optimalTicket || cashPotPrediction?.topEnsembles?.[0])?.confidenceGrade || "Top Pick"}
-                  </span>
-                </div>
-
-                {(cashPotPrediction?.optimalTicket || cashPotPrediction?.topEnsembles?.[0]) ? (
-                  <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
-                    <div className="flex items-center gap-1">
-                      {(cashPotPrediction.optimalTicket || cashPotPrediction.topEnsembles[0]).numbers.map((num: number, idx: number) => (
-                        <div
-                          key={idx}
-                          className="w-6 h-6 rounded-md bg-yellow-500/20 border border-yellow-400 text-yellow-300 font-black text-[11px] flex items-center justify-center font-mono"
-                        >
-                          {num}
-                        </div>
-                      ))}
-                      <span className="text-yellow-400 font-bold text-xs mx-0.5">+</span>
-                      <div
-                        className="w-6 h-6 rounded-md bg-amber-500/40 border border-amber-400 text-amber-200 font-black text-[11px] flex items-center justify-center font-mono"
-                        title="Target Multiplier"
-                      >
-                        {(cashPotPrediction.optimalTicket || cashPotPrediction.topEnsembles[0]).bonusBall}X
-                      </div>
-                    </div>
-                    <span className="text-[9px] text-gray-400">
-                      Odds: 1 in 15,504
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 py-1 text-xs text-gray-400 animate-pulse">
-                    <span>Evaluating companion affinities...</span>
-                  </div>
-                )}
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
+                <span>Exact Single-Mark Odds</span>
+                <span className="text-slate-200 font-bold">2.78% (1 in 36) · 26x</span>
               </div>
             </div>
 
-            {/* CTA Button */}
             <button
-              onClick={() => onSelectGame && onSelectGame("cashpot")}
-              className="w-full py-2.5 bg-yellow-500/15 hover:bg-yellow-500 border border-yellow-500/40 text-yellow-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-yellow-500 group-hover:text-slate-950 group-hover:border-transparent"
+              type="button"
+              onClick={() => navigate("play-whe")}
+              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Explore Cash Pot Analytics</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+              <span>Open Play Whe &amp; Chinapoo</span>
+              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
             </button>
-          </div>
+          </article>
 
           {/* CARD 5: PICK 4 */}
-          <div className="p-5 rounded-2xl bg-gradient-to-b from-purple-950/25 via-slate-950/90 to-slate-950 border border-purple-500/30 hover:border-purple-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(168,85,247,0.18)] flex flex-col justify-between">
-            <div className="space-y-3.5">
-              {/* Card Header */}
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3.5">
-                  <img 
-                    src="/images/pick_four_icon.png" 
-                    alt="Pick 4" 
-                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(168,85,247,0.35)] border border-purple-500/40 shrink-0" 
+          <article className="rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-white/20 transition-colors p-4 sm:p-5 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/images/pick_four_icon.png"
+                    alt="Pick 4"
+                    className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
-                  <div className="space-y-0.5">
-                    <h3 className="text-lg sm:text-xl font-black text-purple-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(168,85,247,0.45)]">
-                      Pick 4
-                    </h3>
-                    <span className="text-xs text-gray-300 font-semibold block">
-                      {latestPick4 ? `${latestPick4.draw_time_slot || "Draw"} #${latestPick4.draw_number}` : "Loading Draw..."}
+                  <div>
+                    <h3 className="text-sm font-bold text-white font-sans">Pick 4</h3>
+                    <span className="text-[11px] font-mono text-slate-400">
+                      {latestPick4 ? `${latestPick4.draw_time_slot || "Draw"} #${latestPick4.draw_number}` : "Syncing..."}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-300 font-bold border border-purple-500/30">
-                  {latestPick4?.draw_date || "Official"}
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
+                  From $2
                 </span>
               </div>
 
-              {/* Countdown Timer */}
-              {renderCountdownBadge(countdowns.pick4, "purple")}
+              {renderCountdownRow(countdowns.pick4)}
 
-              {/* Section A: Last Winning Result */}
-              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
-                  Last Winning 4 Digits:
-                </span>
-
+              <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                  Last Winning 4 Digits (0–9)
+                </div>
                 {loadingResults && !latestPick4 ? (
-                  <div className="flex gap-2 animate-pulse py-1">
+                  <div className="flex gap-1.5 animate-pulse py-0.5">
                     {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="w-8 h-8 rounded-lg bg-slate-800" />
+                      <div key={i} className="w-7 h-7 rounded-lg bg-slate-800" />
                     ))}
                   </div>
                 ) : latestPick4 ? (
-                  <div className="flex items-center gap-2 py-1">
-                    {[latestPick4.digit1, latestPick4.digit2, latestPick4.digit3, latestPick4.digit4].map((d: number, i: number) => (
-                      <div
-                        key={i}
-                        className="w-8 h-8 rounded-lg bg-purple-500/25 border border-purple-400 text-purple-200 font-black text-sm flex items-center justify-center shadow-[0_0_10px_rgba(168,85,247,0.35)] font-mono"
-                      >
-                        {d}
-                      </div>
-                    ))}
-                    <span className="text-[10px] text-gray-400 ml-2 font-mono">
-                      Sum: {Number(latestPick4.digit1) + Number(latestPick4.digit2) + Number(latestPick4.digit3) + Number(latestPick4.digit4)}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-xs text-gray-500 italic">No draw data found</span>
-                )}
-              </div>
-
-              {/* Section B: App Suggested Numbers */}
-              <div className="space-y-1.5 bg-purple-950/20 p-3 rounded-xl border border-purple-500/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1">
-                    <Calculator className="w-3 h-3 text-purple-400" />
-                    Optimal Straight & Box EV:
-                  </span>
-                  <span className="text-[9px] text-purple-400 font-bold px-1.5 py-0.2 rounded bg-purple-500/15 border border-purple-500/30">
-                    EV Score {pick4Prediction?.optimalStraightTicket?.confidenceScore || 92}%
-                  </span>
-                </div>
-
-                {pick4Prediction?.optimalStraightTicket ? (
-                  <div className="flex flex-wrap items-center justify-between gap-1 pt-1">
-                    <div className="flex items-center gap-1">
-                      {pick4Prediction.optimalStraightTicket.digits.map((digit: number, idx: number) => (
-                        <div
-                          key={idx}
-                          className="w-6 h-6 rounded-md bg-purple-500/20 border border-purple-400 text-purple-200 font-black text-[11px] flex items-center justify-center font-mono"
+                  <div className="flex items-center gap-2">
+                    {[latestPick4.digit1, latestPick4.digit2, latestPick4.digit3, latestPick4.digit4].map(
+                      (d: number, i: number) => (
+                        <span
+                          key={i}
+                          className="w-7 h-7 rounded-lg bg-purple-400/15 border border-purple-400/45 text-purple-200 font-mono font-bold text-sm flex items-center justify-center tabular-nums"
                         >
-                          {digit}
-                        </div>
-                      ))}
-                      <span className="text-[9px] text-purple-400 ml-1 font-bold">
-                        (Straight)
-                      </span>
-                    </div>
-                    {pick4Prediction.optimalBoxTickets?.twentyFourWay && (
-                      <div className="text-right">
-                        <span className="text-[9px] text-gray-400 block">Box 24-Way</span>
-                        <span className="text-[10px] font-bold text-purple-300 font-mono">
-                          {pick4Prediction.optimalBoxTickets.twentyFourWay.digitsString}
+                          {d}
                         </span>
-                      </div>
+                      )
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 py-1 text-xs text-gray-400 animate-pulse">
-                    <span>Computing positional Markov matrices...</span>
-                  </div>
+                  <span className="text-xs text-slate-500">No draw data</span>
                 )}
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
+                <span>Straight / 24-Way Box</span>
+                <span className="text-slate-200 font-bold">1 in 10k · 1 in 417</span>
               </div>
             </div>
 
-            {/* CTA Button */}
             <button
-              onClick={() => onSelectGame && onSelectGame("pick4")}
-              className="w-full py-2.5 bg-purple-500/15 hover:bg-purple-500 border border-purple-500/40 text-purple-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-purple-500 group-hover:text-white group-hover:border-transparent"
+              type="button"
+              onClick={() => navigate("pick4")}
+              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Explore Pick 4 Permutations</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+              <span>Open Pick 4 Analytics</span>
+              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
             </button>
-          </div>
+          </article>
 
-          {/* CARD 6: FAST CASH (RAPID 3-MIN DRAWS) */}
-          <div className="p-5 rounded-2xl bg-gradient-to-b from-cyan-950/25 via-slate-950/90 to-slate-950 border border-cyan-500/30 hover:border-cyan-400/60 transition-all duration-300 space-y-4 relative group shadow-xl hover:shadow-[0_4px_30px_rgba(6,182,212,0.18)] flex flex-col justify-between">
-            <div className="space-y-3.5">
-              {/* Card Header */}
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3.5">
+          {/* CARD 6: FAST CASH */}
+          <article className="rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-white/20 transition-colors p-4 sm:p-5 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-3">
                   <img
                     src="/images/fast_cash_icon.png"
                     alt="Fast Cash"
-                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(6,182,212,0.35)] border border-cyan-500/40 shrink-0"
+                    className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
-                  <div className="space-y-0.5">
-                    <h3 className="text-lg sm:text-xl font-black text-cyan-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(6,182,212,0.45)]">
-                      Fast Cash
-                    </h3>
-                    <span className="text-xs text-gray-300 font-semibold block">
+                  <div>
+                    <h3 className="text-sm font-bold text-white font-sans">Fast Cash</h3>
+                    <span className="text-[11px] font-mono text-slate-400">
                       {latestFastCash ? `Draw #${latestFastCash.draw_number}` : "Every 3 Minutes"}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-300 font-bold border border-emerald-500/30">
-                  From $1.00 TT
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
+                  From $1
                 </span>
               </div>
 
-              {/* Draw Cadence Info */}
-              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-cyan-500/30 bg-cyan-950/40 text-cyan-300">
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 opacity-80" />
-                  <span className="text-[10px] font-mono font-medium text-gray-200">
-                    Rapid 3-Minute Draws Daily
-                  </span>
+              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#070b14] border border-white/[0.06] font-mono text-[11px]">
+                <div className="flex items-center gap-1.5 text-slate-400">
+                  <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span>Rapid 3-Minute Cadence</span>
                 </div>
-                <span className="text-[10px] font-black text-emerald-300 px-2 py-0.5 rounded bg-black/50 border border-white/10">
-                  LIVE
-                </span>
+                <span className="text-emerald-400 font-bold">LIVE</span>
               </div>
 
-              {/* Section A: Last Winning Result */}
-              <div className="space-y-1.5 bg-black/40 p-3 rounded-xl border border-white/5">
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">
-                  Latest Fast Cash Draw:
-                </span>
-                {loadingResults && !latestFastCash ? (
-                  <div className="flex gap-1.5 animate-pulse py-1">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
-                    ))}
-                  </div>
-                ) : latestFastCash?.winning_numbers ? (
-                  <div className="flex flex-wrap items-center gap-1.5 py-1">
-                    {String(latestFastCash.winning_numbers)
-                      .split(/[,\s-]+/)
-                      .filter(Boolean)
-                      .slice(0, 6)
-                      .map((num: string, i: number) => (
-                        <div
-                          key={i}
-                          className="w-7 h-7 rounded-full bg-cyan-400 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_10px_rgba(6,182,212,0.35)] font-mono"
-                        >
-                          {num}
-                        </div>
-                      ))}
+              <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
+                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                  Latest Pocket (0, 00, 1–36)
+                </div>
+                {latestFastCash?.winning_code ? (
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-9 h-9 rounded-full bg-cyan-400/15 border border-cyan-400/45 text-cyan-200 font-mono font-bold text-sm flex items-center justify-center tabular-nums">
+                      {latestFastCash.winning_code}
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono">
+                      {latestFastCash.draw_time || "Recent 3-min draw"}
+                    </span>
                   </div>
                 ) : (
-                  <span className="text-xs text-gray-400 font-sans">Open Fast Cash tab to sync latest 3-min draws</span>
+                  <span className="text-xs text-slate-400 font-sans">
+                    Open Fast Cash tab to sync latest 3-minute draws
+                  </span>
                 )}
               </div>
 
-              {/* Section B: How to Play */}
-              <div className="space-y-1 bg-cyan-950/20 p-3 rounded-xl border border-cyan-500/20">
-                <span className="text-[9px] font-bold text-cyan-300 uppercase tracking-wider block">
-                  How It Works:
-                </span>
-                <p className="text-[11px] text-gray-300 font-sans leading-snug">
-                  Track hot &amp; overdue 3-minute draw momentum and test spot combinations before playing ($1.00 TT base) at an NLCB Fast Cash terminal.
-                </p>
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
+                <span>Exact 38-Pocket Odds</span>
+                <span className="text-slate-200 font-bold">2.63% / pocket</span>
               </div>
             </div>
 
-            {/* CTA Button */}
             <button
-              onClick={() => onSelectGame && onSelectGame("fast-cash")}
-              className="w-full py-2.5 bg-cyan-500/15 hover:bg-cyan-500 border border-cyan-500/40 text-cyan-300 text-[11px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 mt-3 shadow-lg group-hover:bg-cyan-500 group-hover:text-slate-950 group-hover:border-transparent"
+              type="button"
+              onClick={() => navigate("fast-cash")}
+              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Explore Fast Cash Engine</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+              <span>Open Fast Cash Terminal</span>
+              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
             </button>
-          </div>
-
-          {/* UNIVERSAL TACTICAL BALL DROP QUICK PICK ENGINE */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-3">
-            <QuickPickEngine
-              initialGame="lotto-plus"
-              onSelectGame={(gameKey) => {
-                if (onSelectGame) onSelectGame(gameKey);
-              }}
-            />
-          </div>
-
-          {/* UTILITY SUITE SHORTCUT CARD (Full-Width on Desktop for Balanced Grid) */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-3 p-5 rounded-2xl bg-gradient-to-b from-indigo-950/25 via-slate-950/90 to-slate-950 border border-indigo-500/30 hover:border-indigo-400/60 transition-all duration-300 space-y-4 relative group shadow-xl flex flex-col justify-between">
-            <div className="space-y-3.5">
-              {/* Card Header */}
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3.5">
-                  <img 
-                    src="/images/scanner_icon.png" 
-                    alt="Utility Suite" 
-                    className="w-12 h-12 rounded-xl object-contain shadow-[0_0_15px_rgba(99,102,241,0.35)] border border-indigo-500/40 shrink-0" 
-                  />
-                  <div className="space-y-0.5">
-                    <h3 className="text-lg sm:text-xl font-black text-indigo-400 uppercase tracking-wider drop-shadow-[0_0_12px_rgba(99,102,241,0.45)]">
-                      Utility Suite
-                    </h3>
-                    <span className="text-xs text-gray-300 font-semibold block">
-                      Scanner, NL Query & Syndicates
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[10px] px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-300 font-bold border border-indigo-500/30">
-                  OCR & AI SQL
-                </span>
-              </div>
-
-              {/* Utility Info: Scanner */}
-              <div className="space-y-2 bg-black/40 p-3 rounded-xl border border-white/5">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-purple-400" />
-                  <span className="text-xs font-bold text-white uppercase">
-                    Automatic Ticket Verification
-                  </span>
-                </div>
-                <p className="text-[11px] text-gray-300 leading-relaxed">
-                  Scan printed physical bet slips with your phone camera across Play Whe, Lotto Plus, Win For Life, Cash Pot, and Pick 4 to automatically cross-reference against official winning database records.
-                </p>
-              </div>
-
-              {/* Natural Language Query Info */}
-              <div className="space-y-1.5 bg-cyan-950/20 p-3 rounded-xl border border-cyan-500/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1">
-                    <Database className="w-3 h-3 text-cyan-400" />
-                    Natural Language Database Query
-                  </span>
-                  <span className="text-[9px] text-cyan-400 font-bold px-1.5 py-0.2 rounded bg-cyan-500/15 border border-cyan-500/30">
-                    Turso + Gemini
-                  </span>
-                </div>
-                <p className="text-[10px] text-gray-300 leading-normal">
-                  Ask complex statistical and historical questions in plain English with instant SQL verification across all 5 NLCB games.
-                </p>
-              </div>
-
-              {/* Syndicate Pooling Info */}
-              <div className="space-y-1 bg-purple-950/20 p-3 rounded-xl border border-purple-500/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1">
-                    <Layers className="w-3 h-3 text-purple-400" />
-                    Syndicate Pooling
-                  </span>
-                  <span className="text-[9px] text-purple-400 font-bold">
-                    WhatsApp Ready
-                  </span>
-                </div>
-                <p className="text-[10px] text-gray-400 leading-normal">
-                  Pool ticket entries with colleagues and calculate exact prize percentages per member automatically.
-                </p>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">
-              <button
-                onClick={() => onSelectGame && onSelectGame("scanner")}
-                className="py-2.5 px-2 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 text-purple-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-lg group-hover:border-purple-400"
-              >
-                <Camera className="w-3.5 h-3.5" />
-                <span>Scanner</span>
-              </button>
-              <button
-                onClick={() => onSelectGame && onSelectGame("scanner-query" as any)}
-                className="py-2.5 px-2 bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/35 text-cyan-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-lg hover:border-cyan-400"
-              >
-                <Database className="w-3.5 h-3.5" />
-                <span>Ask DB</span>
-              </button>
-              <button
-                onClick={() => onSelectGame && onSelectGame("syndicate")}
-                className="py-2.5 px-2 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/35 text-indigo-300 text-[10px] font-black uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-1 shadow-lg group-hover:border-indigo-400"
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Syndicates</span>
-              </button>
-            </div>
-          </div>
-
+          </article>
         </div>
-      </div>
+      </section>
 
-      {/* 4. Architecture & Engineering Overview (Collapsible for Clean Mobile Scroll) */}
-      <div className="glass-panel rounded-2xl border border-white/5 bg-slate-950/40 overflow-hidden">
+      {/* 4. Compact 3-Tool Utility Strip (Scanner · Ask DB · Syndicates) */}
+      <section aria-label="Player Tools" className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
         <button
           type="button"
-          onClick={() => setShowMathArch((v) => !v)}
-          className="w-full p-5 sm:p-6 flex items-center justify-between gap-3 text-left hover:bg-slate-900/40 transition cursor-pointer"
+          onClick={() => navigate("scanner")}
+          className="text-left p-4 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-sky-400/40 transition flex items-start gap-3.5 cursor-pointer group"
         >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.25)] shrink-0">
-              <Sigma className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-black uppercase tracking-wider text-white">
-                How Our Math Models Work (9 Statistical Engines)
-              </h3>
-              <p className="text-[11px] text-gray-400 font-sans">
-                Optional deep-dive into Markov chains, Bayesian priors &amp; covering wheels
-              </p>
-            </div>
+          <div className="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-sky-400 shrink-0">
+            <Camera className="w-4 h-4" />
           </div>
-          <span className="text-[11px] font-bold text-sky-300 shrink-0">
-            {showMathArch ? "Hide" : "Explore"}
-          </span>
+          <div className="space-y-0.5 min-w-0">
+            <div className="text-sm font-bold text-white font-sans flex items-center gap-1.5">
+              <span>Ticket Scanner</span>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-sky-400 transition" />
+            </div>
+            <p className="text-xs text-slate-400 font-sans leading-snug">
+              Scan or enter your printed NLCB bet slip to verify matches against official records.
+            </p>
+          </div>
         </button>
 
-        {showMathArch && (
-          <div className="p-5 sm:p-6 pt-0 border-t border-white/5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          
-          {/* 1. Markov Transitions */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-amber-500/20 hover:border-amber-500/40 transition space-y-2">
-            <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase">
-              <Activity className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>1. Markov Transitions</span>
+        <button
+          type="button"
+          onClick={() => navigate("scanner-query" as any)}
+          className="text-left p-4 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-sky-400/40 transition flex items-start gap-3.5 cursor-pointer group"
+        >
+          <div className="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-emerald-400 shrink-0">
+            <Database className="w-4 h-4" />
+          </div>
+          <div className="space-y-0.5 min-w-0">
+            <div className="text-sm font-bold text-white font-sans flex items-center gap-1.5">
+              <span>Ask the Draw Database</span>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-emerald-400 transition" />
             </div>
-            <p className="text-gray-300 leading-relaxed text-[11px]">
-              First-order Markov chains calculate state transition probabilities P(S_t | S_t-1) between sequential lottery draws, uncovering recurring directional paths across Trinidad lottery history.
+            <p className="text-xs text-slate-400 font-sans leading-snug">
+              Ask plain-English questions across 22,500+ historical NLCB draws with instant SQL checks.
             </p>
           </div>
+        </button>
 
-          {/* 2. Graph & Companion Affinity */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-sky-500/20 hover:border-sky-500/40 transition space-y-2">
-            <div className="flex items-center gap-2 text-sky-400 font-bold text-xs uppercase">
-              <Network className="w-4 h-4 text-sky-400 shrink-0" />
-              <span>2. Graph & Companion Affinity</span>
+        <button
+          type="button"
+          onClick={() => navigate("syndicate")}
+          className="text-left p-4 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-sky-400/40 transition flex items-start gap-3.5 cursor-pointer group"
+        >
+          <div className="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-amber-400 shrink-0">
+            <Layers className="w-4 h-4" />
+          </div>
+          <div className="space-y-0.5 min-w-0">
+            <div className="text-sm font-bold text-white font-sans flex items-center gap-1.5">
+              <span>Syndicate Pools</span>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-amber-400 transition" />
             </div>
-            <p className="text-gray-300 leading-relaxed text-[11px]">
-              PageRank-inspired bipartite affinity networks detect high-frequency companion numbers and co-occurrence cliques that depart significantly from uniform random distributions.
+            <p className="text-xs text-slate-400 font-sans leading-snug">
+              Split 15-slip ($75) or 20-slip ($100) Steiner wheels with friends and share slips on WhatsApp.
             </p>
           </div>
+        </button>
+      </section>
 
-          {/* 3. Combinatorial Covering Wheels */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-emerald-500/20 hover:border-emerald-500/40 transition space-y-2">
-            <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase">
-              <Layers className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>3. Combinatorial Covering Wheels</span>
-            </div>
-            <p className="text-gray-300 leading-relaxed text-[11px]">
-              Abbreviated wheeling algorithms compile your high-confidence pools into mathematically minimized ticket sets that guarantee designated tier matches without purchasing full combinations.
-            </p>
-          </div>
+      {/* 5. Interactive Quick Pick Generator */}
+      <QuickPickEngine
+        initialGame="cashpot"
+        onSelectGame={(gameKey) => navigate(gameKey)}
+      />
 
-          {/* 4. Gaussian Sum Distribution & CLT */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-yellow-500/20 hover:border-yellow-500/40 transition space-y-2">
-            <div className="flex items-center gap-2 text-yellow-400 font-bold text-xs uppercase">
-              <Sigma className="w-4 h-4 text-yellow-400 shrink-0" />
-              <span>4. Gaussian Sums & Central Limit</span>
-            </div>
-            <p className="text-gray-300 leading-relaxed text-[11px]">
-              Normal distribution modeling enforces empirical μ ± 2σ sum envelopes, eliminating combinations whose digit sums fall into low-probability statistical tails (&lt;5% historical frequency).
-            </p>
+      {/* 6. Honest Math Transparency & Fair Play Footer */}
+      <footer className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-8 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] p-5 space-y-2.5">
+          <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Honest Probability &amp; Fair Play Notice</span>
           </div>
-
-          {/* 5. Weibull Renewal Hazard Aging */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-rose-500/20 hover:border-rose-500/40 transition space-y-2">
-            <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase">
-              <Hourglass className="w-4 h-4 text-rose-400 shrink-0" />
-              <span>5. Weibull Renewal Hazard</span>
-            </div>
-            <p className="text-gray-300 leading-relaxed text-[11px]">
-              Non-linear survival analysis measures interval aging and hazard arrival rates λ(t) for overdue numbers, separating genuine cyclical regime changes from the gambler's fallacy.
-            </p>
-          </div>
-
-          {/* 6. Maximum Expected Value & Shannon Entropy */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-purple-500/20 hover:border-purple-500/40 transition space-y-2">
-            <div className="flex items-center gap-2 text-purple-400 font-bold text-xs uppercase">
-              <Scale className="w-4 h-4 text-purple-400 shrink-0" />
-              <span>6. Maximum Expected Value (MEV)</span>
-            </div>
-            <p className="text-gray-300 leading-relaxed text-[11px]">
-              Information-theoretic Shannon entropy optimization evaluates ticket portfolio diversity, maximizing unique combinatorial coverage while penalizing redundant ball overlaps.
-            </p>
-          </div>
-
-          {/* 7. Bayesian Dirichlet Conjugate Priors */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-cyan-500/20 hover:border-cyan-500/40 transition space-y-2">
-            <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase">
-              <Calculator className="w-4 h-4 text-cyan-400 shrink-0" />
-              <span>7. Bayesian Dirichlet Priors</span>
-            </div>
-            <p className="text-gray-300 leading-relaxed text-[11px]">
-              Conjugate Dirichlet-multinomial updating adjusts prior likelihood distributions with rolling historical observations, filtering out transient variance and small-sample bias.
-            </p>
-          </div>
-
-          {/* 8. Non-Homogeneous Poisson Arrival */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-indigo-500/20 hover:border-indigo-500/40 transition space-y-2">
-            <div className="flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase">
-              <TrendingUp className="w-4 h-4 text-indigo-400 shrink-0" />
-              <span>8. Poisson Point-Process Renewal</span>
-            </div>
-            <p className="text-gray-300 leading-relaxed text-[11px]">
-              Time-varying Poisson process likelihoods evaluate interval recurrence intervals between hits, statistically detecting burst clusters versus steady Poisson equilibrium.
-            </p>
-          </div>
-
-          {/* 9. Monte Carlo Permutation Entropy */}
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-pink-500/20 hover:border-pink-500/40 transition space-y-2">
-            <div className="flex items-center gap-2 text-pink-400 font-bold text-xs uppercase">
-              <BarChart3 className="w-4 h-4 text-pink-400 shrink-0" />
-              <span>9. Monte Carlo Entropy Audit</span>
-            </div>
-            <p className="text-gray-300 leading-relaxed text-[11px]">
-              Stochastic 100,000-draw synthetic bootstrap iterations benchmark actual official lottery distributions against true random noise to guarantee algorithmic integrity.
-            </p>
-          </div>
-
-        </div>
-        )}
-      </div>
-
-      {/* 5. Warning Disclaimer Panel */}
-      <div className="glass-panel p-5 rounded-xl border-red-500/10 bg-red-500/[0.01] relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1 h-full bg-red-500/50" />
-        <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-          <div className="space-y-1.5 font-mono">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Disclaimer & Fair Play Notice</h4>
-            <p className="text-xs leading-relaxed text-gray-400">
-              This application is designed as an empirical analytical system that calculates mathematical odds, frequencies, and combinatorial coverage for Trinidad and Tobago lottery games. It is <strong>NOT affiliated with, authorized, or endorsed by the National Lotteries Control Board (NLCB)</strong> of Trinidad and Tobago. Using this app <strong>does NOT guarantee any winnings</strong>. Please gamble responsibly.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 6. Support the Creator Panel */}
-      <div className="glass-panel p-5 sm:p-6 rounded-2xl border border-amber-500/20 bg-amber-500/[0.02] relative overflow-hidden font-mono space-y-4">
-        <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-amber-400 to-amber-600 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
-        
-        {/* Top row: Heart icon + Title and Description */}
-        <div className="flex items-start gap-3.5">
-          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 shrink-0 mt-0.5">
-            <Heart className="w-5 h-5 text-amber-400 animate-pulse" />
-          </div>
-          <div className="space-y-1.5 w-full">
-            <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
-              Support the Creator
-            </h4>
-            <p className="text-xs leading-relaxed text-gray-300">
-              Creating and maintaining these complex mathematical models and cloud scraping pipelines requires continuous hosting, compute, and dedication. If this system helps you hit a lucky streak, win big, or build wealth, please show some love and support the creator!
-            </p>
-          </div>
+          <p className="text-xs text-slate-400 font-sans leading-relaxed">
+            Every NLCB game is a game of chance with an inherent house edge (~40% on pari-mutuel games). No algorithm can predict which individual balls a fair lottery machine will draw next. What mathematics <strong className="text-slate-200">can</strong> optimize is: (1) eliminating wasted ball overlap via Steiner-Johnson packing, (2) full 1–10 Powerball/Cash Ball stratification, (3) avoiding human-crowded combinations so pari-mutuel jackpots are split less often, and (4) playing Cash Pot on Mon / Thu / Sat Sure Call days for 2x–4x Multipliers.
+          </p>
+          <p className="text-[11px] text-slate-500 font-sans">
+            Not affiliated with or endorsed by the National Lotteries Control Board (NLCB) of Trinidad &amp; Tobago. Using this tool does not guarantee winnings — play strictly within your budget.
+          </p>
         </div>
 
-        {/* Email placeholder shifted to line up under the heart icon */}
-        <div className="p-3 bg-slate-950/90 border border-amber-500/40 rounded-xl flex items-center justify-between gap-2 overflow-hidden shadow-inner w-full">
-          <a 
-            href="mailto:daryl.created@gmail.com"
-            className="flex items-center gap-2 text-xs sm:text-sm font-bold min-w-0 truncate group transition"
-            style={{ color: "#fbbf24" }}
-          >
-            <Mail className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
-            <span className="underline underline-offset-4 truncate">daryl.created@gmail.com</span>
-          </a>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText("daryl.created@gmail.com");
-              setEmailCopied(true);
-              setTimeout(() => setEmailCopied(false), 2500);
-            }}
-            className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-            title="Copy Email Address"
-          >
-            {emailCopied ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-emerald-400 text-[11px]">Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5" />
-                <span className="text-[11px]">Copy</span>
-              </>
-            )}
-          </button>
+        <div className="lg:col-span-4 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] p-5 flex flex-col justify-between space-y-3">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+              <Heart className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Support the Project</span>
+            </div>
+            <p className="text-xs text-slate-400 font-sans leading-relaxed">
+              This platform is free to use. Questions, feedback, or support inquiries are always welcome.
+            </p>
+          </div>
+          <div className="p-2.5 rounded-xl bg-[#070b14] border border-white/[0.08] flex items-center justify-between gap-2">
+            <a
+              href="mailto:daryl.created@gmail.com"
+              className="flex items-center gap-2 text-xs font-mono font-semibold text-amber-300 truncate"
+            >
+              <Mail className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">daryl.created@gmail.com</span>
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard?.writeText("daryl.created@gmail.com").catch(() => {});
+                setEmailCopied(true);
+                setTimeout(() => setEmailCopied(false), 2200);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-200 text-[11px] font-mono font-semibold flex items-center gap-1 shrink-0 cursor-pointer"
+            >
+              {emailCopied ? (
+                <>
+                  <Check className="w-3 h-3 text-emerald-400" />
+                  <span className="text-emerald-300">Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3" />
+                  <span>Copy</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
-
+      </footer>
     </div>
   );
 }
