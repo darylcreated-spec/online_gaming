@@ -21,10 +21,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "the Win Concept | Lotto Plus Analytics & Wheeling Engine",
-  description: "Advanced analytics dashboard, Number Line (Delta) analyzer, and combinatorial Wheeling System for Trinidad & Tobago NLCB Lotto Plus.",
-  keywords: ["NLCB", "Lotto Plus", "Trinidad and Tobago", "the Win Concept", "Lottery Analytics", "Lottery Wheeling", "Deltas Analysis", "Winning Numbers"],
-  authors: [{ name: "the Win Concept Team" }],
+  title: "The Win Concept | NLCB Analytics",
+  description: "Understand exact odds, compare ticket budgets, and remove overlapping plays across Cash Pot, Lotto Plus, Win For Life, Play Whe, Pick 4, and Fast Cash in Trinidad and Tobago.",
+  keywords: ["NLCB", "Cash Pot", "Lotto Plus", "Win For Life", "Play Whe", "Pick 4", "Fast Cash", "Trinidad and Tobago", "The Win Concept"],
+  authors: [{ name: "The Win Concept" }],
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

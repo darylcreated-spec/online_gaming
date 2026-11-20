@@ -8,53 +8,56 @@ interface AppSplashScreenProps {
 }
 
 export default function AppSplashScreen({ onComplete, isLoading }: AppSplashScreenProps) {
-  const [progress, setProgress] = useState(15);
+  const [progress, setProgress] = useState(35);
   const [statusText, setStatusText] = useState("Loading official NLCB games...");
   const [isFadingOut, setIsFadingOut] = useState(false);
-  const [isMounted, setIsMounted] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("win_concept_splash_seen")) {
+      if (onComplete) onComplete();
+      return;
+    }
+    setIsMounted(true);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("win_concept_splash_seen", "1");
+    }
+
     const timer1 = setTimeout(() => {
-      setProgress(45);
+      setProgress(75);
       setStatusText("Checking latest draw results...");
-    }, 400);
+    }, 180);
 
     const timer2 = setTimeout(() => {
-      setProgress(78);
-      setStatusText("Preparing exact odds and budgets...");
-    }, 850);
-
-    const timer3 = setTimeout(() => {
       setProgress(100);
       setStatusText("Ready");
-    }, 1300);
+    }, 380);
 
-    const timer4 = setTimeout(() => {
+    const timer3 = setTimeout(() => {
       setIsFadingOut(true);
       setTimeout(() => {
         setIsMounted(false);
         if (onComplete) onComplete();
-      }, 450);
-    }, 1450);
+      }, 280);
+    }, 500);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
-      clearTimeout(timer4);
     };
   }, [onComplete]);
 
   useEffect(() => {
-    if (!isLoading && progress === 100 && !isFadingOut) {
+    if (!isLoading && progress === 100 && !isFadingOut && isMounted) {
       setIsFadingOut(true);
       const timer = setTimeout(() => {
         setIsMounted(false);
         if (onComplete) onComplete();
-      }, 600);
+      }, 280);
       return () => clearTimeout(timer);
     }
-  }, [isLoading, progress, isFadingOut, onComplete]);
+  }, [isLoading, progress, isFadingOut, isMounted, onComplete]);
 
   if (!isMounted) return null;
 

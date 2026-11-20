@@ -22,7 +22,7 @@ import {
   computeLottoPlusFormulaPick,
   computeWinForLifeFormulaPick
 } from "@/lib/winning_formula_engine";
-import { generatePlayWhePredictions } from "@/lib/predictions";
+import { generatePlayWhePredictions, getLocalDateString } from "@/lib/predictions";
 import {
   runFullSystemCalibration,
   getCalibrationProfiles,
@@ -1312,8 +1312,8 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             recordedCount++;
           }
 
-          // 3. 11-Model Ensemble Predictor
-          const todayStr = new Date().toISOString().split("T")[0];
+          // 3. 11-Model Ensemble Predictor (use AST local date, not UTC)
+          const todayStr = getLocalDateString();
           const ensemble = await generatePlayWhePredictions(todayStr, targetSlot);
           let ensembleNums: number[] = [];
           if (ensemble?.predicted_numbers) {

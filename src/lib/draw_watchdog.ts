@@ -52,8 +52,8 @@ export interface WatchdogReport {
   recommendations: string[];
 }
 
-// 15-minute grace period after scheduled draw time before flagging as lagging
-const GRACE_PERIOD_MINUTES = 15;
+// 3-minute grace period after scheduled draw time so fresh results sync promptly after every draw
+const GRACE_PERIOD_MINUTES = 3;
 
 /**
  * Converts a UTC Date into an AST (UTC-4) breakdown.

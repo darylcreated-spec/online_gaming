@@ -25,8 +25,10 @@ export default function LiveDrawTicker({
 
   useEffect(() => {
     setMounted(true);
+    setNextDraw(calculateNextDraw());
     const timer = setInterval(() => {
       setCurrentTime(new Date());
+      setNextDraw(calculateNextDraw());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -128,19 +130,12 @@ export default function LiveDrawTicker({
     };
   };
 
-  useEffect(() => {
-    setNextDraw(calculateNextDraw());
-    const timer = setInterval(() => {
-      setNextDraw(calculateNextDraw());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const handleManualSyncTrigger = async () => {
+  const handleManualSyncTrigger = async (isManualClick: boolean = true) => {
     if (syncStatus === "syncing") return;
     setSyncStatus("syncing");
     try {
-      const res = await fetch("/api/sync/pulse", {
+      const endpoint = isManualClick ? "/api/sync/pulse?manual=1" : "/api/sync/pulse";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       });
@@ -157,7 +152,7 @@ export default function LiveDrawTicker({
   useEffect(() => {
     if (nextDraw && nextDraw.secondsRemaining === 0) {
       const timer = setTimeout(() => {
-        handleManualSyncTrigger();
+        handleManualSyncTrigger(false);
       }, 15000);
       return () => clearTimeout(timer);
     }
@@ -226,7 +221,7 @@ export default function LiveDrawTicker({
 
         <button
           type="button"
-          onClick={handleManualSyncTrigger}
+          onClick={() => handleManualSyncTrigger(true)}
           disabled={syncStatus === "syncing"}
           title="Check for newly published NLCB results"
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${

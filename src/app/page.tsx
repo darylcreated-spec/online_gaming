@@ -251,10 +251,12 @@ export default function Home() {
     }
   };
 
-  // Trigger stats reload on mount & timeframe change
+  // Lazy-load Lotto Plus stats only when Lotto Plus tab is active (saves full-archive scan on Home)
   useEffect(() => {
-    fetchStats();
-  }, [timeframe]);
+    if (activeTab === "lotto-plus") {
+      fetchStats();
+    }
+  }, [activeTab, timeframe]);
 
   // Lazy-load Lotto Plus history table when Lotto Plus tab is active
   useEffect(() => {
@@ -380,8 +382,8 @@ export default function Home() {
       {/* Dynamic Ambient Reactive Aura */}
       <div className={`ambient-aura aura-${activeTab}`} aria-hidden="true" />
 
-      {/* Pre-Landing Initial Loading & Splash Screen */}
-      <AppSplashScreen isLoading={statsLoading} />
+      {/* Pre-Landing Initial Loading & Splash Screen (non-blocking) */}
+      <AppSplashScreen isLoading={false} />
 
       {/* Global Terminal Header */}
       <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-2.5 sm:py-3 px-3 sm:px-6 lg:px-10 flex justify-between items-center gap-3 bg-slate-950/85 backdrop-blur-md w-full font-sans">

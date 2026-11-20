@@ -130,8 +130,7 @@ export async function runUnifiedSyncPipeline(options: UnifiedSyncOptions = {}) {
     if (reportStr.includes("cash pot") && !changedGames.includes("cashpot")) changedGames.push("cashpot");
   }
 
-  const isFullCronRun = !options.onlyGames || options.onlyGames.length === ALL_GAMES.length;
-  const shouldPostProcess = changedGames.length > 0 || healedCount > 0 || isFullCronRun;
+  const shouldPostProcess = changedGames.length > 0 || healedCount > 0;
 
   let engineVerifiedCount = 0;
   if (shouldPostProcess) {
@@ -170,11 +169,11 @@ export async function runUnifiedSyncPipeline(options: UnifiedSyncOptions = {}) {
     }
   }
 
-  // Refresh N+1 engine prediction snapshots only for changed games (or all if ungraded predictions resolved)
+  // Refresh N+1 engine prediction snapshots only for games that actually gained new draws
   const snapshotTargets: string[] =
     changedGames.length > 0
       ? changedGames
-      : (engineVerifiedCount > 0 && isFullCronRun ? ["all"] : []);
+      : (engineVerifiedCount > 0 ? ["all"] : []);
 
   if (snapshotTargets.length > 0) {
     let totalSnapshots = 0;

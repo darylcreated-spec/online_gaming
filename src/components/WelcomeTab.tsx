@@ -67,53 +67,28 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
     };
   }, [clock]);
 
-  const fetchLatestDraws = () => {
+  const fetchLatestDraws = (bypassCache: boolean = false) => {
     setLoadingResults(true);
-    const now = Date.now();
-    const tasks = [
-      fetch(`/api/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d?.draws?.[0]) setLatestLotto(d.draws[0]);
-        })
-        .catch(() => {}),
-      fetch(`/api/playwhe/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d?.draws?.[0]) setLatestPlayWhe(d.draws[0]);
-        })
-        .catch(() => {}),
-      fetch(`/api/winforlife/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d?.draws?.[0]) setLatestWinForLife(d.draws[0]);
-        })
-        .catch(() => {}),
-      fetch(`/api/cashpot/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d?.draws?.[0]) setLatestCashPot(d.draws[0]);
-        })
-        .catch(() => {}),
-      fetch(`/api/pick4/draws?page=1&limit=1&_t=${now}`, { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d?.draws?.[0]) setLatestPick4(d.draws[0]);
-        })
-        .catch(() => {}),
-      fetch(`/api/fastcash/engine?limit=1&_t=${now}`, { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d?.latestDraw) setLatestFastCash(d.latestDraw);
-        })
-        .catch(() => {})
-    ];
-    Promise.allSettled(tasks).finally(() => setLoadingResults(false));
+    const url = bypassCache ? `/api/latest-results?_t=${Date.now()}` : "/api/latest-results";
+    fetch(url, { cache: bypassCache ? "no-store" : "default" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.success && d?.latest) {
+          if (d.latest.lotto) setLatestLotto(d.latest.lotto);
+          if (d.latest.playWhe) setLatestPlayWhe(d.latest.playWhe);
+          if (d.latest.winForLife) setLatestWinForLife(d.latest.winForLife);
+          if (d.latest.cashPot) setLatestCashPot(d.latest.cashPot);
+          if (d.latest.pick4) setLatestPick4(d.latest.pick4);
+          if (d.latest.fastCash) setLatestFastCash(d.latest.fastCash);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingResults(false));
   };
 
   useEffect(() => {
-    fetchLatestDraws();
-    const handleSync = () => fetchLatestDraws();
+    fetchLatestDraws(false);
+    const handleSync = () => fetchLatestDraws(true);
     window.addEventListener("win_concept_sync_completed", handleSync);
     return () => window.removeEventListener("win_concept_sync_completed", handleSync);
   }, []);
@@ -747,7 +722,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             <span>Honest Odds and Fair Play Notice</span>
           </h3>
           <p className="text-sm text-slate-300 font-sans leading-relaxed">
-            Every NLCB game is a game of chance where the lottery keeps about 40% of ticket sales on shared-jackpot games. No formula can predict which numbers a fair lottery machine will draw next. What math <strong className="text-white">can</strong> improve is: removing wasted overlapping pairs across your tickets, covering all 10 Powerball or Cash Ball numbers from 1 to 10, avoiding common date patterns so jackpots are shared less often, and playing Cash Pot on Monday, Thursday, and Saturday Sure Call days for 2 to 4 times Multipliers.
+            Every NLCB game is a game of chance where the lottery keeps about 40% of ticket sales on shared-jackpot games. No formula can predict which numbers a fair lottery machine will draw next. What math can improve is: removing wasted overlapping pairs across your tickets, covering all 10 Powerball or Cash Ball numbers from 1 to 10, avoiding common date patterns so jackpots are shared less often, and playing Cash Pot on Monday, Thursday, and Saturday Sure Call days for 2 to 4 times Multipliers.
           </p>
           <p className="text-xs text-slate-400 font-sans leading-relaxed">
             This platform is not affiliated with or endorsed by the National Lotteries Control Board (NLCB) of Trinidad and Tobago. Using this tool does not guarantee winnings. Always play within your budget.
