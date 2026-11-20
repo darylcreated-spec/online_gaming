@@ -70,7 +70,7 @@ export default function LottoQuant100Panel() {
         <div className="flex flex-col items-center justify-center space-y-4">
           <RefreshCw className="h-10 w-10 animate-spin text-emerald-400" />
           <div className="space-y-1">
-            <h3 className="font-mono text-lg font-bold text-white">
+            <h3 className="text-base font-mono font-bold text-white">
               RUNNING QUANT 100% INVARIANT ENGINE
             </h3>
             <p className="font-mono text-xs text-gray-400">
@@ -120,21 +120,21 @@ export default function LottoQuant100Panel() {
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-[11px] font-mono font-black text-emerald-300 tracking-wider uppercase shadow-inner">
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-xs font-mono font-black text-emerald-300 tracking-wider uppercase shadow-inner">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 100.00% Invariant Compliance Verified
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/30 text-[10px] font-mono font-bold text-sky-300">
+              <span className="px-2.5 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/30 text-xs font-mono font-bold text-sky-300">
                 CRT Galois Rings
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-[10px] font-mono font-bold text-purple-300">
+              <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/30 text-xs font-mono font-bold text-purple-300">
                 Eigen-Centrality
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-[10px] font-mono font-bold text-amber-300">
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-xs font-mono font-bold text-amber-300">
                 Stefan Mandel Sieve
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-mono text-white tracking-wide flex items-center gap-3">
+            <h2 className="text-lg sm:text-xl font-black font-mono text-white tracking-wide flex items-center gap-3">
               <Cpu className="w-7 h-7 text-emerald-400 shrink-0" />
               <span>UNCONVENTIONAL QUANT 100% ENGINE</span>
             </h2>
@@ -171,7 +171,7 @@ export default function LottoQuant100Panel() {
                   {n}
                 </span>
               ))}
-              <span className="text-gray-500 text-[10px] ml-1">(Sum: {data.lastVerifiedDraw.sum})</span>
+              <span className="text-gray-500 text-xs ml-1">(Sum: {data.lastVerifiedDraw.sum})</span>
             </div>
           </div>
         </div>
@@ -184,17 +184,17 @@ export default function LottoQuant100Panel() {
             key={idx} 
             className="rounded-xl border border-white/10 bg-slate-900/60 p-4 backdrop-blur-md space-y-2 card-interactive relative overflow-hidden"
           >
-            <div className="flex items-center justify-between text-[11px] font-mono font-bold text-gray-400">
+            <div className="flex items-center justify-between text-xs font-mono font-bold text-gray-400">
               <span className="uppercase truncate">{inv.name}</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] shrink-0">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs shrink-0">
                 100% INVARIANT
               </span>
             </div>
             <div className="font-mono text-2xl font-black text-white flex items-baseline gap-2">
               <span className="text-emerald-400">{inv.empiricalComplianceRate.toFixed(2)}%</span>
-              <span className="text-[10px] text-gray-500 font-normal">({inv.violations} violations)</span>
+              <span className="text-xs text-gray-500 font-normal">({inv.violations} violations)</span>
             </div>
-            <p className="text-[10px] font-mono text-gray-400 font-mono truncate" title={inv.formula}>
+            <p className="text-xs font-mono text-gray-400 font-mono truncate" title={inv.formula}>
               {inv.formula}
             </p>
           </div>
@@ -202,18 +202,18 @@ export default function LottoQuant100Panel() {
 
         {/* 4th Card: Best Ticket Any Hit Rate */}
         <div className="rounded-xl border border-sky-500/20 bg-slate-900/60 p-4 backdrop-blur-md space-y-2 card-interactive">
-          <div className="flex items-center justify-between text-[11px] font-mono font-bold text-gray-400">
+          <div className="flex items-center justify-between text-xs font-mono font-bold text-gray-400">
             <span className="uppercase">Best Ticket Hit Rate</span>
-            <span className="px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-500/40 text-sky-400 text-[10px] shrink-0">
+            <span className="px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-500/40 text-sky-400 text-xs shrink-0">
               HISTORICAL
             </span>
           </div>
           <div className="font-mono text-2xl font-black text-white flex items-baseline gap-2">
             <span className="text-sky-400">{data.auditVerification.bestTicketHitRates.atLeastOne.percentage}%</span>
-            <span className="text-[10px] text-gray-500 font-normal">(&ge; 1 Hit Across Sets)</span>
+            <span className="text-xs text-gray-500 font-normal">(At least 1 match across sets)</span>
           </div>
-          <p className="text-[10px] font-mono text-gray-400 truncate">
-            {data.auditVerification.bestTicketHitRates.atLeastTwo.percentage}% produced &ge; 2 winning balls
+          <p className="text-xs font-mono text-gray-400 truncate">
+            {data.auditVerification.bestTicketHitRates.atLeastTwo.percentage}% matched 2 or more winning numbers
           </p>
         </div>
       </div>
@@ -222,7 +222,7 @@ export default function LottoQuant100Panel() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h3 className="text-lg font-black font-mono text-white tracking-wide flex items-center gap-2">
+            <h3 className="text-base font-black font-mono text-white tracking-wide flex items-center gap-2">
               <Target className="w-5 h-5 text-emerald-400" />
               <span>THE 5 UNCONVENTIONAL PREDICTION SETS (TARGET DRAW #{data.targetDrawNumber})</span>
             </h3>
@@ -247,7 +247,7 @@ export default function LottoQuant100Panel() {
               <Info className="w-4 h-4 text-sky-400" />
               Mathematical & Statistical Proofs
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] leading-relaxed text-gray-400">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs leading-relaxed text-gray-400">
               <div className="p-3 bg-slate-900/60 rounded-lg border border-white/5 space-y-1">
                 <span className="text-emerald-300 font-bold">1. Chinese Remainder Theorem Z_5 x Z_7:</span>
                 <p>{data.mathematicalFoundations.crtGaloisDecomposition}</p>
@@ -280,7 +280,7 @@ export default function LottoQuant100Panel() {
                 {/* Left: Set Identity & Rationale */}
                 <div className="space-y-1.5 max-w-xl">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black tracking-wider uppercase border ${
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-black tracking-wider uppercase border ${
                       set.badgeColor === "emerald" ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300" :
                       set.badgeColor === "cyan" ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-300" :
                       set.badgeColor === "amber" ? "bg-amber-500/20 border-amber-500/40 text-amber-300" :
@@ -321,10 +321,10 @@ export default function LottoQuant100Panel() {
 
                   {/* Actions & Metrics */}
                   <div className="flex items-center gap-3">
-                    <div className="text-right font-mono text-[10px] text-gray-400 space-y-0.5 hidden sm:block">
+                    <div className="text-right font-mono text-xs text-gray-400 space-y-0.5 hidden sm:block">
                       <div>Sum: <span className="text-white font-bold">{set.sum}</span></div>
                       <div>Parity: <span className="text-gray-300">{set.oddEvenRatio}</span></div>
-                      <div className="text-[9px] text-emerald-400">{set.crtSignature}</div>
+                      <div className="text-xs text-emerald-400">{set.crtSignature}</div>
                     </div>
 
                     <button
@@ -350,7 +350,7 @@ export default function LottoQuant100Panel() {
           <div>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <h3 className="font-mono text-base font-black text-white tracking-wide">
+              <h3 className="text-base font-mono font-black text-white tracking-wide">
                 MASTER 100% ATTRACTOR MANIFOLD POOL ({data.masterAttractorManifold.poolSize} BALLS)
               </h3>
             </div>
@@ -381,7 +381,7 @@ export default function LottoQuant100Panel() {
       <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-6 backdrop-blur-md space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h3 className="font-mono text-base font-black text-white tracking-wide flex items-center gap-2">
+            <h3 className="text-base font-mono font-black text-white tracking-wide flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-emerald-400" />
               <span>LIVE HISTORICAL AUDIT LOG ({data.auditVerification.totalDrawsAudited} DRAWS AUDITED)</span>
             </h3>
@@ -406,7 +406,7 @@ export default function LottoQuant100Panel() {
             <div className="flex items-center gap-1 bg-slate-950/60 p-1 rounded-lg border border-white/10 text-xs font-mono">
               <button
                 onClick={() => setSelectedFilter("all")}
-                className={`px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition-all ${
+                className={`px-2.5 py-1 rounded text-xs font-bold cursor-pointer transition-all ${
                   selectedFilter === "all" ? "bg-emerald-500 text-slate-950" : "text-gray-400 hover:text-white"
                 }`}
               >
@@ -414,7 +414,7 @@ export default function LottoQuant100Panel() {
               </button>
               <button
                 onClick={() => setSelectedFilter("3plus")}
-                className={`px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition-all ${
+                className={`px-2.5 py-1 rounded text-xs font-bold cursor-pointer transition-all ${
                   selectedFilter === "3plus" ? "bg-emerald-500 text-slate-950" : "text-gray-400 hover:text-white"
                 }`}
               >
@@ -422,7 +422,7 @@ export default function LottoQuant100Panel() {
               </button>
               <button
                 onClick={() => setSelectedFilter("2plus")}
-                className={`px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition-all ${
+                className={`px-2.5 py-1 rounded text-xs font-bold cursor-pointer transition-all ${
                   selectedFilter === "2plus" ? "bg-emerald-500 text-slate-950" : "text-gray-400 hover:text-white"
                 }`}
               >
@@ -430,7 +430,7 @@ export default function LottoQuant100Panel() {
               </button>
               <button
                 onClick={() => setSelectedFilter("1plus")}
-                className={`px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer transition-all ${
+                className={`px-2.5 py-1 rounded text-xs font-bold cursor-pointer transition-all ${
                   selectedFilter === "1plus" ? "bg-emerald-500 text-slate-950" : "text-gray-400 hover:text-white"
                 }`}
               >
@@ -443,7 +443,7 @@ export default function LottoQuant100Panel() {
         {/* Audit Table */}
         <div className="overflow-x-auto max-h-[460px] overflow-y-auto rounded-xl border border-white/10 sleek-scrollbar">
           <table className="w-full text-left font-mono text-xs">
-            <thead className="sticky top-0 bg-slate-950 border-b border-white/10 text-gray-400 uppercase text-[10px] tracking-wider z-10">
+            <thead className="sticky top-0 bg-slate-950 border-b border-white/10 text-gray-400 uppercase text-xs tracking-wider z-10">
               <tr>
                 <th className="py-3 px-4">Draw #</th>
                 <th className="py-3 px-4">Date</th>
@@ -462,7 +462,7 @@ export default function LottoQuant100Panel() {
                   <td className="py-2.5 px-4">
                     <div className="flex items-center gap-1.5">
                       {entry.actualNumbers.map(n => (
-                        <span key={n} className="w-6 h-6 rounded-md bg-slate-800 border border-white/10 flex items-center justify-center text-[11px] font-bold text-gray-200">
+                        <span key={n} className="w-6 h-6 rounded-md bg-slate-800 border border-white/10 flex items-center justify-center text-xs font-bold text-gray-200">
                           {n}
                         </span>
                       ))}
@@ -470,7 +470,7 @@ export default function LottoQuant100Panel() {
                   </td>
                   <td className="py-2.5 px-4 text-gray-400 font-bold">{entry.actualSum}</td>
                   <td className="py-2.5 px-4 text-center">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-black ${
+                    <span className={`px-2 py-0.5 rounded text-xs font-black ${
                       entry.bestTicketHit >= 3 ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-300" :
                       entry.bestTicketHit === 2 ? "bg-sky-500/20 border border-sky-500/40 text-sky-300" :
                       entry.bestTicketHit === 1 ? "bg-slate-800 border border-white/10 text-gray-300" :
@@ -479,7 +479,7 @@ export default function LottoQuant100Panel() {
                       {entry.bestTicketHit} {entry.bestTicketHit === 1 ? "Hit" : "Hits"}
                     </span>
                   </td>
-                  <td className="py-2.5 px-4 text-gray-300 text-[11px] truncate max-w-[220px]">
+                  <td className="py-2.5 px-4 text-gray-300 text-xs truncate max-w-[220px]">
                     {entry.bestSetName}
                   </td>
                   <td className="py-2.5 px-4 text-center">

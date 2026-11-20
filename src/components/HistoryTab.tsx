@@ -207,10 +207,10 @@ export default function HistoryTab({
                             </div>
                           </td>
                           <td className="py-3.5 px-3 text-right">
-                            <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded transition-colors ${
+                            <span className={`text-xs uppercase font-bold px-2 py-1 rounded transition-colors ${
                               isSelected ? "bg-sky-400/20 text-sky-300" : "text-gray-500 hover:text-white"
                             }`}>
-                              {isSelected ? "Active" : "Inspect →"}
+                              {isSelected ? "Selected" : "Inspect"}
                             </span>
                           </td>
                         </tr>
@@ -234,7 +234,7 @@ export default function HistoryTab({
                   <h4 className="text-xs font-black uppercase text-white tracking-wider">
                     Lotto Plus Draw #{selectedDraw.draw_number}
                   </h4>
-                  <span className="text-[10px] text-gray-400">
+                  <span className="text-xs text-gray-400">
                     {new Date(selectedDraw.draw_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
                   </span>
                 </div>
@@ -244,7 +244,7 @@ export default function HistoryTab({
                 className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition text-xs"
                 title="Close Investigation Panel"
               >
-                ✕
+                Close
               </button>
             </div>
 
@@ -269,7 +269,7 @@ export default function HistoryTab({
                 <div className="space-y-4">
                   {/* Balls Cluster */}
                   <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-2">
-                    <span className="text-[9px] text-gray-400 uppercase tracking-widest block">Main 5 Balls + Powerball</span>
+                    <span className="text-xs text-gray-400 uppercase tracking-widest block">Main 5 Balls + Powerball</span>
                     <div className="flex items-center justify-center gap-2 flex-wrap">
                       {nums.map((n, i) => (
                         <div key={i} className="w-9 h-9 rounded-full bg-sky-500/20 border-2 border-sky-400 text-sky-200 font-black text-sm flex items-center justify-center shadow-[0_0_10px_rgba(56,189,248,0.4)]">
@@ -285,47 +285,47 @@ export default function HistoryTab({
 
                   {/* Mathematical Metrics Grid */}
                   <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-2.5">
-                    <span className="text-[9px] font-bold text-sky-400 uppercase tracking-widest block">
+                    <span className="text-xs font-bold text-sky-400 uppercase tracking-widest block">
                       Macro-State Invariants
                     </span>
                     <div className="grid grid-cols-2 gap-2 text-center text-xs">
                       <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                        <span className="text-[8px] text-gray-500 block uppercase">Ball Sum (5 Balls)</span>
+                        <span className="text-xs text-gray-500 block uppercase">Ball Sum (5 Balls)</span>
                         <span className="text-base font-black text-white">{sum}</span>
-                        <span className={`text-[8px] block mt-0.5 font-bold ${isGaussianBell ? "text-emerald-400" : "text-amber-400"}`}>
-                          {isGaussianBell ? "✓ Gaussian Center [60-120]" : "Tail Distribution"}
+                        <span className={`text-xs block mt-0.5 font-bold ${isGaussianBell ? "text-emerald-400" : "text-amber-400"}`}>
+                          {isGaussianBell ? "Typical Range (60 to 120)" : "Unusual Sum"}
                         </span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                        <span className="text-[8px] text-gray-500 block uppercase">Odd : Even Ratio</span>
+                        <span className="text-xs text-gray-500 block uppercase">Odd : Even Ratio</span>
                         <span className="text-base font-black text-cyan-300">{oddsCount}O : {evensCount}E</span>
-                        <span className="text-[8px] text-gray-400 block mt-0.5">Parity Balance</span>
+                        <span className="text-xs text-gray-400 block mt-0.5">Parity Balance</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                        <span className="text-[8px] text-gray-500 block uppercase">High : Low Split</span>
+                        <span className="text-xs text-gray-500 block uppercase">High : Low Split</span>
                         <span className="text-base font-black text-purple-300">{highsCount}H : {lowsCount}L</span>
-                        <span className="text-[8px] text-gray-400 block mt-0.5">Median Split at 17/18</span>
+                        <span className="text-xs text-gray-400 block mt-0.5">Median Split at 17/18</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                        <span className="text-[8px] text-gray-500 block uppercase">Range Spread</span>
+                        <span className="text-xs text-gray-500 block uppercase">Range Spread</span>
                         <span className="text-base font-black text-emerald-300">{spread}</span>
-                        <span className="text-[8px] text-gray-400 block mt-0.5">Max ({nums[4]}) - Min ({nums[0]})</span>
+                        <span className="text-xs text-gray-400 block mt-0.5">Max ({nums[4]}) - Min ({nums[0]})</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Jackpots & Multiplier */}
                   <div className="p-3 rounded-xl bg-slate-900/80 border border-white/5 space-y-1.5 text-xs">
-                    <div className="flex justify-between items-center text-[10px]">
+                    <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400 uppercase">Jackpot Est.</span>
                       <span className="font-bold text-emerald-400">{selectedDraw.jackpot === "X" ? "Draw Finalized" : selectedDraw.jackpot}</span>
                     </div>
-                    <div className="flex justify-between items-center text-[10px]">
+                    <div className="flex justify-between items-center text-xs">
                       <span className="text-gray-400 uppercase">Multiplier Ball</span>
                       <span className="font-bold text-amber-300">{selectedDraw.multiplier}</span>
                     </div>
                     {consecutivePairs > 0 && (
-                      <div className="flex justify-between items-center text-[10px] text-cyan-400">
+                      <div className="flex justify-between items-center text-xs text-cyan-400">
                         <span>Consecutive Pairs:</span>
                         <span className="font-bold">{consecutivePairs} pair(s) found</span>
                       </div>

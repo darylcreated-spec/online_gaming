@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Info,
   Heart,
   ArrowRight,
   Clock,
@@ -129,15 +128,15 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
   );
 
   const renderCountdownRow = (cd: DrawCountdown) => (
-    <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#070b14] border border-white/[0.06] font-mono text-[11px]">
+    <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#070b14] border border-white/[0.06] text-xs font-sans">
       <div className="flex items-center gap-1.5 text-slate-400 min-w-0 truncate">
         <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
         <span className="truncate">
-          Next: <strong className="text-slate-200">{mounted ? cd.targetLabel : "—"}</strong>
+          Next draw: <strong className="text-slate-200 font-semibold">{mounted ? cd.targetLabel : "Loading"}</strong>
         </span>
       </div>
-      <span className="tabular-nums font-bold text-slate-100 shrink-0">
-        {mounted ? `${cd.hours}:${cd.minutes}:${cd.seconds}` : "--:--:--"}
+      <span className="font-mono tabular-nums font-bold text-slate-100 shrink-0">
+        {mounted ? `${cd.hours}h ${cd.minutes}m ${cd.seconds}s` : "Loading"}
       </span>
     </div>
   );
@@ -149,54 +148,56 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-8">
-      {/* 1. Minimalist Editorial Orientation Strip */}
+      {/* 1. Clean First-Time Orientation Strip */}
       <header className="rounded-2xl bg-[#0a0f1a] border border-white/[0.08] px-4 sm:px-6 py-4 sm:py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <WinConceptLogoEmblem size="md" className="shrink-0" />
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-base sm:text-xl font-bold tracking-tight text-white font-sans">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">
                 The Win Concept
               </h1>
-              <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-900 border border-white/10 text-slate-300">
+              <span className="text-xs font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-slate-900 border border-white/10 text-slate-300 font-sans">
                 NLCB ANALYTICS
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-400 font-sans leading-snug">
+            <p className="text-sm text-slate-300 font-sans leading-relaxed">
               Understand exact odds, compare ticket budgets, and remove overlapping plays.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 shrink-0 text-[10px] sm:text-[11px] font-mono">
+        <div className="grid grid-cols-3 gap-2 shrink-0 text-xs font-sans">
           {[
             {
               num: "01",
               label: "Pick Game",
               color: "text-sky-400",
-              desc: "Compare Cash Pot, Lotto Plus, Win For Life, Play Whe, Pick 4, and Fast Cash costs & schedules."
+              desc: "Compare Cash Pot, Lotto Plus, Win For Life, Play Whe, Pick 4, and Fast Cash costs and draw schedules."
             },
             {
               num: "02",
               label: "Check Odds",
               color: "text-emerald-400",
-              desc: "See exact mathematical prize odds, $0-return risk, and the zero-overlap Steiner budget curve."
+              desc: "See exact mathematical prize odds, your chance of winning nothing, and the non-overlapping budget curve."
             },
             {
               num: "03",
               label: "Play",
               color: "text-amber-400",
-              desc: "Copy, download, or print Panel A–E sheets and play at any official NLCB Lotto booth."
+              desc: "Copy, download, or print Panel A to E play sheets and play at any official NLCB Lotto booth."
             }
           ].map((step) => (
             <div
               key={step.num}
-              className="relative group px-2.5 py-1.5 rounded-lg bg-[#070b14] border border-white/[0.06] md:hover:border-white/20 text-slate-300 transition cursor-default"
+              className="relative group px-3 py-2 rounded-lg bg-[#070b14] border border-white/[0.06] md:hover:border-white/20 text-slate-200 font-semibold transition cursor-default text-center sm:text-left"
             >
-              <span className={`${step.color} font-bold`}>{step.num}</span> {step.label}
-              <div className="hidden md:block pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-56 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-40 font-sans text-[11px] text-slate-300 leading-snug">
-                <div className="font-mono font-bold text-white mb-0.5">
-                  <span className={step.color}>{step.num}</span> {step.label}
+              <span className={`${step.color} font-mono font-bold mr-1`}>{step.num}</span>
+              <span>{step.label}</span>
+              <div className="hidden md:block pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-64 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-40 font-sans text-xs text-slate-300 leading-relaxed text-left font-normal">
+                <div className="font-bold text-white mb-1 text-sm">
+                  <span className={`${step.color} font-mono mr-1.5`}>{step.num}</span>
+                  {step.label}
                 </div>
                 {step.desc}
               </div>
@@ -205,26 +206,26 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         </div>
       </header>
 
-      {/* 2. Interactive Global Budget Curve & Exact Odds Planner (Centerpiece) */}
+      {/* 2. Interactive Global Budget Curve and Exact Odds Planner (Centerpiece) */}
       <BudgetOddsExplorer
         onSelectGame={(g) => navigate(g)}
         targetDrawNumbers={targetDrawNumbers}
       />
 
-      {/* 3. Live Official NLCB Draw Results (All 6 Games, Clean Institutional Grid) */}
-      <section aria-label="Live Official NLCB Draw Results" className="space-y-3.5">
-        <div className="flex items-end justify-between px-0.5">
-          <div>
-            <h2 className="text-sm sm:text-base font-bold text-white font-sans tracking-tight">
+      {/* 3. Live Official NLCB Draw Results (All 6 Games) */}
+      <section aria-label="Latest Official NLCB Results" className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-2 px-0.5">
+          <div className="space-y-1">
+            <h2 className="text-lg sm:text-xl font-bold text-white font-sans tracking-tight">
               Latest Official NLCB Results
             </h2>
-            <p className="text-xs text-slate-400 font-sans">
-              Verified results from the live database · Tap any game for full history &amp; covering tools
+            <p className="text-sm text-slate-400 font-sans leading-relaxed">
+              Verified results from the live database. Select any game for full draw history and ticket planning tools.
             </p>
           </div>
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            6 Games Active
+          <span className="hidden sm:inline-flex items-center gap-2 text-xs font-medium text-slate-300 font-sans">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            All 6 NLCB Games Active
           </span>
         </div>
 
@@ -240,41 +241,41 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
                   <div>
-                    <h3 className="text-sm font-bold text-white font-sans">Cash Pot</h3>
-                    <span className="text-[11px] font-mono text-slate-400">
-                      {latestCashPot ? `Draw #${latestCashPot.draw_number} · ${latestCashPot.draw_date}` : "Syncing..."}
+                    <h3 className="text-base font-bold text-white font-sans">Cash Pot</h3>
+                    <span className="text-xs text-slate-400 font-sans">
+                      {latestCashPot ? `Draw ${latestCashPot.draw_number} on ${latestCashPot.draw_date}` : "Updating results"}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
-                  $5 / slip
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0 font-sans">
+                  $5 per slip
                 </span>
               </div>
 
               {renderCountdownRow(countdowns.cashPot)}
 
               <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-                  <span>Last Winning 5 Balls (1–20)</span>
+                <div className="flex items-center justify-between text-xs font-sans text-slate-400 font-medium">
+                  <span>Last 5 Winning Numbers (1 to 20)</span>
                   {latestCashPot?.multiplier && (
                     <span className="text-amber-300 font-bold">
-                      {String(latestCashPot.multiplier).replace(/x$/i, "")}X Mult
+                      {String(latestCashPot.multiplier).replace(/x$/i, "")} times Multiplier
                     </span>
                   )}
                 </div>
                 {loadingResults && !latestCashPot ? (
                   <div className="flex gap-1.5 animate-pulse py-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
+                      <div key={i} className="w-8 h-8 rounded-full bg-slate-800" />
                     ))}
                   </div>
                 ) : latestCashPot ? (
-                  <div className="flex items-center gap-1.5 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {[latestCashPot.num1, latestCashPot.num2, latestCashPot.num3, latestCashPot.num4, latestCashPot.num5].map(
                       (num: number, i: number) => (
                         <span
                           key={i}
-                          className="w-7 h-7 rounded-full bg-amber-400/15 border border-amber-400/45 text-amber-200 font-mono font-bold text-xs flex items-center justify-center tabular-nums"
+                          className="w-8 h-8 rounded-full bg-amber-400/15 border border-amber-400/45 text-amber-200 font-mono font-bold text-xs flex items-center justify-center tabular-nums"
                         >
                           {num}
                         </span>
@@ -282,23 +283,23 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     )}
                   </div>
                 ) : (
-                  <span className="text-xs text-slate-500">No draw data</span>
+                  <span className="text-xs text-slate-400 font-sans">No draw data yet</span>
                 )}
               </div>
 
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
-                <span>10-Slip Exact Ceiling</span>
-                <span className="text-emerald-300 font-bold">63.34% Match 3+ · 20/20</span>
+              <div className="flex items-center justify-between text-xs font-sans text-slate-400 px-0.5">
+                <span>10-Slip Best Odds</span>
+                <span className="text-emerald-300 font-bold">63.34% win chance (all 20 numbers)</span>
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => navigate("cashpot")}
-              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
+              className="w-full py-2.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-sm font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Open Cash Pot Analytics</span>
-              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+              <span>Open Cash Pot Page</span>
+              <ArrowRight className="w-4 h-4 text-sky-400" />
             </button>
           </article>
 
@@ -313,32 +314,32 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
                   <div>
-                    <h3 className="text-sm font-bold text-white font-sans">Lotto Plus</h3>
-                    <span className="text-[11px] font-mono text-slate-400">
-                      {latestLotto ? `Draw #${latestLotto.draw_number} · ${latestLotto.draw_date}` : "Syncing..."}
+                    <h3 className="text-base font-bold text-white font-sans">Lotto Plus</h3>
+                    <span className="text-xs text-slate-400 font-sans">
+                      {latestLotto ? `Draw ${latestLotto.draw_number} on ${latestLotto.draw_date}` : "Updating results"}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
-                  $5 / play
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0 font-sans">
+                  $5 per play
                 </span>
               </div>
 
               {renderCountdownRow(countdowns.lotto)}
 
               <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-                  <span>Last Winning (5/35 + PB)</span>
+                <div className="flex items-center justify-between text-xs font-sans text-slate-400 font-medium">
+                  <span>Last Winning Numbers (1 to 35)</span>
                   {latestLotto?.multiplier && (
                     <span className="text-sky-300 font-bold">
-                      {String(latestLotto.multiplier).replace(/x$/i, "")}X Mult
+                      {String(latestLotto.multiplier).replace(/x$/i, "")} times Multiplier
                     </span>
                   )}
                 </div>
                 {loadingResults && !latestLotto ? (
                   <div className="flex gap-1.5 animate-pulse py-0.5">
                     {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
+                      <div key={i} className="w-8 h-8 rounded-full bg-slate-800" />
                     ))}
                   </div>
                 ) : latestLotto ? (
@@ -347,42 +348,40 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                       (num: number, i: number) => (
                         <span
                           key={i}
-                          className="w-7 h-7 rounded-full bg-sky-400/15 border border-sky-400/45 text-sky-200 font-mono font-bold text-xs flex items-center justify-center tabular-nums"
+                          className="w-8 h-8 rounded-full bg-sky-400/15 border border-sky-400/45 text-sky-200 font-mono font-bold text-xs flex items-center justify-center tabular-nums"
                         >
                           {num}
                         </span>
                       )
                     )}
                     {latestLotto.powerball && (
-                      <>
-                        <span className="text-slate-600 font-mono text-xs">+</span>
-                        <span
-                          title="Powerball"
-                          className="w-7 h-7 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-200 font-mono font-bold text-xs flex items-center justify-center tabular-nums"
-                        >
-                          {latestLotto.powerball}
-                        </span>
-                      </>
+                      <span
+                        title="Powerball"
+                        className="px-2.5 h-8 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-200 font-sans font-bold text-xs flex items-center justify-center gap-1 tabular-nums"
+                      >
+                        <span className="text-amber-300/90 font-medium">Powerball</span>
+                        <span className="font-mono">{latestLotto.powerball}</span>
+                      </span>
                     )}
                   </div>
                 ) : (
-                  <span className="text-xs text-slate-500">No draw data</span>
+                  <span className="text-xs text-slate-400 font-sans">No draw data yet</span>
                 )}
               </div>
 
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
-                <span>10-Play Stratified (1–10 PB)</span>
-                <span className="text-emerald-300 font-bold">62.93% Any Prize</span>
+              <div className="flex items-center justify-between text-xs font-sans text-slate-400 px-0.5">
+                <span>10 Plays (all 10 Powerballs)</span>
+                <span className="text-emerald-300 font-bold">62.93% any prize chance</span>
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => navigate("lotto-plus")}
-              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
+              className="w-full py-2.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-sm font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Open Lotto Plus Wheels</span>
-              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+              <span>Open Lotto Plus Page</span>
+              <ArrowRight className="w-4 h-4 text-sky-400" />
             </button>
           </article>
 
@@ -397,31 +396,31 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
                   <div>
-                    <h3 className="text-sm font-bold text-white font-sans">Win For Life</h3>
-                    <span className="text-[11px] font-mono text-slate-400">
-                      {latestWinForLife ? `Draw #${latestWinForLife.draw_number} · ${latestWinForLife.draw_date}` : "Syncing..."}
+                    <h3 className="text-base font-bold text-white font-sans">Win For Life</h3>
+                    <span className="text-xs text-slate-400 font-sans">
+                      {latestWinForLife ? `Draw ${latestWinForLife.draw_number} on ${latestWinForLife.draw_date}` : "Updating results"}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
-                  $10 / line
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0 font-sans">
+                  $10 per line
                 </span>
               </div>
 
               {renderCountdownRow(countdowns.winForLife)}
 
               <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
-                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-                  Last Winning (6/28 + Cash Ball)
+                <div className="text-xs font-sans text-slate-400 font-medium">
+                  Last Winning Numbers (1 to 28) and Cash Ball
                 </div>
                 {loadingResults && !latestWinForLife ? (
-                  <div className="flex gap-1 animate-pulse py-0.5">
+                  <div className="flex gap-1.5 animate-pulse py-0.5">
                     {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="w-6 h-6 rounded-full bg-slate-800" />
+                      <div key={i} className="w-7 h-7 rounded-full bg-slate-800" />
                     ))}
                   </div>
                 ) : latestWinForLife ? (
-                  <div className="flex items-center gap-1 flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     {[
                       latestWinForLife.num1,
                       latestWinForLife.num2,
@@ -432,41 +431,39 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     ].map((num: number, i: number) => (
                       <span
                         key={i}
-                        className="w-6 h-6 rounded-full bg-emerald-400/15 border border-emerald-400/45 text-emerald-200 font-mono font-bold text-[11px] flex items-center justify-center tabular-nums"
+                        className="w-7 h-7 rounded-full bg-emerald-400/15 border border-emerald-400/45 text-emerald-200 font-mono font-bold text-xs flex items-center justify-center tabular-nums"
                       >
                         {num}
                       </span>
                     ))}
                     {latestWinForLife.cash_ball && (
-                      <>
-                        <span className="text-slate-600 font-mono text-xs">+</span>
-                        <span
-                          title="Cash Ball"
-                          className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-200 font-mono font-bold text-[11px] flex items-center justify-center tabular-nums"
-                        >
-                          {latestWinForLife.cash_ball}
-                        </span>
-                      </>
+                      <span
+                        title="Cash Ball"
+                        className="px-2.5 h-7 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-200 font-sans font-bold text-xs flex items-center justify-center gap-1 tabular-nums"
+                      >
+                        <span className="text-amber-300/90 font-medium">Cash Ball</span>
+                        <span className="font-mono">{latestWinForLife.cash_ball}</span>
+                      </span>
                     )}
                   </div>
                 ) : (
-                  <span className="text-xs text-slate-500">No draw data</span>
+                  <span className="text-xs text-slate-400 font-sans">No draw data yet</span>
                 )}
               </div>
 
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
-                <span>10-Line Exact Ceiling</span>
-                <span className="text-emerald-300 font-bold">72.13% Match 3+ · 28/28</span>
+              <div className="flex items-center justify-between text-xs font-sans text-slate-400 px-0.5">
+                <span>10-Line Best Odds</span>
+                <span className="text-emerald-300 font-bold">72.13% win chance (all 28 numbers)</span>
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => navigate("win-for-life")}
-              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
+              className="w-full py-2.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-sm font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Open Win For Life</span>
-              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+              <span>Open Win For Life Page</span>
+              <ArrowRight className="w-4 h-4 text-sky-400" />
             </button>
           </article>
 
@@ -481,28 +478,28 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
                   <div>
-                    <h3 className="text-sm font-bold text-white font-sans">Play Whe</h3>
-                    <span className="text-[11px] font-mono text-slate-400">
+                    <h3 className="text-base font-bold text-white font-sans">Play Whe</h3>
+                    <span className="text-xs text-slate-400 font-sans">
                       {latestPlayWhe
-                        ? `${latestPlayWhe.draw_time_slot || "Draw"} #${latestPlayWhe.draw_number}`
-                        : "Syncing..."}
+                        ? `${latestPlayWhe.draw_time_slot || "Draw"} Number ${latestPlayWhe.draw_number}`
+                        : "Updating results"}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0 font-sans">
                   From $1
                 </span>
               </div>
 
               {renderCountdownRow(countdowns.playWhe)}
 
-              <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-1.5">
-                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-                  Last Winning Mark (1–36)
+              <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
+                <div className="text-xs font-sans text-slate-400 font-medium">
+                  Last Winning Mark (1 to 36)
                 </div>
                 {loadingResults && !latestPlayWhe ? (
                   <div className="flex items-center gap-2.5 animate-pulse py-0.5">
-                    <div className="w-8 h-8 rounded-full bg-slate-800" />
+                    <div className="w-9 h-9 rounded-full bg-slate-800" />
                     <div className="w-24 h-3 bg-slate-800 rounded" />
                   </div>
                 ) : latestPlayWhe ? (
@@ -511,32 +508,32 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                       {latestPlayWhe.winning_number}
                     </span>
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-white uppercase font-sans truncate">
+                      <div className="text-sm font-bold text-white font-sans truncate">
                         {CHINAPOO_CHART[latestPlayWhe.winning_number]?.mark || "Official Mark"}
                       </div>
-                      <div className="text-[11px] text-slate-400 font-sans truncate">
+                      <div className="text-xs text-slate-400 font-sans truncate">
                         {CHINAPOO_CHART[latestPlayWhe.winning_number]?.keywords?.slice(0, 3).join(", ") || ""}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <span className="text-xs text-slate-500">No draw data</span>
+                  <span className="text-xs text-slate-400 font-sans">No draw data yet</span>
                 )}
               </div>
 
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
-                <span>Exact Single-Mark Odds</span>
-                <span className="text-slate-200 font-bold">2.78% (1 in 36) · 26x</span>
+              <div className="flex items-center justify-between text-xs font-sans text-slate-400 px-0.5">
+                <span>Single Mark Odds</span>
+                <span className="text-slate-200 font-bold">1 in 36 (pays 26 times)</span>
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => navigate("play-whe")}
-              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
+              className="w-full py-2.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-sm font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Open Play Whe &amp; Chinapoo</span>
-              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+              <span>Open Play Whe and Chinapoo</span>
+              <ArrowRight className="w-4 h-4 text-sky-400" />
             </button>
           </article>
 
@@ -551,13 +548,13 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
                   <div>
-                    <h3 className="text-sm font-bold text-white font-sans">Pick 4</h3>
-                    <span className="text-[11px] font-mono text-slate-400">
-                      {latestPick4 ? `${latestPick4.draw_time_slot || "Draw"} #${latestPick4.draw_number}` : "Syncing..."}
+                    <h3 className="text-base font-bold text-white font-sans">Pick 4</h3>
+                    <span className="text-xs text-slate-400 font-sans">
+                      {latestPick4 ? `${latestPick4.draw_time_slot || "Draw"} Number ${latestPick4.draw_number}` : "Updating results"}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0 font-sans">
                   From $1
                 </span>
               </div>
@@ -565,13 +562,13 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
               {renderCountdownRow(countdowns.pick4)}
 
               <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
-                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-                  Last Winning 4 Digits (0–9)
+                <div className="text-xs font-sans text-slate-400 font-medium">
+                  Last Winning 4 Digits (0 to 9)
                 </div>
                 {loadingResults && !latestPick4 ? (
                   <div className="flex gap-1.5 animate-pulse py-0.5">
                     {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="w-7 h-7 rounded-lg bg-slate-800" />
+                      <div key={i} className="w-8 h-8 rounded-lg bg-slate-800" />
                     ))}
                   </div>
                 ) : latestPick4 ? (
@@ -580,7 +577,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                       (d: number, i: number) => (
                         <span
                           key={i}
-                          className="w-7 h-7 rounded-lg bg-purple-400/15 border border-purple-400/45 text-purple-200 font-mono font-bold text-sm flex items-center justify-center tabular-nums"
+                          className="w-8 h-8 rounded-lg bg-purple-400/15 border border-purple-400/45 text-purple-200 font-mono font-bold text-sm flex items-center justify-center tabular-nums"
                         >
                           {d}
                         </span>
@@ -588,23 +585,23 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     )}
                   </div>
                 ) : (
-                  <span className="text-xs text-slate-500">No draw data</span>
+                  <span className="text-xs text-slate-400 font-sans">No draw data yet</span>
                 )}
               </div>
 
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
-                <span>Straight / 24-Way Box</span>
-                <span className="text-slate-200 font-bold">1 in 10k · 1 in 417</span>
+              <div className="flex items-center justify-between text-xs font-sans text-slate-400 px-0.5">
+                <span>Exact or 24-Way Box</span>
+                <span className="text-slate-200 font-bold">1 in 10,000 or 1 in 417</span>
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => navigate("pick4")}
-              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
+              className="w-full py-2.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-sm font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Open Pick 4 Analytics</span>
-              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+              <span>Open Pick 4 Page</span>
+              <ArrowRight className="w-4 h-4 text-sky-400" />
             </button>
           </article>
 
@@ -619,80 +616,80 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                     className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0"
                   />
                   <div>
-                    <h3 className="text-sm font-bold text-white font-sans">Fast Cash</h3>
-                    <span className="text-[11px] font-mono text-slate-400">
-                      {latestFastCash ? `Draw #${latestFastCash.draw_number}` : "Every 3 Minutes"}
+                    <h3 className="text-base font-bold text-white font-sans">Fast Cash</h3>
+                    <span className="text-xs text-slate-400 font-sans">
+                      {latestFastCash ? `Draw Number ${latestFastCash.draw_number}` : "Every 3 Minutes"}
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0">
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 shrink-0 font-sans">
                   From $1
                 </span>
               </div>
 
-              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#070b14] border border-white/[0.06] font-mono text-[11px]">
+              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#070b14] border border-white/[0.06] text-xs font-sans">
                 <div className="flex items-center gap-1.5 text-slate-400">
                   <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  <span>Rapid 3-Minute Cadence</span>
+                  <span>New draw every 3 minutes</span>
                 </div>
-                <span className="text-emerald-400 font-bold">LIVE</span>
+                <span className="text-emerald-400 font-bold uppercase">Live</span>
               </div>
 
               <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.06] space-y-2">
-                <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
-                  Latest Pocket (0, 00, 1–36)
+                <div className="text-xs font-sans text-slate-400 font-medium">
+                  Latest Winning Number (0, 00, and 1 to 36)
                 </div>
                 {latestFastCash?.winning_code ? (
                   <div className="flex items-center gap-2.5">
                     <span className="w-9 h-9 rounded-full bg-cyan-400/15 border border-cyan-400/45 text-cyan-200 font-mono font-bold text-sm flex items-center justify-center tabular-nums">
                       {latestFastCash.winning_code}
                     </span>
-                    <span className="text-xs text-slate-400 font-mono">
-                      {latestFastCash.draw_time || "Recent 3-min draw"}
+                    <span className="text-xs text-slate-300 font-sans">
+                      {latestFastCash.draw_time || "Recent 3-minute draw"}
                     </span>
                   </div>
                 ) : (
                   <span className="text-xs text-slate-400 font-sans">
-                    Open Fast Cash tab to sync latest 3-minute draws
+                    Open Fast Cash to view the latest 3-minute draws
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-0.5">
-                <span>Exact 38-Pocket Odds</span>
-                <span className="text-slate-200 font-bold">2.63% / pocket</span>
+              <div className="flex items-center justify-between text-xs font-sans text-slate-400 px-0.5">
+                <span>Single Number Odds</span>
+                <span className="text-slate-200 font-bold">2.63% (1 in 38)</span>
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => navigate("fast-cash")}
-              className="w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-xs font-semibold font-sans transition flex items-center justify-between cursor-pointer"
+              className="w-full py-2.5 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-100 text-sm font-semibold font-sans transition flex items-center justify-between cursor-pointer"
             >
-              <span>Open Fast Cash Terminal</span>
-              <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+              <span>Open Fast Cash Page</span>
+              <ArrowRight className="w-4 h-4 text-sky-400" />
             </button>
           </article>
         </div>
       </section>
 
-      {/* 4. Compact 3-Tool Utility Strip (Scanner · Ask DB · Syndicates) */}
-      <section aria-label="Player Tools" className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+      {/* 4. Helpful Player Tools */}
+      <section aria-label="Player Tools" className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button
           type="button"
           onClick={() => navigate("scanner")}
-          className="text-left p-4 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-sky-400/40 transition flex items-start gap-3.5 cursor-pointer group"
+          className="text-left p-5 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-sky-400/40 transition flex items-start gap-3.5 cursor-pointer group"
         >
           <div className="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-sky-400 shrink-0">
-            <Camera className="w-4 h-4" />
+            <Camera className="w-5 h-5" />
           </div>
-          <div className="space-y-0.5 min-w-0">
-            <div className="text-sm font-bold text-white font-sans flex items-center gap-1.5">
+          <div className="space-y-1 min-w-0">
+            <h3 className="text-base font-bold text-white font-sans flex items-center gap-1.5">
               <span>Ticket Scanner</span>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-sky-400 transition" />
-            </div>
-            <p className="text-xs text-slate-400 font-sans leading-snug">
-              Scan or enter your printed NLCB bet slip to verify matches against official records.
+              <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-sky-400 transition" />
+            </h3>
+            <p className="text-sm text-slate-400 font-sans leading-relaxed">
+              Scan or type in your printed NLCB ticket to check for winning matches against official draws.
             </p>
           </div>
         </button>
@@ -700,18 +697,18 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         <button
           type="button"
           onClick={() => navigate("scanner-query" as any)}
-          className="text-left p-4 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-sky-400/40 transition flex items-start gap-3.5 cursor-pointer group"
+          className="text-left p-5 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-sky-400/40 transition flex items-start gap-3.5 cursor-pointer group"
         >
           <div className="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-emerald-400 shrink-0">
-            <Database className="w-4 h-4" />
+            <Database className="w-5 h-5" />
           </div>
-          <div className="space-y-0.5 min-w-0">
-            <div className="text-sm font-bold text-white font-sans flex items-center gap-1.5">
+          <div className="space-y-1 min-w-0">
+            <h3 className="text-base font-bold text-white font-sans flex items-center gap-1.5">
               <span>Ask the Draw Database</span>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-emerald-400 transition" />
-            </div>
-            <p className="text-xs text-slate-400 font-sans leading-snug">
-              Ask plain-English questions across 22,500+ historical NLCB draws with instant SQL checks.
+              <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition" />
+            </h3>
+            <p className="text-sm text-slate-400 font-sans leading-relaxed">
+              Ask everyday questions across more than 22,500 past NLCB draws and get instant answers.
             </p>
           </div>
         </button>
@@ -719,18 +716,18 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         <button
           type="button"
           onClick={() => navigate("syndicate")}
-          className="text-left p-4 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-sky-400/40 transition flex items-start gap-3.5 cursor-pointer group"
+          className="text-left p-5 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] hover:border-sky-400/40 transition flex items-start gap-3.5 cursor-pointer group"
         >
           <div className="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-amber-400 shrink-0">
-            <Layers className="w-4 h-4" />
+            <Layers className="w-5 h-5" />
           </div>
-          <div className="space-y-0.5 min-w-0">
-            <div className="text-sm font-bold text-white font-sans flex items-center gap-1.5">
-              <span>Syndicate Pools</span>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-amber-400 transition" />
-            </div>
-            <p className="text-xs text-slate-400 font-sans leading-snug">
-              Split 15-slip ($75) or 20-slip ($100) Steiner wheels with friends and share slips on WhatsApp.
+          <div className="space-y-1 min-w-0">
+            <h3 className="text-base font-bold text-white font-sans flex items-center gap-1.5">
+              <span>Group Pools</span>
+              <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-amber-400 transition" />
+            </h3>
+            <p className="text-sm text-slate-400 font-sans leading-relaxed">
+              Split 15-slip ($75) or 20-slip ($100) non-overlapping ticket sets with friends and share them on WhatsApp.
             </p>
           </div>
         </button>
@@ -742,37 +739,37 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
         onSelectGame={(gameKey) => navigate(gameKey)}
       />
 
-      {/* 6. Honest Math Transparency & Fair Play Footer */}
+      {/* 6. Honest Math Transparency and Fair Play Footer */}
       <footer className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-8 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] p-5 space-y-2.5">
-          <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+          <h3 className="text-base flex items-center gap-2 font-bold text-white font-sans">
             <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Honest Probability &amp; Fair Play Notice</span>
-          </div>
-          <p className="text-xs text-slate-400 font-sans leading-relaxed">
-            Every NLCB game is a game of chance with an inherent house edge (~40% on pari-mutuel games). No algorithm can predict which individual balls a fair lottery machine will draw next. What mathematics <strong className="text-slate-200">can</strong> optimize is: (1) eliminating wasted ball overlap via Steiner-Johnson packing, (2) full 1–10 Powerball/Cash Ball stratification, (3) avoiding human-crowded combinations so pari-mutuel jackpots are split less often, and (4) playing Cash Pot on Mon / Thu / Sat Sure Call days for 2x–4x Multipliers.
+            <span>Honest Odds and Fair Play Notice</span>
+          </h3>
+          <p className="text-sm text-slate-300 font-sans leading-relaxed">
+            Every NLCB game is a game of chance where the lottery keeps about 40% of ticket sales on shared-jackpot games. No formula can predict which numbers a fair lottery machine will draw next. What math <strong className="text-white">can</strong> improve is: removing wasted overlapping pairs across your tickets, covering all 10 Powerball or Cash Ball numbers from 1 to 10, avoiding common date patterns so jackpots are shared less often, and playing Cash Pot on Monday, Thursday, and Saturday Sure Call days for 2 to 4 times Multipliers.
           </p>
-          <p className="text-[11px] text-slate-500 font-sans">
-            Not affiliated with or endorsed by the National Lotteries Control Board (NLCB) of Trinidad &amp; Tobago. Using this tool does not guarantee winnings — play strictly within your budget.
+          <p className="text-xs text-slate-400 font-sans leading-relaxed">
+            This platform is not affiliated with or endorsed by the National Lotteries Control Board (NLCB) of Trinidad and Tobago. Using this tool does not guarantee winnings. Always play within your budget.
           </p>
         </div>
 
         <div className="lg:col-span-4 rounded-2xl bg-[#0a0f1a] border border-white/[0.08] p-5 flex flex-col justify-between space-y-3">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-slate-200">
+            <h3 className="text-base flex items-center gap-2 font-bold text-white font-sans">
               <Heart className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>Support the Project</span>
-            </div>
-            <p className="text-xs text-slate-400 font-sans leading-relaxed">
-              This platform is free to use. Questions, feedback, or support inquiries are always welcome.
+              <span>Support and Feedback</span>
+            </h3>
+            <p className="text-sm text-slate-300 font-sans leading-relaxed">
+              This platform is free to use. Questions, suggestions, or support messages are always welcome.
             </p>
           </div>
-          <div className="p-2.5 rounded-xl bg-[#070b14] border border-white/[0.08] flex items-center justify-between gap-2">
+          <div className="p-3 rounded-xl bg-[#070b14] border border-white/[0.08] flex items-center justify-between gap-2">
             <a
               href="mailto:daryl.created@gmail.com"
-              className="flex items-center gap-2 text-xs font-mono font-semibold text-amber-300 truncate"
+              className="flex items-center gap-2 text-xs font-sans font-semibold text-amber-300 truncate"
             >
-              <Mail className="w-3.5 h-3.5 shrink-0" />
+              <Mail className="w-4 h-4 shrink-0" />
               <span className="truncate">daryl.created@gmail.com</span>
             </a>
             <button
@@ -782,16 +779,16 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
                 setEmailCopied(true);
                 setTimeout(() => setEmailCopied(false), 2200);
               }}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-200 text-[11px] font-mono font-semibold flex items-center gap-1 shrink-0 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-200 text-xs font-sans font-semibold flex items-center gap-1.5 shrink-0 cursor-pointer"
             >
               {emailCopied ? (
                 <>
-                  <Check className="w-3 h-3 text-emerald-400" />
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
                   <span className="text-emerald-300">Copied</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3 h-3" />
+                  <Copy className="w-3.5 h-3.5" />
                   <span>Copy</span>
                 </>
               )}

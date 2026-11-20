@@ -137,11 +137,11 @@ export default function FastCashTab() {
                 className="w-11 h-11 object-contain rounded-xl shadow-[0_0_15px_rgba(244,63,94,0.35)] shrink-0"
               />
               <div>
-                <h1 className="text-lg sm:text-xl font-bold text-slate-50 tracking-tight" style={{ color: "#f8fafc" }}>
-                  NLCB Fast Cash — Live Results &amp; 38-State Analytics
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-50 tracking-tight font-sans" style={{ color: "#f8fafc" }}>
+                  NLCB Fast Cash: Live Results and Odds
                 </h1>
-                <p className="text-xs text-slate-400 font-mono">
-                  38-State Wheel (0, 00, 01–36) • 3-Min High-Frequency Draws • Dedicated Turso Audit DB
+                <p className="text-sm text-slate-300 font-sans">
+                  38 numbers (0, 00, and 1 to 36), drawn every 3 minutes daily starting from $1.00 per play.
                 </p>
               </div>
             </div>
@@ -153,7 +153,7 @@ export default function FastCashTab() {
                 <button
                   key={d}
                   onClick={() => setDepth(d)}
-                  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
                     depth === d
                       ? "bg-rose-500 text-slate-950 font-bold"
                       : "text-slate-400 hover:text-white"
@@ -192,16 +192,16 @@ export default function FastCashTab() {
         {/* Live Telemetry Strip */}
         <div className="mt-4 pt-4 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
           <div className="bg-[#14191e] rounded-xl p-3 border border-slate-800">
-            <div className="text-[10px] text-slate-400 uppercase">Fast Cash DB Size</div>
+            <div className="text-xs text-slate-400 uppercase">Fast Cash DB Size</div>
             <div className="text-base font-bold text-white mt-0.5">
               {report ? report.dbTotalDraws.toLocaleString() : "—"} draws
             </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">
+            <div className="text-xs text-slate-400 mt-0.5">
               Analyzed: {report ? report.analyzedDraws.toLocaleString() : "—"}
             </div>
           </div>
           <div className="bg-[#14191e] rounded-xl p-3 border border-slate-800">
-            <div className="text-[10px] text-slate-400 uppercase">Latest Official Draw</div>
+            <div className="text-xs text-slate-400 uppercase">Latest Official Draw</div>
             <div className="text-base font-bold text-white mt-0.5">
               {latest ? `#${latest.draw_number}` : "—"}
               {latest && (
@@ -211,29 +211,29 @@ export default function FastCashTab() {
               )}
             </div>
             {latest && (
-              <div className="text-[10px] text-slate-400 mt-0.5">
-                {latest.draw_date} • {latest.draw_time}
+              <div className="text-xs text-slate-400 mt-0.5">
+                {latest.draw_date} at {latest.draw_time}
               </div>
             )}
           </div>
           <div className="bg-[#14191e] rounded-xl p-3 border border-slate-800">
-            <div className="text-[10px] text-slate-400 uppercase">Shannon Entropy</div>
+            <div className="text-xs text-slate-400 uppercase font-semibold">Randomness Score</div>
             <div className="text-base font-bold text-cyan-300 mt-0.5">
-              {diag ? `${diag.shannonEntropyBits} / ${diag.maxEntropyBits} bits` : "—"}
+              {diag ? `${diag.shannonEntropyBits} of ${diag.maxEntropyBits} bits` : "Pending"}
             </div>
             {diag && (
-              <div className="text-[10px] text-slate-400 mt-0.5">
-                {diag.entropyEfficiencyPct}% uniform efficiency
+              <div className="text-xs text-slate-400 mt-0.5">
+                {diag.entropyEfficiencyPct}% even spread
               </div>
             )}
           </div>
           <div className="bg-[#14191e] rounded-xl p-3 border border-slate-800">
-            <div className="text-[10px] text-slate-400 uppercase">Chi-Square (df=37)</div>
+            <div className="text-xs text-slate-400 uppercase font-semibold">Fairness Test</div>
             <div className="text-base font-bold text-white mt-0.5">
-              {diag ? `χ²=${diag.chiSquare} (p=${diag.pValueApprox})` : "—"}
+              {diag ? `Score ${diag.chiSquare} (p-value ${diag.pValueApprox})` : "Pending"}
             </div>
             {diag && (
-              <div className="text-[10px] text-cyan-300 font-semibold mt-0.5 truncate">
+              <div className="text-xs text-cyan-300 font-semibold mt-0.5 truncate">
                 {diag.verdict.replace(/_/g, " ")}
               </div>
             )}
@@ -243,19 +243,19 @@ export default function FastCashTab() {
         {/* Recent 3-Min Official Draws Feed */}
         {report && report.recentDraws.length > 0 && (
           <div className="mt-3 pt-3 border-t border-slate-800/60 flex items-center gap-2 overflow-x-auto pb-1 sleek-scrollbar">
-            <span className="text-[10px] font-mono uppercase text-slate-400 shrink-0 pr-1">
+            <span className="text-xs font-mono uppercase text-slate-400 shrink-0 pr-1">
               Recent Feed:
             </span>
             {report.recentDraws.slice(0, 12).map((d, idx) => (
               <div
                 key={d.draw_number}
-                className={`shrink-0 px-2.5 py-1.5 rounded-lg border font-mono text-[11px] flex items-center gap-2 ${
+                className={`shrink-0 px-2.5 py-1.5 rounded-lg border font-mono text-xs flex items-center gap-2 ${
                   idx === 0
                     ? "bg-rose-500/15 border-rose-500/40 text-white"
                     : "bg-[#14191e] border-slate-800 text-slate-300"
                 }`}
               >
-                <span className="text-[10px] text-slate-400">{d.draw_time}</span>
+                <span className="text-xs text-slate-400">{d.draw_time}</span>
                 <span className="font-bold text-rose-300">{d.winning_code}</span>
               </div>
             ))}
@@ -296,23 +296,23 @@ export default function FastCashTab() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Target className="w-5 h-5 text-rose-400" />
-                  <h2 className="font-bold text-slate-50 text-sm sm:text-base" style={{ color: "#f8fafc" }}>
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-50" style={{ color: "#f8fafc" }}>
                     Next Draw Candidate Rankings (#{nextPred?.targetDrawNumber})
                   </h2>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-[10px] font-mono text-rose-300">
+                <span className="px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-xs font-mono text-rose-300">
                   38-State Ensemble
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="bg-[#14191e] rounded-xl p-3 border border-rose-500/40">
-                  <div className="text-[10px] font-mono text-slate-400 uppercase">Top-1 Pick</div>
+                  <div className="text-xs font-mono text-slate-400 uppercase">Top-1 Pick</div>
                   <div className="mt-2 flex items-center gap-2.5">
                     <span className="w-10 h-10 rounded-xl bg-rose-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-lg">
                       {nextPred?.top1}
                     </span>
-                    <div className="text-[11px] font-mono text-slate-300">
+                    <div className="text-xs font-mono text-slate-300">
                       <div className="text-white font-semibold">Weight: {nextPred?.rankedScores[0]?.score}%</div>
                       <div className="text-slate-400">Base: 2.63%</div>
                     </div>
@@ -320,7 +320,7 @@ export default function FastCashTab() {
                 </div>
 
                 <div className="sm:col-span-2 bg-[#14191e] rounded-xl p-3 border border-slate-800">
-                  <div className="text-[10px] font-mono text-slate-400 uppercase mb-2">
+                  <div className="text-xs font-mono text-slate-400 uppercase mb-2">
                     Top-5 Core (Markov + LCG + Phase + EWMA)
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -343,10 +343,10 @@ export default function FastCashTab() {
               {/* Top-10 Picks */}
               <div className="bg-[#14191e] rounded-xl p-3 border border-amber-500/30">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-mono text-amber-300 uppercase font-bold">
+                  <span className="text-xs font-mono text-amber-300 uppercase font-bold">
                     Top-10 Picks (Matches TOP-10 Analytics)
                   </span>
-                  <span className="text-[10px] font-mono text-slate-400">26.3% of Wheel</span>
+                  <span className="text-xs font-mono text-slate-400">26.3% of Wheel</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {nextPred?.top10.map((code, idx) => (
@@ -367,10 +367,10 @@ export default function FastCashTab() {
               {/* 14-Ball Core */}
               <div className="bg-[#14191e] rounded-xl p-3 border border-cyan-500/30">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-mono text-cyan-300 uppercase font-bold">
+                  <span className="text-xs font-mono text-cyan-300 uppercase font-bold">
                     14-Ball Extended Core (Top-14 Ranked)
                   </span>
-                  <span className="text-[10px] font-mono text-slate-400">36.8% of Wheel</span>
+                  <span className="text-xs font-mono text-slate-400">36.8% of Wheel</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {nextPred?.top14MandelCore.map((code, idx) => (
@@ -393,16 +393,16 @@ export default function FastCashTab() {
               {/* 19-Ball Half-Wheel */}
               <div className="bg-[#14191e] rounded-xl p-3 border border-emerald-500/30">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-mono text-emerald-300 uppercase font-bold">
+                  <span className="text-xs font-mono text-emerald-300 uppercase font-bold">
                     19-Ball Half-Wheel Coverage
                   </span>
-                  <span className="text-[10px] font-mono text-slate-400">50.0% of Wheel</span>
+                  <span className="text-xs font-mono text-slate-400">50.0% of Wheel</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {nextPred?.top19HalfWheel.map((code) => (
                     <span
                       key={code}
-                      className="px-2 py-0.5 rounded bg-slate-900 border border-emerald-500/30 text-emerald-200 font-mono text-[11px] font-semibold"
+                      className="px-2 py-0.5 rounded bg-slate-900 border border-emerald-500/30 text-emerald-200 font-mono text-xs font-semibold"
                     >
                       {code}
                     </span>
@@ -411,7 +411,7 @@ export default function FastCashTab() {
               </div>
 
               {nextPred && (
-                <div className="text-[11px] font-mono text-slate-400 flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/70">
+                <div className="text-xs font-mono text-slate-400 flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/70">
                   <span>
                     Trailing LCG Fit:{" "}
                     <strong className="text-cyan-300">
@@ -430,11 +430,11 @@ export default function FastCashTab() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Cpu className="w-5 h-5 text-cyan-400" />
-                  <h2 className="font-bold text-slate-50 text-sm sm:text-base" style={{ color: "#f8fafc" }}>
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-50" style={{ color: "#f8fafc" }}>
                     Walk-Forward Backtest ({wf?.evaluatedCount} Draws)
                   </h2>
                 </div>
-                <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono">
+                <span className="px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-mono">
                   Out-of-Sample
                 </span>
               </div>
@@ -450,10 +450,10 @@ export default function FastCashTab() {
                   const diff = Number((tier.val - tier.base).toFixed(2));
                   return (
                     <div key={tier.label} className={`bg-[#14191e] rounded-xl p-2.5 border ${tier.border}`}>
-                      <div className="text-[10px] text-slate-400">{tier.label}</div>
+                      <div className="text-xs text-slate-400">{tier.label}</div>
                       <div className={`text-base font-bold ${tier.accent} mt-1`}>{tier.val}%</div>
-                      <div className="text-[10px] text-slate-400">Base {tier.base}%</div>
-                      <div className={`text-[10px] mt-0.5 font-semibold ${diff >= 0 ? "text-emerald-400" : "text-slate-500"}`}>
+                      <div className="text-xs text-slate-400">Base {tier.base}%</div>
+                      <div className={`text-xs mt-0.5 font-semibold ${diff >= 0 ? "text-emerald-400" : "text-slate-500"}`}>
                         {diff >= 0 ? `+${diff}%` : `${diff}%`}
                       </div>
                     </div>
@@ -463,39 +463,39 @@ export default function FastCashTab() {
 
               {/* Discovered Algorithmic Step-Delta & Wheel Anomalies */}
               {diag && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-                  <div className="bg-[#14191e] rounded-xl p-3 border border-slate-800 space-y-2">
-                    <div className="text-[10px] text-slate-400 uppercase flex items-center gap-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-sans">
+                  <div className="bg-[#14191e] rounded-xl p-3.5 border border-slate-800 space-y-2">
+                    <div className="text-xs text-slate-300 font-semibold uppercase flex items-center gap-1.5">
                       <TrendingUp className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Top Numeric Step Deltas (ΔX mod 38)</span>
+                      <span>Most Common Number Jumps</span>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       {diag.topNumericStepDeltas.slice(0, 3).map((d) => (
-                        <div key={d.delta} className="flex items-center justify-between text-[11px]">
+                        <div key={d.delta} className="flex items-center justify-between text-xs">
                           <span className="text-slate-300">
-                            +{d.delta} mod 38 ({d.count}x, z=+{d.zScore}σ)
+                            Jump of {d.delta} ({d.count} times, score {d.zScore})
                           </span>
-                          <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">
-                            &rarr; {d.nextTargetCode}
+                          <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold font-mono">
+                            Next: {d.nextTargetCode}
                           </span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="bg-[#14191e] rounded-xl p-3 border border-slate-800 space-y-2">
-                    <div className="text-[10px] text-slate-400 uppercase flex items-center gap-1.5">
+                  <div className="bg-[#14191e] rounded-xl p-3.5 border border-slate-800 space-y-2">
+                    <div className="text-xs text-slate-300 font-semibold uppercase flex items-center gap-1.5">
                       <Crosshair className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Roulette Wheel Angular Steps (Δθ)</span>
+                      <span>Most Common Wheel Steps</span>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       {diag.topWheelStepDeltas.slice(0, 3).map((w) => (
-                        <div key={w.wheelStep} className="flex items-center justify-between text-[11px]">
+                        <div key={w.wheelStep} className="flex items-center justify-between text-xs">
                           <span className="text-slate-300">
-                            +{w.wheelStep} pockets ({w.count}x, z=+{w.zScore}σ)
+                            {w.wheelStep} spaces ({w.count} times, score {w.zScore})
                           </span>
-                          <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">
-                            &rarr; {w.nextTargetCode}
+                          <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold font-mono">
+                            Next: {w.nextTargetCode}
                           </span>
                         </div>
                       ))}
@@ -504,26 +504,26 @@ export default function FastCashTab() {
                 </div>
               )}
 
-              {/* Historical Sequence Twins Replay */}
+              {/* Historical Matching Sequences */}
               {nextPred && nextPred.historicalTwins.length > 0 && (
-                <div className="bg-[#14191e] rounded-xl p-3 border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-amber-300 uppercase font-bold">
-                      Exact Historical Sequence Twin Replay ({nextPred.historicalTwins.length} Matches)
+                <div className="bg-[#14191e] rounded-xl p-3.5 border border-slate-800 space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-sans text-amber-300 uppercase font-bold">
+                      Matching Past Sequences ({nextPred.historicalTwins.length} found)
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">
-                      Followers: {nextPred.twinFollowerUnion.join(", ")}
+                    <span className="text-xs font-sans text-slate-400">
+                      Followed by: {nextPred.twinFollowerUnion.join(", ")}
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] font-mono">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
                     {nextPred.historicalTwins.slice(0, 4).map((tw) => (
                       <div
                         key={tw.matchedDrawNumber}
-                        className="px-2.5 py-1.5 rounded bg-slate-900/80 border border-slate-800 flex items-center justify-between"
+                        className="px-3 py-2 rounded bg-slate-900/80 border border-slate-800 flex items-center justify-between"
                       >
                         <span className="text-slate-300">
-                          <span className="text-slate-500">#{tw.matchedDrawNumber}</span>{" "}
-                          [{tw.sequenceCodes.join(" → ")}]
+                          <span className="text-slate-500">Draw {tw.matchedDrawNumber}</span>{" "}
+                          ({tw.sequenceCodes.join(", ")})
                         </span>
                         <span className="text-emerald-300 font-bold">Next: {tw.followerCode}</span>
                       </div>
@@ -541,7 +541,7 @@ export default function FastCashTab() {
                 <div className="flex items-center gap-2.5">
                   <Layers className="w-5 h-5 text-emerald-400 shrink-0" />
                   <div>
-                    <h2 className="font-bold text-slate-50 text-sm sm:text-base" style={{ color: "#f8fafc" }}>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-50" style={{ color: "#f8fafc" }}>
                       Rolling Multi-Draw Window Coverage
                     </h2>
                     <p className="text-xs text-slate-400">
@@ -556,7 +556,7 @@ export default function FastCashTab() {
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-[#171c20] border-b border-slate-800 text-[10px] text-slate-400 uppercase">
+                  <thead className="bg-[#171c20] border-b border-slate-800 text-xs text-slate-400 uppercase">
                     <tr>
                       <th className="py-2.5 px-3">Window</th>
                       <th className="py-2.5 px-3">Time Span</th>
@@ -611,7 +611,7 @@ export default function FastCashTab() {
               <div>
                 <div className="flex items-center gap-2">
                   <Activity className="w-5 h-5 text-rose-400" />
-                  <h2 className="font-bold text-slate-50 text-base" style={{ color: "#f8fafc" }}>
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-50" style={{ color: "#f8fafc" }}>
                     Fast Cash Draw-by-Draw Verification Audit Ledger
                   </h2>
                 </div>
@@ -626,7 +626,7 @@ export default function FastCashTab() {
                     <button
                       key={tier}
                       onClick={() => setLedgerFilter(tier)}
-                      className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer ${
+                      className={`px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
                         ledgerFilter === tier
                           ? "bg-rose-500 text-slate-950 font-bold"
                           : "text-slate-400 hover:text-white"
@@ -658,7 +658,7 @@ export default function FastCashTab() {
 
             <div className="overflow-x-auto max-h-[520px] overflow-y-auto sleek-scrollbar">
               <table className="w-full text-left text-xs">
-                <thead className="sticky top-0 bg-[#171c20] border-b border-slate-800 text-[11px] font-mono text-slate-400 uppercase tracking-wider z-10">
+                <thead className="sticky top-0 bg-[#171c20] border-b border-slate-800 text-xs font-mono text-slate-400 uppercase tracking-wider z-10">
                   <tr>
                     <th className="py-3 px-4">Target Draw</th>
                     <th className="py-3 px-4">Actual Ball</th>
@@ -681,12 +681,12 @@ export default function FastCashTab() {
                       <tr key={row.draw_number} className="hover:bg-slate-900/40 transition-colors">
                         <td className="py-3 px-4 font-bold text-white whitespace-nowrap">
                           {row.draw_date && (
-                            <span className="block text-[10px] text-cyan-400/80 font-normal mb-0.5">
+                            <span className="block text-xs text-cyan-400/80 font-normal mb-0.5">
                               {row.draw_date}
                             </span>
                           )}
                           #{row.draw_number}
-                          <span className="block text-[10px] text-slate-400 font-normal">
+                          <span className="block text-xs text-slate-400 font-normal">
                             {row.draw_time}
                           </span>
                         </td>
@@ -711,7 +711,7 @@ export default function FastCashTab() {
                             {row.predicted_top10.map((code, idx) => (
                               <span
                                 key={code}
-                                className={`px-2 py-0.5 rounded text-[11px] border ${
+                                className={`px-2 py-0.5 rounded text-xs border ${
                                   code === row.actual_code
                                     ? "bg-emerald-500/25 border-emerald-400 text-emerald-300 font-bold"
                                     : idx < 5
@@ -727,7 +727,7 @@ export default function FastCashTab() {
                         <td className="py-3 px-4 text-center text-slate-300">
                           #{row.rank_of_actual}
                         </td>
-                        <td className="py-3 px-4 text-[11px] whitespace-nowrap">
+                        <td className="py-3 px-4 text-xs whitespace-nowrap">
                           {row.session_draws_to_hit_top14 === 0 ? (
                             <span className="text-emerald-400 font-bold">IMMEDIATE (0d)</span>
                           ) : row.session_draws_to_hit_top14 !== null ? (
@@ -740,23 +740,23 @@ export default function FastCashTab() {
                         </td>
                         <td className="py-3 px-4 text-right whitespace-nowrap">
                           {row.hit_top1 ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
                               TOP-1 HIT
                             </span>
                           ) : row.hit_top5 ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">
                               TOP-5 HIT
                             </span>
                           ) : row.hit_top10 ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-400/30">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-400/30">
                               TOP-10 HIT
                             </span>
                           ) : row.hit_top14 ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-400/30">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-purple-500/15 text-purple-300 border border-purple-400/30">
                               TOP-14 HIT
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-500">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-800 text-slate-500">
                               MISS
                             </span>
                           )}

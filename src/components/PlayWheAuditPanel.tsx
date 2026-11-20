@@ -116,7 +116,7 @@ export default function PlayWheAuditPanel() {
       <div className="rounded-2xl border border-amber-500/20 bg-slate-900/60 p-12 text-center backdrop-blur-md space-y-4 font-mono">
         <RefreshCw className="h-10 w-10 animate-spin text-amber-400 mx-auto" />
         <div className="space-y-1">
-          <h3 className="text-lg font-bold text-white uppercase tracking-wider">
+          <h3 className="text-base font-bold text-white uppercase tracking-wider">
             Auditing Play Whe Database & Invariants
           </h3>
           <p className="text-xs text-gray-400">
@@ -155,10 +155,10 @@ export default function PlayWheAuditPanel() {
                 <h2 className="text-lg sm:text-xl font-black uppercase text-white tracking-wide flex items-center gap-2">
                   <span>Play Whe 100% Quant & Audit System</span>
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                   0 Invariant Violations
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/30">
                   26:1 Fixed Payout Math
                 </span>
               </div>
@@ -183,39 +183,39 @@ export default function PlayWheAuditPanel() {
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Audited Records</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Audited Records</span>
             <div className="text-sm text-white font-extrabold flex items-center gap-1.5">
               <Database className="w-3.5 h-3.5 text-amber-400" />
               <span>{data.totalDrawsAudited.toLocaleString()} Draws</span>
             </div>
-            <span className="text-[9px] text-gray-500">Live Turso DB</span>
+            <span className="text-xs text-gray-500">Live Turso DB</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Galois Ring Modulus</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Galois Ring Modulus</span>
             <div className="text-sm text-cyan-300 font-extrabold flex items-center gap-1.5">
               <Binary className="w-3.5 h-3.5 text-cyan-400" />
               <span>Z_4 x Z_9 Sieve</span>
             </div>
-            <span className="text-[9px] text-gray-500">Residues {data.lastVerifiedDraw.winning_number % 4} and {data.lastVerifiedDraw.winning_number % 9}</span>
+            <span className="text-xs text-gray-500">Residues {data.lastVerifiedDraw.winning_number % 4} and {data.lastVerifiedDraw.winning_number % 9}</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Time-Slot Transition</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Time-Slot Transition</span>
             <div className="text-xs text-amber-300 font-extrabold flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
               <span>{data.targetTimeSlot.toUpperCase()} SLOT</span>
             </div>
-            <span className="text-[9px] text-gray-500">Draw #{data.targetDrawNumber} Target</span>
+            <span className="text-xs text-gray-500">Draw #{data.targetDrawNumber} Target</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Automated Sync</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Automated Sync</span>
             <div className="text-xs text-emerald-300 font-extrabold flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
               <span>EVENT-DRIVEN UPDATE</span>
             </div>
-            <span className="text-[9px] text-gray-500">Recalculates on new draw</span>
+            <span className="text-xs text-gray-500">Recalculates on new draw</span>
           </div>
         </div>
       </div>
@@ -243,39 +243,39 @@ export default function PlayWheAuditPanel() {
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Galois Ring Mod 9</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
-              In every rolling 18-draw cycle, draws span <strong>&ge; 6 distinct residue classes mod 9</strong>. Zero single-residue collapses.
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Across every 18-draw stretch, results cover <strong>at least 6 different Chinapoo lines</strong> rather than sticking to one line.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              size({"{"}n mod 9 : n &isin; D{"}"}) &ge; 6 (0 violations)
+            <div className="text-xs text-emerald-400/80 font-mono">
+              At least 6 of 9 Chinapoo lines covered
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Galois Ring Mod 4</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
-              Draws span <strong>&ge; 3 distinct residue classes mod 4</strong> in rolling 10-draw windows. Zero parity degeneracy.
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Across every 10-draw stretch, results cover <strong>at least 3 of 4 number groups</strong> cleanly.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              size({"{"}n mod 4 : n &isin; D{"}"}) &ge; 3 (0 violations)
+            <div className="text-xs text-emerald-400/80 font-mono">
+              At least 3 of 4 number groups covered
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Centroid Involution</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
-              Symmetric conjugate <strong>&sigma;(m) = 37 - m</strong> preserves pneumatic chamber equilibrium around geometric center &mu; = 18.5.
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Each mark pairs with its mirror opposite (<strong>37 minus the mark</strong>) around the center average of 18.5.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              &sigma;(m) = 37 - m, &mu; = 18.5
+            <div className="text-xs text-emerald-400/80 font-mono">
+              Mirror opposite = 37 minus mark (Center 18.5)
             </div>
           </div>
         </div>
@@ -294,12 +294,12 @@ export default function PlayWheAuditPanel() {
               </h3>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              Derived from Last Verified Draw #{data.lastVerifiedDraw.draw_number} ({data.lastVerifiedDraw.time_slot}, {data.lastVerifiedDraw.draw_date}) • Winning Mark: #{data.lastVerifiedDraw.winning_number} ({data.lastVerifiedDraw.mark_name})
+              Based on Last Verified Draw {data.lastVerifiedDraw.draw_number} ({data.lastVerifiedDraw.time_slot}, {data.lastVerifiedDraw.draw_date}), Winning Mark: #{data.lastVerifiedDraw.winning_number} ({data.lastVerifiedDraw.mark_name})
             </p>
           </div>
 
           <div className="text-xs text-right hidden sm:block">
-            <span className="text-[10px] text-gray-500 block uppercase">Fixed Payout Ratio</span>
+            <span className="text-xs text-gray-500 block uppercase">Fixed Payout Ratio</span>
             <span className="text-amber-400 font-bold">26:1 Multiplier ($26 on $1)</span>
           </div>
         </div>
@@ -314,7 +314,7 @@ export default function PlayWheAuditPanel() {
                 className="p-4 rounded-xl bg-slate-900/90 border border-white/10 hover:border-amber-400/40 transition flex flex-col justify-between space-y-3 relative group"
               >
                 <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider ${
+                  <span className={`text-xs font-black uppercase px-2 py-0.5 rounded tracking-wider ${
                     idx === 0 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30" :
                     idx === 1 ? "bg-sky-500/20 text-sky-300 border border-sky-400/30" :
                     idx === 2 ? "bg-purple-500/20 text-purple-300 border border-purple-400/30" :
@@ -326,7 +326,7 @@ export default function PlayWheAuditPanel() {
 
                   <button
                     onClick={() => handleCopy(set.id, set.markNumber, set.markName)}
-                    className="text-[10px] text-gray-400 hover:text-white flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 transition cursor-pointer"
+                    className="text-xs text-gray-400 hover:text-white flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 transition cursor-pointer"
                   >
                     {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                     <span>{isCopied ? "Copied" : "Copy"}</span>
@@ -341,18 +341,18 @@ export default function PlayWheAuditPanel() {
                     <h4 className="text-sm font-bold text-white uppercase tracking-wider">
                       {set.markName}
                     </h4>
-                    <p className="text-[11px] text-gray-400">
+                    <p className="text-xs text-gray-400">
                       Residues: Mod 4 = {set.mod4}, Mod 9 = {set.mod9}
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-1.5 border-t border-white/5 pt-2 text-[11px]">
+                <div className="space-y-1.5 border-t border-white/5 pt-2 text-xs">
                   <div className="flex items-center justify-between text-gray-400">
                     <span>Resonance Score:</span>
                     <strong className="text-amber-400 font-mono">{set.resonanceScore.toFixed(1)}%</strong>
                   </div>
-                  <p className="text-[10px] text-gray-400 leading-tight">
+                  <p className="text-xs text-gray-400 leading-tight">
                     {set.mathematicalBasis}
                   </p>
                 </div>
@@ -444,7 +444,7 @@ export default function PlayWheAuditPanel() {
         <div className="overflow-x-auto sleek-scrollbar rounded-xl border border-white/10 bg-black/40">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-900/90 border-b border-white/10 text-[10px] text-gray-400 uppercase tracking-wider font-bold">
+              <tr className="bg-slate-900/90 border-b border-white/10 text-xs text-gray-400 uppercase tracking-wider font-bold">
                 <th className="py-2.5 px-3">Draw #</th>
                 <th className="py-2.5 px-3">Date & Slot</th>
                 <th className="py-2.5 px-3">Official Winning Mark</th>
@@ -471,7 +471,7 @@ export default function PlayWheAuditPanel() {
                     </td>
                     <td className="py-2.5 px-3 text-gray-400 whitespace-nowrap">
                       <span>{entry.drawDate}</span>
-                      <span className="text-[10px] text-amber-400/80 block uppercase font-bold">{entry.timeSlot}</span>
+                      <span className="text-xs text-amber-400/80 block uppercase font-bold">{entry.timeSlot}</span>
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap">
                       <div className="flex items-center gap-2">
@@ -488,7 +488,7 @@ export default function PlayWheAuditPanel() {
                           return (
                             <span
                               key={m}
-                              className={`w-6 h-6 rounded-md text-[10px] font-bold flex items-center justify-center font-mono ${
+                              className={`w-6 h-6 rounded-md text-xs font-bold flex items-center justify-center font-mono ${
                                 isMatch
                                   ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_10px_rgba(52,211,153,0.5)] border border-emerald-300"
                                   : "bg-slate-900 border border-white/10 text-gray-400"
@@ -502,12 +502,12 @@ export default function PlayWheAuditPanel() {
                     </td>
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       {entry.isHit ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
                           <Check className="w-3 h-3" />
                           <span>HIT (Set #{entry.hitRank})</span>
                         </span>
                       ) : (
-                        <span className="text-[10px] text-gray-500 uppercase font-mono">
+                        <span className="text-xs text-gray-500 uppercase font-mono">
                           Miss
                         </span>
                       )}

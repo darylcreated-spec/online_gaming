@@ -442,7 +442,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
       {/* Top Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#1F232B] pb-5">
         <div className="space-y-1">
-          <h2 className="text-xl font-bold tracking-tight text-white uppercase">Wheeling Workspace</h2>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white uppercase">Wheeling Workspace</h2>
           <p className="text-xs text-slate-500 uppercase">Interactive combinatorial systems & live frequency mappings</p>
         </div>
         
@@ -503,7 +503,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         >
           <Dna className="w-3.5 h-3.5 text-emerald-400" />
           GENETIC AI ALPHA OPTIMIZER
-          <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-extrabold uppercase">
+          <span className="text-xs px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-extrabold uppercase">
             5,000 POP
           </span>
         </button>
@@ -577,14 +577,14 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                 { name: "Delta Spacing", weight: "15% Weight", desc: "Even gap spread" },
                 { name: "Odd/Even Ratio", weight: "15% Weight", desc: "3:2 or 2:3 balance" },
                 { name: "High/Low Ratio", weight: "15% Weight", desc: "Balanced quadrants" },
-                { name: "Decade Spread", weight: "10% Weight", desc: "≥3 decades" },
-                { name: "Consecutive Limit", weight: "10% Weight", desc: "≤1 adjacent pair" },
+                { name: "Decade Spread", weight: "10% Weight", desc: "At least 3 number groups" },
+                { name: "Consecutive Limit", weight: "10% Weight", desc: "At most 1 back-to-back pair" },
                 { name: "Positional Matrix", weight: "15% Weight", desc: "Pos 1-5 mean fit" }
               ].map((metric, i) => (
                 <div key={i} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl space-y-1">
-                  <span className="text-[10px] font-black text-emerald-400 uppercase block truncate">{metric.name}</span>
-                  <span className="text-[9px] text-gray-500 block uppercase font-bold">{metric.weight}</span>
-                  <span className="text-[9px] text-gray-400 block">{metric.desc}</span>
+                  <span className="text-xs font-black text-emerald-400 uppercase block truncate">{metric.name}</span>
+                  <span className="text-xs text-gray-500 block uppercase font-bold">{metric.weight}</span>
+                  <span className="text-xs text-gray-400 block">{metric.desc}</span>
                 </div>
               ))}
             </div>
@@ -617,7 +617,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                     >
                       <div className="flex justify-between items-center border-b border-white/5 pb-2">
                         <span className="text-xs font-black text-amber-400">ALPHA #{slip.rank}</span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+                        <span className="px-2 py-0.5 rounded text-xs font-black bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
                           FITNESS {slip.fitness.totalScore}%
                         </span>
                       </div>
@@ -640,7 +640,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                       </div>
 
                       {/* Score Metrics Breakdown */}
-                      <div className="text-[10px] space-y-1 text-gray-400 border-t border-white/5 pt-2">
+                      <div className="text-xs space-y-1 text-gray-400 border-t border-white/5 pt-2">
                         <div className="flex justify-between">
                           <span>Sum: <strong className="text-white">{slip.fitness.sum}</strong></span>
                           <span>Spread: <strong className="text-white">{slip.fitness.spread}</strong></span>
@@ -657,7 +657,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                           if (slip.powerballOrBonus) setSelectedPb(slip.powerballOrBonus);
                           setActiveMode("wheel");
                         }}
-                        className="w-full py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider rounded transition cursor-pointer"
+                        className="w-full py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider rounded transition cursor-pointer"
                       >
                         Select in Wheeler
                       </button>
@@ -697,7 +697,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
             <div className="flex items-center justify-between border-b border-[#1F232B] pb-4">
               <div className="space-y-1">
                 <span className="text-xs text-amber-500 uppercase tracking-widest font-bold">Workspace Core</span>
-                <h3 className="text-md font-bold text-white uppercase"> Bet Matrix Generator</h3>
+                <h3 className="text-base font-bold text-white uppercase"> Bet Matrix Generator</h3>
               </div>
               <Compass className="w-5 h-5 text-slate-600" />
             </div>
@@ -712,7 +712,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                     <span className="font-bold text-white uppercase tracking-wider">Step 1: Pick Main Pool (1 to 35)</span>
                     <button
                       onClick={() => setShowHeatmapOverlay(!showHeatmapOverlay)}
-                      className={`px-2 py-0.5 border text-[9px] font-bold uppercase transition cursor-pointer select-none ${
+                      className={`px-2 py-0.5 border text-xs font-bold uppercase transition cursor-pointer select-none ${
                         showHeatmapOverlay 
                           ? "bg-amber-400/10 border-amber-400/30 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)]" 
                           : "bg-slate-950/40 border-white/5 text-gray-500 hover:text-gray-400"
@@ -725,7 +725,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                 </div>
 
                 {showHeatmapOverlay && (
-                  <div className="flex items-center gap-2 text-[9px] font-mono text-gray-500 uppercase pb-1 select-none">
+                  <div className="flex items-center gap-2 text-xs font-mono text-gray-500 uppercase pb-1 select-none">
                     <span>Heatmap Key:</span>
                     <span className="w-2 h-2 bg-[#181A20] border border-[#1F232B] inline-block" />
                     <span>Cold (Low Freq)</span>
@@ -826,11 +826,11 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
 
                           {quality.isTrap && quality.traps.length > 0 && (
                             <div className="bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-lg space-y-1">
-                              <div className="flex items-center gap-1.5 text-[11px] font-bold text-rose-400 uppercase">
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-rose-400 uppercase">
                                 <AlertTriangle className="w-3.5 h-3.5" />
                                 <span>Statistical Traps Detected:</span>
                               </div>
-                              <ul className="text-[10px] text-rose-300 list-disc list-inside space-y-0.5">
+                              <ul className="text-xs text-rose-300 list-disc list-inside space-y-0.5">
                                 {quality.traps.map((t, idx) => (
                                   <li key={idx}>{t}</li>
                                 ))}
@@ -838,7 +838,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                             </div>
                           )}
 
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                             <div className="bg-slate-900/80 p-2 border border-white/5 rounded">
                               <span className="text-gray-500 block">Sum Total</span>
                               <span className={`font-bold ${quality.metrics.sumStatus === 'Optimal' ? 'text-emerald-400' : 'text-amber-400'}`}>
@@ -865,7 +865,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                             </div>
                           </div>
 
-                          <p className="text-[10px] text-gray-400 border-t border-white/5 pt-1.5 leading-relaxed">
+                          <p className="text-xs text-gray-400 border-t border-white/5 pt-1.5 leading-relaxed">
                             <span className="text-amber-400 font-bold">Advice:</span> {quality.recommendation}
                           </p>
                         </>
@@ -901,7 +901,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                       </select>
                     </div>
 
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <p className="text-xs text-slate-400 leading-relaxed">
                       {WHEEL_DESIGNS[wheelStrategy]
                         ? WHEEL_DESIGNS[wheelStrategy].guarantee + ` (Standard System: $${WHEEL_DESIGNS[wheelStrategy].standardSystemCost} TT vs Abbreviated: $${WHEEL_DESIGNS[wheelStrategy].abbreviatedCost} TT).`
                         : wheelStrategy === "abbreviated-4-4"
@@ -945,7 +945,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
           <div className="bg-[#121418] border border-[#1F232B] p-6 rounded-none space-y-4">
             <div className="border-b border-[#1F232B] pb-3">
               <span className="text-xs text-amber-500 uppercase tracking-widest font-bold">Statistical Density</span>
-              <h3 className="text-md font-bold text-white uppercase">Number Grid Heatmap</h3>
+              <h3 className="text-base font-bold text-white uppercase">Number Grid Heatmap</h3>
             </div>
             
             <p className="text-xs text-slate-400 leading-relaxed uppercase">
@@ -975,7 +975,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
           <div className="bg-[#121418] border border-[#1F232B] p-6 rounded-none space-y-4">
             <div className="border-b border-[#1F232B] pb-3">
               <span className="text-xs text-emerald-400 uppercase tracking-widest font-bold">Dynamic Companions</span>
-              <h3 className="text-md font-bold text-white uppercase">Dream Chart Mapping</h3>
+              <h3 className="text-base font-bold text-white uppercase">Dream Chart Mapping</h3>
             </div>
             
             <p className="text-xs text-slate-400 leading-relaxed uppercase">
@@ -988,7 +988,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                   <div key={idx} className="flex justify-between items-center text-xs p-2 bg-[#0B0C0E] border border-[#1F232B] font-mono">
                     <div className="flex items-center gap-2">
                       <span className="text-slate-500 font-sans">#{idx+1}</span>
-                      <span className="w-5 h-5 bg-amber-400/10 text-amber-400 flex items-center justify-center font-bold text-[10px]">
+                      <span className="w-5 h-5 bg-amber-400/10 text-amber-400 flex items-center justify-center font-bold text-xs">
                         {String(item.num).padStart(2, "0")}
                       </span>
                       <span className="text-slate-400 uppercase text-xs">Statistical Companion</span>
@@ -1014,7 +1014,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
           <div className="border-b border-[#1F232B] pb-3 flex justify-between items-center">
             <div>
               <span className="text-xs text-amber-500 uppercase tracking-widest font-bold">Delta Spacing</span>
-              <h3 className="text-md font-bold text-white uppercase">Draw Variance Analysis</h3>
+              <h3 className="text-base font-bold text-white uppercase">Draw Variance Analysis</h3>
             </div>
             <div className="text-right font-mono">
               <span className="text-xs text-slate-500 uppercase block">Distribution score</span>
@@ -1061,7 +1061,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-[#1F232B] pb-4">
             <div className="space-y-1">
               <span className="text-xs text-amber-500 uppercase tracking-widest font-bold">Betting slips</span>
-              <h3 className="text-md font-bold text-white uppercase flex items-center gap-2">
+              <h3 className="text-base font-bold text-white uppercase flex items-center gap-2">
                 <Eye className="w-4 h-4 text-amber-400" />
                 Compiled Combos ({generatedTickets.length})
               </h3>
@@ -1108,7 +1108,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                     <>
                       <div className="flex justify-between items-center mt-1 pb-3 border-b border-[#1F232B]">
                         <span className="text-xs text-slate-500 font-bold">SLIP #{String(idx + 1).padStart(3, "0")}</span>
-                        <span className={`text-[8px] font-mono font-bold px-1.5 py-0.5 rounded-sm ${
+                        <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded-sm ${
                           evalResult.grade === "A+"
                             ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                             : evalResult.grade === "B"
@@ -1141,7 +1141,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
                       </div>
 
                         {/* Staggered dashed divider & footer */}
-                        <div className="border-t border-dashed border-[#1F232B] mt-4 pt-2.5 flex justify-between items-center text-[8px] text-slate-500 font-mono">
+                        <div className="border-t border-dashed border-[#1F232B] mt-4 pt-2.5 flex justify-between items-center text-xs text-slate-500 font-mono">
                           <div className="flex gap-2">
                             <span>O/E: {evalResult.oddEvenRatio}</span>
                             <span>H/L: {evalResult.highLowRatio}</span>
@@ -1166,9 +1166,9 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         {/* Metric 1 */}
         <div className="bg-[#121418] border border-[#1F232B] p-5 rounded-none flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[9px] text-slate-500 uppercase tracking-widest block font-bold">Combinatorial Density</span>
+            <span className="text-xs text-slate-500 uppercase tracking-widest block font-bold">Combinatorial Density</span>
             <div className="text-xl font-bold text-white tracking-tight">215,766 Slips</div>
-            <p className="text-[9px] text-slate-500 uppercase">Filtered High-Prob combinations</p>
+            <p className="text-xs text-slate-500 uppercase">Filtered High-Prob combinations</p>
           </div>
           <Cpu className="w-5 h-5 text-slate-700" />
         </div>
@@ -1176,9 +1176,9 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         {/* Metric 2 */}
         <div className="bg-[#121418] border border-[#1F232B] p-5 rounded-none flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[9px] text-slate-500 uppercase tracking-widest block font-bold">Optimization Rate</span>
+            <span className="text-xs text-slate-500 uppercase tracking-widest block font-bold">Optimization Rate</span>
             <div className="text-xl font-bold text-emerald-400 tracking-tight">98.24%</div>
-            <p className="text-[9px] text-slate-500 uppercase">Successor Dispersion Ratio</p>
+            <p className="text-xs text-slate-500 uppercase">Successor Dispersion Ratio</p>
           </div>
           <Compass className="w-5 h-5 text-emerald-500/50" />
         </div>
@@ -1186,9 +1186,9 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         {/* Metric 3 */}
         <div className="bg-[#121418] border border-[#1F232B] p-5 rounded-none flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[9px] text-slate-500 uppercase tracking-widest block font-bold">System Status</span>
+            <span className="text-xs text-slate-500 uppercase tracking-widest block font-bold">System Status</span>
             <div className="text-xl font-bold text-amber-500 tracking-tight">Active</div>
-            <p className="text-[9px] text-slate-500 uppercase">Turso Cloud Sync Connected</p>
+            <p className="text-xs text-slate-500 uppercase">Turso Cloud Sync Connected</p>
           </div>
           <Info className="w-5 h-5 text-amber-500/50" />
         </div>

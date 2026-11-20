@@ -626,7 +626,7 @@ export default function PlayWheTab({
       <GameHeaderBanner
         game="play-whe"
         title="Play Whe"
-        subtitle="1 of 36 Marks • Daily 4 Slots (Morning, Midday, Afternoon, Evening) • Chinapoo Lineage"
+        subtitle="Pick 1 mark from 1 to 36. Draws 4 times daily (Morning, Midday, Afternoon, and Evening) from Monday to Saturday."
         themeColor="amber"
         iconSrc="/images/play_whe_icon.png"
         totalDrawsCount={stats?.totalDraws || pagination.total}
@@ -656,7 +656,7 @@ export default function PlayWheTab({
       <div className="flex bg-slate-900/60 p-1 rounded-xl border border-amber-500/20 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
         <button
           onClick={() => setSubTab("dashboard")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "dashboard"
               ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
               : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
@@ -668,7 +668,7 @@ export default function PlayWheTab({
         
         <button
           onClick={() => setSubTab("math-engine")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "math-engine"
               ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
               : "text-amber-400/90 hover:text-amber-300 hover:bg-amber-500/10"
@@ -680,7 +680,7 @@ export default function PlayWheTab({
 
         <button
           onClick={() => setSubTab("diff")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "diff"
               ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_15px_rgba(251,191,36,0.4)]"
               : "text-amber-400/90 hover:text-amber-300 hover:bg-amber-400/10"
@@ -692,7 +692,7 @@ export default function PlayWheTab({
 
         <button
           onClick={() => setSubTab("audit")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "audit"
               ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.4)]"
               : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
@@ -704,7 +704,7 @@ export default function PlayWheTab({
 
         <button
           onClick={() => setSubTab("forensic")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "forensic"
               ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_15px_rgba(16,185,129,0.4)]"
               : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
@@ -716,7 +716,7 @@ export default function PlayWheTab({
 
         <button
           onClick={() => setSubTab("transition")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "transition"
               ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
               : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
@@ -728,7 +728,7 @@ export default function PlayWheTab({
 
         <button
           onClick={() => setSubTab("relationship")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "relationship"
               ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
               : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
@@ -740,7 +740,7 @@ export default function PlayWheTab({
 
         <button
           onClick={() => setSubTab("translator")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "translator"
               ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
               : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
@@ -752,7 +752,7 @@ export default function PlayWheTab({
         
         <button
           onClick={() => setSubTab("network")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "network"
               ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
               : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
@@ -764,7 +764,7 @@ export default function PlayWheTab({
         
         <button
           onClick={() => setSubTab("hits")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "hits"
               ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
               : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
@@ -776,7 +776,7 @@ export default function PlayWheTab({
 
         <button
           onClick={() => setSubTab("history")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "history"
               ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
               : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
@@ -788,7 +788,7 @@ export default function PlayWheTab({
 
         <button
           onClick={() => setSubTab("explain")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             subTab === "explain"
               ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
               : "text-gray-400 hover:text-amber-300 hover:bg-amber-500/10"
@@ -802,56 +802,56 @@ export default function PlayWheTab({
       {/* Toggleable Explainer Section */}
       {subTab === "explain" && (
         <div className="glass-panel border border-white/5 p-5 rounded-xl bg-slate-950/20 space-y-4">
-          <h3 className="text-xs font-bold text-white uppercase font-mono tracking-widest border-b border-white/5 pb-2">
-            How The App Evaluates &amp; Tracks Play Whe (1–36)
+          <h3 className="text-base font-bold text-white border-b border-white/5 pb-2.5 font-sans">
+            How Play Whe Analysis Works (Marks 1 to 36)
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 text-sm leading-relaxed text-slate-300 font-sans">
             <div className="space-y-1.5">
-              <h4 className="text-emerald-400 font-bold uppercase">1. 5-MARK TACTICAL PORTFOLIO</h4>
+              <h4 className="text-sm text-emerald-400 font-bold">1. 5-Mark Card Coverage</h4>
               <p>
-                A single random mark has a <strong>2.78% (1/36)</strong> baseline hit rate; a 5-mark card has a <strong>13.89% (5/36)</strong> baseline. All 5 tracked engines (<strong>Forensic</strong>, <strong>Ensemble</strong>, <strong>Apex</strong>, <strong>Winning Formula</strong>, <strong>Quant 100%</strong>) output 5 distinct marks graded identically.
+                One mark has a <strong className="text-white">2.78% (1 in 36)</strong> chance per draw, while 5 separate marks give a <strong className="text-white">13.89% (5 in 36)</strong> chance. Every tracked model outputs 5 distinct marks scored on the same terms.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-emerald-400 font-bold uppercase">2. KINEMATIC &amp; INVOLUTION MODES</h4>
+              <h4 className="text-sm text-emerald-400 font-bold">2. Neighbor and Mirror Patterns</h4>
               <p>
-                Combines <strong>Lag-1 / Lag-2 ±1 Steppers</strong>, <strong>Sigma-37 Involution Mirrors</strong> (37 − X), <strong>Same-Slot Conditional Markov Leaders</strong>, and <strong>Poisson Drought Rebounds</strong> (skip 25–75 draws).
+                Checks nearby neighbor numbers (within 1 of recent marks), mirror opposites (37 minus the mark), same-slot repeat leaders, and marks overdue by 25 to 75 draws.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-emerald-400 font-bold uppercase">3. EWMA &amp; CHINAPOO PARTNERS</h4>
+              <h4 className="text-sm text-emerald-400 font-bold">3. Recent Form and Chinapoo Partners</h4>
               <p>
-                Exponentially weights recent draws alongside traditional Chinapoo companion pairings and RTM Z-score rebound signals to rank candidate marks for each time slot.
+                Weighs recent draw frequency alongside traditional Chinapoo partner marks to rank candidate numbers for each time slot.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-emerald-400 font-bold uppercase">4. SHANNON ENTROPY CONVICTION</h4>
+              <h4 className="text-sm text-emerald-400 font-bold">4. Spread and Balance Indicator</h4>
               <p>
-                Measures rolling 60-draw G-statistic departure from uniform entropy to classify each regime as <strong>HIGH CONVICTION</strong>, <strong>BALANCED</strong>, or <strong>HIGH ENTROPY</strong>, helping you size plays when non-uniform clustering appears.
+                Checks how evenly marks have fallen across the last 60 draws to label recent activity as <strong className="text-white">High Focus</strong>, <strong className="text-white">Balanced</strong>, or <strong className="text-white">Wide Spread</strong>.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">5. SLOT-TO-SLOT MARKOV VECTORS</h4>
+              <h4 className="text-sm text-sky-400 font-bold">5. Slot-to-Slot Follow Patterns</h4>
               <p>
-                Tracks 1-step transition probabilities across Morning → Midday → Afternoon → Evening → Morning draws using the live Turso Cloud archive.
+                Tracks which marks most often follow each other from Morning to Midday, Afternoon, Evening, and the next Morning using the live database.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">6. BAYESIAN WEIGHT CALIBRATION</h4>
+              <h4 className="text-sm text-sky-400 font-bold">6. Ongoing Model Calibration</h4>
               <p>
-                Walk-forward out-of-sample backtests dynamically re-weight sub-models based on recent empirical lift rather than static assumptions.
+                Past draw tests adjust model weights automatically based on recent verified accuracy rather than static guesses.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">7. MERIT-BASED CHAMPION DECK</h4>
+              <h4 className="text-sm text-sky-400 font-bold">7. Verified Leaderboard</h4>
               <p>
-                The <strong>Engine Tracker</strong> ranks all 5 Play Whe engines over a 45-draw walk-forward window and live draws, promoting the highest-performing system automatically.
+                The <strong className="text-white">Engines</strong> tab compares all 5 Play Whe models across recent official draws and highlights the current top performer.
               </p>
             </div>
             <div className="space-y-1.5">
-              <h4 className="text-primary font-bold uppercase">8. LIVE 4-SLOT AUTO-GRADING</h4>
+              <h4 className="text-sm text-sky-400 font-bold">8. Automatic 4-Slot Updates</h4>
               <p>
-                Automatically reconciles predictions against official NLCB results after Morning (10:30 AM), Midday (1:00 PM), Afternoon (4:00 PM), and Evening (7:00 PM) draws.
+                Checks results automatically after the Morning (10:30 AM), Midday (1:00 PM), Afternoon (4:00 PM), and Evening (7:00 PM) draws.
               </p>
             </div>
           </div>
@@ -871,8 +871,8 @@ export default function PlayWheTab({
                     Slot-to-Slot Markov Transition Engine
                   </h3>
                 </div>
-                <p className="text-xs text-gray-400 font-mono">
-                  Calculates empirical 1-step successor probabilities across 19,600+ NLCB draws (Morning → Midday → Afternoon → Evening → Morning).
+                <p className="text-sm text-slate-300 font-sans">
+                  Calculates which marks have historically followed each other across more than 19,600 past NLCB draws (Morning to Midday, Afternoon, Evening, and next Morning).
                 </p>
               </div>
 
@@ -882,9 +882,9 @@ export default function PlayWheTab({
                     {transitionData.currentMark.number}
                   </div>
                   <div className="font-mono text-xs">
-                    <span className="text-gray-400 block text-[10px] uppercase">Base Mark Drawn</span>
+                    <span className="text-gray-400 block text-xs uppercase">Base Mark Drawn</span>
                     <span className="text-white font-bold">{transitionData.currentMark.mark}</span>
-                    <span className="text-[10px] text-primary block">({transitionData.currentMark.timeSlot} Draw)</span>
+                    <span className="text-xs text-primary block">({transitionData.currentMark.timeSlot} Draw)</span>
                   </div>
                 </div>
               )}
@@ -898,7 +898,7 @@ export default function PlayWheTab({
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
                 Top High-Probability Successors for {transitionData?.expectedNextSlot || "Upcoming"} Draw
               </h4>
-              <span className="text-[10px] text-gray-500 font-mono">
+              <span className="text-xs text-gray-500 font-mono">
                 Sample Size: {transitionData?.sampleSize || 0} historical occurrences
               </span>
             </div>
@@ -924,7 +924,7 @@ export default function PlayWheTab({
                       className={`glass-panel p-5 rounded-2xl border ${rankColors[idx] || "border-white/10"} flex flex-col justify-between space-y-4 hover:scale-[1.02] transition-transform`}
                     >
                       <div className="flex items-start justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/40 border border-white/10 font-mono">
+                        <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/40 border border-white/10 font-mono">
                           Rank #{idx + 1}
                         </span>
                         <span className="text-xs font-black font-mono text-emerald-400">
@@ -939,12 +939,12 @@ export default function PlayWheTab({
                         <h5 className="text-sm font-bold text-white uppercase font-mono mt-2">
                           {item.mark}
                         </h5>
-                        <p className="text-[10px] text-gray-400 font-mono truncate" title={item.keywords}>
+                        <p className="text-xs text-gray-400 font-mono truncate" title={item.keywords}>
                           {item.keywords}
                         </p>
                       </div>
 
-                      <div className="border-t border-white/5 pt-2 text-center text-[10px] text-gray-500 font-mono">
+                      <div className="border-t border-white/5 pt-2 text-center text-xs text-gray-500 font-mono">
                         Drawn <strong>{item.count} times</strong> after #{transitionData?.currentMark?.number}
                       </div>
                     </div>
@@ -984,7 +984,7 @@ export default function PlayWheTab({
                       }`}
                     >
                       <span className="text-xs font-black">{num}</span>
-                      <span className="text-[8px] opacity-70 truncate max-w-[36px]">
+                      <span className="text-xs opacity-70 truncate max-w-[36px]">
                         {CHINAPOO_CHART[num as keyof typeof CHINAPOO_CHART]?.mark.split(" ")[0] || ""}
                       </span>
                     </button>
@@ -1005,10 +1005,10 @@ export default function PlayWheTab({
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <Brain className="w-6 h-6 text-emerald-400 animate-pulse" />
-                  <h3 className="text-lg font-black uppercase tracking-wider text-white font-mono">
+                  <h3 className="text-base font-black uppercase tracking-wider text-white font-mono">
                     Play Whe Mathematical Inference & Validation Engine
                   </h3>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black uppercase border border-emerald-500/30 font-mono">
+                  <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black uppercase border border-emerald-500/30 font-mono">
                     {mathEngineData?.databaseStats?.totalDraws ? `${mathEngineData.databaseStats.totalDraws} DRAWS` : "19,700+ DRAWS"}
                   </span>
                 </div>
@@ -1041,10 +1041,10 @@ export default function PlayWheTab({
               <div className="flex flex-wrap items-center gap-4 bg-slate-950/80 border border-white/10 px-4 py-2.5 rounded-xl text-xs font-mono">
                 <span className="text-gray-400">Previous Base Draw:</span>
                 <span className="text-white font-bold">#{mathEngineData.prediction.previousDraw.draw_number}</span>
-                <span className="text-emerald-400 font-bold">({mathEngineData.prediction.previousDraw.draw_time_slot} · {mathEngineData.prediction.previousDraw.draw_date})</span>
+                <span className="text-emerald-400 font-bold">({mathEngineData.prediction.previousDraw.draw_time_slot}, {mathEngineData.prediction.previousDraw.draw_date})</span>
                 <div className="flex items-center gap-1.5 ml-auto">
-                  <span className="text-gray-400 text-[10px]">Winning Mark:</span>
-                  <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500 text-emerald-300 text-[11px] font-black flex items-center justify-center">
+                  <span className="text-gray-400 text-xs">Winning Mark:</span>
+                  <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500 text-emerald-300 text-xs font-black flex items-center justify-center">
                     {mathEngineData.prediction.previousDraw.winning_number}
                   </span>
                   <span className="text-white font-black">{mathEngineData.prediction.previousDraw.mark}</span>
@@ -1064,11 +1064,11 @@ export default function PlayWheTab({
                       Walk-Forward Out-of-Sample Empirical Verification ({backtestResults.testSampleSize} Draws Evaluated)
                     </h4>
                   </div>
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-xs text-gray-400 mt-1">
                     Every historical test was conducted with strict causal integrity: using only prior draws at each step in time.
                   </p>
                 </div>
-                <span className="text-[10px] text-gray-400 bg-white/5 border border-white/10 px-2.5 py-1 rounded">
+                <span className="text-xs text-gray-400 bg-white/5 border border-white/10 px-2.5 py-1 rounded">
                   Computed in {backtestResults.executionTimeMs}ms
                 </span>
               </div>
@@ -1076,47 +1076,47 @@ export default function PlayWheTab({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
                 {/* Top-1 Exact Hit */}
                 <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl space-y-2">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Top-1 Single Pick Accuracy</span>
+                  <span className="text-xs text-gray-400 uppercase font-bold block">Top-1 Single Pick Accuracy</span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-black text-white">{backtestResults.top1HitRate}%</span>
-                    <span className="text-[10px] text-emerald-400 font-bold">({backtestResults.top1Hits} hits)</span>
+                    <span className="text-xs text-emerald-400 font-bold">({backtestResults.top1Hits} hits)</span>
                   </div>
-                  <div className="text-[9px] text-gray-500">Random Uniform Baseline: {backtestResults.top1Baseline}%</div>
+                  <div className="text-xs text-gray-500">Random Uniform Baseline: {backtestResults.top1Baseline}%</div>
                 </div>
 
                 {/* Top-3 Trio Coverage */}
                 <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl space-y-2">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Top-3 Trio Coverage</span>
+                  <span className="text-xs text-gray-400 uppercase font-bold block">Top-3 Trio Coverage</span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-black text-sky-400">{backtestResults.top3HitRate}%</span>
-                    <span className="text-[10px] text-sky-300 font-bold">({backtestResults.top3Hits} hits)</span>
+                    <span className="text-xs text-sky-300 font-bold">({backtestResults.top3Hits} hits)</span>
                   </div>
-                  <div className="text-[9px] text-gray-500">Random Uniform Baseline: {backtestResults.top3Baseline}%</div>
+                  <div className="text-xs text-gray-500">Random Uniform Baseline: {backtestResults.top3Baseline}%</div>
                 </div>
 
                 {/* Top-5 Coverage */}
                 <div className="p-4 bg-slate-900/60 border border-emerald-500/30 bg-emerald-500/5 rounded-xl space-y-2">
-                  <span className="text-[10px] text-emerald-300 uppercase font-bold block">Top-5 Ensemble Coverage</span>
+                  <span className="text-xs text-emerald-300 uppercase font-bold block">Top-5 Ensemble Coverage</span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-black text-emerald-400">{backtestResults.top5HitRate}%</span>
-                    <span className="text-[10px] text-emerald-300 font-bold">({backtestResults.top5Hits} hits)</span>
+                    <span className="text-xs text-emerald-300 font-bold">({backtestResults.top5Hits} hits)</span>
                   </div>
-                  <div className="text-[9px] text-emerald-500 font-bold">Outperformed Baseline: {backtestResults.top5Baseline}%</div>
+                  <div className="text-xs text-emerald-500 font-bold">Outperformed Baseline: {backtestResults.top5Baseline}%</div>
                 </div>
 
                 {/* Top-8 Coverage */}
                 <div className="p-4 bg-slate-900/60 border border-white/10 rounded-xl space-y-2">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Top-8 Pool Coverage</span>
+                  <span className="text-xs text-gray-400 uppercase font-bold block">Top-8 Pool Coverage</span>
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-black text-purple-400">{backtestResults.top8HitRate}%</span>
-                    <span className="text-[10px] text-purple-300 font-bold">({backtestResults.top8Hits} hits)</span>
+                    <span className="text-xs text-purple-300 font-bold">({backtestResults.top8Hits} hits)</span>
                   </div>
-                  <div className="text-[9px] text-gray-500">Random Uniform Baseline: {backtestResults.top8Baseline}%</div>
+                  <div className="text-xs text-gray-500">Random Uniform Baseline: {backtestResults.top8Baseline}%</div>
                 </div>
               </div>
 
               {/* Mathematical Proof Note */}
-              <div className="p-3 bg-emerald-950/20 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-300 leading-relaxed">
+              <div className="p-3 bg-emerald-950/20 border border-emerald-500/20 rounded-xl text-xs text-emerald-300 leading-relaxed">
                 <strong>Mathematician's Proof on 100% Determinism:</strong> The Chi-Square Goodness-of-Fit statistic on 10,000+ draws is <strong>42.19 (df=35, p &gt; 0.15)</strong>, confirming Play Whe adheres closely to an independent random process. Because entropy is near-maximal, no single number can be predicted with 100% certainty. However, the multi-factor Bayesian-Markov ensemble concentrates probability mass into high-density subsets, systematically outperforming the uniform random baseline.
               </div>
             </div>
@@ -1129,7 +1129,7 @@ export default function PlayWheTab({
                 <Zap className="w-4 h-4 text-emerald-400" />
                 Live Bayesian-Markov Inferences for Upcoming {mathEngineData?.prediction?.targetSlot || "Next"} Draw
               </h4>
-              <span className="text-[10px] text-gray-400">
+              <span className="text-xs text-gray-400">
                 Probability mass normalized over all 36 marks
               </span>
             </div>
@@ -1146,7 +1146,7 @@ export default function PlayWheTab({
                   {/* Tier 1: Single Alpha Mark */}
                   <div className="p-5 rounded-2xl border border-amber-400/40 bg-gradient-to-br from-amber-500/10 via-slate-950/70 to-slate-950 flex flex-col justify-between space-y-4">
                     <div>
-                      <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-black">
+                      <div className="flex justify-between items-center text-xs uppercase tracking-wider font-black">
                         <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
                           Highest Single Probability (Top 1)
                         </span>
@@ -1160,14 +1160,14 @@ export default function PlayWheTab({
                           <h5 className="text-base font-black text-white uppercase">
                             {mathEngineData.prediction.top1SinglePick.mark}
                           </h5>
-                          <span className="text-[11px] text-gray-400">Optimal single bet selection</span>
-                          <div className="text-[10px] text-amber-400 font-bold mt-1">
+                          <span className="text-xs text-gray-400">Optimal single bet selection</span>
+                          <div className="text-xs text-amber-400 font-bold mt-1">
                             Composite Score: {mathEngineData.prediction.top1SinglePick.score}
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="border-t border-white/10 pt-2 text-[10px] text-gray-500">
+                    <div className="border-t border-white/10 pt-2 text-xs text-gray-500">
                       Evaluated across 8 factors: Markov, EWMA, Slot Freq, Z-Score Rebound, Day-of-Week.
                     </div>
                   </div>
@@ -1175,7 +1175,7 @@ export default function PlayWheTab({
                   {/* Tier 2: Top-3 Trio */}
                   <div className="p-5 rounded-2xl border border-sky-400/40 bg-gradient-to-br from-sky-500/10 via-slate-950/70 to-slate-950 flex flex-col justify-between space-y-4">
                     <div>
-                      <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-black">
+                      <div className="flex justify-between items-center text-xs uppercase tracking-wider font-black">
                         <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
                           Primary Power Trio (Top 3)
                         </span>
@@ -1189,15 +1189,15 @@ export default function PlayWheTab({
                             <span className="w-10 h-10 rounded-full bg-sky-500/15 border border-sky-400 text-sky-300 font-black text-base flex items-center justify-center">
                               {item.number}
                             </span>
-                            <span className="text-[10px] font-bold text-white uppercase mt-1 truncate max-w-full">
+                            <span className="text-xs font-bold text-white uppercase mt-1 truncate max-w-full">
                               {item.mark.split(" ")[0]}
                             </span>
-                            <span className="text-[9px] text-sky-400 font-bold">{item.probability}%</span>
+                            <span className="text-xs text-sky-400 font-bold">{item.probability}%</span>
                           </div>
                         ))}
                       </div>
                     </div>
-                    <div className="border-t border-white/10 pt-2 text-[10px] text-gray-500">
+                    <div className="border-t border-white/10 pt-2 text-xs text-gray-500">
                       Recommended 3-ticket spread covering maximum posterior probability density.
                     </div>
                   </div>
@@ -1205,7 +1205,7 @@ export default function PlayWheTab({
                   {/* Tier 3: Top-5 Ensemble Full Coverage */}
                   <div className="p-5 rounded-2xl border border-emerald-400/40 bg-gradient-to-br from-emerald-500/10 via-slate-950/70 to-slate-950 flex flex-col justify-between space-y-4">
                     <div>
-                      <div className="flex justify-between items-center text-[10px] uppercase tracking-wider font-black">
+                      <div className="flex justify-between items-center text-xs uppercase tracking-wider font-black">
                         <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                           Optimal 5-Mark Ensemble
                         </span>
@@ -1216,18 +1216,18 @@ export default function PlayWheTab({
                       <div className="flex flex-wrap justify-center gap-2 pt-4">
                         {mathEngineData.prediction.top5Coverage.map((item: any, idx: number) => (
                           <div key={item.number} className="flex flex-col items-center bg-slate-950/80 border border-white/5 rounded-xl p-2 text-center min-w-[50px]">
-                            <span className="text-[8px] text-gray-500">#{idx + 1}</span>
+                            <span className="text-xs text-gray-500">#{idx + 1}</span>
                             <span className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-black text-sm flex items-center justify-center my-0.5">
                               {item.number}
                             </span>
-                            <span className="text-[8px] font-bold text-white uppercase truncate max-w-[45px]">
+                            <span className="text-xs font-bold text-white uppercase truncate max-w-[45px]">
                               {item.mark.split(" ")[0]}
                             </span>
                           </div>
                         ))}
                       </div>
                     </div>
-                    <div className="border-t border-white/10 pt-2 text-[10px] text-emerald-400 font-bold text-center">
+                    <div className="border-t border-white/10 pt-2 text-xs text-emerald-400 font-bold text-center">
                       Verified ~14.5%–16% hit rate across 19,700+ empirical draws.
                     </div>
                   </div>
@@ -1240,7 +1240,7 @@ export default function PlayWheTab({
                       <h4 className="text-xs font-black text-white uppercase tracking-wider">
                         Comprehensive Multi-Factor Decomposition Table (All 36 Marks)
                       </h4>
-                      <p className="text-[10px] text-gray-400">
+                      <p className="text-xs text-gray-400">
                         Normalized composite weights for the immediate upcoming {mathEngineData.prediction.targetSlot} draw.
                       </p>
                     </div>
@@ -1249,7 +1249,7 @@ export default function PlayWheTab({
                   <div className="overflow-x-auto sleek-scrollbar">
                     <table className="w-full text-left font-mono text-xs border-collapse min-w-[650px]">
                       <thead>
-                        <tr className="border-b border-white/5 text-gray-400 uppercase text-[9px]">
+                        <tr className="border-b border-white/5 text-gray-400 uppercase text-xs">
                           <th className="pb-2.5 px-3">Rank</th>
                           <th className="pb-2.5 px-3">Mark</th>
                           <th className="pb-2.5 px-3 text-center">Score</th>
@@ -1261,7 +1261,7 @@ export default function PlayWheTab({
                           <th className="pb-2.5 px-3 text-center">Cycle</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/5 text-[11px]">
+                      <tbody className="divide-y divide-white/5 text-xs">
                         {mathEngineData.prediction.allRanked.map((row: any, idx: number) => {
                           const isTop5 = idx < 5;
                           return (
@@ -1308,7 +1308,7 @@ export default function PlayWheTab({
             <div className="glass-panel p-6 rounded-xl border-primary/15 bg-primary/[0.01] space-y-4">
               <div className="flex items-center gap-2">
                 <Activity className="w-5 h-5 text-primary animate-pulse" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Relationship Focus Selector</h3>
+                <h3 className="text-base font-bold uppercase tracking-wider text-white font-mono">Relationship Focus Selector</h3>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
                 Select any Chinapoo mark below to examine its mathematical successors, co-occurring same-day companion numbers, and traditional folkloric partnerships.
@@ -1351,7 +1351,7 @@ export default function PlayWheTab({
                       <span className={`text-xs font-mono font-bold ${isSelected ? "text-slate-950" : "text-white"}`}>
                         {num}
                       </span>
-                      <span className={`text-[7px] font-mono truncate max-w-[45px] uppercase mt-0.5 ${isSelected ? "text-slate-900" : "text-gray-500"}`}>
+                      <span className={`text-xs font-mono truncate max-w-[45px] uppercase mt-0.5 ${isSelected ? "text-slate-900" : "text-gray-500"}`}>
                         {entry.mark.split(" ")[0]}
                       </span>
                     </div>
@@ -1381,12 +1381,12 @@ export default function PlayWheTab({
                       <h4 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
                         {correlationData.mark}
                       </h4>
-                      <p className="text-[10px] text-gray-500 font-mono">
+                      <p className="text-xs text-gray-500 font-mono">
                         ANALYSIS FOCUS | SAMPLE SIZE: LAST {correlationData.limit} DRAWS
                       </p>
                     </div>
                   </div>
-                  <span className="text-[9px] border border-white/5 bg-slate-950/40 text-gray-400 px-2.5 py-1 rounded font-mono uppercase">
+                  <span className="text-xs border border-white/5 bg-slate-950/40 text-gray-400 px-2.5 py-1 rounded font-mono uppercase">
                     LINE {Math.ceil(correlationData.number / 6)}
                   </span>
                 </div>
@@ -1397,7 +1397,7 @@ export default function PlayWheTab({
                     <h4 className="text-xs font-bold font-mono uppercase text-gray-300 tracking-wider">
                       Folkloric Pairings vs. Database Reality
                     </h4>
-                    <span className={`text-[8px] font-mono px-2 py-0.5 rounded font-bold ${
+                    <span className={`text-xs font-mono px-2 py-0.5 rounded font-bold ${
                       correlationData.folklore.isFolkloric 
                         ? "bg-purple-500/10 border border-purple-500/20 text-purple-400"
                         : "bg-slate-900 border border-white/5 text-gray-500"
@@ -1411,17 +1411,17 @@ export default function PlayWheTab({
                       <div key={partner.number} className="space-y-2">
                         <div className="flex justify-between items-center text-xs font-mono">
                           <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-white/5 border border-white/10 text-white text-[9px] font-bold flex items-center justify-center">
+                            <span className="w-5 h-5 rounded-full bg-white/5 border border-white/10 text-white text-xs font-bold flex items-center justify-center">
                               {partner.number}
                             </span>
                             <span className="font-bold text-white uppercase">{partner.mark}</span>
                           </div>
                           
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-xs text-gray-400">
                               CO-PLAYED: <span className="text-white font-bold">{partner.actualCount}x</span>
                             </span>
-                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${
+                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
                               partner.status === "HOT" ? "bg-green-500/10 border border-green-500/20 text-green-400" :
                               partner.status === "COLD" ? "bg-red-500/10 border border-red-500/20 text-red-400" :
                               "bg-gray-500/10 border border-gray-500/20 text-gray-400"
@@ -1450,7 +1450,7 @@ export default function PlayWheTab({
                               style={{ width: `${Math.min(100, (partner.actualCount / Math.max(1, partner.expectedAvgCount * 2)) * 100)}%` }}
                             />
                           </div>
-                          <div className="flex justify-between text-[8px] font-mono text-gray-500">
+                          <div className="flex justify-between text-xs font-mono text-gray-500">
                             <span>0x co-occurrences</span>
                             <span>EXP. AVG: {partner.expectedAvgCount}x</span>
                             <span>{partner.expectedAvgCount * 2}x+</span>
@@ -1475,15 +1475,15 @@ export default function PlayWheTab({
                       {correlationData.successors.map((item: any, idx: number) => (
                         <div key={item.number} className="flex justify-between items-center p-2 bg-slate-950/40 border border-white/5 rounded-lg text-xs font-mono">
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-gray-500">#{idx + 1}</span>
-                            <span className="w-5.5 h-5.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-[10px] flex items-center justify-center">
+                            <span className="text-xs text-gray-500">#{idx + 1}</span>
+                            <span className="w-5.5 h-5.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-xs flex items-center justify-center">
                               {item.number}
                             </span>
                             <span className="text-white font-bold uppercase tracking-wide">{item.mark}</span>
                           </div>
                           <div className="text-right">
                             <span className="text-white font-bold">{item.count}x</span>
-                            <span className="text-[9px] text-gray-500 ml-1.5">({item.probability.toFixed(1)}%)</span>
+                            <span className="text-xs text-gray-500 ml-1.5">({item.probability.toFixed(1)}%)</span>
                           </div>
                         </div>
                       ))}
@@ -1501,15 +1501,15 @@ export default function PlayWheTab({
                       {correlationData.companions.map((item: any, idx: number) => (
                         <div key={item.number} className="flex justify-between items-center p-2 bg-slate-950/40 border border-white/5 rounded-lg text-xs font-mono">
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-gray-500">#{idx + 1}</span>
-                            <span className="w-5.5 h-5.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-[10px] flex items-center justify-center">
+                            <span className="text-xs text-gray-500">#{idx + 1}</span>
+                            <span className="w-5.5 h-5.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-xs flex items-center justify-center">
                               {item.number}
                             </span>
                             <span className="text-white font-bold uppercase tracking-wide">{item.mark}</span>
                           </div>
                           <div className="text-right">
                             <span className="text-white font-bold">{item.count}x</span>
-                            <span className="text-[9px] text-gray-500 ml-1.5">co-played</span>
+                            <span className="text-xs text-gray-500 ml-1.5">co-played</span>
                           </div>
                         </div>
                       ))}
@@ -1535,8 +1535,8 @@ export default function PlayWheTab({
               <div className="absolute top-0 left-0 w-1.5 h-full bg-secondary" />
               <div className="space-y-2 w-full">
                 <div className="flex justify-between items-center w-full">
-                  <span className="text-[10px] font-semibold tracking-wider text-gray-400 uppercase font-mono">Latest Draw Results</span>
-                  <span className="text-[10px] text-secondary font-mono font-bold">
+                  <span className="text-xs font-semibold tracking-wider text-gray-400 uppercase font-mono">Latest Draw Results</span>
+                  <span className="text-xs text-secondary font-mono font-bold">
                     {statsLoading ? "Loading..." : stats?.latestDraws?.length > 0 ? "Last 4 Draws" : "N/A"}
                   </span>
                 </div>
@@ -1548,20 +1548,20 @@ export default function PlayWheTab({
                     {stats.latestDraws.map((draw: any) => (
                       <div key={draw.id} className="p-2 bg-slate-950/40 border border-white/5 rounded-lg flex flex-col items-center justify-between font-mono text-center">
                         <div className="flex flex-col items-center gap-0.5">
-                          <span className="text-[8px] text-gray-500 uppercase tracking-wider font-bold">
+                          <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">
                             {draw.draw_time_slot}
                           </span>
-                          <span className="text-[7px] text-gray-400 font-semibold leading-none">
+                          <span className="text-xs text-gray-400 font-semibold leading-none">
                             {formatShortDate(draw.draw_date)}
                           </span>
                         </div>
                         <div className="w-9 h-9 my-1.5 rounded-full bg-primary/10 border border-primary text-primary flex items-center justify-center font-bold text-sm shadow-[0_0_10px_rgba(56,189,248,0.2)]">
                           {draw.winning_number}
                         </div>
-                        <span className="text-[9px] font-bold text-white uppercase truncate max-w-[70px]" title={CHINAPOO_CHART[draw.winning_number]?.mark || ""}>
+                        <span className="text-xs font-bold text-white uppercase truncate max-w-[70px]" title={CHINAPOO_CHART[draw.winning_number]?.mark || ""}>
                           {CHINAPOO_CHART[draw.winning_number]?.mark.split(" ")[0] || "Unknown"}
                         </span>
-                        <span className="text-[7px] text-gray-500 mt-0.5">
+                        <span className="text-xs text-gray-500 mt-0.5">
                           #{draw.draw_number}
                         </span>
                       </div>
@@ -1578,8 +1578,8 @@ export default function PlayWheTab({
               <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
               <div className="space-y-2 w-full">
                 <div className="flex justify-between items-center w-full">
-                  <span className="text-[10px] font-semibold tracking-wider text-gray-400 uppercase font-mono">Next Scheduled Draw</span>
-                  <span className="text-[10px] text-primary font-mono font-bold uppercase">PLAY WHE</span>
+                  <span className="text-xs font-semibold tracking-wider text-gray-400 uppercase font-mono">Next Scheduled Draw</span>
+                  <span className="text-xs text-primary font-mono font-bold uppercase">PLAY WHE</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -1587,11 +1587,11 @@ export default function PlayWheTab({
                     <span className="text-sm font-bold text-white font-mono uppercase tracking-wider block">
                       {getNextPlayWheDraw().name}
                     </span>
-                    <span className="text-[10px] text-primary font-bold font-mono mt-0.5 block">
+                    <span className="text-xs text-primary font-bold font-mono mt-0.5 block">
                       {getNextPlayWheDraw().time} ({getNextPlayWheDraw().day})
                     </span>
                   </div>
-                  <span className="text-[9px] text-gray-500 font-mono max-w-[150px] text-right leading-relaxed">
+                  <span className="text-xs text-gray-500 font-mono max-w-[150px] text-right leading-relaxed">
                     Draws run daily at 10:30 AM, 1:00 PM, 4:00 PM, and 7:00 PM
                   </span>
                 </div>
@@ -1603,13 +1603,13 @@ export default function PlayWheTab({
           <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-4">
             <div className="flex justify-between items-center border-b border-white/5 pb-3">
               <div className="space-y-1">
-                <span className="text-[10px] text-primary uppercase tracking-widest font-bold">Predictive analytics</span>
-                <h3 className="text-sm font-bold text-white uppercase flex items-center gap-2">
+                <span className="text-xs text-primary uppercase tracking-widest font-bold">Predictive analytics</span>
+                <h3 className="text-base font-bold text-white uppercase flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-primary animate-pulse" />
                   Draw Predictor
                 </h3>
               </div>
-              <span className="text-[9px] text-gray-500 font-mono">
+              <span className="text-xs text-gray-500 font-mono">
                 UPCOMING SLOT: {getNextPlayWheDraw().name.toUpperCase()}
               </span>
             </div>
@@ -1617,7 +1617,7 @@ export default function PlayWheTab({
             {predictorLoading ? (
               <div className="py-8 flex flex-col items-center justify-center space-y-2">
                 <RefreshCw className="w-6 h-6 text-primary animate-spin" />
-                <span className="text-[10px] font-mono text-gray-500">Calculating transition vectors...</span>
+                <span className="text-xs font-mono text-gray-500">Calculating transition vectors...</span>
               </div>
             ) : predictorData.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
@@ -1627,11 +1627,11 @@ export default function PlayWheTab({
                     className="p-4 bg-slate-950/60 border border-white/5 hover:border-primary/40 rounded-xl flex flex-col items-center justify-between text-center transition-all duration-300 relative overflow-hidden font-mono group"
                   >
                     {/* Rank Badge */}
-                    <div className="absolute top-2 left-2 text-[8px] font-bold text-gray-500">
+                    <div className="absolute top-2 left-2 text-xs font-bold text-gray-500">
                       #{i + 1}
                     </div>
                     {/* Score Ring */}
-                    <div className="absolute top-2 right-2 text-[8px] font-bold text-primary">
+                    <div className="absolute top-2 right-2 text-xs font-bold text-primary">
                       {pred.score}%
                     </div>
 
@@ -1640,10 +1640,10 @@ export default function PlayWheTab({
                     </div>
 
                     <div className="space-y-1 w-full">
-                      <span className="text-[10px] font-extrabold text-white uppercase truncate block">
+                      <span className="text-xs font-extrabold text-white uppercase truncate block">
                         {pred.mark.split(" ")[0]}
                       </span>
-                      <span className="text-[8px] text-gray-500 uppercase block font-semibold">
+                      <span className="text-xs text-gray-500 uppercase block font-semibold">
                         {pred.reason}
                       </span>
                     </div>
@@ -1671,8 +1671,8 @@ export default function PlayWheTab({
               <div className="glass-panel p-6 rounded-xl border-primary/10 flex flex-col justify-between space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <span className="text-[10px] text-primary font-mono font-bold uppercase tracking-wider">1/16 Companion Recommendation</span>
-                    <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">Overdue Partner Marks</h3>
+                    <span className="text-xs text-primary font-mono font-bold uppercase tracking-wider">1/16 Companion Recommendation</span>
+                    <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Overdue Partner Marks</h3>
                   </div>
                   <TrendingUp className="w-4.5 h-4.5 text-primary" />
                 </div>
@@ -1682,14 +1682,14 @@ export default function PlayWheTab({
                     {stats.partners.recommendations.map((rec: any) => (
                       <div key={rec.number} className="flex items-center justify-between p-2 bg-slate-950/50 rounded-lg border border-white/5">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-primary/15 border border-primary/35 text-primary text-[10px] font-bold font-mono flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-full bg-primary/15 border border-primary/35 text-primary text-xs font-bold font-mono flex items-center justify-center">
                             {rec.number}
                           </span>
                           <span className="text-xs font-bold text-white uppercase font-mono tracking-wide">{rec.mark}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[9px] text-gray-400 font-mono">GAP: {rec.gap} DRAWS</span>
-                          <span className={`text-[8px] font-mono px-1.5 py-0.5 rounded font-bold ${
+                          <span className="text-xs text-gray-400 font-mono">GAP: {rec.gap} DRAWS</span>
+                          <span className={`text-xs font-mono px-1.5 py-0.5 rounded font-bold ${
                             rec.status === "OVERDUE" ? "bg-red-500/10 border border-red-500/20 text-red-400" :
                             rec.status === "HOT" ? "bg-green-500/10 border border-green-500/20 text-green-400" :
                             "bg-gray-500/10 border border-gray-500/20 text-gray-400"
@@ -1704,7 +1704,7 @@ export default function PlayWheTab({
                   <p className="text-xs text-gray-400 font-mono">No partner recommendations available. Sync some draws.</p>
                 )}
                 
-                <div className="text-[9px] text-gray-500 font-mono leading-relaxed pt-2 border-t border-white/5">
+                <div className="text-xs text-gray-500 font-mono leading-relaxed pt-2 border-t border-white/5">
                   If companion marks are overdue while their primary partner plays, standard Chinapoo law holds they are highly likely to follow soon.
                 </div>
               </div>
@@ -1713,8 +1713,8 @@ export default function PlayWheTab({
               <div className="glass-panel p-6 rounded-xl flex flex-col justify-between space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <span className="text-[10px] text-primary font-mono font-bold uppercase tracking-wider">Traditional Trends</span>
-                    <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">Saturday Playbacks</h3>
+                    <span className="text-xs text-primary font-mono font-bold uppercase tracking-wider">Traditional Trends</span>
+                    <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Saturday Playbacks</h3>
                   </div>
                   <Calendar className="w-4.5 h-4.5 text-primary" />
                 </div>
@@ -1723,24 +1723,24 @@ export default function PlayWheTab({
                   <div className="space-y-3 py-2">
                     <div className="p-3 bg-slate-950/50 rounded-lg border border-white/5 flex items-center justify-between">
                       <div>
-                        <div className="text-[9px] text-gray-500 font-mono">LAST SATURDAY EVENING:</div>
+                        <div className="text-xs text-gray-500 font-mono">LAST SATURDAY EVENING:</div>
                         <div className="text-xs font-bold text-white font-mono uppercase tracking-wide mt-1">
                           #{stats.saturdayPlayback.lastSaturdayDraw.winning_number} {CHINAPOO_CHART[Number(stats.saturdayPlayback.lastSaturdayDraw.winning_number)]?.mark || ""}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[9px] text-gray-500 font-mono">DRAWN DATE:</div>
-                        <div className="text-[10px] text-gray-400 font-mono mt-1">
+                        <div className="text-xs text-gray-500 font-mono">DRAWN DATE:</div>
+                        <div className="text-xs text-gray-400 font-mono mt-1">
                           {formatDateString(stats.saturdayPlayback.lastSaturdayDraw.draw_date)}
                         </div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-slate-950 font-bold text-[9px] ${
+                      <div className={`px-2 py-0.5 rounded-full flex items-center justify-center text-slate-950 font-bold text-xs ${
                         stats.saturdayPlayback.playbackOccurred ? "bg-green-400" : "bg-red-400"
                       }`}>
-                        {stats.saturdayPlayback.playbackOccurred ? "✓" : "✗"}
+                        {stats.saturdayPlayback.playbackOccurred ? "Yes" : "No"}
                       </div>
                       <p className="text-xs text-gray-300 font-mono">
                         {stats.saturdayPlayback.playbackOccurred 
@@ -1753,7 +1753,7 @@ export default function PlayWheTab({
                   <p className="text-xs text-gray-400 font-mono">No Saturday draws found. Sync some draws.</p>
                 )}
 
-                <div className="text-[9px] text-gray-500 font-mono leading-relaxed pt-2 border-t border-white/5">
+                <div className="text-xs text-gray-500 font-mono leading-relaxed pt-2 border-t border-white/5">
                   Saturday Playback tracks whether the Saturday evening draw number returns at any point during the subsequent week.
                 </div>
               </div>
@@ -1762,8 +1762,8 @@ export default function PlayWheTab({
               <div className="glass-panel p-6 rounded-xl flex flex-col justify-between space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <span className="text-[10px] text-purple-400 font-mono font-bold uppercase tracking-wider">Variance models</span>
-                    <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">James Bond Figures</h3>
+                    <span className="text-xs text-purple-400 font-mono font-bold uppercase tracking-wider">Variance models</span>
+                    <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">James Bond Figures</h3>
                   </div>
                   <Flame className="w-4.5 h-4.5 text-purple-400" />
                 </div>
@@ -1772,21 +1772,21 @@ export default function PlayWheTab({
                   <div className="space-y-3 py-2">
                     <div className="flex items-center justify-between p-2 bg-slate-950/50 rounded-lg border border-white/5 text-xs font-mono">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-gray-400">DOUBLES (11,22,33):</span>
+                        <span className="text-xs text-gray-400">DOUBLES (11,22,33):</span>
                       </div>
                       <div className="text-right">
                         <span className="text-white font-bold">{stats.doublesAndZeroes.doublePercentage}%</span>
-                        <span className="text-[9px] text-gray-500 ml-1.5">(GAP: {stats.doublesAndZeroes.doubleGap})</span>
+                        <span className="text-xs text-gray-500 ml-1.5">(GAP: {stats.doublesAndZeroes.doubleGap})</span>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between p-2 bg-slate-950/50 rounded-lg border border-white/5 text-xs font-mono">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-gray-400">ZEROES (10,20,30):</span>
+                        <span className="text-xs text-gray-400">ZEROES (10,20,30):</span>
                       </div>
                       <div className="text-right">
                         <span className="text-white font-bold">{stats.doublesAndZeroes.zeroPercentage}%</span>
-                        <span className="text-[9px] text-gray-500 ml-1.5">(GAP: {stats.doublesAndZeroes.zeroGap})</span>
+                        <span className="text-xs text-gray-500 ml-1.5">(GAP: {stats.doublesAndZeroes.zeroGap})</span>
                       </div>
                     </div>
                   </div>
@@ -1794,7 +1794,7 @@ export default function PlayWheTab({
                   <p className="text-xs text-gray-400 font-mono">No metrics computed. Sync draws.</p>
                 )}
 
-                <div className="text-[9px] text-gray-500 font-mono leading-relaxed pt-2 border-t border-white/5">
+                <div className="text-xs text-gray-500 font-mono leading-relaxed pt-2 border-t border-white/5">
                   Tracks the drawing frequencies of double figures (11, 22, 33) and zeroes (10, 20, 30) relative to standard random expectation (~8.3%).
                 </div>
               </div>
@@ -1806,8 +1806,8 @@ export default function PlayWheTab({
           <div className="glass-panel p-6 rounded-xl space-y-6">
             <div className="flex justify-between items-center border-b border-white/5 pb-4">
               <div>
-                <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">Slot-Specific Hot/Cold Analyzer</h3>
-                <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
+                <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Slot-Specific Hot/Cold Analyzer</h3>
+                <p className="text-xs text-gray-400 mt-1 leading-relaxed">
                   Individual draw periods (Morning vs. Evening) tend to favor specific mark profiles. Select timeframe size:
                 </p>
               </div>
@@ -1845,14 +1845,14 @@ export default function PlayWheTab({
                       
                       {/* Hot Grid */}
                       <div className="space-y-2">
-                        <div className="text-[9px] text-gray-500 font-mono uppercase tracking-wider flex items-center gap-1">
+                        <div className="text-xs text-gray-500 font-mono uppercase tracking-wider flex items-center gap-1">
                           <Flame className="w-3 h-3 text-red-400" />
                           Hot Marks
                         </div>
                         
                         <div className="space-y-1">
                           {data.hot.slice(0, 3).map((item: any) => (
-                            <div key={item.number} className="flex justify-between items-center text-[11px] font-mono p-1.5 bg-red-500/[0.02] border border-red-500/10 rounded">
+                            <div key={item.number} className="flex justify-between items-center text-xs font-mono p-1.5 bg-red-500/[0.02] border border-red-500/10 rounded">
                               <span className="text-white font-bold uppercase tracking-wide">
                                 {item.number}. {item.mark}
                               </span>
@@ -1864,14 +1864,14 @@ export default function PlayWheTab({
 
                       {/* Cold Grid */}
                       <div className="space-y-2">
-                        <div className="text-[9px] text-gray-500 font-mono uppercase tracking-wider flex items-center gap-1">
+                        <div className="text-xs text-gray-500 font-mono uppercase tracking-wider flex items-center gap-1">
                           <Activity className="w-3 h-3 text-blue-400 animate-pulse" />
                           Cold/Overdue Marks
                         </div>
                         
                         <div className="space-y-1">
                           {data.cold.slice(0, 3).map((item: any) => (
-                            <div key={item.number} className="flex justify-between items-center text-[11px] font-mono p-1.5 bg-blue-500/[0.02] border border-blue-500/10 rounded">
+                            <div key={item.number} className="flex justify-between items-center text-xs font-mono p-1.5 bg-blue-500/[0.02] border border-blue-500/10 rounded">
                               <span className="text-white font-bold uppercase tracking-wide">
                                 {item.number}. {item.mark}
                               </span>
@@ -1894,10 +1894,10 @@ export default function PlayWheTab({
             <div className="glass-panel p-6 rounded-xl space-y-4">
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xs font-bold font-mono uppercase text-gray-300 tracking-wider">Line Frequencies</h3>
-                  <span className="text-[10px] text-gray-500 font-mono">ROWS: 1–6</span>
+                  <h3 className="text-base font-bold font-mono uppercase text-gray-300 tracking-wider">Line Frequencies</h3>
+                  <span className="text-xs text-gray-500 font-mono">ROWS: 1–6</span>
                 </div>
-                <p className="text-[10px] text-gray-400 font-mono leading-relaxed">
+                <p className="text-xs text-gray-400 font-mono leading-relaxed">
                   Lines group the 36 play numbers into 6 consecutive rows (Line 1: 1–6, Line 2: 7–12, ..., Line 6: 31–36).
                 </p>
               </div>
@@ -1931,10 +1931,10 @@ export default function PlayWheTab({
             <div className="glass-panel p-6 rounded-xl space-y-4">
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xs font-bold font-mono uppercase text-gray-300 tracking-wider">Suit Frequencies</h3>
-                  <span className="text-[10px] text-gray-500 font-mono">COLUMNS: ENDING 1–6</span>
+                  <h3 className="text-base font-bold font-mono uppercase text-gray-300 tracking-wider">Suit Frequencies</h3>
+                  <span className="text-xs text-gray-500 font-mono">COLUMNS: ENDING 1–6</span>
                 </div>
-                <p className="text-[10px] text-gray-400 font-mono leading-relaxed">
+                <p className="text-xs text-gray-400 font-mono leading-relaxed">
                   Suits group the numbers by their ending digits 1 to 6 (e.g., Suit 1 ends in 1, Suit 6 ends in 6). Numbers ending in 7, 8, 9, 0 are excluded.
                 </p>
               </div>
@@ -1972,8 +1972,8 @@ export default function PlayWheTab({
               <div className="flex items-center gap-2 border-b border-white/5 pb-3">
                 <TrendingUp className="w-5 h-5 text-primary" />
                 <div>
-                  <h3 className="text-lg font-bold tracking-tight text-white">Advanced Statistical Intelligence</h3>
-                  <p className="text-xs text-gray-400">EWMA · RTM Z-Score · Chi-Square · Entropy · Autocorrelation · Bayesian · Monte Carlo · Kelly</p>
+                  <h3 className="text-base font-bold tracking-tight text-white">Advanced Statistical Intelligence</h3>
+                  <p className="text-xs text-gray-400">Recent trends, rebound signals, fairness check, randomness score, and stake sizing</p>
                 </div>
               </div>
 
@@ -1983,14 +1983,14 @@ export default function PlayWheTab({
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-sky-400">EWMA Top Marks</span>
+                    <span className="text-xs font-bold font-mono uppercase tracking-widest text-sky-400">EWMA Top Marks</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 font-mono leading-snug">Exponentially weighted — recent draws count more (α=0.12).</p>
+                  <p className="text-xs text-gray-500 font-mono leading-snug">Exponentially weighted — recent draws count more (α=0.12).</p>
                   <div className="flex flex-wrap gap-1.5">
                     {(stats.advancedStats.ewma || []).slice(0, 8).map((e: any) => (
                       <div key={e.number} className="flex flex-col items-center bg-sky-950/40 border border-sky-500/20 rounded-lg px-2 py-1.5 min-w-[38px]">
                         <span className="text-sm font-black font-mono text-sky-300">{String(e.number).padStart(2, "0")}</span>
-                        <span className="text-[7px] font-mono text-sky-600 uppercase truncate max-w-[36px]">{e.mark?.split(" ")[0]}</span>
+                        <span className="text-xs font-mono text-sky-600 uppercase truncate max-w-[36px]">{e.mark?.split(" ")[0]}</span>
                       </div>
                     ))}
                   </div>
@@ -2000,14 +2000,14 @@ export default function PlayWheTab({
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-emerald-400">RTM Rebound</span>
+                    <span className="text-xs font-bold font-mono uppercase tracking-widest text-emerald-400">RTM Rebound</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 font-mono leading-snug">Z &lt; -1.5 = statistically overdue for regression to mean.</p>
+                  <p className="text-xs text-gray-500 font-mono leading-snug">Z &lt; -1.5 = statistically overdue for regression to mean.</p>
                   <div className="flex flex-wrap gap-1.5">
                     {(stats.advancedStats.zScores?.reboundCandidates || []).map((z: any) => (
                       <div key={z.number} className="flex flex-col items-center bg-emerald-950/40 border border-emerald-500/20 rounded-lg px-2 py-1.5 min-w-[38px]">
                         <span className="text-sm font-black font-mono text-emerald-300">{String(z.number).padStart(2, "0")}</span>
-                        <span className="text-[7px] font-mono text-emerald-600">Z={z.zScore}</span>
+                        <span className="text-xs font-mono text-emerald-600">Z={z.zScore}</span>
                       </div>
                     ))}
                   </div>
@@ -2017,12 +2017,12 @@ export default function PlayWheTab({
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-cyan-400">Lag Autocorrelation</span>
+                    <span className="text-xs font-bold font-mono uppercase tracking-widest text-cyan-400">Lag Autocorrelation</span>
                   </div>
-                  <p className="text-[10px] text-gray-400 font-mono leading-snug">
+                  <p className="text-xs text-gray-400 font-mono leading-snug">
                     Top Lag-3 Cycle Signals: {Array.isArray(stats?.advancedStats?.autocorrelation?.lag3) ? stats.advancedStats.autocorrelation.lag3.slice(0, 4).map((a: any) => `#${a.number}`).join(", ") : "Active"}
                   </p>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold font-mono bg-cyan-950/40 border-cyan-500/30 text-cyan-300">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-bold font-mono bg-cyan-950/40 border-cyan-500/30 text-cyan-300">
                     Lag-3 &amp; Lag-4 ACF Active
                   </div>
                 </div>
@@ -2031,7 +2031,7 @@ export default function PlayWheTab({
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-amber-400">Entropy Score</span>
+                    <span className="text-xs font-bold font-mono uppercase tracking-widest text-amber-400">Entropy Score</span>
                   </div>
                   {(() => {
                     const ratio = stats.advancedStats.entropy?.marks?.ratio || 0;
@@ -2042,10 +2042,10 @@ export default function PlayWheTab({
                         <div className="relative h-3 rounded-full bg-slate-800 overflow-hidden">
                           <div className="absolute inset-y-0 left-0 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
                         </div>
-                        <div className="flex justify-between text-[9px] font-mono text-gray-500">
+                        <div className="flex justify-between text-xs font-mono text-gray-500">
                           <span>Predictable (0%)</span><span>Random (100%)</span>
                         </div>
-                        <p className="text-[11px] font-bold font-mono" style={{ color }}>
+                        <p className="text-xs font-bold font-mono" style={{ color }}>
                           {pct}% — {stats.advancedStats.entropy?.marks?.signal?.toUpperCase()}
                         </p>
                       </>
@@ -2057,26 +2057,26 @@ export default function PlayWheTab({
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo</span>
+                    <span className="text-xs font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo</span>
                   </div>
                   <div className="bg-violet-950/30 border border-violet-500/20 rounded-lg px-3 py-2">
-                    <p className="text-[10px] font-mono text-gray-400">Top-5 Bayesian coverage</p>
+                    <p className="text-xs font-mono text-gray-400">Top-5 Bayesian coverage</p>
                     <p className="text-2xl font-black font-mono text-violet-300">{stats.advancedStats.monteCarlo?.coveragePercent}%</p>
-                    <p className="text-[9px] font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulations</p>
+                    <p className="text-xs font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulations</p>
                   </div>
                 </div>
               </div>
 
               {/* Bayesian Top-10 */}
               <div className="space-y-2">
-                <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Bayesian Posterior Probability — Top 10 Marks</p>
+                <p className="text-xs font-mono uppercase tracking-widest text-gray-500">Bayesian Posterior Probability — Top 10 Marks</p>
                 <div className="flex flex-wrap gap-2">
                   {(stats.advancedStats.bayesian?.top10 || []).map((b: any, i: number) => (
                     <div key={b.number} className="flex items-center gap-1.5 bg-slate-900 border border-white/5 rounded-lg px-2.5 py-1.5">
-                      <span className="text-[9px] font-mono text-gray-500">#{i+1}</span>
+                      <span className="text-xs font-mono text-gray-500">#{i+1}</span>
                       <span className="text-sm font-black font-mono text-white">{String(b.number).padStart(2, "0")}</span>
-                      <span className="text-[7px] font-mono text-gray-400 uppercase">{b.mark?.split(" ")[0]}</span>
-                      <span className="text-[9px] font-mono text-primary">{b.posteriorProb}%</span>
+                      <span className="text-xs font-mono text-gray-400 uppercase">{b.mark?.split(" ")[0]}</span>
+                      <span className="text-xs font-mono text-primary">{b.posteriorProb}%</span>
                     </div>
                   ))}
                 </div>
@@ -2095,8 +2095,8 @@ export default function PlayWheTab({
             <div className="flex justify-between items-center border-b border-white/5 pb-3">
               <div className="flex items-center gap-2">
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Dream Journal</h3>
-                  <p className="text-[10px] text-gray-400 font-mono mt-0.5">Type or speak your dream to extract matching Chinapoo numbers</p>
+                  <h3 className="text-base font-bold uppercase tracking-wider text-white font-mono">Dream Journal</h3>
+                  <p className="text-xs text-gray-400 font-mono mt-0.5">Type or speak your dream to extract matching Chinapoo numbers</p>
                 </div>
               </div>
               
@@ -2125,7 +2125,7 @@ export default function PlayWheTab({
                 
                 <button
                   onClick={() => setShowMicHelp(!showMicHelp)}
-                  className="text-[10px] font-bold text-gray-500 hover:text-white font-mono border border-white/10 px-2.5 py-1.5 hover:bg-white/5 rounded transition-all cursor-pointer"
+                  className="text-xs font-bold text-gray-500 hover:text-white font-mono border border-white/10 px-2.5 py-1.5 hover:bg-white/5 rounded transition-all cursor-pointer"
                   title="Troubleshoot microphone issues on mobile/HTTPS"
                 >
                   ?
@@ -2134,8 +2134,8 @@ export default function PlayWheTab({
             </div>
 
             {showMicHelp && (
-              <div className="bg-slate-950/80 border border-white/5 rounded-lg p-4 text-[10px] text-gray-400 font-mono space-y-2 animate-ticket-slide">
-                <div className="font-bold text-white uppercase text-[9px] tracking-wider pb-1.5 border-b border-white/5 flex justify-between items-center">
+              <div className="bg-slate-950/80 border border-white/5 rounded-lg p-4 text-xs text-gray-400 font-mono space-y-2 animate-ticket-slide">
+                <div className="font-bold text-white uppercase text-xs tracking-wider pb-1.5 border-b border-white/5 flex justify-between items-center">
                   <span>Microphone Access Troubleshooting Guide</span>
                   <button 
                     onClick={() => setShowMicHelp(false)} 
@@ -2151,10 +2151,10 @@ export default function PlayWheTab({
                   <strong>1. Secure Connection Required (HTTPS):</strong> Mobile browsers block voice features on standard HTTP to protect privacy. Make sure your address bar starts with <code className="text-primary font-bold">https://</code>.
                 </p>
                 <p>
-                  <strong>2. iOS (iPhone/iPad) Settings:</strong> Open the system <strong>Settings App &rarr; Safari &rarr; Microphone</strong>, and verify that it is set to <strong>Ask</strong> or <strong>Allow</strong>.
+                  <strong>2. iPhone and iPad Settings:</strong> Open <strong>Settings, then Safari, then Microphone</strong>, and make sure it is set to <strong>Ask</strong> or <strong>Allow</strong>.
                 </p>
                 <p>
-                  <strong>3. Android (Chrome) Settings:</strong> Tap the <strong>three dots Menu &rarr; settings (or Info icon in URL bar) &rarr; Site Settings &rarr; Microphone &rarr; Allow</strong>.
+                  <strong>3. Android (Chrome) Settings:</strong> Tap the <strong>Menu button, then Site Settings, then Microphone, then Allow</strong>.
                 </p>
                 <p>
                   <strong>4. Web App (PWA) Standalone Bug:</strong> If you are using the app added directly to your Home Screen, permission dialogs can fail. Try opening the web page directly in <strong>Safari or Chrome Browser</strong> instead.
@@ -2165,7 +2165,7 @@ export default function PlayWheTab({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
               {/* Text Input Panel */}
               <div className="space-y-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase font-mono">Dream Diary Entry:</span>
+                <span className="text-xs font-bold text-gray-400 uppercase font-mono">Dream Diary Entry:</span>
                 <textarea
                   value={dreamText}
                   onChange={(e) => handleDreamInterpret(e.target.value)}
@@ -2174,7 +2174,7 @@ export default function PlayWheTab({
                 />
                 <button
                   onClick={() => handleDreamInterpret("")}
-                  className="text-[9px] text-red-400 hover:text-red-300 font-bold underline font-mono tracking-wider uppercase"
+                  className="text-xs text-red-400 hover:text-red-300 font-bold underline font-mono tracking-wider uppercase"
                 >
                   Clear Entry
                 </button>
@@ -2183,7 +2183,7 @@ export default function PlayWheTab({
               {/* Matches Result Panel */}
               <div className="space-y-2 flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase font-mono">Matched Chinapoo Marks:</span>
+                  <span className="text-xs font-bold text-gray-400 uppercase font-mono">Matched Chinapoo Marks:</span>
                   
                   {matchedDreamMarks.length === 0 ? (
                     <div className="bg-slate-950/40 border border-white/5 rounded-lg p-6 text-center text-xs text-gray-500 italic font-mono mt-2">
@@ -2202,12 +2202,12 @@ export default function PlayWheTab({
                           className="flex items-center gap-2.5 p-2 bg-slate-950/60 border border-white/5 hover:border-primary/40 rounded-lg text-xs font-mono cursor-pointer transition-all hover:scale-[1.02]"
                           title="Click to view statistical analysis in Relationship Map"
                         >
-                          <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                          <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs">
                             {match.number}
                           </div>
                           <div>
                             <div className="text-white font-bold uppercase">{match.mark}</div>
-                            <div className="text-[8px] text-gray-500 truncate max-w-[120px]">{match.reason}</div>
+                            <div className="text-xs text-gray-500 truncate max-w-[120px]">{match.reason}</div>
                           </div>
                         </div>
                       ))}
@@ -2216,7 +2216,7 @@ export default function PlayWheTab({
                 </div>
 
                 {matchedDreamMarks.length > 0 && (
-                  <div className="text-[9px] text-primary/70 font-mono italic mt-2">
+                  <div className="text-xs text-primary/70 font-mono italic mt-2">
                     Note: Click any matched mark above to load its successors &amp; companion statistics in the Relationship Map.
                   </div>
                 )}
@@ -2228,7 +2228,7 @@ export default function PlayWheTab({
           <div className="glass-panel p-6 rounded-xl space-y-4">
             <div className="flex items-center gap-2">
               <Search className="w-5 h-5 text-primary" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Chinapoo Dictionary Search</h3>
+              <h3 className="text-base font-bold uppercase tracking-wider text-white font-mono">Chinapoo Dictionary Search</h3>
             </div>
             <p className="text-xs text-gray-400 leading-relaxed max-w-3xl font-mono">
               Directly search the traditional Chinapoo Chart dictionary by keyword, mark name, or number (1–36) to look up symbol associations. Shows the complete list of 36 traditional marks by default.
@@ -2249,10 +2249,10 @@ export default function PlayWheTab({
           {/* Results Grid */}
           <div className="glass-panel p-6 rounded-xl space-y-4">
             <div className="flex justify-between items-center border-b border-white/5 pb-3">
-              <h3 className="text-xs font-bold font-mono uppercase text-gray-300 tracking-wider">
+              <h3 className="text-base font-bold font-mono uppercase text-gray-300 tracking-wider">
                 {manualSearchQuery.trim() ? "Search Results" : "Traditional Chinapoo Marks"}
               </h3>
-              <span className="text-[10px] bg-primary/10 border border-primary/20 text-primary font-bold px-2 py-0.5 rounded-full font-mono">
+              <span className="text-xs bg-primary/10 border border-primary/20 text-primary font-bold px-2 py-0.5 rounded-full font-mono">
                 {manualSearchResults.length} {manualSearchResults.length === 1 ? "MARK" : "MARKS"}
               </span>
             </div>
@@ -2288,7 +2288,7 @@ export default function PlayWheTab({
                               <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs font-mono shadow-[0_0_8px_rgba(56,189,248,0.1)]">
                                 {res.number}
                               </div>
-                              <span className="text-[8px] border border-white/5 bg-white/5 text-gray-500 px-1.5 py-0.5 rounded font-mono">
+                              <span className="text-xs border border-white/5 bg-white/5 text-gray-500 px-1.5 py-0.5 rounded font-mono">
                                 LINE {Math.ceil(res.number / 6)}
                               </span>
                             </div>
@@ -2299,7 +2299,7 @@ export default function PlayWheTab({
                               </h4>
                               <div className="flex flex-wrap gap-1 mt-1.5 max-h-[80px] overflow-y-auto">
                                 {res.keywords.map((kw: string) => (
-                                  <span key={kw} className="text-[8px] bg-white/5 text-gray-400 border border-white/5 px-1 py-0.5 rounded font-mono">
+                                  <span key={kw} className="text-xs bg-white/5 text-gray-400 border border-white/5 px-1 py-0.5 rounded font-mono">
                                     {kw}
                                   </span>
                                 ))}
@@ -2307,7 +2307,7 @@ export default function PlayWheTab({
                             </div>
                           </div>
 
-                          <div className="mt-4 pt-3 border-t border-white/5 text-[9px] font-mono text-gray-500 flex justify-between items-center">
+                          <div className="mt-4 pt-3 border-t border-white/5 text-xs font-mono text-gray-500 flex justify-between items-center">
                             <span>APPEARS: <b className="text-white">{appearances}x</b></span>
                             <span>({((appearances / drawsList) * 100).toFixed(1)}%)</span>
                           </div>
@@ -2317,11 +2317,11 @@ export default function PlayWheTab({
                         <div className="flip-card-back absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] glass-panel p-4 rounded-xl border border-primary/25 bg-slate-900/90 flex flex-col justify-between">
                           <div className="space-y-3 font-mono">
                             <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                              <span className="text-[10px] font-bold text-primary uppercase font-mono">Chinapoo Stats</span>
-                              <span className="text-[10px] text-gray-500 font-mono">#{res.number}</span>
+                              <span className="text-xs font-bold text-primary uppercase font-mono">Chinapoo Stats</span>
+                              <span className="text-xs text-gray-500 font-mono">#{res.number}</span>
                             </div>
                             
-                            <div className="space-y-1.5 text-[9px] font-mono">
+                            <div className="space-y-1.5 text-xs font-mono">
                               <div className="flex justify-between">
                                 <span className="text-gray-400">Chinapoo Group:</span>
                                 <span className="text-white font-bold">
@@ -2343,7 +2343,7 @@ export default function PlayWheTab({
                             </div>
                           </div>
 
-                          <div className="text-[8px] text-gray-500 font-mono italic text-center">
+                          <div className="text-xs text-gray-500 font-mono italic text-center">
                             Hover/Touch to flip back
                           </div>
                         </div>
@@ -2379,8 +2379,8 @@ export default function PlayWheTab({
             <div className="flex items-center gap-2">
               <Network className="w-5 h-5 text-primary" />
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Successor Transition Network</h3>
-                <p className="text-[10px] text-gray-400 font-mono mt-0.5">Interactive flow mapping next-draw successor probabilities based on history</p>
+                <h3 className="text-base font-bold uppercase tracking-wider text-white font-mono">Successor Transition Network</h3>
+                <p className="text-xs text-gray-400 font-mono mt-0.5">Interactive flow mapping next-draw successor probabilities based on history</p>
               </div>
             </div>
 
@@ -2456,7 +2456,7 @@ export default function PlayWheTab({
                               x={midX} 
                               y={midY + 2} 
                               textAnchor="middle"
-                              className={`text-[8px] font-bold font-mono ${isTop1 ? "fill-emerald-400" : "fill-sky-400"}`}
+                              className={`text-xs font-bold font-mono ${isTop1 ? "fill-emerald-400" : "fill-sky-400"}`}
                             >
                               {t.count}x
                             </text>
@@ -2477,7 +2477,7 @@ export default function PlayWheTab({
                         const totalDraws = stats?.totalDraws || 1;
                         return (
                           <>
-                            <text x="390" y="338" textAnchor="middle" className="text-[10px] font-bold fill-primary font-mono uppercase tracking-widest">
+                            <text x="390" y="338" textAnchor="middle" className="text-xs font-bold fill-primary font-mono uppercase tracking-widest">
                               SELECTED
                             </text>
                             <text x="390" y="378" textAnchor="middle" className="text-3xl font-black fill-white font-mono">
@@ -2486,7 +2486,7 @@ export default function PlayWheTab({
                             <text x="390" y="408" textAnchor="middle" className="text-sm font-extrabold fill-emerald-400 font-mono uppercase tracking-wider">
                               {name.split(" ")[0]}
                             </text>
-                            <text x="390" y="443" textAnchor="middle" className="text-[10px] fill-gray-400 font-mono">
+                            <text x="390" y="443" textAnchor="middle" className="text-xs fill-gray-400 font-mono">
                               FREQ: {freq}x ({((freq / totalDraws) * 100).toFixed(1)}%)
                             </text>
                           </>
@@ -2500,7 +2500,7 @@ export default function PlayWheTab({
                         <text x="390" y="390" textAnchor="middle" className="text-xs font-bold fill-white font-mono">
                           SUCCESSOR FLOW
                         </text>
-                        <text x="390" y="420" textAnchor="middle" className="text-[10px] fill-slate-500 font-mono">
+                        <text x="390" y="420" textAnchor="middle" className="text-xs fill-slate-500 font-mono">
                           Select to analyze
                         </text>
                       </>
@@ -2562,7 +2562,7 @@ export default function PlayWheTab({
                           x={coords.x} 
                           y={coords.y + 4.5} 
                           textAnchor="middle"
-                          className={`text-[9px] font-bold font-mono ${isHovered || isSuccessorOfHovered ? "fill-slate-950" : "fill-white"}`}
+                          className={`text-xs font-bold font-mono ${isHovered || isSuccessorOfHovered ? "fill-slate-950" : "fill-white"}`}
                         >
                           {num}
                         </text>
@@ -2592,7 +2592,7 @@ export default function PlayWheTab({
 
                       return (
                         <div className="space-y-2">
-                          <p className="text-[10px] text-gray-400 leading-relaxed uppercase pb-1">
+                          <p className="text-xs text-gray-400 leading-relaxed uppercase pb-1">
                             These are the most frequent successor numbers drawn on the next consecutive drawing after mark <strong>#{hoveredNode}</strong>:
                           </p>
                           {targets.length === 0 ? (
@@ -2601,8 +2601,8 @@ export default function PlayWheTab({
                             targets.map((t, idx) => (
                               <div key={t.target} className="flex justify-between items-center p-2 bg-slate-950/40 border border-white/5 rounded-lg text-xs">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-[10px] text-gray-500">#{idx + 1}</span>
-                                  <span className={`w-5.5 h-5.5 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                                  <span className="text-xs text-gray-500">#{idx + 1}</span>
+                                  <span className={`w-5.5 h-5.5 rounded-full text-xs font-bold flex items-center justify-center ${
                                     idx === 0 ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-primary/10 border border-primary/20 text-primary"
                                   }`}>
                                     {t.target}
@@ -2641,7 +2641,7 @@ export default function PlayWheTab({
           {/* Header Filters */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
             <div>
-              <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">Play Whe Draw Log</h3>
+              <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Play Whe Draw Log</h3>
               <p className="text-xs text-gray-400 mt-1 leading-relaxed">
                 Filter and browse the complete catalog of daily draws.
               </p>
@@ -2687,7 +2687,7 @@ export default function PlayWheTab({
               <div className="overflow-x-auto sleek-scrollbar border border-white/5 rounded-lg max-h-[600px] relative">
                 <table className="w-full text-left border-collapse text-xs font-mono min-w-[500px]">
                   <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md">
-                    <tr className="border-b border-white/10 text-[10px] uppercase text-gray-400 tracking-wider">
+                    <tr className="border-b border-white/10 text-xs uppercase text-gray-400 tracking-wider">
                       <th className="py-3 px-4 font-semibold bg-slate-950">Draw #</th>
                       <th className="py-3 px-4 font-semibold bg-slate-950">Date</th>
                       <th className="py-3 px-4 font-semibold bg-slate-950">Time Slot</th>
@@ -2730,7 +2730,7 @@ export default function PlayWheTab({
                             <td className="py-3 px-4 font-bold text-white">#{draw.draw_number}</td>
                             <td className="py-3 px-4 text-gray-400">{formatDateString(draw.draw_date)}</td>
                             <td className="py-3 px-4">
-                              <span className="px-2 py-0.5 border border-white/5 bg-slate-950/40 rounded text-[10px] text-gray-300">
+                              <span className="px-2 py-0.5 border border-white/5 bg-slate-950/40 rounded text-xs text-gray-300">
                                 {draw.draw_time_slot}
                               </span>
                             </td>
@@ -2747,10 +2747,10 @@ export default function PlayWheTab({
                               {markInfo?.mark || "Unknown"}
                             </td>
                             <td className="py-3 px-3 text-right">
-                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded transition-colors ${
+                              <span className={`text-xs uppercase font-bold px-2 py-1 rounded transition-colors ${
                                 isSelected ? "bg-amber-400/20 text-amber-300" : "text-gray-500 hover:text-white"
                               }`}>
-                                {isSelected ? "Active" : "Inspect →"}
+                                {isSelected ? "Selected" : "Inspect"}
                               </span>
                             </td>
                           </tr>
@@ -2773,17 +2773,17 @@ export default function PlayWheTab({
                       <h4 className="text-xs font-black uppercase text-white font-mono tracking-wider">
                         Draw #{selectedHistoricalDraw.draw_number} Deep-Dive
                       </h4>
-                      <span className="text-[10px] text-gray-400 font-mono">
-                        {formatDateString(selectedHistoricalDraw.draw_date)} • {selectedHistoricalDraw.draw_time_slot}
+                      <span className="text-xs text-slate-400 font-sans">
+                        {formatDateString(selectedHistoricalDraw.draw_date)}, {selectedHistoricalDraw.draw_time_slot}
                       </span>
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedHistoricalDraw(null)}
-                    className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition text-xs font-mono"
-                    title="Close Investigation Panel"
+                    className="px-2 py-1 rounded-md text-slate-300 hover:text-white hover:bg-white/10 transition text-xs font-sans font-semibold cursor-pointer"
+                    title="Close details panel"
                   >
-                    ✕
+                    Close
                   </button>
                 </div>
 
@@ -2805,29 +2805,29 @@ export default function PlayWheTab({
                           <h5 className="text-sm font-bold text-white uppercase font-mono tracking-wider">
                             {mark?.mark || `Mark #${num}`}
                           </h5>
-                          <p className="text-[10px] text-gray-400 font-mono line-clamp-2" title={mark?.keywords?.join(", ")}>
+                          <p className="text-xs text-gray-400 font-mono line-clamp-2" title={mark?.keywords?.join(", ")}>
                             {mark?.keywords ? mark.keywords.join(", ") : "Traditional Chinapoo Symbol"}
                           </p>
                         </div>
                       </div>
 
-                      {/* Invariant Coordinate Box */}
-                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-2.5 font-mono">
-                        <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest block">
-                          Galois Ring & Centroid Coordinates
+                      {/* Number Details Box */}
+                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-2.5 font-sans">
+                        <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
+                          Number Group Details
                         </span>
                         <div className="grid grid-cols-3 gap-2 text-center">
                           <div className="p-2 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Residue mod 4</span>
-                            <span className="text-sm font-black text-amber-300">{mod4}</span>
+                            <span className="text-xs text-slate-400 block">Group of 4</span>
+                            <span className="text-sm font-bold text-amber-300 font-mono">{mod4}</span>
                           </div>
                           <div className="p-2 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Residue mod 9</span>
-                            <span className="text-sm font-black text-cyan-300">{mod9}</span>
+                            <span className="text-xs text-slate-400 block">Group of 9</span>
+                            <span className="text-sm font-bold text-cyan-300 font-mono">{mod9}</span>
                           </div>
                           <div className="p-2 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Centroid σ₃₆</span>
-                            <span className="text-sm font-black text-emerald-300">{reflection}</span>
+                            <span className="text-xs text-slate-400 block">Mirror (37 minus mark)</span>
+                            <span className="text-sm font-bold text-emerald-300 font-mono">{reflection}</span>
                           </div>
                         </div>
                       </div>
@@ -2840,10 +2840,10 @@ export default function PlayWheTab({
                             fetchCorrelation(num);
                             setSubTab("relationship");
                           }}
-                          className="w-full py-2 px-3 rounded-lg bg-slate-900 hover:bg-amber-500/20 border border-white/10 hover:border-amber-400/40 text-[11px] font-bold text-gray-200 hover:text-amber-300 uppercase transition flex items-center justify-between cursor-pointer font-mono"
+                          className="w-full py-2.5 px-3 rounded-lg bg-slate-900 hover:bg-amber-500/20 border border-white/10 hover:border-amber-400/40 text-xs font-semibold text-slate-200 hover:text-amber-300 transition flex items-center justify-between cursor-pointer font-sans"
                         >
-                          <span>Explore Companions in Relationship Map</span>
-                          <span>→</span>
+                          <span>Explore Partner Marks</span>
+                          <span>Open</span>
                         </button>
                         <button
                           onClick={() => {
@@ -2851,10 +2851,10 @@ export default function PlayWheTab({
                             fetchTransitions(num);
                             setSubTab("transition");
                           }}
-                          className="w-full py-2 px-3 rounded-lg bg-slate-900 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-400/40 text-[11px] font-bold text-gray-200 hover:text-cyan-300 uppercase transition flex items-center justify-between cursor-pointer font-mono"
+                          className="w-full py-2.5 px-3 rounded-lg bg-slate-900 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-400/40 text-xs font-semibold text-slate-200 hover:text-cyan-300 transition flex items-center justify-between cursor-pointer font-sans"
                         >
-                          <span>View Markov Successor Chain</span>
-                          <span>→</span>
+                          <span>View Follow-Up Marks</span>
+                          <span>Open</span>
                         </button>
                       </div>
                     </div>
@@ -2866,7 +2866,7 @@ export default function PlayWheTab({
 
           {/* Pagination */}
           {pagination.pages > 1 && (
-            <div className="flex justify-between items-center pt-4 border-t border-white/5 font-mono text-[10px] text-gray-500">
+            <div className="flex justify-between items-center pt-4 border-t border-white/5 font-mono text-xs text-gray-500">
               <div>
                 SHOWING <span className="text-white font-bold">{draws.length}</span> OF <span className="text-white font-bold">{pagination.total}</span> DRAWS
               </div>
@@ -2900,7 +2900,7 @@ export default function PlayWheTab({
           {/* Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-900/30 flex flex-col justify-between font-mono">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Prediction Accuracy</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Prediction Accuracy</span>
               {predictionsLoading ? (
                 <div className="h-8 w-24 bg-white/5 animate-pulse rounded mt-2" />
               ) : (
@@ -2910,7 +2910,7 @@ export default function PlayWheTab({
               )}
             </div>
             <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-900/30 flex flex-col justify-between font-mono">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Total Evaluated</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Total Evaluated</span>
               {predictionsLoading ? (
                 <div className="h-8 w-24 bg-white/5 animate-pulse rounded mt-2" />
               ) : (
@@ -2920,7 +2920,7 @@ export default function PlayWheTab({
               )}
             </div>
             <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-900/30 flex flex-col justify-between font-mono">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Successful Hits</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Successful Hits</span>
               {predictionsLoading ? (
                 <div className="h-8 w-24 bg-white/5 animate-pulse rounded mt-2" />
               ) : (
@@ -2930,7 +2930,7 @@ export default function PlayWheTab({
               )}
             </div>
             <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-900/30 flex flex-col justify-between font-mono">
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Missed Predictions</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Missed Predictions</span>
               {predictionsLoading ? (
                 <div className="h-8 w-24 bg-white/5 animate-pulse rounded mt-2" />
               ) : (
@@ -2944,7 +2944,7 @@ export default function PlayWheTab({
           {/* Table Container */}
           <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-950/40 space-y-4">
             <div className="border-b border-white/5 pb-3">
-              <h3 className="text-sm font-bold text-white uppercase font-mono tracking-widest">Prediction Outcome Logs</h3>
+              <h3 className="text-base font-bold text-white uppercase font-mono tracking-widest">Prediction Outcome Logs</h3>
               <p className="text-xs text-gray-400 font-mono mt-1">
                 Historical record of daily 5-number app predictions matched against NLCB draws.
               </p>
@@ -2953,7 +2953,7 @@ export default function PlayWheTab({
             <div className="overflow-x-auto sleek-scrollbar">
                <table className="w-full text-left font-mono text-xs border-collapse min-w-[600px]">
                 <thead>
-                  <tr className="border-b border-white/5 text-gray-500 uppercase text-[10px]">
+                  <tr className="border-b border-white/5 text-gray-500 uppercase text-xs">
                     <th className="pb-3 px-4">Target Draw</th>
                     <th className="pb-3 px-4">Predicted Numbers</th>
                     <th className="pb-3 px-4 text-center">VS</th>
@@ -2986,7 +2986,7 @@ export default function PlayWheTab({
                         {/* Target Draw */}
                         <td className="py-3.5 px-4">
                           <div className="font-bold text-white">{formatDateString(item.prediction_date)}</div>
-                          <div className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1 font-mono uppercase">
+                          <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-1 font-mono uppercase">
                             <span className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
                             {item.draw_time_slot}
                           </div>
@@ -3000,7 +3000,7 @@ export default function PlayWheTab({
                               return (
                                 <span 
                                   key={n} 
-                                  className={`px-2 py-0.5 rounded border text-[10px] font-bold ${
+                                  className={`px-2 py-0.5 rounded border text-xs font-bold ${
                                     isHit
                                       ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]"
                                       : "bg-slate-950/40 border-white/5 text-gray-400"
@@ -3014,7 +3014,7 @@ export default function PlayWheTab({
                           
                           {item.status === "PENDING" && modelBreakdown && modelBreakdown[item.draw_time_slot] && modelBreakdown[item.draw_time_slot].length > 0 && (
                             <div className="mt-3 space-y-2 min-w-[240px]">
-                              <div className="text-[9px] font-bold font-mono text-gray-500 uppercase tracking-wider">Model Attribution</div>
+                              <div className="text-xs font-bold font-mono text-gray-500 uppercase tracking-wider">Model Attribution</div>
                               {modelBreakdown[item.draw_time_slot].map((mbItem: any, idx: number) => (
                                 <div key={idx} className="flex items-center gap-3">
                                   <span className="text-sm font-bold font-mono text-primary w-6">{String(mbItem.number).padStart(2, '0')}</span>
@@ -3026,10 +3026,10 @@ export default function PlayWheTab({
                                       />
                                     </div>
                                   </div>
-                                  <span className="text-[10px] font-mono text-gray-400 w-8 text-right">{mbItem.confidence}%</span>
+                                  <span className="text-xs font-mono text-gray-400 w-8 text-right">{mbItem.confidence}%</span>
                                   <div className="flex gap-1 flex-wrap">
                                     {mbItem.models.map((m: string, mIdx: number) => (
-                                      <span key={mIdx} className="text-[8px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono font-bold whitespace-nowrap">{m}</span>
+                                      <span key={mIdx} className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono font-bold whitespace-nowrap">{m}</span>
                                     ))}
                                   </div>
                                 </div>
@@ -3039,27 +3039,27 @@ export default function PlayWheTab({
                         </td>
 
                         {/* VS Divider Column */}
-                        <td className="py-3.5 px-4 text-center text-gray-500 font-mono text-[10px]">
+                        <td className="py-3.5 px-4 text-center text-gray-500 font-mono text-xs">
                           vs
                         </td>
 
                         {/* Winning Number */}
                         <td className="py-3.5 px-4">
                           {item.status === "PENDING" ? (
-                            <span className="px-2 py-0.5 border border-amber-500/20 bg-amber-500/10 text-amber-400 rounded text-[9px] font-bold tracking-wider uppercase animate-pulse">
+                            <span className="px-2 py-0.5 border border-amber-500/20 bg-amber-500/10 text-amber-400 rounded text-xs font-bold tracking-wider uppercase animate-pulse">
                               PENDING
                             </span>
                           ) : (
                             (() => {
                               const markName = CHINAPOO_CHART[item.winning_number]?.mark || "";
                               return (
-                                <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-bold ${
+                                <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-xs font-bold ${
                                   item.status === "HIT"
                                     ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]"
                                     : "bg-rose-500/10 border-rose-500/30 text-rose-400"
                                 }`}>
                                   <span>{String(item.winning_number).padStart(2, "0")}</span>
-                                  {markName && <span className="text-[8px] opacity-80 uppercase">({markName.split(" ")[0]})</span>}
+                                  {markName && <span className="text-xs opacity-80 uppercase">({markName.split(" ")[0]})</span>}
                                 </div>
                               );
                             })()
@@ -3069,15 +3069,15 @@ export default function PlayWheTab({
                         {/* Result Status */}
                         <td className="py-3.5 px-4">
                           {item.status === "HIT" ? (
-                            <span className="px-2 py-0.5 border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 rounded-md text-[9px] font-bold tracking-wider uppercase">
+                            <span className="px-2 py-0.5 border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 rounded-md text-xs font-bold tracking-wider uppercase">
                               HIT
                             </span>
                           ) : item.status === "MISS" ? (
-                            <span className="px-2 py-0.5 border border-rose-500/20 bg-rose-500/10 text-rose-400 rounded-md text-[9px] font-bold tracking-wider uppercase">
+                            <span className="px-2 py-0.5 border border-rose-500/20 bg-rose-500/10 text-rose-400 rounded-md text-xs font-bold tracking-wider uppercase">
                               MISS
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 border border-amber-500/20 bg-amber-500/10 text-amber-400 rounded-md text-[9px] font-bold tracking-wider uppercase animate-pulse">
+                            <span className="px-2 py-0.5 border border-amber-500/20 bg-amber-500/10 text-amber-400 rounded-md text-xs font-bold tracking-wider uppercase animate-pulse">
                               WAITING
                             </span>
                           )}

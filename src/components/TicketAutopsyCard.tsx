@@ -61,12 +61,12 @@ export default function TicketAutopsyCard({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono uppercase font-bold tracking-wider text-slate-400">
-                {autopsy.gameTitle} • Draw #{autopsy.drawNumber}
+              <span className="text-xs font-sans font-semibold text-slate-300">
+                {autopsy.gameTitle}, Draw {autopsy.drawNumber}
               </span>
               {autopsy.isWinner && (
-                <span className="px-2 py-0.5 text-[9px] font-black uppercase rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-                  OFFICIAL WINNER
+                <span className="px-2 py-0.5 text-xs font-bold uppercase rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                  Official Winner
                 </span>
               )}
             </div>
@@ -82,24 +82,24 @@ export default function TicketAutopsyCard({
             <div className="text-right">
               <div className="text-xl font-black font-mono text-emerald-300">
                 ${autopsy.netPayoutTT.toLocaleString("en-US", { minimumFractionDigits: 2 })}{" "}
-                <span className="text-[10px] text-emerald-400">TTD</span>
+                <span className="text-xs text-emerald-400">TTD</span>
               </div>
               {autopsy.isTaxable && (
-                <div className="text-[9px] font-mono text-amber-300/80">
+                <div className="text-xs font-mono text-amber-300/80">
                   10% Tax (-${autopsy.taxDeductionTT.toFixed(2)} TT)
                 </div>
               )}
             </div>
           ) : (
             <div className="text-right">
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 border border-amber-500/30 text-amber-300">
+              <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/10 border border-amber-500/30 text-amber-300">
                 {autopsy.proximityScorePercent}% Proximity Score
               </span>
             </div>
           )}
 
           {/* 180-Day NLCB Expiration Clock */}
-          <div className="mt-1 flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
+          <div className="mt-1 flex items-center gap-1.5 text-xs font-mono text-slate-400">
             <Clock className="w-3 h-3 text-cyan-400" />
             <span>
               Claim by {autopsy.claimDeadlineDate} (
@@ -131,14 +131,14 @@ export default function TicketAutopsyCard({
         </div>
       )}
 
-      {/* 3. Forensic Ball Comparison Spectrum */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-slate-400">
-          <span className="font-semibold uppercase tracking-wider text-[10px]">
-            Forensic Ticket Ball Breakdown (Your Slip vs Drawn)
+      {/* 3. Ticket Number Comparison */}
+      <div className="space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+          <span className="font-semibold uppercase tracking-wider text-slate-300">
+            Your Ticket Compared to Drawn Numbers
           </span>
-          <span className="font-mono text-[10px] text-cyan-300">
-            {autopsy.exactMatchCount} Exact • {autopsy.adjacentMatchCount} Near-Miss (Δ≤2)
+          <span className="font-sans font-semibold text-cyan-300">
+            {autopsy.exactMatchCount} Exact, {autopsy.adjacentMatchCount} Close (within 2)
           </span>
         </div>
 
@@ -154,12 +154,12 @@ export default function TicketAutopsyCard({
                   : "bg-slate-950/60 border-slate-800"
               }`}
             >
-              <div className="text-[9px] uppercase tracking-wider text-slate-400 mb-1">
-                Ball #{idx + 1}
+              <div className="text-xs font-medium text-slate-400 mb-1">
+                Number {idx + 1}
               </div>
               <div className="flex items-center gap-1.5">
                 <span
-                  className={`w-8 h-8 rounded-lg font-mono font-black text-sm flex items-center justify-center ${
+                  className={`w-8 h-8 rounded-lg font-mono font-bold text-sm flex items-center justify-center ${
                     item.isExact
                       ? "bg-emerald-400 text-slate-950 ring-2 ring-emerald-300"
                       : item.isAdjacent
@@ -170,18 +170,18 @@ export default function TicketAutopsyCard({
                   {String(item.ticketNum).padStart(2, "0")}
                 </span>
               </div>
-              <div className="mt-1.5 text-[9px] font-mono flex items-center gap-1">
+              <div className="mt-1.5 text-xs font-sans flex items-center gap-1">
                 {item.isExact ? (
                   <span className="text-emerald-400 font-bold flex items-center gap-0.5">
-                    <Check className="w-2.5 h-2.5" /> EXACT
+                    <Check className="w-3 h-3" /> Exact
                   </span>
                 ) : item.isAdjacent ? (
-                  <span className="text-amber-300 font-bold">
-                    Δ = ±{item.delta} ({String(item.nearestWinningNum).padStart(2, "0")})
+                  <span className="text-amber-300 font-semibold">
+                    Off by {item.delta} (near {String(item.nearestWinningNum).padStart(2, "0")})
                   </span>
                 ) : (
-                  <span className="text-slate-500">
-                    Δ = {item.delta}
+                  <span className="text-slate-400">
+                    Off by {item.delta}
                   </span>
                 )}
               </div>
@@ -191,13 +191,13 @@ export default function TicketAutopsyCard({
           {/* Optional Bonus Ball Card */}
           {autopsy.ticketBonus !== undefined && (
             <div className="p-2.5 rounded-xl border bg-cyan-950/30 border-cyan-500/40 flex flex-col items-center justify-center">
-              <div className="text-[9px] uppercase tracking-wider text-cyan-400 mb-1">
-                Bonus / PB
+              <div className="text-xs font-semibold text-cyan-300 mb-1">
+                Bonus Ball
               </div>
               <span className="w-8 h-8 rounded-lg font-mono font-black text-sm flex items-center justify-center bg-cyan-400 text-slate-950 ring-2 ring-cyan-300">
                 {String(autopsy.ticketBonus).padStart(2, "0")}
               </span>
-              <div className="mt-1.5 text-[9px] font-mono text-cyan-300">
+              <div className="mt-1.5 text-xs font-mono text-cyan-300">
                 {autopsy.ticketBonus === autopsy.officialBonus ? "MATCHED" : `Drawn: ${autopsy.officialBonus ?? "-"}`}
               </div>
             </div>
@@ -208,36 +208,36 @@ export default function TicketAutopsyCard({
       {/* 4. Chamber Attractor Resonance Diagnostics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-800 text-center">
         <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-          <div className="text-[9px] uppercase text-slate-400">Proximity</div>
+          <div className="text-xs uppercase text-slate-400">Proximity</div>
           <div className="text-sm font-extrabold text-cyan-300 font-mono">
             {autopsy.proximityScorePercent}%
           </div>
-          <div className="text-[8px] text-slate-500">Chamber Closeness</div>
+          <div className="text-xs text-slate-500">Chamber Closeness</div>
         </div>
 
         <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-          <div className="text-[9px] uppercase text-slate-400">Attractor Manifold</div>
+          <div className="text-xs uppercase text-slate-400">Attractor Manifold</div>
           <div className="text-sm font-extrabold text-emerald-300 font-mono">
             {autopsy.attractorManifoldOverlapCount} Balls
           </div>
-          <div className="text-[8px] text-slate-500">{autopsy.attractorManifoldOverlapPercent}% In Resonance Pool</div>
+          <div className="text-xs text-slate-500">{autopsy.attractorManifoldOverlapPercent}% In Resonance Pool</div>
         </div>
 
         <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-          <div className="text-[9px] uppercase text-slate-400">Gaussian Sum</div>
+          <div className="text-xs uppercase text-slate-400">Gaussian Sum</div>
           <div className="text-sm font-extrabold text-white font-mono">
             {autopsy.ticketSum}{" "}
-            <span className="text-[9px] text-slate-400 font-normal">
+            <span className="text-xs text-slate-400 font-normal">
               (Drawn: {autopsy.winningSum})
             </span>
           </div>
-          <div className="text-[8px] text-slate-500">
+          <div className="text-xs text-slate-500">
             {autopsy.isWithinGaussianEnvelope ? "Optimal Centroid" : "Outlier Skew"}
           </div>
         </div>
 
         <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
-          <div className="text-[9px] uppercase text-slate-400">Phase Space</div>
+          <div className="text-xs uppercase text-slate-400">Phase Space</div>
           <div
             className={`text-xs font-black uppercase mt-0.5 ${
               autopsy.attractorBasinZone === "CENTRAL_BASIN"
@@ -249,7 +249,7 @@ export default function TicketAutopsyCard({
           >
             {autopsy.attractorBasinZone.replace("_", " ")}
           </div>
-          <div className="text-[8px] text-slate-500">Takens Attractor</div>
+          <div className="text-xs text-slate-500">Takens Attractor</div>
         </div>
       </div>
 
@@ -260,12 +260,12 @@ export default function TicketAutopsyCard({
             <Crosshair className="w-3.5 h-3.5 text-cyan-400" />
             <span>Next-Draw Smart Pivot Line</span>
           </div>
-          <span className="text-[10px] text-slate-400 font-mono">
+          <span className="text-xs text-slate-400 font-mono">
             Anchored Hits + Calibrated Replacements
           </span>
         </div>
 
-        <p className="text-[11px] text-slate-300 leading-snug">
+        <p className="text-xs text-slate-300 leading-snug">
           {autopsy.smartPivot.rationale}
         </p>
 

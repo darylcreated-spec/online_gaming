@@ -84,7 +84,7 @@ export default function SystemAuditCenter() {
       <div className="p-8 rounded-3xl bg-red-950/40 border border-red-500/30 font-mono text-red-200 space-y-4">
         <div className="flex items-center gap-2 text-red-400">
           <XCircle className="w-6 h-6" />
-          <h3 className="text-sm font-bold uppercase tracking-wider">System Audit Execution Failure</h3>
+          <h3 className="text-base font-bold uppercase tracking-wider">System Audit Execution Failure</h3>
         </div>
         <p className="text-xs text-gray-300">{error || "Unable to complete system verification suite."}</p>
         <button
@@ -111,17 +111,17 @@ export default function SystemAuditCenter() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-[10px] font-black uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-xs font-black uppercase tracking-wider">
                 100% MATHEMATICAL AUDIT
               </span>
-              <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-[10px] font-black uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-400 text-cyan-300 text-xs font-black uppercase tracking-wider">
                 ALL 5 GAMES VERIFIED
               </span>
-              <span className="px-2.5 py-0.5 rounded-md bg-purple-500/20 border border-purple-400 text-purple-300 text-[10px] font-black uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 rounded-md bg-purple-500/20 border border-purple-400 text-purple-300 text-xs font-black uppercase tracking-wider">
                 TURSO CLOUD ACTIVE
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide flex items-center gap-3">
+            <h2 className="text-lg sm:text-xl font-black text-white tracking-wide flex items-center gap-3">
               <ShieldCheck className="w-7 h-7 text-emerald-400 shrink-0" />
               <span>Master System Integrity &amp; Accuracy Verifier</span>
             </h2>
@@ -144,48 +144,48 @@ export default function SystemAuditCenter() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 relative z-10 pt-2">
           {/* Health Score */}
           <div className="p-4 rounded-2xl glass-panel bg-slate-900/60 border border-white/10 flex flex-col justify-between">
-            <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">System Health Score</span>
+            <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">System Health Score</span>
             <div className="flex items-baseline gap-1.5 mt-2">
               <span className="text-3xl font-black text-emerald-400 font-mono">{report.overallHealthScore}%</span>
               <span className="text-xs text-emerald-400/80 font-bold uppercase">{report.overallStatus}</span>
             </div>
-            <span className="text-[10px] text-gray-500 mt-1">
+            <span className="text-xs text-gray-500 mt-1">
               {report.passedChecks} of {report.totalChecks} subsystems optimal
             </span>
           </div>
 
           {/* Lottery Games Audited */}
           <div className="p-4 rounded-2xl glass-panel bg-slate-900/60 border border-white/10 flex flex-col justify-between">
-            <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Games Verified</span>
+            <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Games Verified</span>
             <div className="flex items-baseline gap-1.5 mt-2">
               <span className="text-3xl font-black text-cyan-400 font-mono">5 / 5</span>
               <span className="text-xs text-cyan-400/80 font-bold">100%</span>
             </div>
-            <span className="text-[10px] text-gray-500 mt-1">
+            <span className="text-xs text-gray-500 mt-1">
               Play Whe, Pick 4, Cash Pot, Lotto, WFL
             </span>
           </div>
 
           {/* Core Analytical Engines */}
           <div className="p-4 rounded-2xl glass-panel bg-slate-900/60 border border-white/10 flex flex-col justify-between">
-            <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Engines Audited</span>
+            <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Engines Audited</span>
             <div className="flex items-baseline gap-1.5 mt-2">
               <span className="text-3xl font-black text-purple-400 font-mono">3 / 3</span>
               <span className="text-xs text-purple-400/80 font-bold">OPTIMAL</span>
             </div>
-            <span className="text-[10px] text-gray-500 mt-1">
+            <span className="text-xs text-gray-500 mt-1">
               Wheeling, Attractor, Ticket Grader
             </span>
           </div>
 
           {/* Verification Execution Time */}
           <div className="p-4 rounded-2xl glass-panel bg-slate-900/60 border border-white/10 flex flex-col justify-between">
-            <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Suite Runtime</span>
+            <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Suite Runtime</span>
             <div className="flex items-baseline gap-1.5 mt-2">
               <span className="text-3xl font-black text-amber-400 font-mono">{report.totalExecutionTimeMs}</span>
               <span className="text-xs text-amber-400/80 font-bold">ms</span>
             </div>
-            <span className="text-[10px] text-gray-500 mt-1">
+            <span className="text-xs text-gray-500 mt-1">
               Real-time Turso cloud audit
             </span>
           </div>
@@ -249,18 +249,18 @@ export default function SystemAuditCenter() {
       {/* Terminal Diagnostic Stream */}
       {showConsole && (
         <div className="p-4 rounded-2xl bg-black/90 border border-white/15 text-xs text-gray-300 font-mono space-y-2 animate-in fade-in duration-200 shadow-inner">
-          <div className="flex items-center justify-between text-[11px] text-gray-400 border-b border-white/10 pb-2">
+          <div className="flex items-center justify-between text-xs text-gray-400 border-b border-white/10 pb-2">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               DIAGNOSTIC TEST EXECUTION LOG
             </span>
             <span>{report.timestamp}</span>
           </div>
-          <div className="space-y-1 text-[11px] max-h-48 overflow-y-auto sleek-scrollbar text-emerald-400/90 leading-relaxed">
+          <div className="space-y-1 text-xs max-h-48 overflow-y-auto sleek-scrollbar text-emerald-400/90 leading-relaxed">
             <div>[INIT] Starting Master System Verification Suite across 8 subsystems...</div>
             {report.checks.map(c => (
               <div key={c.id} className="text-gray-300">
-                <span className="text-emerald-400">[PASS]</span> {c.name} ({c.subsystem}) — executed in {c.executionTimeMs}ms • Accuracy: {c.accuracyScorePercent}%
+                <span className="text-emerald-400">[PASS]</span> {c.name} ({c.subsystem}) finished in {c.executionTimeMs}ms, Accuracy: {c.accuracyScorePercent}%
               </div>
             ))}
             <div className="text-cyan-400">[COMPLETE] All {report.totalChecks} tests evaluated. Overall System Status: {report.overallStatus} ({report.overallHealthScore}%).</div>
@@ -287,14 +287,14 @@ export default function SystemAuditCenter() {
                 {/* Header Line */}
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">
                       {check.subsystem}
                     </span>
-                    <h3 className="text-sm font-bold text-white mt-0.5">{check.name}</h3>
+                    <h3 className="text-base font-bold text-white mt-0.5">{check.name}</h3>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider flex items-center gap-1 border ${
+                      className={`px-2 py-0.5 rounded text-xs font-black uppercase tracking-wider flex items-center gap-1 border ${
                         isPassed
                           ? "bg-emerald-500/20 text-emerald-300 border-emerald-400"
                           : "bg-amber-500/20 text-amber-300 border-amber-400"
@@ -309,19 +309,19 @@ export default function SystemAuditCenter() {
                 {/* Subsystem Metrics Pills */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                   <div className="p-2 rounded-xl bg-slate-900/60 border border-white/5">
-                    <span className="text-[9px] text-gray-500 block uppercase">Accuracy / Hit</span>
+                    <span className="text-xs text-gray-500 block uppercase">Accuracy / Hit</span>
                     <span className="font-black text-emerald-400 font-mono text-sm">
                       {check.accuracyScorePercent}%
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-slate-900/60 border border-white/5">
-                    <span className="text-[9px] text-gray-500 block uppercase">Latency</span>
+                    <span className="text-xs text-gray-500 block uppercase">Latency</span>
                     <span className="font-black text-cyan-300 font-mono text-sm">
                       {check.executionTimeMs}ms
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-slate-900/60 border border-white/5 col-span-2 sm:col-span-1">
-                    <span className="text-[9px] text-gray-500 block uppercase">Invariants</span>
+                    <span className="text-xs text-gray-500 block uppercase">Invariants</span>
                     <span className="font-black text-purple-300 font-mono text-sm">
                       {check.invariantsVerified.length} Passed
                     </span>
@@ -330,12 +330,12 @@ export default function SystemAuditCenter() {
 
                 {/* Mathematical Invariants Checklist */}
                 <div className="space-y-1 pt-1">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold block">
+                  <span className="text-xs text-gray-400 uppercase font-bold block">
                     Verified Invariants &amp; Rules:
                   </span>
                   <div className="space-y-1">
                     {check.invariantsVerified.map((inv, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5 text-[11px] text-gray-300">
+                      <div key={idx} className="flex items-center gap-1.5 text-xs text-gray-300">
                         <Check className="w-3 h-3 text-emerald-400 shrink-0" />
                         <span>{inv}</span>
                       </div>
@@ -346,10 +346,10 @@ export default function SystemAuditCenter() {
                 {/* Expanded Details */}
                 {isExpanded && (
                   <div className="mt-3 pt-3 border-t border-white/10 space-y-2 text-xs text-gray-300 animate-in fade-in duration-200">
-                    <p className="text-[11px] text-gray-400 leading-relaxed">{check.details}</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">{check.details}</p>
                     <div className="p-2.5 rounded-lg bg-black/50 border border-white/5 space-y-1">
-                      <span className="text-[9px] font-bold text-gray-400 uppercase block">Telemetry Details:</span>
-                      <pre className="text-[10px] text-cyan-300 whitespace-pre-wrap font-mono">
+                      <span className="text-xs font-bold text-gray-400 uppercase block">Telemetry Details:</span>
+                      <pre className="text-xs text-cyan-300 whitespace-pre-wrap font-mono">
                         {JSON.stringify(check.metrics, null, 2)}
                       </pre>
                     </div>
@@ -358,7 +358,7 @@ export default function SystemAuditCenter() {
               </div>
 
               {/* Expand / Collapse Action */}
-              <div className="pt-2 border-t border-white/5 flex justify-between items-center text-[10px] text-gray-400">
+              <div className="pt-2 border-t border-white/5 flex justify-between items-center text-xs text-gray-400">
                 <span>Category: <strong className="text-white uppercase">{check.category}</strong></span>
                 <button
                   onClick={() => toggleExpand(check.id)}

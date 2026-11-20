@@ -207,10 +207,10 @@ export default function TicketScannerModal({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white tracking-wide">
+                <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide">
                   Live Ticket Scanner & Prize Auditor
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-mono tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 rounded-full">
+                <span className="px-2 py-0.5 text-xs font-mono tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 rounded-full">
                   TURSO DB VERIFIED
                 </span>
               </div>
@@ -267,7 +267,7 @@ export default function TicketScannerModal({
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Game Selector */}
           <div>
-            <label className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-1.5 block">
+            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 block">
               Select Game
             </label>
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
@@ -314,7 +314,7 @@ export default function TicketScannerModal({
                     <div className="absolute bottom-1 left-1 w-2.5 h-2.5 border-b-2 border-l-2 border-cyan-300" />
                     <div className="absolute bottom-1 right-1 w-2.5 h-2.5 border-b-2 border-r-2 border-cyan-300" />
                   </div>
-                  <span className="mt-3 text-[11px] font-mono text-cyan-300/80 bg-black/60 px-3 py-1 rounded-full border border-cyan-500/30">
+                  <span className="mt-3 text-xs font-mono text-cyan-300/80 bg-black/60 px-3 py-1 rounded-full border border-cyan-500/30">
                     Align ticket barcode or QR code inside box
                   </span>
                 </div>
@@ -364,7 +364,7 @@ export default function TicketScannerModal({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 mb-1 block">
+                  <label className="text-xs font-semibold text-slate-400 mb-1 block">
                     Draw # (optional, checks latest if blank)
                   </label>
                   <input
@@ -376,7 +376,7 @@ export default function TicketScannerModal({
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-400 mb-1 block">
+                  <label className="text-xs font-semibold text-slate-400 mb-1 block">
                     Bet Amount ($ TTD)
                   </label>
                   <input

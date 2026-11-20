@@ -356,7 +356,7 @@ export default function SettingsTab() {
       {/* Title Header */}
       <div className="flex items-center justify-between border-b border-white/5 pb-4">
         <div>
-          <h2 className="text-lg font-black tracking-wider text-white uppercase font-mono">
+          <h2 className="text-lg sm:text-xl font-black tracking-wider text-white uppercase font-mono">
             System & Sync Center
           </h2>
           <p className="text-xs text-gray-400 font-mono">
@@ -814,23 +814,23 @@ export default function SettingsTab() {
               
               {syncingGame !== null ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono text-primary animate-pulse font-semibold uppercase">
+                  <span className="text-xs font-mono text-primary animate-pulse font-semibold uppercase">
                     {activeStep}
                   </span>
                   <div className="w-2.5 h-2.5 border border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : syncSuccess === true ? (
-                <div className="flex items-center gap-1.5 text-green-400 text-[10px] font-bold font-mono">
+                <div className="flex items-center gap-1.5 text-green-400 text-xs font-bold font-mono">
                   <CheckCircle2 className="w-3 h-3" />
                   SYNC COMPLETE
                 </div>
               ) : syncSuccess === false ? (
-                <div className="flex items-center gap-1.5 text-rose-400 text-[10px] font-bold font-mono">
+                <div className="flex items-center gap-1.5 text-rose-400 text-xs font-bold font-mono">
                   <AlertTriangle className="w-3 h-3" />
                   SYNC ERROR
                 </div>
               ) : (
-                <div className="text-[10px] font-mono text-gray-500">IDLE</div>
+                <div className="text-xs font-mono text-gray-500">IDLE</div>
               )}
             </div>
 
@@ -863,7 +863,7 @@ export default function SettingsTab() {
         <div className="space-y-6">
           {/* Main Card */}
           <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/40 space-y-4">
-            <h3 className="text-sm font-bold font-mono tracking-widest text-white uppercase border-b border-white/5 pb-2">
+            <h3 className="text-base font-bold font-mono tracking-widest text-white uppercase border-b border-white/5 pb-2">
               Progressive Web App (PWA) Installation Guide
             </h3>
             <p className="text-xs text-gray-400 font-mono leading-relaxed">
@@ -939,7 +939,7 @@ export default function SettingsTab() {
         <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-4 font-mono">
           <div className="flex items-center gap-2">
             <Bell className="w-5 h-5 text-primary" />
-            <h3 className="text-sm font-bold uppercase tracking-wider text-white">PWA Notification Center</h3>
+            <h3 className="text-base font-bold uppercase tracking-wider text-white">PWA Notification Center</h3>
           </div>
           <p className="text-xs text-gray-400 leading-relaxed">
             Enable HTML5 web notifications to receive real-time updates when lottery numbers are synchronized or when a new win is detected.
@@ -948,7 +948,7 @@ export default function SettingsTab() {
           <div className="bg-slate-950/50 p-4 border border-white/5 rounded-lg flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="space-y-1">
               <div className="text-xs font-bold text-white uppercase">Notification Status</div>
-              <div className="text-[10px] text-gray-400 font-bold">
+              <div className="text-xs text-gray-400 font-bold">
                 {notificationPermission === "granted" ? (
                   <span className="text-emerald-400 font-extrabold uppercase">● Active & Authorized</span>
                 ) : notificationPermission === "denied" ? (
@@ -981,7 +981,7 @@ export default function SettingsTab() {
         <div className="space-y-6 font-mono">
           <div className="glass-panel p-5 rounded-xl border border-cyan-500/20 bg-slate-950/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+              <h3 className="text-base font-bold uppercase tracking-wider text-white flex items-center gap-2">
                 <Users className="w-4 h-4 text-cyan-400" />
                 Live Visitor &amp; Active User Telemetry ($0 / Free Self-Hosted)
               </h3>
@@ -1002,27 +1002,27 @@ export default function SettingsTab() {
           {/* KPI Strip */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <div className="p-4 rounded-xl bg-slate-900/70 border border-emerald-500/30">
-              <span className="text-[10px] text-gray-400 uppercase block">Active Now (5m)</span>
+              <span className="text-xs text-gray-400 uppercase block">Active Now (5m)</span>
               <span className="text-2xl font-black text-emerald-400">{visitorData?.summary?.activeNow ?? 0}</span>
             </div>
             <div className="p-4 rounded-xl bg-slate-900/70 border border-cyan-500/30">
-              <span className="text-[10px] text-gray-400 uppercase block">Last 24 Hours</span>
+              <span className="text-xs text-gray-400 uppercase block">Last 24 Hours</span>
               <span className="text-2xl font-black text-cyan-300">{visitorData?.summary?.last24Hours ?? 0}</span>
             </div>
             <div className="p-4 rounded-xl bg-slate-900/70 border border-white/10">
-              <span className="text-[10px] text-gray-400 uppercase block">Last 7 Days</span>
+              <span className="text-xs text-gray-400 uppercase block">Last 7 Days</span>
               <span className="text-2xl font-black text-white">{visitorData?.summary?.last7Days ?? 0}</span>
             </div>
             <div className="p-4 rounded-xl bg-slate-900/70 border border-white/10">
-              <span className="text-[10px] text-gray-400 uppercase block">Total Unique Devices</span>
+              <span className="text-xs text-gray-400 uppercase block">Total Unique Devices</span>
               <span className="text-2xl font-black text-white">{visitorData?.summary?.totalUniqueVisitors ?? 0}</span>
             </div>
             <div className="p-4 rounded-xl bg-slate-900/70 border border-white/10">
-              <span className="text-[10px] text-gray-400 uppercase block">Total Sessions</span>
+              <span className="text-xs text-gray-400 uppercase block">Total Sessions</span>
               <span className="text-2xl font-black text-amber-300">{visitorData?.summary?.totalSessions ?? 0}</span>
             </div>
             <div className="p-4 rounded-xl bg-slate-900/70 border border-white/10">
-              <span className="text-[10px] text-gray-400 uppercase block">Syndicate Members</span>
+              <span className="text-xs text-gray-400 uppercase block">Syndicate Members</span>
               <span className="text-2xl font-black text-purple-300">{visitorData?.summary?.namedSyndicateMembers ?? 0}</span>
             </div>
           </div>
@@ -1056,7 +1056,7 @@ export default function SettingsTab() {
                   Save Label
                 </button>
               </div>
-              <p className="text-[10px] text-gray-400 leading-relaxed">
+              <p className="text-xs text-gray-400 leading-relaxed">
                 Note on &quot;Who&quot;: Anonymous web analytics shows Location (City/Country), Device/OS/Browser, and Game Tabs for free. To know every user&apos;s real name or email, add a free login provider (such as Clerk Free Tier or Google Sign-In via NextAuth).
               </p>
             </div>
@@ -1066,9 +1066,9 @@ export default function SettingsTab() {
                 <Globe className="w-3.5 h-3.5 text-cyan-400" />
                 Top Locations &amp; Most-Visited Tabs
               </h4>
-              <div className="grid grid-cols-2 gap-3 text-[11px]">
+              <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 uppercase block">Countries</span>
+                  <span className="text-xs text-gray-400 uppercase block">Countries</span>
                   {(visitorData?.countryBreakdown || []).slice(0, 5).map((c: any, i: number) => (
                     <div key={i} className="flex justify-between text-slate-300">
                       <span>{c.country}</span>
@@ -1077,7 +1077,7 @@ export default function SettingsTab() {
                   ))}
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[10px] text-gray-400 uppercase block">Last Active Tab</span>
+                  <span className="text-xs text-gray-400 uppercase block">Last Active Tab</span>
                   {(visitorData?.tabBreakdown || []).slice(0, 5).map((t: any, i: number) => (
                     <div key={i} className="flex justify-between text-slate-300">
                       <span>{t.last_tab}</span>
@@ -1093,11 +1093,11 @@ export default function SettingsTab() {
           <div className="rounded-xl bg-slate-900/60 border border-white/10 overflow-hidden">
             <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
               <h4 className="text-xs font-bold text-white uppercase">Recent Visitors &amp; Devices (Latest 50)</h4>
-              <span className="text-[10px] text-gray-400">Push Subscribers: {visitorData?.summary?.pushSubscribers ?? 0}</span>
+              <span className="text-xs text-gray-400">Push Subscribers: {visitorData?.summary?.pushSubscribers ?? 0}</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-950/80 border-b border-white/10 text-[10px] text-gray-400 uppercase">
+                <thead className="bg-slate-950/80 border-b border-white/10 text-xs text-gray-400 uppercase">
                   <tr>
                     <th className="py-2.5 px-3">Visitor / Label</th>
                     <th className="py-2.5 px-3">Location</th>
@@ -1113,14 +1113,14 @@ export default function SettingsTab() {
                       <td className="py-2 px-3 font-bold text-white">
                         <span>{v.display_name || `Guest-${String(v.visitor_id).slice(0, 6)}`}</span>
                         {v.email && (
-                          <span className="block text-[10px] text-cyan-400 font-normal">{v.email}</span>
+                          <span className="block text-xs text-cyan-400 font-normal">{v.email}</span>
                         )}
                       </td>
                       <td className="py-2 px-3 text-cyan-300">
                         {v.city !== "Unknown" ? `${v.city}, ${v.country}` : v.country}
                       </td>
                       <td className="py-2 px-3 text-gray-300">
-                        {v.device_type} · {v.os} ({v.browser})
+                        {v.device_type}, {v.os} ({v.browser})
                       </td>
                       <td className="py-2 px-3 text-emerald-300">{v.last_tab}</td>
                       <td className="py-2 px-3 text-center text-amber-300 font-bold">{v.visit_count}</td>

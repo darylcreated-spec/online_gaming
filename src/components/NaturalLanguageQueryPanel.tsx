@@ -199,7 +199,7 @@ export default function NaturalLanguageQueryPanel() {
                 <h2 className="text-lg sm:text-xl font-black uppercase text-white tracking-wide flex items-center gap-2">
                   <span>Natural Language Database Query</span>
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-cyan-500/15 text-cyan-300 border border-cyan-400/30">
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-cyan-500/15 text-cyan-300 border border-cyan-400/30">
                   Turso LibSQL + Gemini
                 </span>
               </div>
@@ -220,7 +220,7 @@ export default function NaturalLanguageQueryPanel() {
         {/* Category Pills & Preset Queries */}
         <div className="space-y-2.5 pt-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400 font-bold flex items-center gap-1.5 uppercase text-[10px]">
+            <span className="text-gray-400 font-bold flex items-center gap-1.5 uppercase text-xs">
               <TrendingUp className="w-3 h-3 text-cyan-400" />
               Quick Query Templates:
             </span>
@@ -232,7 +232,7 @@ export default function NaturalLanguageQueryPanel() {
                     setActiveCategoryFilter(cat);
                     triggerHaptic("selection");
                   }}
-                  className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase transition cursor-pointer shrink-0 ${
+                  className={`px-2.5 py-0.5 rounded-md text-xs font-bold uppercase transition cursor-pointer shrink-0 ${
                     activeCategoryFilter === cat
                       ? "bg-cyan-500 text-slate-950 font-black shadow-[0_0_8px_rgba(6,182,212,0.4)]"
                       : "bg-slate-900/80 text-gray-400 hover:text-white border border-white/5"
@@ -288,7 +288,7 @@ export default function NaturalLanguageQueryPanel() {
                 onClick={() => setPrompt("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs px-1"
               >
-                ✕
+                Close
               </button>
             )}
           </div>
@@ -312,7 +312,7 @@ export default function NaturalLanguageQueryPanel() {
           </button>
         </form>
 
-        <div className="flex items-center justify-between text-[10px] text-gray-500 px-1">
+        <div className="flex items-center justify-between text-xs text-gray-500 px-1">
           <span className="flex items-center gap-1">
             <CornerDownLeft className="w-3 h-3 text-gray-600" />
             Press <strong>Enter</strong> to run query
@@ -344,20 +344,20 @@ export default function NaturalLanguageQueryPanel() {
                   <Bot className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase text-white tracking-wide">
+                  <h3 className="text-base font-black uppercase text-white tracking-wide">
                     {result.title || "Statistical Analysis & Findings"}
                   </h3>
-                  <span className="text-[10px] text-gray-400">
-                    Natural Language Synthesis • {result.metrics?.model || "Gemini Flash"}
+                  <span className="text-xs text-gray-400">
+                    Plain-English Answer ({result.metrics?.model || "Assistant"})
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold">
+                <span className="px-2.5 py-1 rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-xs font-bold">
                   {result.rowCount} Rows Found
                 </span>
-                <span className="px-2.5 py-1 rounded-md bg-black/40 text-gray-400 border border-white/10 text-[10px] font-mono">
+                <span className="px-2.5 py-1 rounded-md bg-black/40 text-gray-400 border border-white/10 text-xs font-mono">
                   {result.metrics?.totalDurationMs || 0}ms
                 </span>
               </div>
@@ -374,11 +374,11 @@ export default function NaturalLanguageQueryPanel() {
                 onClick={() => setShowSql(!showSql)}
                 className="w-full flex items-center justify-between text-xs text-gray-400 hover:text-cyan-300 transition py-1 cursor-pointer"
               >
-                <span className="flex items-center gap-1.5 font-bold uppercase text-[10px]">
+                <span className="flex items-center gap-1.5 font-bold uppercase text-xs">
                   <Code2 className="w-3.5 h-3.5 text-cyan-400" />
                   <span>Inspect Executed SQL Query</span>
                 </span>
-                <span className="flex items-center gap-1 text-[10px]">
+                <span className="flex items-center gap-1 text-xs">
                   {showSql ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                 </span>
               </button>
@@ -386,19 +386,19 @@ export default function NaturalLanguageQueryPanel() {
               {showSql && (
                 <div className="mt-2.5 p-3 rounded-xl bg-black/80 border border-cyan-500/20 space-y-2 relative group">
                   <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
-                    <span className="text-[10px] text-gray-500 font-mono">Turso LibSQL (Read-Only)</span>
+                    <span className="text-xs text-gray-500 font-mono">Turso LibSQL (Read-Only)</span>
                     <button
                       onClick={handleCopySql}
-                      className="text-[10px] text-gray-400 hover:text-cyan-300 flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 transition cursor-pointer"
+                      className="text-xs text-gray-400 hover:text-cyan-300 flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 transition cursor-pointer"
                     >
                       {copiedSql ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                       <span>{copiedSql ? "Copied!" : "Copy SQL"}</span>
                     </button>
                   </div>
-                  <pre className="text-[11px] text-cyan-300 font-mono overflow-x-auto whitespace-pre-wrap py-1">
+                  <pre className="text-xs text-cyan-300 font-mono overflow-x-auto whitespace-pre-wrap py-1">
                     {result.sql}
                   </pre>
-                  <div className="text-[9px] text-gray-500 flex items-center gap-2 pt-1 border-t border-white/5">
+                  <div className="text-xs text-gray-500 flex items-center gap-2 pt-1 border-t border-white/5">
                     <span>Database Engine Latency: <strong>{result.metrics?.dbLatencyMs || 0}ms</strong></span>
                   </div>
                 </div>
@@ -411,12 +411,12 @@ export default function NaturalLanguageQueryPanel() {
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div className="flex items-center gap-2">
                 <Table className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-black uppercase text-white tracking-wide">
+                <h3 className="text-base font-black uppercase text-white tracking-wide">
                   Query Results Table
                 </h3>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-gray-400 hidden sm:inline">
+                <span className="text-xs text-gray-400 hidden sm:inline">
                   Displaying {result.rows.length} records
                 </span>
                 <button
@@ -434,7 +434,7 @@ export default function NaturalLanguageQueryPanel() {
                     document.body.removeChild(link);
                     triggerHaptic("success");
                   }}
-                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] text-cyan-300 font-bold uppercase transition flex items-center gap-1.5 cursor-pointer"
+                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-cyan-300 font-bold uppercase transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <Copy className="w-3 h-3" />
                   <span>Export CSV</span>
@@ -450,7 +450,7 @@ export default function NaturalLanguageQueryPanel() {
               <div className="overflow-x-auto max-h-[460px] sleek-scrollbar rounded-xl border border-white/10 bg-black/40 relative">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md shadow-sm">
-                    <tr className="border-b border-white/10 text-[10px] text-gray-400 uppercase tracking-wider font-bold">
+                    <tr className="border-b border-white/10 text-xs text-gray-400 uppercase tracking-wider font-bold">
                       {result.columns.map((col, idx) => (
                         <th key={idx} className="py-2.5 px-3.5 whitespace-nowrap bg-slate-950">
                           {col.replace(/_/g, " ")}
@@ -472,7 +472,7 @@ export default function NaturalLanguageQueryPanel() {
                           return (
                             <td key={colIdx} className="py-2.5 px-3.5 whitespace-nowrap text-gray-200">
                               {isNumberCol && val !== null && val !== undefined ? (
-                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 font-bold text-[11px] font-mono">
+                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 font-bold text-xs font-mono">
                                   {val}
                                 </span>
                               ) : isFrequencyCol ? (

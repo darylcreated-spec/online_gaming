@@ -384,7 +384,7 @@ export default function Home() {
       <AppSplashScreen isLoading={statsLoading} />
 
       {/* Global Terminal Header */}
-      <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-2.5 sm:py-3 px-3 sm:px-6 lg:px-10 flex justify-between items-center gap-3 bg-slate-950/85 backdrop-blur-md w-full">
+      <header className="glass-panel border-b border-white/5 sticky top-0 z-50 py-2.5 sm:py-3 px-3 sm:px-6 lg:px-10 flex justify-between items-center gap-3 bg-slate-950/85 backdrop-blur-md w-full font-sans">
         <div className="flex items-center gap-2.5 shrink-0">
           <WinConceptLogoEmblem 
             size="sm" 
@@ -392,11 +392,11 @@ export default function Home() {
             className="cursor-pointer"
           />
           <div className="min-w-0">
-            <h1 className="text-sm sm:text-base lg:text-lg font-black tracking-wider text-white uppercase font-mono whitespace-nowrap">
+            <div className="text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap">
               The Win Concept
-            </h1>
-            <p className="text-[9px] sm:text-[10px] tracking-wider text-primary font-mono font-semibold uppercase whitespace-nowrap">
-              NLCB Analytics &amp; Cost Guide
+            </div>
+            <p className="text-xs tracking-wider text-sky-400 font-semibold uppercase whitespace-nowrap">
+              NLCB Analytics
             </p>
           </div>
         </div>
@@ -408,18 +408,18 @@ export default function Home() {
             <div className="relative group">
               <button
                 onClick={() => handleTabChange("welcome")}
-                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                className={`h-9 px-3 rounded-lg text-xs font-semibold tracking-wide transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   activeTab === "welcome"
                     ? "bg-sky-500/20 border border-sky-400 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]"
-                    : "text-gray-400 hover:text-sky-300 border border-transparent hover:bg-sky-500/10"
+                    : "text-slate-300 hover:text-sky-300 border border-transparent hover:bg-sky-500/10"
                 }`}
               >
                 <img src="/images/welcome_icon.png" alt="Home" className="w-4 h-4 object-contain rounded shrink-0" />
-                <span>HOME</span>
+                <span>Home</span>
               </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-52 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-[11px] font-sans text-slate-300 leading-snug">
-                <div className="font-mono font-bold text-white mb-0.5">Home Overview</div>
-                Compare exact odds, budget curves, and latest results across all 6 NLCB games.
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-xs font-sans text-slate-300 leading-relaxed">
+                <div className="text-sm font-bold text-white mb-1">Home Overview</div>
+                Compare exact odds, ticket budgets, and latest results across all 6 NLCB games.
               </div>
             </div>
 
@@ -431,26 +431,26 @@ export default function Home() {
             >
               <button
                 onClick={() => setDesktopGamesOpen((v) => !v)}
-                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                className={`h-9 px-3 rounded-lg text-xs font-semibold tracking-wide transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   isGameTab
                     ? "bg-amber-500/20 border border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.2)]"
-                    : "text-gray-300 hover:text-white border border-transparent hover:bg-white/5"
+                    : "text-slate-200 hover:text-white border border-transparent hover:bg-white/5"
                 }`}
               >
                 <Gamepad2 className="w-4 h-4 text-amber-400 shrink-0" />
                 <span>
                   {isGameTab
-                    ? NLCB_GAME_GUIDE.find((g) => g.key === activeTab)?.name.toUpperCase() || "GAMES"
-                    : "GAMES (6)"}
+                    ? NLCB_GAME_GUIDE.find((g) => g.key === activeTab)?.name || "Games"
+                    : "Games (6)"}
                 </span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${desktopGamesOpen ? "rotate-180" : ""}`} />
               </button>
 
               {desktopGamesOpen && (
-                <div className="absolute left-0 top-full pt-2 w-80 z-50">
-                  <div className="p-2 rounded-2xl bg-[#0d1424]/95 border border-white/15 shadow-2xl space-y-1 backdrop-blur-xl">
-                    <div className="px-2.5 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-gray-400 border-b border-white/5">
-                      Select NLCB Game
+                <div className="absolute left-0 top-full pt-2 w-88 z-50">
+                  <div className="p-2.5 rounded-2xl bg-[#0d1424]/95 border border-white/15 shadow-2xl space-y-1 backdrop-blur-xl">
+                    <div className="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/5">
+                      Choose an NLCB Game
                     </div>
                     {NLCB_GAME_GUIDE.map((g) => (
                       <button
@@ -459,17 +459,17 @@ export default function Home() {
                         className={`w-full flex items-center justify-between gap-2 p-2.5 rounded-xl transition cursor-pointer text-left ${
                           activeTab === g.key
                             ? "bg-sky-500/15 border border-sky-400/40 text-white"
-                            : "hover:bg-white/5 border border-transparent text-gray-300"
+                            : "hover:bg-white/5 border border-transparent text-slate-200"
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <img src={g.iconSrc} alt={g.name} className="w-7 h-7 rounded-lg object-contain shrink-0 border border-white/10" />
+                          <img src={g.iconSrc} alt={g.name} className="w-8 h-8 rounded-lg object-contain shrink-0 border border-white/10" />
                           <div className="min-w-0">
-                            <div className="text-xs font-bold text-white truncate">{g.name}</div>
-                            <div className="text-[10px] text-gray-400 truncate">{g.tagline}</div>
+                            <div className="text-sm font-bold text-white truncate">{g.name}</div>
+                            <div className="text-xs text-slate-400 truncate">{g.tagline}</div>
                           </div>
                         </div>
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 shrink-0">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 shrink-0">
                           {g.costPerPlay}
                         </span>
                       </button>
@@ -483,18 +483,18 @@ export default function Home() {
             <div className="relative group">
               <button
                 onClick={() => handleTabChange("engine-tracker")}
-                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                className={`h-9 px-3 rounded-lg text-xs font-semibold tracking-wide transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   activeTab === "engine-tracker"
                     ? "bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(56,189,248,0.2)]"
-                    : "text-gray-400 hover:text-cyan-300 border border-transparent hover:bg-cyan-500/10"
+                    : "text-slate-300 hover:text-cyan-300 border border-transparent hover:bg-cyan-500/10"
                 }`}
               >
                 <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span>ENGINES</span>
+                <span>Engines</span>
               </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-56 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-[11px] font-sans text-slate-300 leading-snug">
-                <div className="font-mono font-bold text-cyan-300 mb-0.5">Steiner-Johnson Engines</div>
-                Live zero-overlap covering slips, Sure Call timing, and honest out-of-sample audits.
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-xs font-sans text-slate-300 leading-relaxed">
+                <div className="text-sm font-bold text-cyan-300 mb-1">Number Covering Engines</div>
+                View non-overlapping ticket sets, Cash Pot Sure Call timing, and verified past results.
               </div>
             </div>
 
@@ -502,18 +502,18 @@ export default function Home() {
             <div className="relative group">
               <button
                 onClick={() => handleTabChange("scanner")}
-                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                className={`h-9 px-3 rounded-lg text-xs font-semibold tracking-wide transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   activeTab === "scanner"
                     ? "bg-purple-500/20 border border-purple-400 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.2)]"
-                    : "text-gray-400 hover:text-purple-300 border border-transparent hover:bg-purple-500/10"
+                    : "text-slate-300 hover:text-purple-300 border border-transparent hover:bg-purple-500/10"
                 }`}
               >
                 <img src="/images/scanner_icon.png" alt="Scanner" className="w-4 h-4 object-contain rounded shrink-0" />
-                <span>SCANNER</span>
+                <span>Scanner</span>
               </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-56 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-[11px] font-sans text-slate-300 leading-snug">
-                <div className="font-mono font-bold text-purple-300 mb-0.5">Ticket Scanner &amp; Ask DB</div>
-                Verify printed NLCB tickets or query 22,500+ historical draws in plain English.
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-xs font-sans text-slate-300 leading-relaxed">
+                <div className="text-sm font-bold text-purple-300 mb-1">Ticket Scanner and Search</div>
+                Check printed NLCB tickets or ask questions across over 22,500 past draws.
               </div>
             </div>
 
@@ -521,18 +521,18 @@ export default function Home() {
             <div className="relative group">
               <button
                 onClick={() => handleTabChange("syndicate")}
-                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                className={`h-9 px-3 rounded-lg text-xs font-semibold tracking-wide transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   activeTab === "syndicate"
                     ? "bg-violet-500/20 border border-violet-400 text-violet-300 shadow-[0_0_12px_rgba(167,139,250,0.2)]"
-                    : "text-gray-400 hover:text-violet-300 border border-transparent hover:bg-violet-500/10"
+                    : "text-slate-300 hover:text-violet-300 border border-transparent hover:bg-violet-500/10"
                 }`}
               >
                 <img src="/images/syndicate_icon.png" alt="Pools" className="w-4 h-4 object-contain rounded shrink-0" />
-                <span>POOLS</span>
+                <span>Pools</span>
               </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-56 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-[11px] font-sans text-slate-300 leading-snug">
-                <div className="font-mono font-bold text-violet-300 mb-0.5">Syndicate Pools</div>
-                Split 15-slip ($75) or 20-slip ($100) wheels with friends and share via WhatsApp.
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-xs font-sans text-slate-300 leading-relaxed">
+                <div className="text-sm font-bold text-violet-300 mb-1">Group Pools</div>
+                Split 15-slip ($75) or 20-slip ($100) sets with friends and share via WhatsApp.
               </div>
             </div>
 
@@ -540,18 +540,18 @@ export default function Home() {
             <div className="relative group">
               <button
                 onClick={() => handleTabChange("settings")}
-                className={`h-9 px-3 rounded-lg text-xs font-mono font-bold tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                className={`h-9 px-3 rounded-lg text-xs font-semibold tracking-wide transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                   activeTab === "settings"
                     ? "bg-slate-700/40 border border-slate-400 text-slate-200 shadow-[0_0_12px_rgba(148,163,184,0.2)]"
-                    : "text-gray-400 hover:text-slate-200 border border-transparent hover:bg-slate-700/20"
+                    : "text-slate-300 hover:text-slate-200 border border-transparent hover:bg-slate-700/20"
                 }`}
               >
                 <img src="/images/settings_icon.png" alt="Settings" className="w-4 h-4 object-contain rounded shrink-0" />
-                <span>SETTINGS</span>
+                <span>Settings</span>
               </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-52 p-2.5 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-[11px] font-sans text-slate-300 leading-snug">
-                <div className="font-mono font-bold text-slate-200 mb-0.5">Settings &amp; Usage</div>
-                Sync latest draws, inspect system audit status, and view visitor analytics.
+              <div className="pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 absolute right-0 top-full mt-2 w-60 p-3 rounded-xl bg-[#0d1424]/95 border border-white/15 shadow-2xl backdrop-blur-md z-50 text-xs font-sans text-slate-300 leading-relaxed">
+                <div className="text-sm font-bold text-slate-200 mb-1">Settings and Sync</div>
+                Refresh latest draws, check system status, and view app activity.
               </div>
             </div>
           </nav>
@@ -576,7 +576,7 @@ export default function Home() {
             <GameHeaderBanner
               game="lotto-plus"
               title="Lotto Plus"
-              subtitle="5 of 35 Main Numbers + 1 of 10 Powerball • Wednesday & Saturday 8:30 PM • $5.00 TT / play"
+              subtitle="Pick 5 numbers from 1 to 35 plus 1 Powerball from 1 to 10. Draws Wednesday and Saturday at 8:30 PM, $5.00 per play."
               themeColor="sky"
               iconSrc="/images/lotto_plus_icon.png"
               totalDrawsCount={stats?.totalDraws || pagination.total}
@@ -597,17 +597,17 @@ export default function Home() {
                           ].map((n: number, idx: number) => (
                             <span
                               key={idx}
-                              className="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-400 text-sky-200 font-black text-xs flex items-center justify-center font-mono shadow-[0_0_8px_rgba(56,189,248,0.4)]"
+                              className="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-400 text-sky-200 font-bold text-xs flex items-center justify-center font-mono"
                             >
                               {n}
                             </span>
                           ))}
-                          <span className="text-white font-bold text-xs">+</span>
                           <span
-                            className="w-7 h-7 rounded-full bg-red-600 text-white font-black text-xs flex items-center justify-center font-mono shadow-[0_0_10px_rgba(239,68,68,0.6)]"
+                            className="px-2.5 h-7 rounded-full bg-red-600 text-white font-bold text-xs flex items-center justify-center gap-1 font-sans"
                             title="Powerball"
                           >
-                            {(stats?.latestDraw || draws[0]).powerball}
+                            <span>Powerball</span>
+                            <span className="font-mono">{(stats?.latestDraw || draws[0]).powerball}</span>
                           </span>
                         </div>
                       ),
@@ -616,17 +616,17 @@ export default function Home() {
               }
             />
 
-            <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 w-full md:w-fit overflow-x-auto flex-nowrap sleek-scrollbar gap-1">
+            <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 w-full md:w-fit overflow-x-auto flex-nowrap sleek-scrollbar gap-1 font-sans">
               {[
-                { id: "dashboard", label: "DASHBOARD & STATS", icon: BarChart2 },
-                { id: "math-engine", label: "MATHEMATICAL ENGINE", icon: Brain },
-                { id: "diff-35", label: "SUM-35 QUANT ENGINE", icon: Binary },
-                { id: "quant-100", label: "100% QUANT ENGINE", icon: ShieldCheck },
-                { id: "forensic", label: "FORENSIC ENGINE", icon: Cpu },
-                { id: "audit", label: "AUDIT & VERIFICATION", icon: ShieldCheck },
-                { id: "builder", label: "WHEELING BUILDER", icon: ClipboardList },
-                { id: "history", label: "DRAW ARCHIVE", icon: Calendar },
-                { id: "explain", label: "METHODOLOGY", icon: HelpCircle },
+                { id: "dashboard", label: "Overview and Stats", icon: BarChart2 },
+                { id: "math-engine", label: "Math Engine", icon: Brain },
+                { id: "diff-35", label: "Sum-35 Engine", icon: Binary },
+                { id: "quant-100", label: "Full Archive Model", icon: ShieldCheck },
+                { id: "forensic", label: "Deep Pattern Audit", icon: Cpu },
+                { id: "audit", label: "Audit Report", icon: ShieldCheck },
+                { id: "builder", label: "Ticket Builder", icon: ClipboardList },
+                { id: "history", label: "Past Draws", icon: Calendar },
+                { id: "explain", label: "How It Works", icon: HelpCircle },
               ].map((tabItem) => {
                 const IconComp = tabItem.icon;
                 const isActive = lottoSubTab === tabItem.id;
@@ -634,10 +634,10 @@ export default function Home() {
                   <button
                     key={tabItem.id}
                     onClick={() => setLottoSubTab(tabItem.id as any)}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                       isActive
-                        ? "bg-sky-500 text-slate-950 font-black shadow-sm"
-                        : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/70"
+                        ? "bg-sky-500 text-slate-950 font-bold shadow-sm"
+                        : "text-slate-300 hover:text-white hover:bg-slate-800/70"
                     }`}
                   >
                     <IconComp className="w-3.5 h-3.5" />
@@ -729,104 +729,103 @@ export default function Home() {
         )}
 
         {activeTab === "lotto-plus" && lottoSubTab === "explain" && (
-          <div className="tab-content-enter space-y-6">
+          <div className="tab-content-enter space-y-6 font-sans">
             {/* Explainer Header */}
-            <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/40">
-              <h2 className="text-sm font-bold font-mono tracking-widest text-white uppercase mb-2">Lotto Plus System Explainer</h2>
-              <p className="text-[11px] text-gray-400 font-mono leading-relaxed max-w-2xl">
-                The Lotto Plus dashboard uses advanced statistical modeling to track, analyze, and combine numbers drawn in the Trinidad & Tobago NLCB Lotto Plus game.
+            <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-slate-900/40 space-y-2">
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
+                How Lotto Plus Tools Work
+              </h2>
+              <p className="text-sm text-slate-300 leading-relaxed max-w-2xl">
+                The Lotto Plus dashboard organizes past official draws from Trinidad and Tobago so you can study number gaps, avoid overlapping tickets, and build balanced plays.
               </p>
             </div>
 
             {/* Explainer Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Card 1: Delta System */}
-              <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3">
-                <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
-                  <Activity className="w-4 h-4 text-primary" />
-                  1. Delta Number Analysis
-                </div>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  Instead of analyzing raw numbers, the Delta System calculates the mathematical <strong>differences (deltas)</strong> between consecutive numbers in a draw. 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Card 1: Number Gaps */}
+              <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-slate-900/30 space-y-2.5">
+                <h3 className="flex items-center gap-2 text-base font-bold text-white">
+                  <Activity className="w-4 h-4 text-sky-400 shrink-0" />
+                  1. Number Gap Analysis
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Instead of looking only at individual numbers, this method checks the <strong className="text-white">spacing (difference)</strong> between consecutive numbers in a sorted draw.
                 </p>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  Since lottery numbers are drawn sequentially but ordered ascendingly, their deltas follow a highly predictable distribution. Over 90% of winning combinations feature deltas that sum up to less than 15. The system uses these intervals to filter out low-probability sets.
-                </p>
-              </div>
-
-              {/* Card 2: Wheeling Engine */}
-              <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3">
-                <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
-                  <ClipboardList className="w-4 h-4 text-primary" />
-                  2. Combinatorial Wheeling
-                </div>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  A <strong>Wheeling System</strong> allows you to select a large pool of numbers (e.g. 10 to 15 numbers) and mathematically compile them into an optimized set of tickets (combinations).
-                </p>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  Rather than buying all possible combinations (which would require hundreds of tickets), the Wheeling Engine runs coverage algorithms (e.g., Abbreviated Wheel) to guarantee that if your chosen pool contains the winning numbers, you will win at least a 3-match or 4-match prize on at least one ticket.
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Because winning numbers are ordered from lowest to highest, most draws have balanced gaps rather than tight clusters. Reviewing these gaps helps avoid extreme or overcrowded tickets.
                 </p>
               </div>
 
-              {/* Card 3: Monochromatic Heatmap */}
-              <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3">
-                <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
-                  <BarChart2 className="w-4 h-4 text-primary" />
-                  3. Monochromatic Heatmap & Overlay
-                </div>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  The frequency grid is shaded dynamically using monochromatic opacity levels. Numbers that are drawn more frequently in history light up with high opacity (amber/gold for hot ranges; charcoal for cold).
+              {/* Card 2: Covering Wheels */}
+              <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-slate-900/30 space-y-2.5">
+                <h3 className="flex items-center gap-2 text-base font-bold text-white">
+                  <ClipboardList className="w-4 h-4 text-sky-400 shrink-0" />
+                  2. Ticket Covering Wheels
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  A <strong className="text-white">Covering Wheel</strong> lets you pick a larger group of favorite numbers (for example 10 to 15 numbers) and arrange them cleanly across a fixed set of tickets.
                 </p>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  In the <strong>Wheeling Workspace</strong>, you can toggle the **Heatmap Overlay ON/OFF** directly over the Step 1 selection buttons to instantly identify hot/cold values as you select your pool!
-                </p>
-              </div>
-
-              {/* Card 4: Companion Mappings */}
-              <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3">
-                <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
-                  <Compass className="w-4 h-4 text-primary" />
-                  4. Companion Correlations
-                </div>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  Numbers are not drawn in isolation. The system tracks <strong>Companion (Partner) Numbers</strong>—which numbers are drawn together most frequently.
-                </p>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  When you select a pool in the wheeling engine workspace, the dashboard dynamically scans the historical database to identify and recommend "Companion Numbers" that have high historical co-occurrence with your selected pool.
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Instead of paying for hundreds of combinations, a covering wheel reduces overlap so that if the winning numbers fall inside your chosen pool, at least one ticket guarantees a prize match.
                 </p>
               </div>
 
-              {/* Card 5: Slip Validation & Quality Grading */}
-              <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3">
-                <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
-                  <Layers className="w-4 h-4 text-primary" />
-                  5. Slip Validation & Quality Grading
-                </div>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  To filter out weak combinations, the system runs a real-time validation scan on every compiled betting slip, assigning an instant quality score and grade (**A+**, **B**, **C**, **D**).
+              {/* Card 3: Frequency Heatmap */}
+              <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-slate-900/30 space-y-2.5">
+                <h3 className="flex items-center gap-2 text-base font-bold text-white">
+                  <BarChart2 className="w-4 h-4 text-sky-400 shrink-0" />
+                  3. Number Frequency Heatmap
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  The number grid highlights how often each number from 1 to 35 has appeared in past draws. Bright amber shows numbers drawn more often, while darker shading shows numbers drawn less often.
                 </p>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  This evaluation checks:
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Inside the <strong className="text-white">Ticket Builder</strong>, you can turn the <strong className="text-white">Heatmap Overlay</strong> on or off directly over the number buttons while picking your pool.
                 </p>
-                <ul className="list-disc pl-5 text-[11px] text-gray-400 font-mono space-y-1">
-                  <li><strong>Odd/Even Ratios:</strong> Verifies the balance of odd and even numbers (e.g. 3:2, 2:3, or 4:1).</li>
-                  <li><strong>High/Low Ratios:</strong> Verifies the balance of high numbers vs. low numbers (split at 17/18).</li>
-                  <li><strong>Mathematical Spread:</strong> Ensures the difference between the highest and lowest numbers in the ticket falls within the optimal 15 to 33 range.</li>
-                  <li><strong>Adjacent Runs:</strong> Restricts tickets containing low-probability runs of more than 1 consecutive pair.</li>
+              </div>
+
+              {/* Card 4: Partner Numbers */}
+              <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-slate-900/30 space-y-2.5">
+                <h3 className="flex items-center gap-2 text-base font-bold text-white">
+                  <Compass className="w-4 h-4 text-sky-400 shrink-0" />
+                  4. Partner Numbers
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  This view tracks <strong className="text-white">Partner Numbers</strong>, showing which pairs of numbers have appeared together most frequently in official past draws.
+                </p>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  When you pick numbers in the builder, the app checks the history database to show which other numbers appeared alongside them most often.
+                </p>
+              </div>
+
+              {/* Card 5: Ticket Balance Checks */}
+              <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-slate-900/30 space-y-2.5">
+                <h3 className="flex items-center gap-2 text-base font-bold text-white">
+                  <Layers className="w-4 h-4 text-sky-400 shrink-0" />
+                  5. Ticket Balance Checks
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Every generated ticket is checked for overall balance and given a clear rating from A to D based on common draw patterns:
+                </p>
+                <ul className="list-disc pl-5 text-sm text-slate-300 space-y-1.5 leading-relaxed">
+                  <li><strong className="text-white">Odd and Even Mix:</strong> Checks for a healthy mix of odd and even numbers (such as 3 odd and 2 even).</li>
+                  <li><strong className="text-white">Low and High Mix:</strong> Checks the balance between lower numbers (1 to 17) and higher numbers (18 to 35).</li>
+                  <li><strong className="text-white">Number Spread:</strong> Checks that the span from lowest to highest number falls in the typical 15 to 33 range.</li>
+                  <li><strong className="text-white">Consecutive Numbers:</strong> Flags tickets with long back-to-back runs.</li>
                 </ul>
               </div>
 
               {/* Card 6: Quick Pick */}
-              <div className="glass-panel p-6 rounded-xl border border-white/5 bg-slate-900/30 space-y-3">
-                <div className="flex items-center gap-2 text-primary font-bold font-mono text-[11px] uppercase">
-                  <RefreshCw className="w-4 h-4 text-primary" />
-                  6. Quick Pick (QP5)
-                </div>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  Draws a Quick Pick ticket (5 unique numbers from 1-35 + 1 Powerball from 1-10) using interactive ball draw simulation with sound and haptics.
+              <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-slate-900/30 space-y-2.5">
+                <h3 className="flex items-center gap-2 text-base font-bold text-white">
+                  <RefreshCw className="w-4 h-4 text-sky-400 shrink-0" />
+                  6. Quick Pick Generator
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Creates a ready-to-play ticket with 5 unique numbers from 1 to 35 plus 1 Powerball from 1 to 10 in one tap.
                 </p>
-                <p className="text-[11px] text-gray-400 font-mono leading-relaxed">
-                  The drawn main numbers are color-matched to the corresponding balls, while the Powerball is highlighted in solid white.
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  You can copy any generated line or use the Budget Planner on the Home page to create 5 or 10 non-overlapping tickets with every Powerball covered.
                 </p>
               </div>
             </div>
@@ -895,36 +894,31 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-6 pb-28 md:pb-6 text-center text-[10px] text-gray-500 font-mono tracking-wider space-y-1.5 bg-slate-950/20">
-        <div 
-          className="text-white/90 font-bold" 
-          style={{ textShadow: "0 0 8px rgba(56, 189, 248, 0.6), 0 0 16px rgba(56, 189, 248, 0.3)" }}
-        >
-          THE WIN CONCEPT | TRINIDAD AND TOBAGO ONLINE GAMING ANALYTICAL SYSTEM © {new Date().getFullYear()}
+      <footer className="border-t border-white/5 py-6 pb-28 md:pb-6 px-4 text-center text-xs text-slate-400 font-sans space-y-1.5 bg-slate-950/20">
+        <div className="text-slate-200 font-semibold">
+          The Win Concept | Trinidad and Tobago NLCB Analytics ({new Date().getFullYear()})
         </div>
-        <div 
-          className="text-gray-400 text-[9px] tracking-normal uppercase" 
-          style={{ textShadow: "0 0 6px rgba(255, 255, 255, 0.25)" }}
-        >
-          This app is not affiliated with the National Lotteries Control Board (NLCB) and does not guarantee any winning combinations.
+        <div className="text-slate-400 text-xs max-w-2xl mx-auto leading-relaxed">
+          This app is not affiliated with the National Lotteries Control Board (NLCB) and does not guarantee winning combinations.
         </div>
       </footer>
 
-      {/* Mobile Slide-Up Sheet for Games & More */}
+      {/* Mobile Slide-Up Sheet for Games and Tools */}
       {mobileSheet && (
-        <div className="md:hidden fixed inset-0 z-50 flex items-center justify-center p-4 pb-20">
+        <div className="md:hidden fixed inset-0 z-50 flex items-center justify-center p-4 pb-20 font-sans">
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setMobileSheet(null)}
           />
           <div className="relative z-10 w-full max-w-md bg-slate-950 border border-white/15 rounded-3xl p-5 space-y-4 shadow-2xl max-h-[78vh] overflow-y-auto">
             <div className="relative flex items-center justify-center border-b border-white/10 pb-3">
-              <h3 className="text-sm font-black font-mono uppercase tracking-wider text-white text-center">
-                {mobileSheet === "games" ? "Choose NLCB Game" : "Tools & Settings"}
+              <h3 className="text-base font-bold text-white text-center">
+                {mobileSheet === "games" ? "Choose an NLCB Game" : "Tools and Settings"}
               </h3>
               <button
                 onClick={() => setMobileSheet(null)}
-                className="absolute right-0 p-1.5 rounded-lg bg-white/5 text-gray-400 hover:text-white cursor-pointer"
+                aria-label="Close menu"
+                className="absolute right-0 p-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -939,18 +933,18 @@ export default function Home() {
                     className={`w-full flex items-center justify-between gap-3 p-3 rounded-2xl border transition cursor-pointer text-left ${
                       activeTab === g.key
                         ? "bg-sky-500/15 border-sky-400/50 text-white"
-                        : "bg-slate-900/70 border-white/10 text-gray-200 hover:border-white/25"
+                        : "bg-slate-900/70 border-white/10 text-slate-200 hover:border-white/25"
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <img src={g.iconSrc} alt={g.name} className="w-10 h-10 rounded-xl object-contain shrink-0 border border-white/10" />
                       <div className="min-w-0">
-                        <div className="text-sm font-black text-white">{g.name}</div>
-                        <div className="text-[11px] text-gray-400 truncate">{g.tagline}</div>
+                        <div className="text-sm font-bold text-white">{g.name}</div>
+                        <div className="text-xs text-slate-400 truncate">{g.tagline}</div>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <span className="inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
+                      <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
                         {g.costPerPlay}
                       </span>
                     </div>
@@ -967,8 +961,8 @@ export default function Home() {
                     <Cpu className="w-5 h-5 text-cyan-400" />
                   </div>
                   <div>
-                    <div className="text-sm font-black text-white">Engine Benchmark Tracker</div>
-                    <div className="text-[11px] text-gray-400">Compare historical hit rates across all models</div>
+                    <div className="text-sm font-bold text-white">Number Covering Engines</div>
+                    <div className="text-xs text-slate-400">Compare past results across all models</div>
                   </div>
                 </button>
                 <button
@@ -977,8 +971,8 @@ export default function Home() {
                 >
                   <img src="/images/settings_icon.png" alt="Settings" className="w-10 h-10 rounded-xl object-contain border border-white/10 shrink-0" />
                   <div>
-                    <div className="text-sm font-black text-white">Settings &amp; Visitor Analytics</div>
-                    <div className="text-[11px] text-gray-400">App preferences, draw sync &amp; usage stats</div>
+                    <div className="text-sm font-bold text-white">Settings and Activity</div>
+                    <div className="text-xs text-slate-400">App preferences, draw sync, and usage</div>
                   </div>
                 </button>
               </div>
@@ -987,78 +981,78 @@ export default function Home() {
         </div>
       )}
 
-      {/* Mobile Sticky Bottom Tab Bar (6 Thumb-Zone Tabs: Engines before Scan & Pools) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070b19]/95 backdrop-blur-xl border-t border-white/10 px-1.5 py-1.5 grid grid-cols-6 gap-1 shadow-[0_-5px_25px_rgba(0,0,0,0.6)]">
+      {/* Mobile Sticky Bottom Tab Bar (6 Thumb-Zone Tabs: Engines before Scan and Pools) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070b19]/95 backdrop-blur-xl border-t border-white/10 px-1.5 py-1.5 grid grid-cols-6 gap-1 shadow-[0_-5px_25px_rgba(0,0,0,0.6)] font-sans">
         <button
           onClick={() => handleTabChange("welcome")}
-          className={`h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
+          className={`h-[54px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "welcome" && !mobileSheet
               ? "bg-sky-500/20 border-sky-400 text-sky-300 font-bold"
-              : "text-gray-400 border-transparent hover:bg-white/5"
+              : "text-slate-400 border-transparent hover:bg-white/5"
           }`}
         >
           <img src="/images/welcome_icon.png" alt="Home" className="w-5 h-5 object-contain rounded" />
-          <span className="text-[8.5px] font-mono tracking-tight">HOME</span>
+          <span className="text-[10px] font-semibold">Home</span>
         </button>
 
         <button
           onClick={() => setMobileSheet(mobileSheet === "games" ? null : "games")}
-          className={`h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
+          className={`h-[54px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
             isGameTab || mobileSheet === "games"
               ? "bg-amber-500/20 border-amber-400 text-amber-300 font-bold"
-              : "text-gray-400 border-transparent hover:bg-white/5"
+              : "text-slate-400 border-transparent hover:bg-white/5"
           }`}
         >
           <Gamepad2 className="w-5 h-5" />
-          <span className="text-[8.5px] font-mono tracking-tight">GAMES</span>
+          <span className="text-[10px] font-semibold">Games</span>
         </button>
 
         <button
           onClick={() => handleTabChange("engine-tracker")}
-          className={`h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
+          className={`h-[54px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "engine-tracker" && !mobileSheet
               ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 font-bold"
-              : "text-gray-400 border-transparent hover:bg-white/5"
+              : "text-slate-400 border-transparent hover:bg-white/5"
           }`}
         >
           <Cpu className="w-5 h-5 text-cyan-400" />
-          <span className="text-[8.5px] font-mono tracking-tight">ENGINES</span>
+          <span className="text-[10px] font-semibold">Engines</span>
         </button>
 
         <button
           onClick={() => handleTabChange("scanner")}
-          className={`h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
+          className={`h-[54px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "scanner" && !mobileSheet
               ? "bg-purple-500/20 border-purple-400 text-purple-300 font-bold"
-              : "text-gray-400 border-transparent hover:bg-white/5"
+              : "text-slate-400 border-transparent hover:bg-white/5"
           }`}
         >
           <img src="/images/scanner_icon.png" alt="Scan" className="w-5 h-5 object-contain rounded" />
-          <span className="text-[8.5px] font-mono tracking-tight">SCAN</span>
+          <span className="text-[10px] font-semibold">Scan</span>
         </button>
 
         <button
           onClick={() => handleTabChange("syndicate")}
-          className={`h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
+          className={`h-[54px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "syndicate" && !mobileSheet
               ? "bg-violet-500/20 border-violet-400 text-violet-300 font-bold"
-              : "text-gray-400 border-transparent hover:bg-white/5"
+              : "text-slate-400 border-transparent hover:bg-white/5"
           }`}
         >
           <img src="/images/syndicate_icon.png" alt="Pools" className="w-5 h-5 object-contain rounded" />
-          <span className="text-[8.5px] font-mono tracking-tight">POOLS</span>
+          <span className="text-[10px] font-semibold">Pools</span>
         </button>
 
         <button
           onClick={() => handleTabChange("settings")}
-          className={`h-[52px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
+          className={`h-[54px] flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer border ${
             activeTab === "settings" && !mobileSheet
               ? "bg-slate-700/40 border-slate-400 text-slate-200 font-bold"
-              : "text-gray-400 border-transparent hover:bg-white/5"
+              : "text-slate-400 border-transparent hover:bg-white/5"
           }`}
         >
           <img src="/images/settings_icon.png" alt="Settings" className="w-5 h-5 object-contain rounded" />
-          <span className="text-[8.5px] font-mono tracking-tight">SETTINGS</span>
+          <span className="text-[10px] font-semibold">Settings</span>
         </button>
       </nav>
 

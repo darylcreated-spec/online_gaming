@@ -70,7 +70,7 @@ export default function WinForLifeQuant100Panel() {
         <div className="flex flex-col items-center justify-center space-y-4">
           <RefreshCw className="h-10 w-10 animate-spin text-emerald-400" />
           <div className="space-y-1">
-            <h3 className="font-mono text-lg font-bold text-white">
+            <h3 className="text-base font-mono font-bold text-white">
               RUNNING WIN FOR LIFE 100% INVARIANT ENGINE
             </h3>
             <p className="font-mono text-xs text-gray-400">
@@ -120,21 +120,21 @@ export default function WinForLifeQuant100Panel() {
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-[11px] font-mono font-black text-emerald-300 tracking-wider uppercase shadow-inner">
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-xs font-mono font-black text-emerald-300 tracking-wider uppercase shadow-inner">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 100.00% Mathematical Invariant Compliance
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-teal-500/20 border border-teal-400/30 text-[10px] font-mono font-bold text-teal-300">
+              <span className="px-2.5 py-0.5 rounded-full bg-teal-500/20 border border-teal-400/30 text-xs font-mono font-bold text-teal-300">
                 Z_4 x Z_7 Galois Rings
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-[10px] font-mono font-bold text-cyan-300">
+              <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-xs font-mono font-bold text-cyan-300">
                 Eigen-Centrality Graph
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-[10px] font-mono font-bold text-emerald-300">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-xs font-mono font-bold text-emerald-300">
                 Stefan Mandel Sieve
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black font-mono text-white tracking-wide flex items-center gap-3">
+            <h2 className="text-lg sm:text-xl font-black font-mono text-white tracking-wide flex items-center gap-3">
               <Cpu className="w-7 h-7 text-emerald-400 shrink-0" />
               <span>WIN FOR LIFE 100% QUANT ENGINE</span>
             </h2>
@@ -145,12 +145,12 @@ export default function WinForLifeQuant100Panel() {
 
           <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end gap-3 shrink-0">
             <div className="text-left lg:text-right">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-gray-400">Targeting Draw</div>
+              <div className="text-xs font-mono uppercase tracking-wider text-gray-400">Targeting Draw</div>
               <div className="text-2xl font-black font-mono text-emerald-400 flex items-center gap-1.5">
                 <span>#{data.targetDrawNumber}</span>
                 <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Next Draw</span>
               </div>
-              <div className="text-[10px] font-mono text-gray-500">
+              <div className="text-xs font-mono text-gray-500">
                 Calibrated on Draw #{data.lastVerifiedDraw.draw_number} ({data.lastVerifiedDraw.draw_date})
               </div>
             </div>
@@ -176,14 +176,14 @@ export default function WinForLifeQuant100Panel() {
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 {inv.name}
               </span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <span className="px-2 py-0.5 rounded text-xs font-mono font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 100.00%
               </span>
             </div>
-            <div className="font-mono text-[11px] text-emerald-300 bg-slate-950/60 p-2 rounded border border-emerald-500/10 mb-2">
+            <div className="font-mono text-xs text-emerald-300 bg-slate-950/60 p-2 rounded border border-emerald-500/10 mb-2">
               {inv.formula}
             </div>
-            <p className="text-[11px] text-gray-400 leading-snug">
+            <p className="text-xs text-gray-400 leading-snug">
               {inv.significance}
             </p>
           </div>
@@ -195,12 +195,12 @@ export default function WinForLifeQuant100Panel() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Target className="w-5 h-5 text-emerald-400" />
-            <h3 className="font-mono text-lg font-bold text-white tracking-wide">
+            <h3 className="text-base font-mono font-bold text-white tracking-wide">
               THE 5 UNCONVENTIONAL PREDICTION SETS (6 OF 28)
             </h3>
           </div>
           <span className="text-xs font-mono text-gray-400 hidden sm:inline-block">
-            Sequence Independent • Cash Ball Excluded
+            Any order, main numbers only (excluding Cash Ball)
           </span>
         </div>
 
@@ -220,32 +220,32 @@ export default function WinForLifeQuant100Panel() {
                     <h4 className="font-mono font-black text-white text-base tracking-wide">
                       {set.name}
                     </h4>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-gradient-to-r ${set.badgeColor} text-white shadow-sm`}>
+                    <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold bg-gradient-to-r ${set.badgeColor} text-white shadow-sm`}>
                       {set.badge}
                     </span>
                   </div>
                   <p className="text-xs text-gray-400 leading-relaxed">
                     {set.mathematicalBasis}
                   </p>
-                  <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] font-mono text-gray-400">
+                  <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-mono text-gray-400">
                     <span className="flex items-center gap-1">
                       <span className="text-gray-500">Sum:</span>
                       <span className="text-emerald-400 font-bold">{set.sum}</span>
                     </span>
-                    <span className="text-gray-600">•</span>
+                    <span className="text-slate-600">|</span>
                     <span className="flex items-center gap-1">
                       <span className="text-gray-500">Parity:</span>
                       <span className="text-gray-300 font-bold">{set.oddEvenRatio}</span>
                     </span>
-                    <span className="text-gray-600">•</span>
+                    <span className="text-slate-600">|</span>
                     <span className="flex items-center gap-1">
                       <span className="text-gray-500">Quartiles:</span>
-                      <span className="text-emerald-300 font-mono text-[10px]">{set.quartileDistribution}</span>
+                      <span className="text-emerald-300 font-mono text-xs">{set.quartileDistribution}</span>
                     </span>
-                    <span className="text-gray-600">•</span>
+                    <span className="text-slate-600">|</span>
                     <span className="flex items-center gap-1">
                       <span className="text-gray-500">CRT:</span>
-                      <span className="text-teal-400 font-mono text-[10px]">{set.crtSignature}</span>
+                      <span className="text-teal-400 font-mono text-xs">{set.crtSignature}</span>
                     </span>
                   </div>
                 </div>
@@ -290,7 +290,7 @@ export default function WinForLifeQuant100Panel() {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Fingerprint className="w-5 h-5 text-teal-400" />
-              <h3 className="font-mono text-base font-bold text-white">
+              <h3 className="text-base font-mono font-bold text-white">
                 MASTER ATTRACTOR MANIFOLD ({data.masterAttractorManifold.poolSize} RESONANT BALLS)
               </h3>
             </div>
@@ -370,7 +370,7 @@ export default function WinForLifeQuant100Panel() {
           <div>
             <div className="flex items-center gap-2">
               <Award className="w-5 h-5 text-emerald-400" />
-              <h3 className="font-mono text-base font-bold text-white">
+              <h3 className="text-base font-mono font-bold text-white">
                 HISTORICAL DRAW-BY-DRAW AUDITING ENGINE
               </h3>
             </div>
@@ -382,25 +382,25 @@ export default function WinForLifeQuant100Panel() {
           {/* Hit Rate Stats Bar */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-center font-mono">
-              <div className="text-[10px] text-gray-400 uppercase">&gt;= 1 Hit</div>
+              <div className="text-xs text-gray-400 uppercase">&gt;= 1 Hit</div>
               <div className="text-xs font-bold text-emerald-400">
                 {data.auditVerification.bestTicketHitRates.atLeastOne.percentage}%
               </div>
             </div>
             <div className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-center font-mono">
-              <div className="text-[10px] text-gray-400 uppercase">&gt;= 2 Hits</div>
+              <div className="text-xs text-gray-400 uppercase">&gt;= 2 Hits</div>
               <div className="text-xs font-bold text-teal-400">
                 {data.auditVerification.bestTicketHitRates.atLeastTwo.percentage}%
               </div>
             </div>
             <div className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-center font-mono">
-              <div className="text-[10px] text-gray-400 uppercase">3+ Prize</div>
+              <div className="text-xs text-gray-400 uppercase">3+ Prize</div>
               <div className="text-xs font-bold text-cyan-400">
                 {data.auditVerification.bestTicketHitRates.atLeastThree.percentage}%
               </div>
             </div>
             <div className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-center font-mono">
-              <div className="text-[10px] text-gray-400 uppercase">4+ High Prize</div>
+              <div className="text-xs text-gray-400 uppercase">4+ High Prize</div>
               <div className="text-xs font-bold text-purple-400">
                 {data.auditVerification.bestTicketHitRates.atLeastFour.percentage}%
               </div>
@@ -490,7 +490,7 @@ export default function WinForLifeQuant100Panel() {
                       {entry.actualNumbers.map((n, i) => (
                         <span 
                           key={i} 
-                          className="w-5 h-5 rounded-full bg-slate-800 border border-emerald-500/30 text-emerald-300 font-bold text-[10px] flex items-center justify-center"
+                          className="w-5 h-5 rounded-full bg-slate-800 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center"
                         >
                           {n}
                         </span>
@@ -499,7 +499,7 @@ export default function WinForLifeQuant100Panel() {
                   </td>
                   <td className="py-2 px-3 text-gray-400">{entry.actualSum}</td>
                   <td className="py-2 px-3 text-center">
-                    <div className="flex items-center justify-center gap-1 text-[11px]">
+                    <div className="flex items-center justify-center gap-1 text-xs">
                       <span className={`px-1.5 py-0.5 rounded ${entry.hits.set1 >= 3 ? "bg-emerald-500/20 text-emerald-300 font-bold" : "text-gray-400"}`}>
                         {entry.hits.set1}
                       </span>
@@ -522,20 +522,20 @@ export default function WinForLifeQuant100Panel() {
                     </div>
                   </td>
                   <td className="py-2 px-3">
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 text-[10px] font-bold border border-emerald-500/20">
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 text-xs font-bold border border-emerald-500/20">
                       {entry.bestTicketHit}/6 ({entry.bestSetName.split(" ")[1] || entry.bestSetName})
                     </span>
                   </td>
                   <td className="py-2 px-3 text-center">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
                       {entry.attractorManifoldHits}/6
                     </span>
                   </td>
                   <td className="py-2 px-3 text-center">
                     {entry.invariantCompliant ? (
-                      <span className="text-emerald-400 font-bold text-[10px]">100% OK</span>
+                      <span className="text-emerald-400 font-bold text-xs">100% OK</span>
                     ) : (
-                      <span className="text-rose-400 font-bold text-[10px]">Anomaly</span>
+                      <span className="text-rose-400 font-bold text-xs">Anomaly</span>
                     )}
                   </td>
                 </tr>
@@ -544,7 +544,7 @@ export default function WinForLifeQuant100Panel() {
           </table>
         </div>
         {filteredAudit.length > 30 && (
-          <div className="text-center font-mono text-[11px] text-gray-500 pt-1">
+          <div className="text-center font-mono text-xs text-gray-500 pt-1">
             Showing top 30 of {filteredAudit.length} matching audited draws.
           </div>
         )}

@@ -63,18 +63,19 @@ export default function MemberCheckInPill() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative font-sans">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-semibold transition cursor-pointer border whitespace-nowrap ${
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer border whitespace-nowrap ${
           savedName
             ? "bg-slate-900/90 hover:bg-slate-800 border-emerald-500/40 text-white"
             : "bg-cyan-500/15 hover:bg-cyan-500/25 border-cyan-400/50 text-cyan-200"
         }`}
-        title="Free Member Login / Check-In (Optional Name & Email)"
+        title="Optional member profile with name and email"
       >
         {savedName ? (
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
         ) : (
           <Users className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
         )}
@@ -87,54 +88,59 @@ export default function MemberCheckInPill() {
             className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-[75] sm:hidden"
             onClick={() => setOpen(false)}
           />
-          <div className="fixed inset-x-4 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-72 p-4 rounded-xl bg-slate-950 border border-cyan-500/30 shadow-2xl z-[80] font-mono space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-            <span className="text-xs font-bold text-white uppercase">Member Check-In (Free)</span>
-            <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-white">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <form onSubmit={handleSave} className="space-y-2.5">
-            <div>
-              <label className="text-[10px] text-slate-400 uppercase block mb-1">Your Name *</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. John Doe"
-                className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] text-slate-400 uppercase block mb-1">Email (Optional)</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-400"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs uppercase flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {saving ? "Saving..." : savedName ? "Update Profile" : "Save & Check In"}
-            </button>
-            {savedName && (
+          <div className="fixed inset-x-4 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-72 p-4 rounded-xl bg-slate-950 border border-cyan-500/30 shadow-2xl z-[80] space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <h3 className="text-base font-bold text-white">Member Profile</h3>
               <button
                 type="button"
-                onClick={handleSignOut}
-                className="w-full py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-300 text-[11px] font-bold uppercase cursor-pointer"
+                onClick={() => setOpen(false)}
+                aria-label="Close member profile"
+                className="text-slate-400 hover:text-white cursor-pointer"
               >
-                Sign Out
+                <X className="w-4 h-4" />
               </button>
-            )}
-          </form>
-        </div>
+            </div>
+            <form onSubmit={handleSave} className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Your Name (Required)</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-slate-300 block mb-1">Email Address (Optional)</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-cyan-400"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                {saving ? "Saving..." : savedName ? "Update Profile" : "Save Profile"}
+              </button>
+              {savedName && (
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full py-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-300 text-xs font-semibold cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              )}
+            </form>
+          </div>
         </>
       )}
     </div>

@@ -114,7 +114,7 @@ export default function Pick4AuditPanel() {
       <div className="rounded-2xl border border-purple-500/20 bg-slate-900/60 p-12 text-center backdrop-blur-md space-y-4 font-mono">
         <RefreshCw className="h-10 w-10 animate-spin text-purple-400 mx-auto" />
         <div className="space-y-1">
-          <h3 className="text-lg font-bold text-white uppercase tracking-wider">
+          <h3 className="text-base font-bold text-white uppercase tracking-wider">
             Auditing Pick 4 Database & Invariants
           </h3>
           <p className="text-xs text-gray-400">
@@ -153,10 +153,10 @@ export default function Pick4AuditPanel() {
                 <h2 className="text-lg sm:text-xl font-black uppercase text-white tracking-wide flex items-center gap-2">
                   <span>Pick 4 100% Quant & Audit System</span>
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                   0 Invariant Violations
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-400/30">
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-400/30">
                   Straight + Box Quant Sieve
                 </span>
               </div>
@@ -181,39 +181,39 @@ export default function Pick4AuditPanel() {
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Audited Records</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Audited Records</span>
             <div className="text-sm text-white font-extrabold flex items-center gap-1.5">
               <Database className="w-3.5 h-3.5 text-purple-400" />
               <span>{data.totalDrawsAudited.toLocaleString()} Draws</span>
             </div>
-            <span className="text-[9px] text-gray-500">Live Turso DB</span>
+            <span className="text-xs text-gray-500">Live Turso DB</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Sum Manifold</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Sum Manifold</span>
             <div className="text-sm text-cyan-300 font-extrabold flex items-center gap-1.5">
               <Binary className="w-3.5 h-3.5 text-cyan-400" />
               <span>Sum in [6, 30]</span>
             </div>
-            <span className="text-[9px] text-gray-500">Last Sum: {data.lastVerifiedDraw.sum} (mu = 18.0)</span>
+            <span className="text-xs text-gray-500">Last Sum: {data.lastVerifiedDraw.sum} (mu = 18.0)</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Next Target</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Next Target</span>
             <div className="text-xs text-purple-300 font-extrabold flex items-center gap-1.5">
               <Hash className="w-3.5 h-3.5 text-purple-400" />
               <span>DRAW #{data.targetDrawNumber}</span>
             </div>
-            <span className="text-[9px] text-gray-500">10,000 Total States</span>
+            <span className="text-xs text-gray-500">10,000 Total States</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Automated Sync</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Automated Sync</span>
             <div className="text-xs text-emerald-300 font-extrabold flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
               <span>EVENT-DRIVEN UPDATE</span>
             </div>
-            <span className="text-[9px] text-gray-500">Recalculates on new draw</span>
+            <span className="text-xs text-gray-500">Recalculates on new draw</span>
           </div>
         </div>
       </div>
@@ -241,25 +241,25 @@ export default function Pick4AuditPanel() {
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Compact Sum Manifold</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
+            <p className="text-xs text-gray-300 leading-relaxed">
               Every modern draw sum falls strictly within <strong>[6, 30]</strong>. Eliminates degenerate tail combinations without sacrificing winning sets.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              6 &le; (d_1 + d_2 + d_3 + d_4) &le; 30 (0 violations)
+            <div className="text-xs text-emerald-400/80 font-mono">
+              Digit total between 6 and 30 (0 exceptions)
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Digital Root Mod 9</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
-              Digital roots span residue classes smoothly without persistent clusters over &ge; 4 consecutive draws.
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Reduced digit sums spread evenly without getting stuck for 4 or more draws in a row.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
+            <div className="text-xs text-emerald-400/80 font-mono">
               max_run(sum mod 9 = k) &lt; 4 (0 violations)
             </div>
           </div>
@@ -267,13 +267,13 @@ export default function Pick4AuditPanel() {
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Parity Non-Degeneracy</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
+            <p className="text-xs text-gray-300 leading-relaxed">
               Balanced macro-states (2:2 or 3:1) cover &gt; 88% of all draws. Extreme 4:0 states have zero persistence beyond 2 draws.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              size({"{"}d_i mod 2{"}"}) &ge; 1 (0 persistent traps)
+            <div className="text-xs text-emerald-400/80 font-mono">
+              Balanced odd and even digits (0 stuck patterns)
             </div>
           </div>
         </div>
@@ -292,12 +292,12 @@ export default function Pick4AuditPanel() {
               </h3>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              Derived from Last Verified Draw #{data.lastVerifiedDraw.draw_number} ({data.lastVerifiedDraw.draw_date}) • Winning Digits: [{data.lastVerifiedDraw.digits.join(", ")}] (Sum: {data.lastVerifiedDraw.sum})
+              Based on Last Verified Draw {data.lastVerifiedDraw.draw_number} ({data.lastVerifiedDraw.draw_date}), Winning Digits: [{data.lastVerifiedDraw.digits.join(", ")}] (Sum: {data.lastVerifiedDraw.sum})
             </p>
           </div>
 
           <div className="text-xs text-right hidden sm:block">
-            <span className="text-[10px] text-gray-500 block uppercase">Permutation Space</span>
+            <span className="text-xs text-gray-500 block uppercase">Permutation Space</span>
             <span className="text-purple-400 font-bold">10^4 = 10,000 Straight Combinations</span>
           </div>
         </div>
@@ -312,7 +312,7 @@ export default function Pick4AuditPanel() {
                 className="p-4 rounded-xl bg-slate-900/90 border border-white/10 hover:border-purple-400/40 transition flex flex-col justify-between space-y-3 relative group"
               >
                 <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider ${
+                  <span className={`text-xs font-black uppercase px-2 py-0.5 rounded tracking-wider ${
                     idx === 0 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30" :
                     idx === 1 ? "bg-sky-500/20 text-sky-300 border border-sky-400/30" :
                     idx === 2 ? "bg-purple-500/20 text-purple-300 border border-purple-400/30" :
@@ -324,7 +324,7 @@ export default function Pick4AuditPanel() {
 
                   <button
                     onClick={() => handleCopy(set.id, set.digitsString)}
-                    className="text-[10px] text-gray-400 hover:text-white flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 transition cursor-pointer"
+                    className="text-xs text-gray-400 hover:text-white flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 transition cursor-pointer"
                   >
                     {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                     <span>{isCopied ? "Copied" : "Copy"}</span>
@@ -342,23 +342,23 @@ export default function Pick4AuditPanel() {
                     </div>
                   ))}
                   <div className="ml-2 text-right">
-                    <span className="text-[10px] text-purple-300 font-bold px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/30">
+                    <span className="text-xs text-purple-300 font-bold px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/30">
                       {set.boxType}
                     </span>
-                    <span className="text-[9px] text-gray-500 block mt-0.5">Sum: {set.sum}</span>
+                    <span className="text-xs text-gray-500 block mt-0.5">Sum: {set.sum}</span>
                   </div>
                 </div>
 
-                <div className="space-y-1.5 border-t border-white/5 pt-2 text-[11px]">
+                <div className="space-y-1.5 border-t border-white/5 pt-2 text-xs">
                   <div className="flex items-center justify-between text-gray-400">
                     <span>Parity / Spread:</span>
-                    <span className="text-white font-mono text-[10px]">{set.oddEvenRatio} • {set.lowHighRatio}</span>
+                    <span className="text-white font-mono text-xs">{set.oddEvenRatio}, {set.lowHighRatio}</span>
                   </div>
                   <div className="flex items-center justify-between text-gray-400">
                     <span>Resonance Score:</span>
                     <strong className="text-purple-400 font-mono">{set.resonanceScore.toFixed(1)}%</strong>
                   </div>
-                  <p className="text-[10px] text-gray-400 leading-tight">
+                  <p className="text-xs text-gray-400 leading-tight">
                     {set.mathematicalBasis}
                   </p>
                 </div>
@@ -448,7 +448,7 @@ export default function Pick4AuditPanel() {
         <div className="overflow-x-auto sleek-scrollbar rounded-xl border border-white/10 bg-black/40">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-900/90 border-b border-white/10 text-[10px] text-gray-400 uppercase tracking-wider font-bold">
+              <tr className="bg-slate-900/90 border-b border-white/10 text-xs text-gray-400 uppercase tracking-wider font-bold">
                 <th className="py-2.5 px-3">Draw #</th>
                 <th className="py-2.5 px-3">Date & Slot</th>
                 <th className="py-2.5 px-3">Official Drawn Digits</th>
@@ -476,7 +476,7 @@ export default function Pick4AuditPanel() {
                     <td className="py-2.5 px-3 text-gray-400 whitespace-nowrap">
                       <span>{entry.drawDate}</span>
                       {entry.timeSlot && (
-                        <span className="text-[10px] text-purple-400/80 block uppercase font-bold">{entry.timeSlot}</span>
+                        <span className="text-xs text-purple-400/80 block uppercase font-bold">{entry.timeSlot}</span>
                       )}
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap">
@@ -502,7 +502,7 @@ export default function Pick4AuditPanel() {
                           return (
                             <span
                               key={cand}
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
+                              className={`px-2 py-0.5 rounded text-xs font-bold font-mono ${
                                 isStraight
                                   ? "bg-amber-400 text-slate-950 font-black shadow-[0_0_8px_rgba(251,191,36,0.6)]"
                                   : isBox
@@ -518,17 +518,17 @@ export default function Pick4AuditPanel() {
                     </td>
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
                       {entry.isStraightHit ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-400/40">
                           <Check className="w-3 h-3" />
                           <span>STRAIGHT HIT</span>
                         </span>
                       ) : entry.isBoxHit ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
                           <Check className="w-3 h-3" />
                           <span>BOX HIT</span>
                         </span>
                       ) : (
-                        <span className="text-[10px] text-gray-500 uppercase font-mono">
+                        <span className="text-xs text-gray-500 uppercase font-mono">
                           Miss
                         </span>
                       )}

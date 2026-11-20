@@ -87,15 +87,15 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
+              <span className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
                 <Brain className="w-3.5 h-3.5 animate-pulse" />
                 Bayesian-Markov MAP Engine
               </span>
-              <span className="text-[10px] font-mono text-gray-500">
+              <span className="text-xs font-mono text-gray-500">
                 {data?.databaseStats?.totalDraws ? `${data.databaseStats.totalDraws} Historical Draws Analyzed` : "Analyzing database..."}
               </span>
             </div>
-            <h2 className="text-xl md:text-2xl font-black text-white font-mono uppercase tracking-tight flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-black text-white font-mono uppercase tracking-tight flex items-center gap-2">
               {gameTitle} Mathematical Prediction &amp; Verification
             </h2>
             <p className="text-xs text-gray-400 font-mono max-w-2xl leading-relaxed">
@@ -126,20 +126,20 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
         {showTheory && (
           <div className="mt-6 pt-5 border-t border-white/10 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono text-gray-300 leading-relaxed">
             <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2">
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest block">1. Bayesian-Markov MAP</span>
-              <p className="text-[11px] text-gray-400">
+              <span className="text-xs font-bold text-primary uppercase tracking-widest block">1. Bayesian-Markov MAP</span>
+              <p className="text-xs text-gray-400">
                 Computes posterior probability distribution P(X_t | X_t-1, ...) combining empirical priors with slot and companion network transitions.
               </p>
             </div>
             <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2">
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block">2. Out-of-Sample Backtesting</span>
-              <p className="text-[11px] text-gray-400">
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block">2. Out-of-Sample Backtesting</span>
+              <p className="text-xs text-gray-400">
                 At each historical draw index T, the engine only observes past draws before T, predicts T, and calculates true empirical multi-match hit rates against random hypergeometric baselines.
               </p>
             </div>
             <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-2">
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">3. Mathematical Honesty</span>
-              <p className="text-[11px] text-gray-400">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-widest block">3. Mathematical Honesty</span>
+              <p className="text-xs text-gray-400">
                 Physical tumbler mixing is non-deterministic. The MAP covering ensemble maximizes expected value (EV) and coverage efficiency over random picking.
               </p>
             </div>
@@ -164,7 +164,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
               <div className="space-y-4">
                 <div className="flex justify-between items-center border-b border-white/10 pb-3">
                   <div>
-                    <span className="text-[10px] font-bold text-primary font-mono uppercase tracking-widest block">
+                    <span className="text-xs font-bold text-primary font-mono uppercase tracking-widest block">
                       Next Draw Mathematical Forecast
                     </span>
                     <h3 className="text-base font-black text-white font-mono uppercase">
@@ -189,7 +189,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                       className="w-13 h-13 md:w-14 md:h-14 rounded-full bg-slate-900 border-2 border-primary/50 text-white font-black font-mono text-lg md:text-xl flex items-center justify-center shadow-[0_0_20px_rgba(56,189,248,0.25)] relative group hover:scale-105 transition-transform"
                     >
                       {String(num).padStart(2, "0")}
-                      <span className="absolute -bottom-2 text-[8px] font-bold font-mono px-1 rounded bg-slate-950 text-primary border border-primary/30">
+                      <span className="absolute -bottom-2 text-xs font-bold font-mono px-1 rounded bg-slate-950 text-primary border border-primary/30">
                         P: {prediction?.topRankedNumbers?.find((n: any) => n.number === num)?.posteriorProbability || 3.5}%
                       </span>
                     </div>
@@ -200,14 +200,14 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                   {/* Bonus Ball */}
                   <div className="w-13 h-13 md:w-14 md:h-14 rounded-full bg-amber-400/20 border-2 border-amber-400 text-amber-300 font-black font-mono text-lg md:text-xl flex items-center justify-center shadow-[0_0_20px_rgba(251,191,36,0.3)] relative group hover:scale-105 transition-transform">
                     {optimalTicket?.bonusBall}
-                    <span className="absolute -bottom-2 text-[7px] font-bold font-mono px-1 rounded bg-slate-950 text-amber-400 border border-amber-400/30 uppercase whitespace-nowrap">
+                    <span className="absolute -bottom-2 text-xs font-bold font-mono px-1 rounded bg-slate-950 text-amber-400 border border-amber-400/30 uppercase whitespace-nowrap">
                       {bonusLabel}
                     </span>
                   </div>
                 </div>
 
                 {/* Ticket Combinatorial Properties */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-[10px] font-mono">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs font-mono">
                   <div className="p-2.5 rounded-lg bg-slate-900/50 border border-white/5">
                     <span className="text-gray-500 uppercase block">Ticket Sum</span>
                     <span className="text-white font-bold text-xs">{optimalTicket?.sum} (Optimal Range)</span>
@@ -228,7 +228,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
               </div>
 
               <div className="pt-4 border-t border-white/10 mt-4 flex justify-between items-center">
-                <span className="text-[10px] font-mono text-gray-500">
+                <span className="text-xs font-mono text-gray-500">
                   Target Draw Date: <strong className="text-white">{prediction?.targetDate || "Next Official Draw"}</strong>
                 </span>
                 <button
@@ -245,7 +245,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
             <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-slate-950/60 flex flex-col justify-between space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                  <span className="text-[10px] font-bold text-primary font-mono uppercase tracking-widest">
+                  <span className="text-xs font-bold text-primary font-mono uppercase tracking-widest">
                     Statistical Verification
                   </span>
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -258,7 +258,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                 <div className="space-y-2.5 text-xs font-mono">
                   <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
                     <div className="flex justify-between text-gray-400">
-                      <span>Main Pool Chi-Square (χ²):</span>
+                      <span>Main Numbers Fairness Score:</span>
                       <span className="text-white font-bold">{mathSummary?.chiSquarePoolStat}</span>
                     </div>
                     <div className="flex justify-between text-gray-400">
@@ -275,7 +275,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
 
                   <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
                     <div className="flex justify-between text-gray-400">
-                      <span>{bonusLabel} Chi-Square (χ²):</span>
+                      <span>{bonusLabel} Fairness Score:</span>
                       <span className="text-white font-bold">{mathSummary?.chiSquareBonusStat}</span>
                     </div>
                     <div className="flex justify-between text-gray-400">
@@ -292,7 +292,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                 </div>
               </div>
 
-              <div className="text-[10px] text-gray-500 font-mono leading-relaxed pt-2 border-t border-white/10">
+              <div className="text-xs text-gray-500 font-mono leading-relaxed pt-2 border-t border-white/10">
                 Confidence test confirms that the empirical draw set matches classical stochastic limits without mechanical tumbler bias.
               </div>
             </div>
@@ -304,7 +304,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono font-bold uppercase">
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-xs font-mono font-bold uppercase">
                     Rigorous Verification
                   </span>
                   <span className="text-xs font-mono text-gray-400">
@@ -353,24 +353,24 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="p-3.5 rounded-xl bg-slate-900/70 border border-white/5 font-mono">
-                    <span className="text-[10px] text-gray-400 uppercase block">Tested Draws</span>
+                    <span className="text-xs text-gray-400 uppercase block">Tested Draws</span>
                     <span className="text-xl font-bold text-white mt-0.5 block">{backtest.drawsEvaluated}</span>
-                    <span className="text-[9px] text-gray-500">Walk-forward out-of-sample</span>
+                    <span className="text-xs text-gray-500">Walk-forward out-of-sample</span>
                   </div>
                   <div className="p-3.5 rounded-xl bg-slate-900/70 border border-white/5 font-mono">
-                    <span className="text-[10px] text-gray-400 uppercase block">{bonusLabel} Hit Rate</span>
+                    <span className="text-xs text-gray-400 uppercase block">{bonusLabel} Hit Rate</span>
                     <span className="text-xl font-bold text-amber-400 mt-0.5 block">{backtest.bonusBallHitRatePct}%</span>
-                    <span className="text-[9px] text-gray-500">Baseline: {backtest.bonusBallBaselinePct}% ({backtest.bonusBallEfficiencyMultiplier}x)</span>
+                    <span className="text-xs text-gray-500">Baseline: {backtest.bonusBallBaselinePct}% ({backtest.bonusBallEfficiencyMultiplier}x)</span>
                   </div>
                   <div className="p-3.5 rounded-xl bg-slate-900/70 border border-white/5 font-mono">
-                    <span className="text-[10px] text-gray-400 uppercase block">2+ Numbers Matched</span>
+                    <span className="text-xs text-gray-400 uppercase block">2+ Numbers Matched</span>
                     <span className="text-xl font-bold text-emerald-400 mt-0.5 block">{backtest.anyMatch2PlusRatePct}%</span>
-                    <span className="text-[9px] text-gray-500">Multi-match consistency</span>
+                    <span className="text-xs text-gray-500">Multi-match consistency</span>
                   </div>
                   <div className="p-3.5 rounded-xl bg-slate-900/70 border border-white/5 font-mono">
-                    <span className="text-[10px] text-gray-400 uppercase block">3+ Numbers Matched</span>
+                    <span className="text-xs text-gray-400 uppercase block">3+ Numbers Matched</span>
                     <span className="text-xl font-bold text-primary mt-0.5 block">{backtest.anyMatch3PlusRatePct}%</span>
-                    <span className="text-[9px] text-gray-500">Prize-tier hit rate</span>
+                    <span className="text-xs text-gray-500">Prize-tier hit rate</span>
                   </div>
                 </div>
 
@@ -378,7 +378,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                 <div className="overflow-x-auto sleek-scrollbar rounded-xl border border-white/5">
                   <table className="w-full text-left font-mono text-xs border-collapse min-w-[580px]">
                     <thead>
-                      <tr className="border-b border-white/5 bg-slate-900/60 text-gray-400 uppercase text-[10px]">
+                      <tr className="border-b border-white/5 bg-slate-900/60 text-gray-400 uppercase text-xs">
                         <th className="py-2.5 px-4">Exact Numbers Matched</th>
                         <th className="py-2.5 px-4">Occurrences</th>
                         <th className="py-2.5 px-4">Empirical Hit Rate</th>
@@ -390,7 +390,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                       {backtest.matchTiers.map((tier: any) => (
                         <tr key={tier.matches} className="hover:bg-white/[0.02]">
                           <td className="py-2.5 px-4 font-bold text-white flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-full bg-primary/10 border border-primary/30 text-primary text-[10px] flex items-center justify-center font-bold">
+                            <span className="w-5 h-5 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs flex items-center justify-center font-bold">
                               {tier.matches}
                             </span>
                             {tier.matches} of {isLotto ? "5" : "6"} Balls
@@ -399,7 +399,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                           <td className="py-2.5 px-4 font-bold text-emerald-400">{tier.empiricalRatePct}%</td>
                           <td className="py-2.5 px-4 text-gray-400">{tier.randomBaselinePct}%</td>
                           <td className="py-2.5 px-4 text-right">
-                            <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${tier.efficiencyMultiplier >= 1 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-slate-900 text-gray-400"}`}>
+                            <span className={`px-2 py-0.5 rounded font-bold text-xs ${tier.efficiencyMultiplier >= 1 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-slate-900 text-gray-400"}`}>
                               {tier.efficiencyMultiplier}x
                             </span>
                           </td>
@@ -422,7 +422,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <div>
-                <span className="text-[10px] font-bold text-primary font-mono uppercase tracking-widest block">
+                <span className="text-xs font-bold text-primary font-mono uppercase tracking-widest block">
                   Combinatorial Coverage
                 </span>
                 <h3 className="text-base font-bold text-white font-mono uppercase">
@@ -442,12 +442,12 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                 >
                   <div className="flex justify-between items-center border-b border-white/5 pb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-gray-400">TICKET #{idx + 1}</span>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-bold">
+                      <span className="text-xs font-bold text-gray-400">TICKET #{idx + 1}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-bold">
                         {ticket.confidenceGrade}
                       </span>
                     </div>
-                    <span className="text-[10px] text-gray-500">{ticket.label}</span>
+                    <span className="text-xs text-gray-500">{ticket.label}</span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-1.5 py-1">
@@ -465,7 +465,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center text-[9px] text-gray-500 pt-2 border-t border-white/5">
+                  <div className="flex justify-between items-center text-xs text-gray-500 pt-2 border-t border-white/5">
                     <span>Sum: {ticket.sum} | Spread: {ticket.spread}</span>
                     <button
                       onClick={() => handleCopy(ticket.id, ticket.numbers, ticket.bonusBall)}
@@ -482,7 +482,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
           {/* Multi-Factor Decomposition Grid for Top Numbers */}
           <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-slate-950/60 space-y-4 font-mono">
             <div className="border-b border-white/10 pb-3">
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest block">
+              <span className="text-xs font-bold text-primary uppercase tracking-widest block">
                 Deep Factor Attribution
               </span>
               <h3 className="text-base font-black text-white uppercase">
@@ -493,7 +493,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
             <div className="overflow-x-auto sleek-scrollbar">
               <table className="w-full text-left text-xs border-collapse min-w-[700px]">
                 <thead>
-                  <tr className="border-b border-white/5 text-gray-500 uppercase text-[10px]">
+                  <tr className="border-b border-white/5 text-gray-500 uppercase text-xs">
                     <th className="py-2.5 px-3">Rank</th>
                     <th className="py-2.5 px-3">Ball Number</th>
                     <th className="py-2.5 px-3">Posterior Prob</th>

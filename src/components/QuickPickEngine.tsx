@@ -2,22 +2,14 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  Zap,
   RefreshCw,
   Copy,
   Check,
   Users,
   CheckCircle2,
-  Binary,
   ArrowRight,
   Sliders,
-  ShieldCheck,
-  TrendingUp,
-  Award,
-  Layers,
-  Flame,
-  Clock,
-  Compass
+  X
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
@@ -55,12 +47,19 @@ interface GameDefinition {
   coldPool: number[];
 }
 
+const STRATEGY_LABELS: Record<StrategyMode, string> = {
+  balanced: "Balanced Mix",
+  hot: "Frequently Drawn",
+  cold: "Less Recent",
+  pure: "Pure Random"
+};
+
 const GAME_DEFINITIONS: Record<QuickPickGame, GameDefinition> = {
   "lotto-plus": {
     id: "lotto-plus",
     name: "Lotto Plus",
     shortName: "Lotto Plus",
-    tagline: "5 of 35 • Powerball 1-10",
+    tagline: "5 numbers from 1 to 35 plus 1 Powerball from 1 to 10",
     poolSize: 35,
     pickCount: 5,
     minNumber: 1,
@@ -69,8 +68,8 @@ const GAME_DEFINITIONS: Record<QuickPickGame, GameDefinition> = {
     bonusPoolSize: 10,
     themeColor: "sky",
     accentHex: "#38bdf8",
-    glowHex: "rgba(56, 189, 248, 0.45)",
-    borderClass: "border-sky-500/40",
+    glowHex: "rgba(56, 189, 248, 0.35)",
+    borderClass: "border-white/[0.09]",
     badgeBg: "bg-sky-500/15",
     badgeText: "text-sky-300",
     iconSrc: "/images/lotto_plus_icon.png",
@@ -82,15 +81,17 @@ const GAME_DEFINITIONS: Record<QuickPickGame, GameDefinition> = {
     id: "win-for-life",
     name: "Win For Life",
     shortName: "Win For Life",
-    tagline: "6 of 28 • LJCR Manifold",
+    tagline: "6 numbers from 1 to 28 plus 1 Cash Ball from 1 to 10",
     poolSize: 28,
     pickCount: 6,
     minNumber: 1,
-    hasBonus: false,
+    hasBonus: true,
+    bonusName: "Cash Ball",
+    bonusPoolSize: 10,
     themeColor: "emerald",
     accentHex: "#10b981",
-    glowHex: "rgba(16, 185, 129, 0.45)",
-    borderClass: "border-emerald-500/40",
+    glowHex: "rgba(16, 185, 129, 0.35)",
+    borderClass: "border-white/[0.09]",
     badgeBg: "bg-emerald-500/15",
     badgeText: "text-emerald-300",
     iconSrc: "/images/win_for_life_icon.png",
@@ -98,11 +99,11 @@ const GAME_DEFINITIONS: Record<QuickPickGame, GameDefinition> = {
     hotPool: [7, 12, 4, 18, 26, 19, 23, 1, 3, 15],
     coldPool: [2, 8, 11, 14, 17, 21, 25, 27]
   },
-  "cashpot": {
+  cashpot: {
     id: "cashpot",
     name: "Cash Pot",
     shortName: "Cash Pot",
-    tagline: "5 of 20 • Multiplier 1X-5X",
+    tagline: "5 numbers from 1 to 20 with Multiplier",
     poolSize: 20,
     pickCount: 5,
     minNumber: 1,
@@ -110,8 +111,8 @@ const GAME_DEFINITIONS: Record<QuickPickGame, GameDefinition> = {
     hasMultiplier: true,
     themeColor: "yellow",
     accentHex: "#eab308",
-    glowHex: "rgba(234, 179, 8, 0.45)",
-    borderClass: "border-yellow-500/40",
+    glowHex: "rgba(234, 179, 8, 0.35)",
+    borderClass: "border-white/[0.09]",
     badgeBg: "bg-yellow-500/15",
     badgeText: "text-yellow-300",
     iconSrc: "/images/cash_pot_icon.png",
@@ -119,19 +120,19 @@ const GAME_DEFINITIONS: Record<QuickPickGame, GameDefinition> = {
     hotPool: [6, 11, 3, 12, 2, 15, 8, 10, 7, 18],
     coldPool: [1, 4, 5, 9, 13, 14, 17, 19]
   },
-  "pick4": {
+  pick4: {
     id: "pick4",
     name: "Pick 4",
     shortName: "Pick 4",
-    tagline: "4 Digits 0000 - 9999",
-    poolSize: 10, // 0-9
+    tagline: "4 digits from 0 to 9",
+    poolSize: 10,
     pickCount: 4,
     minNumber: 0,
     hasBonus: false,
     themeColor: "purple",
     accentHex: "#a855f7",
-    glowHex: "rgba(168, 85, 247, 0.45)",
-    borderClass: "border-purple-500/40",
+    glowHex: "rgba(168, 85, 247, 0.35)",
+    borderClass: "border-white/[0.09]",
     badgeBg: "bg-purple-500/15",
     badgeText: "text-purple-300",
     iconSrc: "/images/pick_four_icon.png",
@@ -143,15 +144,15 @@ const GAME_DEFINITIONS: Record<QuickPickGame, GameDefinition> = {
     id: "play-whe",
     name: "Play Whe",
     shortName: "Play Whe",
-    tagline: "1 of 36 • Chinapoo Lineage",
+    tagline: "1 mark from 1 to 36 (Chinapoo chart)",
     poolSize: 36,
     pickCount: 1,
     minNumber: 1,
     hasBonus: false,
     themeColor: "amber",
     accentHex: "#f59e0b",
-    glowHex: "rgba(245, 158, 11, 0.45)",
-    borderClass: "border-amber-500/40",
+    glowHex: "rgba(245, 158, 11, 0.35)",
+    borderClass: "border-white/[0.09]",
     badgeBg: "bg-amber-500/15",
     badgeText: "text-amber-300",
     iconSrc: "/images/play_whe_icon.png",
@@ -181,7 +182,6 @@ export default function QuickPickEngine({
 
   const gameConfig = GAME_DEFINITIONS[selectedGame];
 
-  // Generator algorithm
   const generateSingleTicket = useCallback((game: GameDefinition, strat: StrategyMode): { numbers: number[]; bonus?: number; multiplier?: number } => {
     const isPick4 = game.id === "pick4";
     const { pickCount, poolSize, minNumber, hasBonus, bonusPoolSize, hasMultiplier, gaussianSumRange, hotPool, coldPool } = game;
@@ -195,7 +195,6 @@ export default function QuickPickEngine({
       const candidate: number[] = [];
 
       if (isPick4) {
-        // Pick 4 generates ordered 4 digits with replacement allowed
         for (let i = 0; i < pickCount; i++) {
           if (strat === "hot" && Math.random() < 0.65) {
             candidate.push(hotPool[Math.floor(Math.random() * hotPool.length)]);
@@ -205,7 +204,6 @@ export default function QuickPickEngine({
             candidate.push(Math.floor(Math.random() * 10));
           }
         }
-        // If balanced strategy, verify sum within 12-25 and reject 4-of-a-kind
         if (strat === "balanced") {
           const sum = candidate.reduce((a, b) => a + b, 0);
           const uniqueDigits = new Set(candidate).size;
@@ -218,11 +216,9 @@ export default function QuickPickEngine({
           break;
         }
       } else {
-        // Multi-ball games without replacement
         const poolSet = new Set<number>();
 
         if (strat === "hot") {
-          // Favor hot numbers
           hotPool.forEach(h => { if (Math.random() < 0.5 && poolSet.size < pickCount) poolSet.add(h); });
         } else if (strat === "cold") {
           coldPool.forEach(c => { if (Math.random() < 0.5 && poolSet.size < pickCount) poolSet.add(c); });
@@ -251,7 +247,6 @@ export default function QuickPickEngine({
       }
     }
 
-    // Fallback if max attempts exceeded
     if (numbers.length === 0) {
       if (isPick4) {
         numbers = Array.from({ length: 4 }, () => Math.floor(Math.random() * 10));
@@ -272,20 +267,17 @@ export default function QuickPickEngine({
 
     let multiplier: number | undefined;
     if (hasMultiplier) {
-      // 1X to 5X with 2X, 3X, 5X weighted
-      const mults = [1, 2, 2, 3, 3, 4, 5];
+      const mults = [1, 2, 2, 3, 3, 4];
       multiplier = mults[Math.floor(Math.random() * mults.length)];
     }
 
     return { numbers, bonus, multiplier };
   }, []);
 
-  // Trigger Ball Drop Animation
   const executeBallDrop = useCallback(() => {
     setIsDropping(true);
     triggerHaptic("heavy");
 
-    // Generate new numbers
     const primary = generateSingleTicket(gameConfig, strategy);
     setPrimaryPicks(primary.numbers);
     setPrimaryBonus(primary.bonus ?? null);
@@ -304,7 +296,6 @@ export default function QuickPickEngine({
 
     setDropIteration(prev => prev + 1);
 
-    // End dropping state after gravity animation finishes
     const duration = 200 + gameConfig.pickCount * 140;
     setTimeout(() => {
       setIsDropping(false);
@@ -312,24 +303,22 @@ export default function QuickPickEngine({
     }, duration);
   }, [gameConfig, strategy, lineCount, generateSingleTicket]);
 
-  // Initial draw generation on mount or game switch
   useEffect(() => {
     executeBallDrop();
   }, [selectedGame]);
 
-  // Copy Ticket Handlers
   const handleCopyTicket = (numbers: number[], bonus?: number | null, index: number = 0) => {
     triggerHaptic("selection");
     let text = "";
     if (selectedGame === "pick4") {
       text = numbers.join("");
     } else if (selectedGame === "play-whe") {
-      text = `#${numbers[0]} - ${CHINAPOO_CHART[numbers[0]]?.mark || ""}`;
+      text = `Mark ${numbers[0]} - ${CHINAPOO_CHART[numbers[0]]?.mark || ""}`;
     } else {
-      text = numbers.map(n => String(n).padStart(2, "0")).join(" - ");
-      if (bonus) text += ` | Powerball: ${bonus}`;
+      text = numbers.map(n => String(n).padStart(2, "0")).join(", ");
+      if (bonus && gameConfig.bonusName) text += ` | ${gameConfig.bonusName}: ${bonus}`;
     }
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).catch(() => {});
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
@@ -337,13 +326,13 @@ export default function QuickPickEngine({
   const handleSendToSyndicate = (numbers: number[], bonus?: number | null) => {
     triggerHaptic("success");
     const formatted = numbers.map(n => String(n).padStart(2, "0")).join(", ");
-    const text = `${gameConfig.name} Quick Pick: [${formatted}]${bonus ? ` PB: ${bonus}` : ""}`;
-    navigator.clipboard.writeText(text);
-    setSyndicateMsg(`Added ${gameConfig.shortName} slip [${formatted}] to clipboard for Syndicate submission!`);
+    const bonusText = bonus && gameConfig.bonusName ? ` | ${gameConfig.bonusName}: ${bonus}` : "";
+    const text = `${gameConfig.name} Quick Pick: ${formatted}${bonusText}`;
+    navigator.clipboard.writeText(text).catch(() => {});
+    setSyndicateMsg(`Copied ${gameConfig.shortName} numbers (${formatted}) for sharing with your group.`);
     setTimeout(() => setSyndicateMsg(null), 4000);
   };
 
-  // Metrics
   const ticketMetrics = useMemo(() => {
     if (primaryPicks.length === 0) return null;
     const sum = primaryPicks.reduce((a, b) => a + b, 0);
@@ -356,11 +345,11 @@ export default function QuickPickEngine({
       const counts: Record<number, number> = {};
       primaryPicks.forEach(d => counts[d] = (counts[d] || 0) + 1);
       const values = Object.values(counts).sort((a, b) => b - a);
-      if (values[0] === 4) formType = "Quad (1-Way)";
-      else if (values[0] === 3) formType = "Triple (4-Way Box)";
-      else if (values[0] === 2 && values[1] === 2) formType = "Two-Pair (6-Way Box)";
-      else if (values[0] === 2) formType = "One-Pair (12-Way Box)";
-      else formType = "ABCD (24-Way Box)";
+      if (values[0] === 4) formType = "All 4 Same (1-Way)";
+      else if (values[0] === 3) formType = "3 Same Digits (4-Way Box)";
+      else if (values[0] === 2 && values[1] === 2) formType = "2 Pairs (6-Way Box)";
+      else if (values[0] === 2) formType = "1 Pair (12-Way Box)";
+      else formType = "4 Different Digits (24-Way Box)";
     }
 
     const inGaussian = gameConfig.gaussianSumRange
@@ -378,48 +367,52 @@ export default function QuickPickEngine({
   }, [primaryPicks, selectedGame, gameConfig]);
 
   return (
-    <div className={`p-6 sm:p-7 rounded-3xl glass-panel border ${gameConfig.borderClass} bg-slate-950/85 relative overflow-hidden font-mono shadow-2xl transition-all duration-300 ${className}`}>
-      {/* Background Ambient Glow */}
+    <section
+      aria-label="Quick Number Picker"
+      className={`p-5 sm:p-6 rounded-2xl border ${gameConfig.borderClass} bg-[#0a0f1a] relative overflow-hidden font-sans shadow-xl transition-all duration-300 ${className}`}
+    >
+      {/* Subtle Ambient Glow */}
       <div
-        className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-colors duration-500"
-        style={{ background: gameConfig.glowHex }}
-      />
-      <div
-        className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full blur-3xl pointer-events-none transition-colors duration-500 opacity-40"
+        className="absolute -top-32 -right-32 w-80 h-80 rounded-full blur-3xl pointer-events-none transition-colors duration-500 opacity-30"
         style={{ background: gameConfig.glowHex }}
       />
 
-      {/* Top Header & Toast */}
+      {/* Top Header and Toast */}
       <div className="relative z-10 space-y-4">
         {syndicateMsg && (
-          <div className="p-3.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold flex items-center justify-between shadow-[0_0_20px_rgba(16,185,129,0.3)] animate-in fade-in duration-200">
+          <div className="p-3.5 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-sm font-medium flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>{syndicateMsg}</span>
             </div>
-            <button onClick={() => setSyndicateMsg(null)} className="text-emerald-400 hover:text-white text-xs">
-              ✕
+            <button
+              type="button"
+              onClick={() => setSyndicateMsg(null)}
+              className="text-emerald-300 hover:text-white p-1 cursor-pointer"
+              aria-label="Close message"
+            >
+              <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border border-white/10 ${gameConfig.badgeBg} ${gameConfig.badgeText}`}>
-                TACTICAL BALL DROP
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wider border border-white/10 ${gameConfig.badgeBg} ${gameConfig.badgeText}`}>
+                Quick Number Picker
               </span>
-              <span className="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-gray-400 text-[10px] font-bold">
+              <span className="text-xs text-slate-400 font-medium">
                 {gameConfig.tagline}
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-wide flex items-center gap-2.5">
+            <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2.5">
               <img
                 src={gameConfig.iconSrc}
                 alt={gameConfig.name}
                 className="w-7 h-7 rounded-lg object-contain border border-white/10 shadow-sm"
               />
-              <span>{gameConfig.name} Quick Pick Engine</span>
+              <span>{gameConfig.name} Quick Pick</span>
             </h2>
           </div>
 
@@ -431,14 +424,15 @@ export default function QuickPickEngine({
               return (
                 <button
                   key={gId}
+                  type="button"
                   onClick={() => {
                     triggerHaptic("selection");
                     setSelectedGame(gId);
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                     isCurrent
-                      ? `${g.badgeBg} ${g.badgeText} border border-current shadow-sm font-black`
-                      : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                      ? `${g.badgeBg} ${g.badgeText} border border-current shadow-sm font-bold`
+                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
                   }`}
                 >
                   <span
@@ -453,70 +447,56 @@ export default function QuickPickEngine({
         </div>
       </div>
 
-      {/* Control Configuration Bar: Strategy & Lines */}
+      {/* Control Configuration Bar: Style and Lines */}
       <div className="mt-5 pt-4 border-t border-white/10 relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-        {/* Strategy Buttons */}
+        {/* Style Buttons */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1 flex items-center gap-1">
-            <Sliders className="w-3.5 h-3.5 text-gray-500" />
-            Strategy:
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1">
+            <Sliders className="w-3.5 h-3.5 text-slate-500" />
+            Number Style:
           </span>
-          <button
-            onClick={() => { setStrategy("balanced"); triggerHaptic("selection"); }}
-            className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer text-[11px] ${
-              strategy === "balanced"
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400"
-                : "bg-slate-900/60 text-gray-400 border border-white/5 hover:text-white"
-            }`}
-          >
-            Gaussian Balanced
-          </button>
-          <button
-            onClick={() => { setStrategy("hot"); triggerHaptic("selection"); }}
-            className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer text-[11px] ${
-              strategy === "hot"
-                ? "bg-amber-500/20 text-amber-300 border border-amber-400"
-                : "bg-slate-900/60 text-gray-400 border border-white/5 hover:text-white"
-            }`}
-          >
-            Hot Attractor
-          </button>
-          <button
-            onClick={() => { setStrategy("cold"); triggerHaptic("selection"); }}
-            className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer text-[11px] ${
-              strategy === "cold"
-                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400"
-                : "bg-slate-900/60 text-gray-400 border border-white/5 hover:text-white"
-            }`}
-          >
-            Overdue Reversion
-          </button>
-          <button
-            onClick={() => { setStrategy("pure"); triggerHaptic("selection"); }}
-            className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer text-[11px] ${
-              strategy === "pure"
-                ? "bg-purple-500/20 text-purple-300 border border-purple-400"
-                : "bg-slate-900/60 text-gray-400 border border-white/5 hover:text-white"
-            }`}
-          >
-            Pure RNG
-          </button>
+          {(["balanced", "hot", "cold", "pure"] as StrategyMode[]).map((mode) => {
+            const activeColors: Record<StrategyMode, string> = {
+              balanced: "bg-emerald-500/20 text-emerald-300 border border-emerald-400",
+              hot: "bg-amber-500/20 text-amber-300 border border-amber-400",
+              cold: "bg-cyan-500/20 text-cyan-300 border border-cyan-400",
+              pure: "bg-purple-500/20 text-purple-300 border border-purple-400"
+            };
+            return (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => {
+                  setStrategy(mode);
+                  triggerHaptic("selection");
+                }}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer text-xs ${
+                  strategy === mode
+                    ? activeColors[mode]
+                    : "bg-slate-900/60 text-slate-400 border border-white/5 hover:text-white"
+                }`}
+              >
+                {STRATEGY_LABELS[mode]}
+              </button>
+            );
+          })}
         </div>
 
         {/* Lines Count Selector */}
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Lines:</span>
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lines:</span>
           {[1, 3, 5].map((cnt) => (
             <button
               key={cnt}
+              type="button"
               onClick={() => {
                 setLineCount(cnt);
                 triggerHaptic("selection");
               }}
-              className={`w-7 h-7 rounded-lg font-bold transition cursor-pointer text-xs flex items-center justify-center border ${
+              className={`w-8 h-8 rounded-lg font-bold transition cursor-pointer text-xs flex items-center justify-center border ${
                 lineCount === cnt
-                  ? `${gameConfig.badgeBg} ${gameConfig.badgeText} border-current font-black`
-                  : "bg-slate-900/60 text-gray-400 border-white/5 hover:text-white"
+                  ? `${gameConfig.badgeBg} ${gameConfig.badgeText} border-current`
+                  : "bg-slate-900/60 text-slate-400 border-white/5 hover:text-white"
               }`}
             >
               {cnt}
@@ -525,18 +505,16 @@ export default function QuickPickEngine({
         </div>
       </div>
 
-      {/* MECHANICAL DROP CHUTE & BALL RECEPTACLES */}
-      <div className="my-6 relative z-10">
-        {/* Overhead Pneumatic Rail & Release Chutes */}
-        <div className="w-full h-10 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-white/15 p-2 flex items-center justify-between relative shadow-inner">
+      {/* Ball Display Chamber */}
+      <div className="my-5 relative z-10">
+        <div className="w-full py-2.5 px-3.5 rounded-xl bg-slate-900/80 border border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              {isDropping ? "GRAVITY DISPENSING BALLS..." : "PNEUMATIC CHUTE ARMED"}
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className="text-xs font-semibold text-slate-300">
+              {isDropping ? "Picking your numbers..." : "Ready to generate a quick pick"}
             </span>
           </div>
 
-          {/* Chute Status Lights */}
           <div className="flex items-center gap-1.5">
             {Array.from({ length: gameConfig.pickCount }).map((_, i) => (
               <div
@@ -544,26 +522,21 @@ export default function QuickPickEngine({
                 className={`w-3.5 h-1.5 rounded-full transition-all duration-300 ${
                   isDropping
                     ? "bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]"
-                    : "bg-white/10"
+                    : "bg-white/15"
                 }`}
               />
             ))}
             {gameConfig.hasBonus && (
               <div
                 className={`w-3.5 h-1.5 rounded-full transition-all duration-300 ${
-                  isDropping ? "bg-red-400 shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "bg-red-500/20"
+                  isDropping ? "bg-red-400 shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "bg-red-500/25"
                 }`}
               />
             )}
           </div>
         </div>
 
-        {/* BALL DROP RECEPTACLES (Physical Slotted Chamber) */}
-        <div className="mt-4 p-6 sm:p-8 rounded-2xl bg-slate-950/90 border border-white/10 relative overflow-hidden min-h-[170px] flex flex-col items-center justify-center">
-          {/* Laser Guide Lines */}
-          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:16px_16px]" />
-
-          {/* Primary Line Balls */}
+        <div className="mt-3 p-6 sm:p-7 rounded-2xl bg-[#070b14] border border-white/10 relative overflow-hidden min-h-[160px] flex flex-col items-center justify-center">
           <div className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap relative z-10 py-2">
             {primaryPicks.map((num, idx) => {
               const animDelay = isDropping ? `${idx * 130}ms` : "0ms";
@@ -575,38 +548,31 @@ export default function QuickPickEngine({
                   style={{ animationDelay: animDelay }}
                   className={`flex flex-col items-center gap-1.5 ${isDropping ? "animate-ball-drop" : ""}`}
                 >
-                  {/* The Physical Ball */}
                   <div
                     className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-black text-xl sm:text-2xl shadow-2xl transition-transform hover:scale-105 select-none ${
-                      isPlayWhe
-                        ? "w-20 h-20 sm:w-24 sm:h-24 text-3xl sm:text-4xl"
-                        : ""
+                      isPlayWhe ? "w-20 h-20 sm:w-24 sm:h-24 text-3xl sm:text-4xl" : ""
                     }`}
                     style={{
                       background: `radial-gradient(circle at 35% 30%, #ffffff 0%, ${gameConfig.accentHex} 45%, #050505 100%)`,
                       boxShadow: `0 8px 24px -2px ${gameConfig.glowHex}, inset 0 -4px 8px rgba(0,0,0,0.7), inset 0 2px 4px rgba(255,255,255,0.9)`
                     }}
                   >
-                    {/* Gloss Reflection Layer */}
                     <div className="absolute inset-0 rounded-full ball-3d-gloss pointer-events-none" />
-
-                    {/* Ball Number */}
                     <span className="relative z-10 text-slate-950 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] font-mono font-black">
                       {selectedGame === "pick4" ? num : String(num).padStart(2, "0")}
                     </span>
                   </div>
 
-                  {/* Slot Sub-Label / Chinapoo Name */}
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                  <span className="text-xs text-slate-400 font-medium">
                     {isPlayWhe
-                      ? CHINAPOO_CHART[num]?.mark || `Mark #${num}`
-                      : `Slot #${idx + 1}`}
+                      ? CHINAPOO_CHART[num]?.mark || `Mark ${num}`
+                      : `Number ${idx + 1}`}
                   </span>
                 </div>
               );
             })}
 
-            {/* Lotto Plus Bonus Powerball */}
+            {/* Bonus Ball (Powerball or Cash Ball) */}
             {gameConfig.hasBonus && primaryBonus !== null && (
               <div
                 key={`bonus-${dropIteration}`}
@@ -619,7 +585,7 @@ export default function QuickPickEngine({
                   className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-black text-xl sm:text-2xl shadow-2xl transition-transform hover:scale-105 select-none"
                   style={{
                     background: "radial-gradient(circle at 35% 30%, #ffffff 0%, #ef4444 45%, #450a0a 100%)",
-                    boxShadow: "0 8px 24px -2px rgba(239, 68, 68, 0.6), inset 0 -4px 8px rgba(0,0,0,0.7), inset 0 2px 4px rgba(255,255,255,0.9)"
+                    boxShadow: "0 8px 24px -2px rgba(239, 68, 68, 0.5), inset 0 -4px 8px rgba(0,0,0,0.7), inset 0 2px 4px rgba(255,255,255,0.9)"
                   }}
                 >
                   <div className="absolute inset-0 rounded-full ball-3d-gloss pointer-events-none" />
@@ -627,13 +593,13 @@ export default function QuickPickEngine({
                     {primaryBonus}
                   </span>
                 </div>
-                <span className="text-[10px] text-red-400 font-black uppercase tracking-wider">
-                  Powerball
+                <span className="text-xs text-red-300 font-semibold">
+                  {gameConfig.bonusName}
                 </span>
               </div>
             )}
 
-            {/* Cash Pot Multiplier Ball */}
+            {/* Cash Pot Sample Multiplier */}
             {gameConfig.hasMultiplier && (
               <div
                 key={`mult-${dropIteration}`}
@@ -644,38 +610,30 @@ export default function QuickPickEngine({
               >
                 <div
                   className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center font-black text-lg sm:text-xl shadow-2xl transition-transform select-none bg-gradient-to-br from-amber-400 to-yellow-600 text-slate-950 border border-yellow-300"
-                  style={{
-                    boxShadow: "0 8px 20px -2px rgba(234, 179, 8, 0.5)"
-                  }}
+                  style={{ boxShadow: "0 8px 20px -2px rgba(234, 179, 8, 0.45)" }}
                 >
                   <span className="font-mono font-black">
-                    {primaryMultiplier}X
+                    {primaryMultiplier}x
                   </span>
                 </div>
-                <span className="text-[10px] text-yellow-400 font-black uppercase tracking-wider">
+                <span className="text-xs text-amber-300 font-semibold">
                   Multiplier
                 </span>
               </div>
             )}
           </div>
-
-          {/* Under-Chamber Cradle Floor Lighting */}
-          <div
-            className="w-3/4 h-2 rounded-full blur-md mt-2 transition-colors duration-500 opacity-70"
-            style={{ background: gameConfig.accentHex }}
-          />
         </div>
       </div>
 
-      {/* METRIC ANALYSIS BAR */}
+      {/* Plain-English Summary Bar */}
       {ticketMetrics && (
-        <div className="relative z-10 p-3.5 rounded-xl bg-slate-900/70 border border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-300">
-          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+        <div className="relative z-10 p-3.5 rounded-xl bg-slate-900/70 border border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-300">
+          <div className="flex items-center gap-4 flex-wrap">
             {selectedGame !== "play-whe" && (
               <>
                 <div>
-                  <span className="text-gray-500 text-[10px] uppercase block">Sum Total</span>
-                  <span className="font-black text-white text-sm">
+                  <span className="text-slate-400 text-xs font-semibold uppercase block">Total Sum</span>
+                  <span className="font-bold text-white text-sm font-mono">
                     {ticketMetrics.sum}
                   </span>
                 </div>
@@ -683,9 +641,9 @@ export default function QuickPickEngine({
                 <div className="h-6 w-px bg-white/10" />
 
                 <div>
-                  <span className="text-gray-500 text-[10px] uppercase block">Parity Ratio</span>
-                  <span className="font-black text-cyan-300 text-sm">
-                    {ticketMetrics.odds}O : {ticketMetrics.evens}E
+                  <span className="text-slate-400 text-xs font-semibold uppercase block">Odd and Even</span>
+                  <span className="font-bold text-cyan-300 text-sm">
+                    {ticketMetrics.odds} Odd, {ticketMetrics.evens} Even
                   </span>
                 </div>
 
@@ -695,74 +653,76 @@ export default function QuickPickEngine({
 
             {selectedGame === "pick4" ? (
               <div>
-                <span className="text-gray-500 text-[10px] uppercase block">Combinatorial Form</span>
-                <span className="font-black text-purple-300 text-sm">
+                <span className="text-slate-400 text-xs font-semibold uppercase block">Digit Pattern</span>
+                <span className="font-bold text-purple-300 text-sm">
                   {ticketMetrics.formType}
                 </span>
               </div>
             ) : selectedGame === "play-whe" ? (
               <div>
-                <span className="text-gray-500 text-[10px] uppercase block">Chinapoo Folkloric Lineage</span>
-                <span className="font-black text-amber-300 text-sm">
-                  #{primaryPicks[0]} • {CHINAPOO_CHART[primaryPicks[0]]?.mark} (Line {((primaryPicks[0] - 1) % 9) + 1})
+                <span className="text-slate-400 text-xs font-semibold uppercase block">Chinapoo Mark</span>
+                <span className="font-bold text-amber-300 text-sm">
+                  Mark {primaryPicks[0]}: {CHINAPOO_CHART[primaryPicks[0]]?.mark} (Line {((primaryPicks[0] - 1) % 9) + 1})
                 </span>
               </div>
             ) : (
               <div>
-                <span className="text-gray-500 text-[10px] uppercase block">Gaussian Status</span>
-                <span className={`font-black text-sm ${ticketMetrics.inGaussian ? "text-emerald-400" : "text-amber-400"}`}>
-                  {ticketMetrics.inGaussian ? "✓ In 75% Centroid Band" : "Tail Distribution"}
+                <span className="text-slate-400 text-xs font-semibold uppercase block">Number Balance</span>
+                <span className={`font-bold text-sm ${ticketMetrics.inGaussian ? "text-emerald-400" : "text-amber-400"}`}>
+                  {ticketMetrics.inGaussian ? "Typical Balanced Range" : "Wide Sum Range"}
                 </span>
               </div>
             )}
           </div>
 
-          <div className="text-[10px] text-gray-400">
-            Strategy: <strong className="text-white capitalize">{strategy}</strong>
+          <div className="text-xs text-slate-400">
+            Style: <strong className="text-white">{STRATEGY_LABELS[strategy]}</strong>
           </div>
         </div>
       )}
 
-      {/* ADDITIONAL LINES (IF MULTI-LINE SELECTED) */}
+      {/* Additional Lines */}
       {additionalLines.length > 0 && (
-        <div className="mt-4 space-y-2 relative z-10">
-          <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider block">
-            Additional Generated Lines:
+        <div className="mt-4 space-y-2.5 relative z-10">
+          <span className="text-xs text-slate-400 uppercase font-semibold tracking-wider block">
+            Additional Lines
           </span>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {additionalLines.map((line, idx) => (
               <div
                 key={idx}
-                className="p-3 rounded-xl bg-slate-900/60 border border-white/5 flex items-center justify-between text-xs hover:border-white/15 transition"
+                className="p-3 rounded-xl bg-slate-900/60 border border-white/5 flex items-center justify-between gap-2 text-xs hover:border-white/15 transition"
               >
-                <span className="text-gray-500 font-bold text-[10px]">Line #{idx + 2}</span>
-                <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 font-semibold">Line {idx + 2}</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
                   {line.numbers.map((n, i) => (
                     <span
                       key={i}
-                      className="w-7 h-7 rounded-lg bg-slate-800 border border-white/10 text-white font-bold text-xs flex items-center justify-center"
+                      className="w-7 h-7 rounded-lg bg-slate-800 border border-white/10 text-white font-mono font-bold text-xs flex items-center justify-center"
                     >
                       {selectedGame === "pick4" ? n : String(n).padStart(2, "0")}
                     </span>
                   ))}
                   {line.bonus && (
-                    <span className="w-7 h-7 rounded-lg bg-red-500/20 border border-red-400 text-red-300 font-bold text-xs flex items-center justify-center">
-                      {line.bonus}
+                    <span className="px-2 h-7 rounded-lg bg-red-500/20 border border-red-400 text-red-200 font-sans font-bold text-xs flex items-center justify-center">
+                      {gameConfig.bonusName} {line.bonus}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
                   <button
+                    type="button"
                     onClick={() => handleCopyTicket(line.numbers, line.bonus, idx + 1)}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
                     title="Copy line"
                   >
                     {copiedIndex === idx + 1 ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleSendToSyndicate(line.numbers, line.bonus)}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-amber-400 hover:bg-white/10 transition"
-                    title="Send to Syndicate"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-white/10 transition cursor-pointer"
+                    title="Copy for group pool"
                   >
                     <Users className="w-3.5 h-3.5" />
                   </button>
@@ -773,55 +733,55 @@ export default function QuickPickEngine({
         </div>
       )}
 
-      {/* BIG PRIMARY ACTION BUTTONS */}
-      <div className="mt-6 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/10">
+      {/* Primary Action Buttons */}
+      <div className="mt-5 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/10">
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* Main Drop Button */}
           <button
+            type="button"
             onClick={executeBallDrop}
             disabled={isDropping}
-            className={`w-full sm:w-auto px-6 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg disabled:opacity-50 ${
+            className={`w-full sm:w-auto px-5 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg disabled:opacity-50 ${
               isDropping
-                ? "bg-slate-800 text-gray-400 border border-white/10"
-                : "bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 hover:brightness-110 shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-95"
+                ? "bg-slate-800 text-slate-400 border border-white/10"
+                : "bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 hover:brightness-110 active:scale-95"
             }`}
           >
             <RefreshCw className={`w-4 h-4 ${isDropping ? "animate-spin" : ""}`} />
-            <span>{isDropping ? "DISPENSING BALLS..." : "DROP QUICK PICK"}</span>
+            <span>{isDropping ? "Picking Numbers..." : "Generate Quick Pick"}</span>
           </button>
 
-          {/* Quick Copy Primary */}
           <button
+            type="button"
             onClick={() => handleCopyTicket(primaryPicks, primaryBonus, 0)}
-            className="px-4 py-3.5 rounded-xl bg-slate-900 border border-white/10 hover:border-white/20 text-gray-300 hover:text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
-            title="Copy primary numbers"
+            className="px-4 py-3 rounded-xl bg-slate-900 border border-white/10 hover:border-white/20 text-slate-200 hover:text-white text-sm font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            title="Copy numbers"
           >
             {copiedIndex === 0 ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-            <span className="hidden sm:inline">COPY</span>
+            <span className="hidden sm:inline">{copiedIndex === 0 ? "Copied" : "Copy"}</span>
           </button>
 
-          {/* Send to Syndicate */}
           <button
+            type="button"
             onClick={() => handleSendToSyndicate(primaryPicks, primaryBonus)}
-            className="px-4 py-3.5 rounded-xl bg-slate-900 border border-white/10 hover:border-amber-400/40 text-amber-300 hover:text-amber-200 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
-            title="Queue for Syndicate ticket slip"
+            className="px-4 py-3 rounded-xl bg-slate-900 border border-white/10 hover:border-amber-400/40 text-amber-300 hover:text-amber-200 text-sm font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            title="Copy numbers for group pool"
           >
             <Users className="w-4 h-4" />
-            <span className="hidden sm:inline">SYNDICATE</span>
+            <span className="hidden sm:inline">Group Pool</span>
           </button>
         </div>
 
-        {/* View Deep Game Engine CTA */}
         {onSelectGame && (
           <button
+            type="button"
             onClick={() => onSelectGame(selectedGame)}
-            className="w-full sm:w-auto px-4 py-3 text-xs text-gray-400 hover:text-white transition flex items-center justify-center sm:justify-end gap-1.5 cursor-pointer group"
+            className="w-full sm:w-auto px-4 py-2.5 text-sm font-semibold text-slate-300 hover:text-white transition flex items-center justify-center sm:justify-end gap-1.5 cursor-pointer group"
           >
-            <span>Launch {gameConfig.shortName} Full Analytics</span>
-            <ArrowRight className="w-3.5 h-3.5 text-amber-400 transition-transform group-hover:translate-x-1" />
+            <span>Open {gameConfig.shortName} Page</span>
+            <ArrowRight className="w-4 h-4 text-amber-400 transition-transform group-hover:translate-x-1" />
           </button>
         )}
       </div>
-    </div>
+    </section>
   );
 }

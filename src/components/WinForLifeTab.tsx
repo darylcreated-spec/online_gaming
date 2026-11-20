@@ -432,7 +432,7 @@ export default function WinForLifeTab() {
       <GameHeaderBanner
         game="win-for-life"
         title="Win For Life"
-        subtitle="6 of 28 Main Numbers + 1 of 3 Cash Ball • Tuesday & Friday 7:00 PM • Annuity Top Prize"
+        subtitle="Pick 6 numbers from 1 to 28 plus 1 Cash Ball from 1 to 10. Draws Tuesday and Friday at 7:00 PM, $10.00 per line."
         themeColor="emerald"
         iconSrc="/images/win_for_life_icon.png"
         totalDrawsCount={stats?.totalDraws || draws.length}
@@ -493,7 +493,7 @@ export default function WinForLifeTab() {
             <button
               key={tabItem.id}
               onClick={() => setSubTab(tabItem.id as any)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? "bg-emerald-500 text-slate-950 font-black shadow-sm"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/70"
@@ -515,7 +515,7 @@ export default function WinForLifeTab() {
             {/* Card 1: Latest Draw Results */}
             <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
               <div>
-                <span className="text-[10px] font-bold font-mono tracking-widest text-primary uppercase block mb-2">
+                <span className="text-xs font-bold font-mono tracking-widest text-primary uppercase block mb-2">
                   LATEST DRAW RESULTS
                 </span>
                 {statsLoading || !stats?.latestDraw ? (
@@ -555,7 +555,7 @@ export default function WinForLifeTab() {
             {/* Card 2: Next Draw Schedule */}
             <div className="glass-panel p-5 rounded-xl border border-white/5 bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
               <div>
-                <span className="text-[10px] font-bold font-mono tracking-widest text-primary uppercase block mb-2">
+                <span className="text-xs font-bold font-mono tracking-widest text-primary uppercase block mb-2">
                   NEXT SCHEDULED DRAW
                 </span>
                 <div className="space-y-1.5 font-mono">
@@ -583,7 +583,7 @@ export default function WinForLifeTab() {
                   <div className="text-xs text-amber-400 font-black">
                     7:00 PM
                   </div>
-                  <div className="text-[10px] text-gray-500 leading-relaxed pt-1">
+                  <div className="text-xs text-gray-500 leading-relaxed pt-1">
                     Draws occur every Tuesday and Friday evening.
                   </div>
                 </div>
@@ -594,11 +594,11 @@ export default function WinForLifeTab() {
             <div className="glass-panel p-5 rounded-xl border border-emerald-500/30 bg-slate-950/60 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
               <div>
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-[10px] font-bold font-mono tracking-widest text-emerald-400 uppercase block">
+                  <span className="text-xs font-bold font-mono tracking-widest text-emerald-400 uppercase block">
                     VERIFIED CHAMPION PICK
                   </span>
                   {championPick && (
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[9px] font-black font-mono">
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black font-mono">
                       {championPick.verified_win_rate_pct ?? championPick.win_rate_pct}% WIN RATE
                     </span>
                   )}
@@ -610,8 +610,8 @@ export default function WinForLifeTab() {
                   </div>
                 ) : (
                   <div className="space-y-2 font-mono">
-                    <div className="text-[9px] text-slate-400 uppercase tracking-widest">
-                      {championPick ? `${championPick.engine_name} • Target #${championPick.target_draw_number}` : "Deterministic Hot/Cold Consensus"}
+                    <div className="text-xs text-slate-400 uppercase tracking-widest">
+                      {championPick ? `${championPick.engine_name} (Next Draw ${championPick.target_draw_number})` : "Balanced Hot and Cold Numbers"}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
                       {(() => {
@@ -655,11 +655,11 @@ export default function WinForLifeTab() {
                   <span className="text-xs font-black uppercase tracking-wider text-emerald-300">
                     Verified Champion Engine — {championPick.engine_name}
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black">
                     {championPick.verified_win_rate_pct ?? championPick.win_rate_pct}% 3+ BALL PRIZE WIN RATE ({(championPick.verified_roi_pct ?? championPick.roi_pct) >= 0 ? "+" : ""}{championPick.verified_roi_pct ?? championPick.roi_pct}% ROI)
                   </span>
                   {championPick.bonus_ball_rotation?.length > 0 && (
-                    <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 text-amber-200 text-[10px] font-bold">
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 text-amber-200 text-xs font-bold">
                       Cash Ball Rotation (1–3): {championPick.bonus_ball_rotation.join(", ")}
                     </span>
                   )}
@@ -670,7 +670,7 @@ export default function WinForLifeTab() {
                       triggerHaptic("selection");
                       setShowChampionDrawer(!showChampionDrawer);
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-300 text-[11px] font-bold transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-300 text-xs font-bold transition cursor-pointer"
                   >
                     {showChampionDrawer ? "Close Champion Drawer" : "Open 10-Slip & Window Drawer"}
                   </button>
@@ -679,7 +679,7 @@ export default function WinForLifeTab() {
                       triggerHaptic("selection");
                       setSubTab("builder");
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] uppercase tracking-wider transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider transition cursor-pointer"
                   >
                     Wheeling ({selectedNums.length} Balls)
                   </button>
@@ -692,22 +692,22 @@ export default function WinForLifeTab() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-gray-400 uppercase block">1-Draw Window</span>
-                          <span className="text-[9px] text-gray-500">{championPick.multi_draw_window_rates.description}</span>
+                          <span className="text-xs text-gray-400 uppercase block">1-Draw Window</span>
+                          <span className="text-xs text-gray-500">{championPick.multi_draw_window_rates.description}</span>
                         </div>
                         <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_1_draw}%</span>
                       </div>
                       <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-gray-400 uppercase block">3-Draw Rolling Window</span>
-                          <span className="text-[9px] text-gray-500">4+ Prize Ball Capture</span>
+                          <span className="text-xs text-gray-400 uppercase block">3-Draw Rolling Window</span>
+                          <span className="text-xs text-gray-500">4+ Prize Ball Capture</span>
                         </div>
                         <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_3_draw}%</span>
                       </div>
                       <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-gray-400 uppercase block">5-Draw Saturation Window</span>
-                          <span className="text-[9px] text-gray-500">Multi-Draw Convergence</span>
+                          <span className="text-xs text-gray-400 uppercase block">5-Draw Saturation Window</span>
+                          <span className="text-xs text-gray-500">Multi-Draw Convergence</span>
                         </div>
                         <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_5_draw}%</span>
                       </div>
@@ -724,12 +724,12 @@ export default function WinForLifeTab() {
                             : "bg-black/40 border-white/10"
                         }`}
                       >
-                        <span className="text-[10px] font-bold text-gray-400">#{idx + 1}</span>
+                        <span className="text-xs font-bold text-gray-400">#{idx + 1}</span>
                         <div className="flex items-center gap-1">
                           {slip.map((n: number, bIdx: number) => (
                             <span
                               key={bIdx}
-                              className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-black text-[10px] flex items-center justify-center"
+                              className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-black text-xs flex items-center justify-center"
                             >
                               {n}
                             </span>
@@ -756,19 +756,19 @@ export default function WinForLifeTab() {
                   <h3 className="text-base font-black uppercase tracking-wider text-white font-mono">
                     Expected Value (EV) Combinatorial Optimizer
                   </h3>
-                  <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black uppercase border border-emerald-500/30">
+                  <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black uppercase border border-emerald-500/30">
                     {mevStats ? `${mevStats.drawsAnalyzed} DRAWS` : "459+ DRAWS"}
                   </span>
                 </div>
                 <p className="text-xs text-gray-400 font-mono max-w-2xl">
                   Scores 25,000 stochastic candidates against 6 weighted factors derived from every historical Win For Life draw:
-                  Frequency Weight · Recency Decay · Companion Pair Synergy · Positional Matrix · Balance Score · Overdue Mean-Reversion.
+                  Combines draw frequency, recent appearances, partner pairs, number balance, and overdue gaps.
                 </p>
               </div>
 
               <div className="flex items-center gap-3 shrink-0">
                 <div className="flex items-center gap-2 bg-slate-900/80 border border-white/10 px-3 py-1.5 rounded-lg">
-                  <span className="text-[10px] text-gray-400 font-mono uppercase">Lines ($10/ticket):</span>
+                  <span className="text-xs text-gray-400 font-mono uppercase">Lines ($10/ticket):</span>
                   <select
                     value={mevTicketCount}
                     onChange={(e) => setMevTicketCount(parseInt(e.target.value))}
@@ -811,7 +811,7 @@ export default function WinForLifeTab() {
               <div className="space-y-4">
                 {/* Engine Stats Bar */}
                 {mevStats && (
-                  <div className="flex flex-wrap gap-4 text-[10px] font-mono text-gray-400 uppercase bg-slate-950/40 border border-white/5 px-4 py-2 rounded-lg">
+                  <div className="flex flex-wrap gap-4 text-xs font-mono text-gray-400 uppercase bg-slate-950/40 border border-white/5 px-4 py-2 rounded-lg">
                     <span>Draws Analyzed: <strong className="text-emerald-400">{mevStats.drawsAnalyzed}</strong></span>
                     <span>Candidates Scored: <strong className="text-emerald-400">{mevStats.candidatesScored.toLocaleString()}</strong></span>
                     <span>Score Cutoff: <strong className="text-emerald-400">{mevStats.topScoreCutoff}</strong></span>
@@ -841,11 +841,11 @@ export default function WinForLifeTab() {
                       >
                         {/* Header */}
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/40 border border-white/10 text-gray-300">
+                          <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/40 border border-white/10 text-gray-300">
                             Line #{idx + 1}
                           </span>
                           <span className={`text-xs font-black ${gradeTextColors[ticket.grade] || "text-gray-400"}`}>
-                            {ticket.grade} · {ticket.mevScore}
+                            Grade {ticket.grade} (Score {ticket.mevScore})
                           </span>
                         </div>
 
@@ -859,14 +859,14 @@ export default function WinForLifeTab() {
                               {String(num).padStart(2, "0")}
                             </div>
                           ))}
-                          <span className="text-gray-500 font-bold text-[10px] mx-0.5">+</span>
+                          <span className="text-gray-500 font-bold text-xs mx-0.5">+</span>
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_8px_rgba(52,211,153,0.4)] border border-emerald-300/40">
                             {String(ticket.bonusBall).padStart(2, "0")}
                           </div>
                         </div>
 
                         {/* Score Breakdown */}
-                        <div className="space-y-1 text-[9px] border-t border-white/5 pt-2">
+                        <div className="space-y-1 text-xs border-t border-white/5 pt-2">
                           {[
                             { label: "Frequency", val: ticket.breakdown.frequencyScore, color: "bg-blue-400" },
                             { label: "Recency", val: ticket.breakdown.recencyScore, color: "bg-emerald-400" },
@@ -907,8 +907,8 @@ export default function WinForLifeTab() {
             {/* Number Frequency Chart */}
             <div className="glass-panel p-6 rounded-xl space-y-4">
               <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Main Pool Frequencies (1 to 28)</h3>
-                <span className="text-[10px] text-gray-500 font-mono">Sorted highest to lowest</span>
+                <h3 className="text-base font-bold uppercase tracking-wider text-white font-mono">Main Pool Frequencies (1 to 28)</h3>
+                <span className="text-xs text-gray-500 font-mono">Sorted highest to lowest</span>
               </div>
               <div className="h-64 w-full">
                 {statsLoading ? (
@@ -929,8 +929,8 @@ export default function WinForLifeTab() {
             {/* Cash Ball Frequency Chart */}
             <div className="glass-panel p-6 rounded-xl space-y-4">
               <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Cash Ball Frequencies (1 to 3)</h3>
-                <span className="text-[10px] text-gray-500 font-mono">Draw Count</span>
+                <h3 className="text-base font-bold text-white font-sans">Cash Ball Frequencies (1 to 10)</h3>
+                <span className="text-xs text-gray-500 font-mono">Draw Count</span>
               </div>
               <div className="h-64 w-full">
                 {statsLoading ? (
@@ -954,8 +954,8 @@ export default function WinForLifeTab() {
           <div className="glass-panel p-6 rounded-xl space-y-4">
             <div className="flex justify-between items-center border-b border-white/5 pb-3">
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">Overdue Gap Analysis Heatmap</h3>
-                <p className="text-[10px] text-gray-400 mt-0.5">Shows current draws elapsed since each number was last drawn. Red alerts indicate numbers highly overdue.</p>
+                <h3 className="text-base font-bold uppercase tracking-wider text-white font-mono">Overdue Gap Analysis Heatmap</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Shows current draws elapsed since each number was last drawn. Red alerts indicate numbers highly overdue.</p>
               </div>
             </div>
             <div className="grid grid-cols-4 sm:grid-cols-7 lg:grid-cols-10 gap-3 font-mono">
@@ -975,7 +975,7 @@ export default function WinForLifeTab() {
                 return (
                   <div key={num} className={`border p-2.5 rounded-lg flex flex-col items-center justify-center transition ${alertColor}`}>
                     <span className="text-xs font-bold font-sans">#{String(num).padStart(2, "0")}</span>
-                    <span className="text-[9px] font-mono tracking-widest mt-1 text-gray-500">
+                    <span className="text-xs font-mono tracking-widest mt-1 text-gray-500">
                       GAP: {gap === 999 ? "N/A" : gap}
                     </span>
                   </div>
@@ -990,8 +990,8 @@ export default function WinForLifeTab() {
               <div className="flex items-center gap-2 border-b border-white/5 pb-3">
                 <Eye className="w-5 h-5 text-emerald-400" />
                 <div>
-                  <h3 className="text-lg font-bold tracking-tight text-white">Advanced Statistical Intelligence</h3>
-                  <p className="text-xs text-gray-400">EWMA · RTM Z-Score · Chi-Square · Entropy · Bayesian · Monte Carlo</p>
+                  <h3 className="text-base font-bold tracking-tight text-white">Advanced Statistical Intelligence</h3>
+                  <p className="text-xs text-gray-400">Recent trends, rebound signals, fairness check, randomness score, and simulations</p>
                 </div>
               </div>
 
@@ -1001,14 +1001,14 @@ export default function WinForLifeTab() {
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-sky-400">EWMA Top Numbers</span>
+                    <span className="text-xs font-bold font-mono uppercase tracking-widest text-sky-400">EWMA Top Numbers</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 font-mono leading-snug">Recent frequency bias (α=0.15, bi-weekly cadence).</p>
+                  <p className="text-xs text-gray-500 font-mono leading-snug">Recent frequency bias (α=0.15, bi-weekly cadence).</p>
                   <div className="flex flex-wrap gap-1.5">
                     {(stats.advancedStats.ewma?.mainNumbers || []).slice(0, 8).map((e: any) => (
                       <div key={e.number} className="flex flex-col items-center bg-sky-950/40 border border-sky-500/20 rounded-lg px-2 py-1.5 min-w-[34px]">
                         <span className="text-sm font-black font-mono text-sky-300">{String(e.number).padStart(2, "0")}</span>
-                        <span className="text-[7px] font-mono text-sky-600">{e.ewmaScore?.toFixed(3)}</span>
+                        <span className="text-xs font-mono text-sky-600">{e.ewmaScore?.toFixed(3)}</span>
                       </div>
                     ))}
                   </div>
@@ -1018,14 +1018,14 @@ export default function WinForLifeTab() {
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-emerald-400">RTM Rebound</span>
+                    <span className="text-xs font-bold font-mono uppercase tracking-widest text-emerald-400">RTM Rebound</span>
                   </div>
-                  <p className="text-[10px] text-gray-500 font-mono leading-snug">Numbers statistically underrepresented (Z &lt; -1.5).</p>
+                  <p className="text-xs text-gray-500 font-mono leading-snug">Numbers statistically underrepresented (Z &lt; -1.5).</p>
                   <div className="flex flex-wrap gap-1.5">
                     {(stats.advancedStats.zScores?.reboundCandidates || []).map((z: any) => (
                       <div key={z.number} className="flex flex-col items-center bg-emerald-950/40 border border-emerald-500/20 rounded-lg px-2 py-1.5 min-w-[34px]">
                         <span className="text-sm font-black font-mono text-emerald-300">{String(z.number).padStart(2, "0")}</span>
-                        <span className="text-[7px] font-mono text-emerald-600">Z={z.zScore}</span>
+                        <span className="text-xs font-mono text-emerald-600">Z={z.zScore}</span>
                       </div>
                     ))}
                   </div>
@@ -1035,9 +1035,9 @@ export default function WinForLifeTab() {
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom ? "bg-amber-400" : "bg-slate-500"}`} />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-amber-400">Chi-Square · Entropy</span>
+                    <span className="text-xs font-bold font-mono uppercase tracking-widest text-amber-400">Fairness and Randomness</span>
                   </div>
-                  <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[10px] font-bold font-mono ${
+                  <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-bold font-mono ${
                     stats.advancedStats.chiSquare?.mainNumbers?.isNonRandom
                       ? "bg-amber-950/40 border-amber-500/30 text-amber-300"
                       : "bg-slate-900/40 border-white/5 text-gray-400"
@@ -1053,7 +1053,7 @@ export default function WinForLifeTab() {
                         <div className="relative h-2.5 rounded-full bg-slate-800 overflow-hidden mt-2">
                           <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
                         </div>
-                        <p className="text-[11px] font-bold font-mono" style={{ color }}>
+                        <p className="text-xs font-bold font-mono" style={{ color }}>
                           Entropy {pct}% — {stats.advancedStats.entropy?.mainNumbers?.signal?.toUpperCase()}
                         </p>
                       </>
@@ -1065,25 +1065,25 @@ export default function WinForLifeTab() {
                 <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-                    <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo</span>
+                    <span className="text-xs font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo</span>
                   </div>
                   <div className="bg-violet-950/30 border border-violet-500/20 rounded-lg px-3 py-2">
-                    <p className="text-[10px] font-mono text-gray-400">Bayesian top-6 coverage</p>
+                    <p className="text-xs font-mono text-gray-400">Bayesian top-6 coverage</p>
                     <p className="text-2xl font-black font-mono text-violet-300">{stats.advancedStats.monteCarlo?.coveragePercent}%</p>
-                    <p className="text-[9px] font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulations</p>
+                    <p className="text-xs font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulations</p>
                   </div>
                 </div>
               </div>
 
               {/* Bayesian Top-8 */}
               <div className="space-y-2">
-                <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Bayesian Posterior Probability — Top 8 Main Numbers</p>
+                <p className="text-xs font-mono uppercase tracking-widest text-gray-500">Bayesian Posterior Probability — Top 8 Main Numbers</p>
                 <div className="flex flex-wrap gap-2">
                   {(stats.advancedStats.bayesian?.top10 || []).slice(0, 8).map((b: any, i: number) => (
                     <div key={b.number} className="flex items-center gap-1.5 bg-slate-900 border border-white/5 rounded-lg px-2.5 py-1.5">
-                      <span className="text-[9px] font-mono text-gray-500">#{i+1}</span>
+                      <span className="text-xs font-mono text-gray-500">#{i+1}</span>
                       <span className="text-sm font-black font-mono text-white">{String(b.number).padStart(2, "0")}</span>
-                      <span className="text-[9px] font-mono text-emerald-400">{b.posteriorProb}%</span>
+                      <span className="text-xs font-mono text-emerald-400">{b.posteriorProb}%</span>
                     </div>
                   ))}
                 </div>
@@ -1125,12 +1125,12 @@ export default function WinForLifeTab() {
         <div className="glass-panel p-6 rounded-xl space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
             <div>
-              <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">Win for Life Draw Log</h3>
+              <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Win for Life Draw Log</h3>
               <p className="text-xs text-gray-400 mt-1">Browse and filter NLCB Win for Life results history. Click any draw to inspect deep structural manifolds.</p>
             </div>
             
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex bg-slate-900/80 p-0.5 rounded-lg border border-white/5 text-[10px] font-mono">
+              <div className="flex bg-slate-900/80 p-0.5 rounded-lg border border-white/5 text-xs font-mono">
                 {["All", "2025", "2024", "2023"].map((chip) => (
                   <button
                     key={chip}
@@ -1172,7 +1172,7 @@ export default function WinForLifeTab() {
               <div className="overflow-x-auto sleek-scrollbar border border-white/5 rounded-xl">
                 <table className="w-full text-left border-collapse text-xs font-mono min-w-[520px]">
                   <thead className="sticky top-0 bg-slate-950/95 backdrop-blur-md z-10">
-                    <tr className="border-b border-white/10 text-gray-500 uppercase tracking-widest text-[10px]">
+                    <tr className="border-b border-white/10 text-gray-500 uppercase tracking-widest text-xs">
                       <th className="py-3 px-4">Draw #</th>
                       <th className="py-3 px-4">Date</th>
                       <th className="py-3 px-4 text-center">Winning Numbers (6 Balls)</th>
@@ -1215,7 +1215,7 @@ export default function WinForLifeTab() {
                                 {nums.map((n, i) => (
                                   <span 
                                     key={i} 
-                                    className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] transition-transform ${
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs transition-transform ${
                                       isSelected 
                                         ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_8px_rgba(52,211,153,0.5)] scale-105" 
                                         : "bg-slate-800 text-white border border-white/5"
@@ -1227,15 +1227,15 @@ export default function WinForLifeTab() {
                               </div>
                             </td>
                             <td className="py-3 px-4 text-center">
-                              <span className="w-6 h-6 rounded-full inline-flex items-center justify-center font-bold text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                              <span className="w-6 h-6 rounded-full inline-flex items-center justify-center font-bold text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
                                 {d.cash_ball}
                               </span>
                             </td>
                             <td className="py-3 px-4 text-right">
-                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded transition-colors ${
+                              <span className={`text-xs uppercase font-bold px-2 py-1 rounded transition-colors ${
                                 isSelected ? "bg-emerald-400/20 text-emerald-300" : "text-gray-500 hover:text-white"
                               }`}>
-                                {isSelected ? "Active" : "Inspect →"}
+                                {isSelected ? "Selected" : "Inspect"}
                               </span>
                             </td>
                           </tr>
@@ -1277,8 +1277,8 @@ export default function WinForLifeTab() {
                       <h4 className="text-xs font-black uppercase text-white tracking-wider">
                         Win For Life Draw #{selectedWflDraw.draw_number}
                       </h4>
-                      <span className="text-[10px] text-gray-400">
-                        {selectedWflDraw.draw_date} · {selectedWflDraw.jackpot || "$1,000/Month for Life"}
+                      <span className="text-xs text-slate-400">
+                        {selectedWflDraw.draw_date}, {selectedWflDraw.jackpot || "$20,000 per month for 20 years"}
                       </span>
                     </div>
                   </div>
@@ -1317,7 +1317,7 @@ export default function WinForLifeTab() {
                     <div className="space-y-4">
                       {/* Balls Cluster */}
                       <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-2">
-                        <span className="text-[9px] text-gray-400 uppercase tracking-widest block">6 Winning Balls + Cash Ball</span>
+                        <span className="text-xs text-gray-400 uppercase tracking-widest block">6 Winning Balls + Cash Ball</span>
                         <div className="flex items-center justify-center gap-1.5 flex-wrap">
                           {nums.map((n, i) => (
                             <div key={i} className="w-8 h-8 rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-200 font-black text-xs flex items-center justify-center shadow-[0_0_8px_rgba(52,211,153,0.3)]">
@@ -1333,29 +1333,29 @@ export default function WinForLifeTab() {
 
                       {/* Manifold Diagnostics Grid */}
                       <div className="space-y-2">
-                        <span className="text-[9px] text-gray-400 uppercase tracking-widest block">Structural Invariants</span>
+                        <span className="text-xs text-gray-400 uppercase tracking-widest block">Structural Invariants</span>
                         <div className="grid grid-cols-2 gap-2 text-center text-xs">
                           <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Ball Sum</span>
+                            <span className="text-xs text-gray-500 block uppercase">Ball Sum</span>
                             <span className="text-base font-black text-emerald-300">{sum}</span>
-                            <span className={`text-[8px] block mt-0.5 font-bold ${isManifoldPassed ? "text-emerald-400" : "text-amber-400"}`}>
-                              {isManifoldPassed ? "✓ In Bell [60-114]" : "Tail Margin"}
+                            <span className={`text-xs block mt-0.5 font-semibold ${isManifoldPassed ? "text-emerald-400" : "text-amber-400"}`}>
+                              {isManifoldPassed ? "Typical Range (60 to 114)" : "Unusual Sum"}
                             </span>
                           </div>
                           <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Odd : Even</span>
-                            <span className="text-base font-black text-cyan-300">{oddsCount}O : {evensCount}E</span>
-                            <span className="text-[8px] text-gray-400 block mt-0.5">{oddsCount === 3 ? "Perfect 3:3 Split" : "Standard Split"}</span>
+                            <span className="text-xs text-slate-400 block">Odd and Even</span>
+                            <span className="text-base font-bold text-cyan-300">{oddsCount} Odd, {evensCount} Even</span>
+                            <span className="text-xs text-slate-400 block mt-0.5">{oddsCount === 3 ? "Even 3 and 3 Mix" : "Standard Mix"}</span>
                           </div>
                           <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">High : Low</span>
+                            <span className="text-xs text-gray-500 block uppercase">High : Low</span>
                             <span className="text-base font-black text-purple-300">{highsCount}H : {lowsCount}L</span>
-                            <span className="text-[8px] text-gray-400 block mt-0.5">Median Split at 14/15</span>
+                            <span className="text-xs text-gray-400 block mt-0.5">Median Split at 14/15</span>
                           </div>
                           <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Range Spread</span>
+                            <span className="text-xs text-gray-500 block uppercase">Range Spread</span>
                             <span className="text-base font-black text-emerald-300">{spread}</span>
-                            <span className="text-[8px] text-gray-400 block mt-0.5">Max ({nums[5]}) - Min ({nums[0]})</span>
+                            <span className="text-xs text-gray-400 block mt-0.5">Max ({nums[5]}) - Min ({nums[0]})</span>
                           </div>
                         </div>
                       </div>
@@ -1363,13 +1363,13 @@ export default function WinForLifeTab() {
                       {/* Consecutive & Cash Ball Info */}
                       <div className="p-3 rounded-xl bg-slate-900/80 border border-white/5 space-y-1.5 text-xs">
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-400 uppercase text-[10px]">Consecutive Pairs:</span>
+                          <span className="text-gray-400 uppercase text-xs">Consecutive Pairs:</span>
                           <span className={`text-xs font-bold ${consecutivePairs > 0 ? "text-emerald-400" : "text-gray-300"}`}>
                             {consecutivePairs === 0 ? "0 (Dispersed)" : `${consecutivePairs} Pair(s)`}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-400 uppercase text-[10px]">Cash Ball Option:</span>
+                          <span className="text-gray-400 uppercase text-xs">Cash Ball Option:</span>
                           <span className="text-xs font-bold text-emerald-300">
                             Ball #{selectedWflDraw.cash_ball} (1 of 3)
                           </span>
@@ -1413,7 +1413,7 @@ export default function WinForLifeTab() {
       {subTab === "network" && (
         <div className="glass-panel p-6 rounded-xl space-y-6">
           <div className="border-b border-white/5 pb-4">
-            <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">Successor Transition Network</h3>
+            <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Successor Transition Network</h3>
             <p className="text-xs text-gray-400 mt-1">Select or hover a node to map which numbers statistically succeed it in subsequent drawings.</p>
           </div>
 
@@ -1430,13 +1430,13 @@ export default function WinForLifeTab() {
                       const count = stats?.frequencies?.find((f: any) => f.number === hoveredNode)?.count || 0;
                       return (
                         <>
-                          <text x="390" y="360" textAnchor="middle" className="text-[10px] font-bold fill-primary font-mono uppercase tracking-widest">
+                          <text x="390" y="360" textAnchor="middle" className="text-xs font-bold fill-primary font-mono uppercase tracking-widest">
                             SELECTED
                           </text>
                           <text x="390" y="395" textAnchor="middle" className="text-3xl font-black fill-white font-mono">
                             #{hoveredNode}
                           </text>
-                          <text x="390" y="425" textAnchor="middle" className="text-[10px] fill-gray-400 font-mono">
+                          <text x="390" y="425" textAnchor="middle" className="text-xs fill-gray-400 font-mono">
                             FREQ: {count}x
                           </text>
                         </>
@@ -1444,10 +1444,10 @@ export default function WinForLifeTab() {
                     })()
                   ) : (
                     <>
-                      <text x="390" y="375" textAnchor="middle" className="text-[10px] font-extrabold fill-slate-500 font-mono uppercase tracking-wider animate-pulse">
+                      <text x="390" y="375" textAnchor="middle" className="text-xs font-extrabold fill-slate-500 font-mono uppercase tracking-wider animate-pulse">
                         HOVER NODE
                       </text>
-                      <text x="390" y="405" textAnchor="middle" className="text-[10px] font-bold fill-white font-mono">
+                      <text x="390" y="405" textAnchor="middle" className="text-xs font-bold fill-white font-mono">
                         SUCCESSORS
                       </text>
                     </>
@@ -1504,7 +1504,7 @@ export default function WinForLifeTab() {
                         x={coords.x} 
                         y={coords.y + 4.5} 
                         textAnchor="middle"
-                        className={`text-[9px] font-bold font-mono ${isHovered || isSuccessorOfHovered ? "fill-slate-950" : "fill-white"}`}
+                        className={`text-xs font-bold font-mono ${isHovered || isSuccessorOfHovered ? "fill-slate-950" : "fill-white"}`}
                       >
                         {num}
                       </text>
@@ -1540,11 +1540,11 @@ export default function WinForLifeTab() {
                         {sortedTargets.map((item, idx) => (
                           <div key={idx} className="flex justify-between items-center text-xs p-2 bg-slate-950/40 border border-white/5 rounded">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-gray-500 font-sans">#{idx+1}</span>
-                              <span className="w-5.5 h-5.5 bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
+                              <span className="text-xs text-gray-500 font-sans">#{idx+1}</span>
+                              <span className="w-5.5 h-5.5 bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-xs">
                                 {item.target}
                               </span>
-                              <span className="text-gray-400 uppercase text-[10px]">Successor</span>
+                              <span className="text-gray-400 uppercase text-xs">Successor</span>
                             </div>
                             <span className="text-gray-400 font-bold">{item.count}x draws</span>
                           </div>
@@ -1567,7 +1567,7 @@ export default function WinForLifeTab() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
             <div>
-              <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">Win for Life Wheeling Workspace</h3>
+              <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Win for Life Wheeling Workspace</h3>
               <p className="text-xs text-gray-400 mt-1">Select a custom number pool and construct optimized betting combinations.</p>
             </div>
             
@@ -1591,7 +1591,7 @@ export default function WinForLifeTab() {
                       <span className="font-bold text-white uppercase tracking-wider">Step 1: Pick Main Pool (1 to 28)</span>
                       <button
                         onClick={() => setShowHeatmapOverlay(!showHeatmapOverlay)}
-                        className={`px-2 py-0.5 border text-[9px] font-bold uppercase transition cursor-pointer select-none ${
+                        className={`px-2 py-0.5 border text-xs font-bold uppercase transition cursor-pointer select-none ${
                           showHeatmapOverlay ? "bg-amber-400/10 border-amber-400/30 text-amber-400" : "bg-slate-950/40 border-white/5 text-gray-500"
                         }`}
                       >
@@ -1602,7 +1602,7 @@ export default function WinForLifeTab() {
                   </div>
 
                   {showHeatmapOverlay && (
-                    <div className="flex items-center gap-2 text-[9px] font-mono text-gray-500 uppercase pb-1 select-none">
+                    <div className="flex items-center gap-2 text-xs font-mono text-gray-500 uppercase pb-1 select-none">
                       <span>Heatmap Key:</span>
                       <span className="w-2 h-2 bg-slate-900 border border-white/5 inline-block" />
                       <span>Cold (Low Freq)</span>
@@ -1715,18 +1715,18 @@ export default function WinForLifeTab() {
                     {companionNums.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-xs p-2 bg-slate-950/40 border border-white/5 rounded">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-gray-500 font-sans">#{idx+1}</span>
-                          <span className="w-5.5 h-5.5 bg-emerald-400/10 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
+                          <span className="text-xs text-gray-500 font-sans">#{idx+1}</span>
+                          <span className="w-5.5 h-5.5 bg-emerald-400/10 text-emerald-400 flex items-center justify-center font-bold text-xs">
                             {item.num}
                           </span>
-                          <span className="text-gray-400 uppercase text-[10px]">Companion</span>
+                          <span className="text-gray-400 uppercase text-xs">Companion</span>
                         </div>
                         <span className="text-gray-400">{item.count}x co-occurrences</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[10px] text-gray-500 italic">Select numbers to compute companions dynamically.</p>
+                  <p className="text-xs text-gray-500 italic">Select numbers to compute companions dynamically.</p>
                 )}
               </div>
 
@@ -1740,13 +1740,13 @@ export default function WinForLifeTab() {
               <div className="flex justify-between items-center border-b border-white/5 pb-3">
                 <div className="flex items-center gap-3">
                   <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider">Compiled Combos ({generatedTickets.length})</h4>
-                  <span className="text-emerald-400 font-mono text-[11px] bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/20 rounded">
+                  <span className="text-emerald-400 font-mono text-xs bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/20 rounded">
                     Total Stake: ${generatedTickets.length * 10} TT ($10/ticket)
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={handleSaveSlips} disabled={isSavingSlips} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 disabled:opacity-50 px-3 py-1.5 text-[10px] font-bold font-mono transition cursor-pointer"><Save className="w-3 h-3" /> {isSavingSlips ? "SAVING..." : "SAVE SLIPS"}</button>
-                  <button onClick={handleExportTxt} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 px-3 py-1.5 text-[10px] font-bold font-mono transition cursor-pointer"><Download className="w-3 h-3" /> EXPORT (.TXT)</button>
+                  <button onClick={handleSaveSlips} disabled={isSavingSlips} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 disabled:opacity-50 px-3 py-1.5 text-xs font-bold font-mono transition cursor-pointer"><Save className="w-3 h-3" /> {isSavingSlips ? "SAVING..." : "SAVE SLIPS"}</button>
+                  <button onClick={handleExportTxt} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 px-3 py-1.5 text-xs font-bold font-mono transition cursor-pointer"><Download className="w-3 h-3" /> EXPORT (.TXT)</button>
                 </div>
               </div>
 
@@ -1756,8 +1756,8 @@ export default function WinForLifeTab() {
                   return (
                     <div key={idx} className="bg-slate-950/40 border border-white/5 hover:border-emerald-400/50 p-4 rounded-lg flex flex-col justify-between transition relative overflow-hidden select-none cursor-pointer">
                       <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                        <span className="text-[10px] text-gray-500 font-bold">SLIP #{String(idx+1).padStart(3, "0")}</span>
-                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-sm ${
+                        <span className="text-xs text-gray-500 font-bold">SLIP #{String(idx+1).padStart(3, "0")}</span>
+                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-sm ${
                           evalResult.grade === "A+" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                         }`}>
                           GRADE: {evalResult.grade}
@@ -1766,18 +1766,18 @@ export default function WinForLifeTab() {
                       <div className="flex justify-between items-center pt-3">
                         <div className="flex gap-1.5">
                           {ticket.map((n, i) => (
-                            <span key={i} className="w-6.5 h-6.5 bg-slate-900 border border-white/5 text-white flex items-center justify-center font-bold text-[10px]">
+                            <span key={i} className="w-6.5 h-6.5 bg-slate-900 border border-white/5 text-white flex items-center justify-center font-bold text-xs">
                               {n}
                             </span>
                           ))}
                         </div>
                         {selectedCb && (
-                          <span className="w-6.5 h-6.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-[10px] ml-2">
+                          <span className="w-6.5 h-6.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs ml-2">
                             {selectedCb}
                           </span>
                         )}
                       </div>
-                      <div className="border-t border-dashed border-white/5 mt-3 pt-2 flex justify-between items-center text-[8px] text-slate-500 font-mono">
+                      <div className="border-t border-dashed border-white/5 mt-3 pt-2 flex justify-between items-center text-xs text-slate-500 font-mono">
                         <div className="flex gap-2">
                           <span>O/E: {evalResult.oddEvenRatio}</span>
                           <span>H/L: {evalResult.highLowRatio}</span>
@@ -1800,13 +1800,13 @@ export default function WinForLifeTab() {
         <div className="glass-panel p-6 rounded-xl space-y-6">
           <div className="flex justify-between items-center border-b border-white/5 pb-4">
             <div>
-              <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">Win for Life Predictive Outcome Logs</h3>
+              <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Win for Life Predictive Outcome Logs</h3>
               <p className="text-xs text-gray-400 mt-1">Verifies generated predictions against NLCB official drawings in real-time.</p>
             </div>
             
             {predictionsStats && (
               <div className="text-right font-mono">
-                <span className="text-[10px] text-gray-500 uppercase block">Historical Success Rate</span>
+                <span className="text-xs text-gray-500 uppercase block">Historical Success Rate</span>
                 <span className="text-sm font-bold text-emerald-400">{predictionsStats.hitRate}% hits</span>
               </div>
             )}
@@ -1815,7 +1815,7 @@ export default function WinForLifeTab() {
           <div className="overflow-x-auto sleek-scrollbar">
             <table className="w-full text-left border-collapse text-xs font-mono min-w-[620px]">
               <thead>
-                <tr className="border-b border-white/10 text-gray-500 uppercase tracking-widest text-[10px]">
+                <tr className="border-b border-white/10 text-gray-500 uppercase tracking-widest text-xs">
                   <th className="py-3 px-4">Prediction Date</th>
                   <th className="py-3 px-4">Forecasted Combo</th>
                   <th className="py-3 px-4">CB</th>
@@ -1845,7 +1845,7 @@ export default function WinForLifeTab() {
                         <td className="py-3 px-4">
                           <div className="flex gap-1">
                             {predNums.map((n: number, i: number) => (
-                              <span key={i} className={`w-5.5 h-5.5 rounded-sm flex items-center justify-center font-bold text-[9px] ${
+                              <span key={i} className={`w-5.5 h-5.5 rounded-sm flex items-center justify-center font-bold text-xs ${
                                 drawNums && drawNums.includes(n) ? "bg-emerald-450 text-slate-950 font-black animate-pulse" : "bg-slate-900 border border-white/5 text-gray-400"
                               }`}>
                                 {n}
@@ -1855,7 +1855,7 @@ export default function WinForLifeTab() {
                           
                           {p.status === "PENDING" && modelBreakdown && modelBreakdown.length > 0 && (
                             <div className="mt-3 space-y-2 min-w-[240px]">
-                              <div className="text-[9px] font-bold font-mono text-gray-500 uppercase tracking-wider">Model Attribution</div>
+                              <div className="text-xs font-bold font-mono text-gray-500 uppercase tracking-wider">Model Attribution</div>
                               {modelBreakdown.map((mbItem: any, idx: number) => (
                                 <div key={idx} className="flex items-center gap-3">
                                   <span className="text-sm font-bold font-mono text-primary w-6">{String(mbItem.number).padStart(2, '0')}</span>
@@ -1867,10 +1867,10 @@ export default function WinForLifeTab() {
                                       />
                                     </div>
                                   </div>
-                                  <span className="text-[10px] font-mono text-gray-400 w-8 text-right">{mbItem.confidence}%</span>
+                                  <span className="text-xs font-mono text-gray-400 w-8 text-right">{mbItem.confidence}%</span>
                                   <div className="flex gap-1 flex-wrap">
                                     {mbItem.models.map((m: string, mIdx: number) => (
-                                      <span key={mIdx} className="text-[8px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono font-bold whitespace-nowrap">{m}</span>
+                                      <span key={mIdx} className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono font-bold whitespace-nowrap">{m}</span>
                                     ))}
                                   </div>
                                 </div>
@@ -1879,7 +1879,7 @@ export default function WinForLifeTab() {
                           )}
                         </td>
                         <td className="py-3 px-4">
-                          <span className={`w-5.5 h-5.5 rounded-sm flex items-center justify-center font-bold text-[9px] ${
+                          <span className={`w-5.5 h-5.5 rounded-sm flex items-center justify-center font-bold text-xs ${
                             p.winning_cash_ball && p.winning_cash_ball === p.predicted_cash_ball ? "bg-emerald-500 text-slate-950 font-black animate-pulse" : "bg-slate-900 border border-white/5 text-gray-400"
                           }`}>
                             {p.predicted_cash_ball}
@@ -1888,14 +1888,14 @@ export default function WinForLifeTab() {
                         <td className="py-3 px-4">
                           {drawNums ? (
                             <div className="flex gap-1 items-center">
-                              <span className="text-[10px] text-gray-500 mr-1.5 font-bold">#{p.winning_draw_number}</span>
+                              <span className="text-xs text-gray-500 mr-1.5 font-bold">#{p.winning_draw_number}</span>
                               {drawNums.map((n: number, i: number) => (
-                                <span key={i} className="w-5.5 h-5.5 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-[9px]">
+                                <span key={i} className="w-5.5 h-5.5 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs">
                                   {n}
                                 </span>
                               ))}
                               <span className="text-gray-500 mx-1 font-bold">|</span>
-                              <span className="w-5.5 h-5.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-[9px]">
+                              <span className="w-5.5 h-5.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs">
                                 {p.winning_cash_ball}
                               </span>
                             </div>
@@ -1907,7 +1907,7 @@ export default function WinForLifeTab() {
                           {p.matching_count !== null ? p.matching_count + " + " + (p.cash_ball_matched ? "CB" : "0") : "-"}
                         </td>
                         <td className="py-3 px-4">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                             p.status === "HIT" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 animate-pulse" :
                             p.status === "MISS" ? "bg-red-500/10 text-red-400 border border-red-500/20" :
                             "bg-amber-500/10 text-amber-400 border border-amber-500/20"
@@ -1927,40 +1927,40 @@ export default function WinForLifeTab() {
 
       {/* SUBTAB: EXPLAIN */}
       {subTab === "explain" && (
-        <div className="space-y-6">
-          <div className="glass-panel p-6 rounded-xl space-y-5">
-            <div className="border-b border-white/5 pb-3">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white font-mono">How The App Reduces The Odds in Win For Life (6 of 28)</h3>
-              <p className="text-[11px] text-gray-400 mt-1">Empirical P10–P90 sum-corridor filtering, 4 audited quantitative engines, 10-slip Mandel covering wheels, and closed-loop Bayesian calibration.</p>
+        <div className="space-y-6 font-sans">
+          <div className="glass-panel p-6 rounded-2xl space-y-5">
+            <div className="border-b border-white/5 pb-3 space-y-1">
+              <h3 className="text-base font-bold text-white">How Ticket Coverage Works in Win For Life (6 of 28)</h3>
+              <p className="text-sm text-slate-300">Balanced sum ranges, non-overlapping 10-line sets covering all 28 numbers, and full Cash Ball coverage from 1 to 10.</p>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs text-gray-400 leading-relaxed font-mono">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-sm text-slate-300 leading-relaxed">
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">1. P10–P90 Sum Corridor [66, 111] &amp; Balance</h4>
+                  <h4 className="text-sm font-bold text-emerald-400 mb-1">1. Balanced Sum Range (66 to 111)</h4>
                   <p>
-                    Out of 376,740 possible 6/28 combinations (+ Cash Ball 1–10), candidate lines are constrained to the empirical <strong>[66, 111]</strong> sum corridor with balanced <strong>2:4 / 3:3 / 4:2</strong> parity and low-high splits, eliminating extreme low/high tail collapses.
+                    Out of 376,740 possible 6-number combinations (plus Cash Ball 1 to 10), generated lines stay inside the typical <strong className="text-white">66 to 111</strong> sum range with a balanced odd-and-even and low-and-high mix.
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">2. 4 Audited Quantitative Engines</h4>
+                  <h4 className="text-sm font-bold text-emerald-400 mb-1">2. Four Tracked Models</h4>
                   <p>
-                    Every draw is evaluated across <strong>Quant 100% Sieve</strong> (CRT mod-7/mod-5 + eigenvector centrality), <strong>Winning Formula</strong> (Lag 1–2 ±1 kinematic wave), <strong>Forensic Engine</strong>, and <strong>Apex Champion Consensus</strong>, with merit-based Champion selection in the <strong>Engine Tracker</strong>.
+                    Every Tuesday and Friday draw is graded across 4 models in the <strong className="text-white">Engines</strong> tab so you can inspect verified past results before choosing numbers.
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">3. 10-Slip Mandel Covering Wheel</h4>
+                  <h4 className="text-sm font-bold text-emerald-400 mb-1">3. 10-Line Non-Overlapping Coverage</h4>
                   <p>
-                    Over the active 14–16 ball attractor core, the app constructs a 10-slip minimal covering wheel (with live <strong>10-Slip Wheel Capture %</strong> telemetry) to maximize 3/6, 4/6, and 5/6 prize density per dollar wagered.
+                    A 10-line non-overlapping set covers all 28 numbers with at most 1 shared number between any two lines, reaching a <strong className="text-white">72.13% chance</strong> of matching 3 or more numbers and covering all 10 Cash Balls.
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">4. Entropy Conviction &amp; Cash Ball Renewal</h4>
+                  <h4 className="text-sm font-bold text-sky-400 mb-1">4. Cash Ball Coverage (1 to 10)</h4>
                   <p>
-                    Tracks Shannon entropy conviction (<strong>HIGH CONVICTION</strong> / <strong>BALANCED</strong> / <strong>HIGH ENTROPY</strong>) alongside Weibull renewal projections for the 1–10 Cash Ball.
+                    Assigning every Cash Ball from 1 to 10 once across 10 lines ensures you always match the Cash Ball without wasting duplicate plays on the same bonus number.
                   </p>
                 </div>
                 <div>
@@ -1970,8 +1970,8 @@ export default function WinForLifeTab() {
                   </p>
                 </div>
                 <div className="p-3 bg-slate-900/60 rounded-lg border border-white/5">
-                  <div className="text-[10px] font-bold uppercase tracking-wider mb-1 text-emerald-400">Winning Strategy Tip</div>
-                  <p className="text-[11px] text-gray-300">
+                  <div className="text-xs font-bold uppercase tracking-wider mb-1 text-emerald-400">Winning Strategy Tip</div>
+                  <p className="text-xs text-gray-300">
                     Check the <strong>ENGINE TRACKER</strong> tab before playing to see which engine currently holds the #1 merit rank for Win For Life and whether the chamber is in a <strong>BALANCED</strong> or <strong>HIGH ENTROPY</strong> regime.
                   </p>
                 </div>

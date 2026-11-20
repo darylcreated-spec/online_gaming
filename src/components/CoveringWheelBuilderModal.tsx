@@ -179,10 +179,10 @@ export default function CoveringWheelBuilderModal({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white tracking-wide">
+                <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide">
                   Bitwise Covering Wheel Engine
                 </h2>
-                <span className="px-2 py-0.5 text-[10px] font-mono tracking-wider bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 rounded-full">
+                <span className="px-2 py-0.5 text-xs font-mono tracking-wider bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 rounded-full">
                   $O(1)$ POPCOUNT
                 </span>
               </div>
@@ -222,7 +222,7 @@ export default function CoveringWheelBuilderModal({
                   }`}
                 >
                   <div className="font-bold text-sm">{g.name}</div>
-                  <div className="text-[11px] text-cyan-400/80 mt-0.5">{g.format} • {g.cost}/line</div>
+                  <div className="text-xs text-cyan-400/80 mt-0.5">{g.format}, {g.cost} per line</div>
                 </button>
               ))}
             </div>
@@ -233,26 +233,26 @@ export default function CoveringWheelBuilderModal({
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                 <span>2. Select Your Number Pool</span>
-                <span className="text-cyan-400 font-mono text-[11px] font-normal">
-                  ({selectedPool.length} numbers selected • target 7–14)
+                <span className="text-cyan-400 font-mono text-xs font-normal">
+                  ({selectedPool.length} numbers selected, target 7 to 14)
                 </span>
               </label>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => handleQuickSelect(8)}
-                  className="px-2 py-1 text-[11px] rounded-lg bg-slate-800 text-slate-300 hover:text-cyan-300 border border-slate-700 hover:border-cyan-500/50 transition-all"
+                  className="px-2 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:text-cyan-300 border border-slate-700 hover:border-cyan-500/50 transition-all"
                 >
                   Random 8
                 </button>
                 <button
                   onClick={() => handleQuickSelect(10)}
-                  className="px-2 py-1 text-[11px] rounded-lg bg-slate-800 text-slate-300 hover:text-cyan-300 border border-slate-700 hover:border-cyan-500/50 transition-all"
+                  className="px-2 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:text-cyan-300 border border-slate-700 hover:border-cyan-500/50 transition-all"
                 >
                   Random 10
                 </button>
                 <button
                   onClick={handleClear}
-                  className="px-2 py-1 text-[11px] rounded-lg bg-red-950/30 text-red-400 hover:bg-red-900/40 border border-red-800/40 transition-all"
+                  className="px-2 py-1 text-xs rounded-lg bg-red-950/30 text-red-400 hover:bg-red-900/40 border border-red-800/40 transition-all"
                 >
                   Clear
                 </button>
@@ -287,7 +287,7 @@ export default function CoveringWheelBuilderModal({
                 {selectedPool.map(n => (
                   <span
                     key={n}
-                    className="px-2 py-0.5 rounded-md bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 font-mono text-[11px]"
+                    className="px-2 py-0.5 rounded-md bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 font-mono text-xs"
                   >
                     {String(n).padStart(2, "0")}
                   </span>
@@ -342,9 +342,9 @@ export default function CoveringWheelBuilderModal({
                   >
                     <div className="font-bold text-xs flex items-center justify-between">
                       <span>{opt.title}</span>
-                      <span className="text-[10px] text-emerald-400/90 font-mono">{opt.savings}</span>
+                      <span className="text-xs text-emerald-400/90 font-mono">{opt.savings}</span>
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-1">{opt.subtitle}</div>
+                    <div className="text-xs text-slate-400 mt-1">{opt.subtitle}</div>
                   </button>
                 );
               })}
@@ -388,37 +388,37 @@ export default function CoveringWheelBuilderModal({
               {/* Financial KPI Banner */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-slate-900/60 border border-cyan-500/20">
-                  <div className="text-[10px] uppercase font-mono text-slate-400">Wheeled Slips</div>
+                  <div className="text-xs uppercase font-mono text-slate-400">Wheeled Slips</div>
                   <div className="text-xl font-bold text-cyan-300 font-mono mt-0.5">
                     {result.ticketCount} <span className="text-xs font-normal text-slate-400">lines</span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">${result.wheeledCostTT} TTD</div>
+                  <div className="text-xs text-slate-400 mt-0.5">${result.wheeledCostTT} TTD</div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <div className="text-[10px] uppercase font-mono text-slate-400">Full Combinations</div>
+                  <div className="text-xs uppercase font-mono text-slate-400">Full Combinations</div>
                   <div className="text-xl font-bold text-slate-300 font-mono mt-0.5">
                     {result.fullCombinationsCount} <span className="text-xs font-normal text-slate-400">lines</span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">${result.fullCostTT} TTD</div>
+                  <div className="text-xs text-slate-400 mt-0.5">${result.fullCostTT} TTD</div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30">
-                  <div className="text-[10px] uppercase font-mono text-emerald-400">Capital Saved</div>
+                  <div className="text-xs uppercase font-mono text-emerald-400">Capital Saved</div>
                   <div className="text-xl font-bold text-emerald-300 font-mono mt-0.5">
                     {result.costSavingsPct.toFixed(1)}%
                   </div>
-                  <div className="text-[11px] text-emerald-400/90 mt-0.5">
+                  <div className="text-xs text-emerald-400/90 mt-0.5">
                     +${result.fullCostTT - result.wheeledCostTT} TTD saved
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                  <div className="text-[10px] uppercase font-mono text-slate-400">Execution Speed</div>
+                  <div className="text-xs uppercase font-mono text-slate-400">Execution Speed</div>
                   <div className="text-xl font-bold text-cyan-400 font-mono mt-0.5">
                     {result.executionTimeMs} <span className="text-xs font-normal text-slate-400">ms</span>
                   </div>
-                  <div className="text-[11px] text-slate-400 mt-0.5">Bitwise Greedy Mask</div>
+                  <div className="text-xs text-slate-400 mt-0.5">Bitwise Greedy Mask</div>
                 </div>
               </div>
 
@@ -454,27 +454,27 @@ export default function CoveringWheelBuilderModal({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                      <span className="font-bold text-cyan-300 uppercase tracking-wider text-[11px]">
+                      <span className="font-bold text-cyan-300 uppercase tracking-wider text-xs">
                         1.5-Sigma Gaussian Manifold Active
                       </span>
-                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-black">
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-black">
                         3.53X PROBABILITY DENSITY
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 font-sans">
-                      Target Sum Range: <strong className="text-white font-mono">[{result.manifoldSummary.minSum} – {result.manifoldSummary.maxSum}]</strong> (Expected mean &mu;={result.manifoldSummary.mu}, &sigma;={result.manifoldSummary.sigma}).
+                    <p className="text-xs text-slate-400 font-sans">
+                      Target Sum Range: <strong className="text-white font-mono">{result.manifoldSummary.minSum} to {result.manifoldSummary.maxSum}</strong> (Average {result.manifoldSummary.mu}, Spread {result.manifoldSummary.sigma}).
                       Eliminates ~75% of negative-EV combinations.
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right">
-                      <span className="text-[10px] text-slate-400 uppercase block">Manifold Compliant</span>
+                      <span className="text-xs text-slate-400 uppercase block">Manifold Compliant</span>
                       <span className="text-sm font-bold text-cyan-300">
                         {result.manifoldPassedCount || result.ticketCount} / {result.ticketCount} Slips
                       </span>
                     </div>
                     <div className="text-right border-l border-white/10 pl-3">
-                      <span className="text-[10px] text-slate-400 uppercase block">Avg Quality</span>
+                      <span className="text-xs text-slate-400 uppercase block">Avg Quality</span>
                       <span className="text-sm font-bold text-emerald-400">
                         {result.averageQualityScore || 92}%
                       </span>
@@ -487,7 +487,7 @@ export default function CoveringWheelBuilderModal({
               <div className="space-y-2">
                 <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center justify-between">
                   <span>Generated Ticket Slips ({result.tickets.length})</span>
-                  <span className="text-[10px] text-slate-500 font-normal">Ranked by combinatorial efficiency</span>
+                  <span className="text-xs text-slate-500 font-normal">Ranked by combinatorial efficiency</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1 sleek-scrollbar">
                   {result.tickets.map((ticket: number[], idx: number) => {
@@ -501,14 +501,14 @@ export default function CoveringWheelBuilderModal({
                         className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between gap-2"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-mono text-slate-500 w-6">
+                          <span className="text-xs font-mono text-slate-500 w-6">
                             #{String(idx + 1).padStart(2, "0")}
                           </span>
                           <div className="flex items-center gap-1">
                             {ticket.map(ball => (
                               <span
                                 key={ball}
-                                className="w-6.5 h-6.5 rounded-lg bg-gradient-to-tr from-cyan-950 to-slate-800 border border-cyan-500/30 text-cyan-300 font-mono font-bold text-[11px] flex items-center justify-center shadow-sm"
+                                className="w-6.5 h-6.5 rounded-lg bg-gradient-to-tr from-cyan-950 to-slate-800 border border-cyan-500/30 text-cyan-300 font-mono font-bold text-xs flex items-center justify-center shadow-sm"
                               >
                                 {String(ball).padStart(2, "0")}
                               </span>
@@ -516,13 +516,13 @@ export default function CoveringWheelBuilderModal({
                           </div>
                         </div>
                         <div className="text-right font-mono shrink-0">
-                          <div className="text-[10px] text-slate-400">
+                          <div className="text-xs text-slate-400">
                             Sum: <span className="font-bold text-slate-200">{sum}</span>
                           </div>
-                          <span className={`text-[8px] font-bold px-1 rounded ${
+                          <span className={`text-xs font-bold px-1 rounded ${
                             isWithinManifold ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"
                           }`}>
-                            {isWithinManifold ? "✓ MANIFOLD" : "TAIL"}
+                            {isWithinManifold ? "Balanced" : "Wide Range"}
                           </span>
                         </div>
                       </div>

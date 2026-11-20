@@ -403,7 +403,7 @@ export default function QuantumSphereTumbler({
             <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-white">
               The Quantum Sphere Tumbler
             </h2>
-            <span className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest bg-sky-500/20 text-sky-300 border border-sky-400/30">
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-widest bg-sky-500/20 text-sky-300 border border-sky-400/30">
               Option A Live
             </span>
           </div>
@@ -516,14 +516,14 @@ export default function QuantumSphereTumbler({
 
           {/* Chamber Controls Bar */}
           <div className="mt-4 flex items-center gap-3">
-            <span className="text-[10px] text-gray-400 font-mono uppercase flex items-center gap-1.5">
+            <span className="text-xs text-gray-400 font-mono uppercase flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${
                 animState === "idle" ? "bg-emerald-400" : "bg-sky-400 animate-ping"
               }`} />
               Status: <strong className="text-white uppercase">{animState}</strong>
             </span>
             <span className="text-gray-600">|</span>
-            <span className="text-[10px] text-gray-400 font-mono">
+            <span className="text-xs text-gray-400 font-mono">
               Pool: <strong className="text-white">{config.poolSize}</strong> balls
             </span>
           </div>
@@ -543,7 +543,7 @@ export default function QuantumSphereTumbler({
                 <button
                   type="button"
                   onClick={() => setDrawStrategy("quant")}
-                  className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition cursor-pointer ${
+                  className={`px-2.5 py-1 rounded text-xs font-bold uppercase transition cursor-pointer ${
                     drawStrategy === "quant"
                       ? "bg-sky-500 text-slate-950 font-black shadow-sm"
                       : "text-gray-400 hover:text-white"
@@ -554,7 +554,7 @@ export default function QuantumSphereTumbler({
                 <button
                   type="button"
                   onClick={() => setDrawStrategy("rng")}
-                  className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition cursor-pointer ${
+                  className={`px-2.5 py-1 rounded text-xs font-bold uppercase transition cursor-pointer ${
                     drawStrategy === "rng"
                       ? "bg-amber-400 text-slate-950 font-black shadow-sm"
                       : "text-gray-400 hover:text-white"
@@ -586,7 +586,7 @@ export default function QuantumSphereTumbler({
           {/* DRAWN NUMBERS REVEAL TRAY */}
           <div className="space-y-3 bg-slate-900/60 p-5 rounded-xl border border-sky-400/20 shadow-inner">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
                 <Award className="w-3.5 h-3.5 text-sky-400" />
                 Optical Extraction Tray:
               </span>
@@ -594,7 +594,7 @@ export default function QuantumSphereTumbler({
                 <button
                   type="button"
                   onClick={handleCopyTicket}
-                  className="flex items-center gap-1 text-[10px] font-bold text-sky-400 hover:text-sky-300 transition cursor-pointer"
+                  className="flex items-center gap-1 text-xs font-bold text-sky-400 hover:text-sky-300 transition cursor-pointer"
                 >
                   {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                   <span>{copied ? "Copied!" : "Copy Slip"}</span>
@@ -643,14 +643,14 @@ export default function QuantumSphereTumbler({
             {selectedGame === "play-whe" && drawnBalls.length > 0 && (
               <div className="p-3 bg-amber-950/20 border border-amber-500/30 rounded-xl flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-amber-400 uppercase font-bold block">Tradition Mark</span>
+                  <span className="text-xs text-amber-400 uppercase font-bold block">Tradition Mark</span>
                   <span className="text-sm font-black text-white uppercase tracking-wider">
                     {CHINAPOO_CHART[drawnBalls[0]]?.mark || "Unknown"}
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] text-gray-400 block">Symbol Keywords</span>
-                  <span className="text-[10px] text-amber-300 font-mono">
+                  <span className="text-xs text-gray-400 block">Symbol Keywords</span>
+                  <span className="text-xs text-amber-300 font-mono">
                     {CHINAPOO_CHART[drawnBalls[0]]?.keywords?.slice(0, 3).join(", ") || "Tradition"}
                   </span>
                 </div>
@@ -661,15 +661,15 @@ export default function QuantumSphereTumbler({
             {metrics && (
               <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono">
                 <div className="p-2 bg-black/40 rounded-lg border border-white/5">
-                  <span className="text-[9px] text-gray-400 block uppercase">Sum</span>
+                  <span className="text-xs text-gray-400 block uppercase">Sum</span>
                   <strong className="text-xs text-white">{metrics.sum}</strong>
                 </div>
                 <div className="p-2 bg-black/40 rounded-lg border border-white/5">
-                  <span className="text-[9px] text-gray-400 block uppercase">Odd:Even</span>
+                  <span className="text-xs text-gray-400 block uppercase">Odd:Even</span>
                   <strong className="text-xs text-sky-400">{metrics.oddEven}</strong>
                 </div>
                 <div className="p-2 bg-black/40 rounded-lg border border-white/5">
-                  <span className="text-[9px] text-gray-400 block uppercase">Spread</span>
+                  <span className="text-xs text-gray-400 block uppercase">Spread</span>
                   <strong className="text-xs text-amber-400">{metrics.spread}</strong>
                 </div>
               </div>

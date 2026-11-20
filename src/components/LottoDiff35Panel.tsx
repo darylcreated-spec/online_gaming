@@ -122,20 +122,20 @@ export default function LottoDiff35Panel() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
+              <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
                 <Binary className="w-3.5 h-3.5 animate-pulse text-cyan-400" />
                 QUANTITATIVE STATISTICAL ENGINE
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1">
                 <Sigma className="w-3 h-3 text-emerald-400" />
                 Sum-35 Additive Inversion
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-[10px] font-mono font-bold uppercase tracking-wider">
-                Excludes Powerball • Unordered Sets
+              <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono font-bold uppercase tracking-wider">
+                Main numbers only (excluding Powerball), any order
               </span>
             </div>
 
-            <h2 className="text-xl md:text-2xl font-black text-white font-mono uppercase tracking-tight flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-black text-white font-mono uppercase tracking-tight flex items-center gap-2">
               Sum-35 Difference Model &amp; Recurrent Formula Sets
             </h2>
 
@@ -170,11 +170,11 @@ export default function LottoDiff35Panel() {
           <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
             <div className="flex items-center gap-2">
               <Sigma className="w-5 h-5 text-cyan-400" />
-              <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+              <h3 className="text-base font-mono font-bold text-white uppercase tracking-wider">
                 Mathematical Foundations &amp; Combinatorial Invariants
               </h3>
             </div>
-            <span className="text-[10px] font-mono text-cyan-400/80">Algebraic Group &#8484;&#8323;&#8325;</span>
+            <span className="text-xs font-mono text-cyan-400/80">Algebraic Group &#8484;&#8323;&#8325;</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono text-gray-300 leading-relaxed">
@@ -215,7 +215,7 @@ export default function LottoDiff35Panel() {
       <div className="glass-panel p-6 rounded-2xl border border-sky-500/20 bg-slate-950/60 space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
           <div>
-            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+            <div className="text-xs font-mono text-cyan-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
               Latest Official Database Draw
             </div>
@@ -244,7 +244,7 @@ export default function LottoDiff35Panel() {
         <div className="space-y-3">
           <div className="text-xs font-mono font-bold text-gray-300 uppercase tracking-wider flex items-center justify-between">
             <span>Additive Decomposition Map: n_i + d_i = 35</span>
-            <span className="text-[11px] text-cyan-400 font-normal">
+            <span className="text-xs text-cyan-400 font-normal">
               Parity Flip: {latestDraw.oddCount}O/{latestDraw.evenCount}E &#8594; {latestDraw.complementOddCount}O/{latestDraw.complementEvenCount}E
             </span>
           </div>
@@ -258,7 +258,7 @@ export default function LottoDiff35Panel() {
                   key={idx}
                   className="p-3.5 rounded-xl bg-slate-900/70 border border-cyan-500/20 flex flex-col items-center justify-center space-y-2 relative group hover:border-cyan-500/50 transition-all shadow-[0_0_15px_rgba(0,0,0,0.4)]"
                 >
-                  <span className="text-[9px] font-mono text-gray-500 uppercase tracking-wider">Ball {idx + 1}</span>
+                  <span className="text-xs font-mono text-gray-500 uppercase tracking-wider">Ball {idx + 1}</span>
                   
                   <div className="flex items-center gap-2">
                     {/* Actual Number */}
@@ -274,7 +274,7 @@ export default function LottoDiff35Panel() {
                     </div>
                   </div>
 
-                  <div className="text-[10px] font-mono text-gray-400">
+                  <div className="text-xs font-mono text-gray-400">
                     {num} + {comp} = <span className="text-cyan-300 font-bold">35</span>
                   </div>
                 </div>
@@ -288,11 +288,11 @@ export default function LottoDiff35Panel() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <div className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+            <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-emerald-400" />
               Mathematical Forecast
             </div>
-            <h3 className="text-lg font-mono font-black text-white uppercase tracking-tight">
+            <h3 className="text-base font-mono font-black text-white uppercase tracking-tight">
               5 Formula Sets for Next Draw #{nextDrawPredictions.targetDrawNumber}
             </h3>
           </div>
@@ -312,7 +312,7 @@ export default function LottoDiff35Panel() {
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase text-slate-950 bg-gradient-to-r ${set.badgeColor}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase text-slate-950 bg-gradient-to-r ${set.badgeColor}`}>
                       {set.badge}
                     </span>
                     <button
@@ -326,10 +326,10 @@ export default function LottoDiff35Panel() {
 
                   <div>
                     <h4 className="text-sm font-mono font-bold text-white tracking-wide">{set.name}</h4>
-                    <p className="text-[10px] font-mono text-cyan-400/80">{set.subtitle}</p>
+                    <p className="text-xs font-mono text-cyan-400/80">{set.subtitle}</p>
                   </div>
 
-                  <p className="text-[11px] font-mono text-gray-400 leading-relaxed min-h-[38px]">
+                  <p className="text-xs font-mono text-gray-400 leading-relaxed min-h-[38px]">
                     {set.description}
                   </p>
                 </div>
@@ -347,7 +347,7 @@ export default function LottoDiff35Panel() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] font-mono text-gray-400">
+                  <div className="flex items-center justify-between text-xs font-mono text-gray-400">
                     <span>Sum: <strong className="text-white">{set.sum}</strong></span>
                     <span>Parity: <strong className="text-white">{set.oddEvenRatio}</strong></span>
                   </div>
@@ -360,7 +360,7 @@ export default function LottoDiff35Panel() {
           <div className="glass-panel p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 flex flex-col justify-between space-y-4 hover:border-emerald-500/60 transition-all">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-500">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-500">
                   WHEELING SUPER-SET
                 </span>
                 <button
@@ -374,10 +374,10 @@ export default function LottoDiff35Panel() {
 
               <div>
                 <h4 className="text-sm font-mono font-bold text-white tracking-wide">5-Set Combined Pool</h4>
-                <p className="text-[10px] font-mono text-emerald-400">Master Wheeling Candidate Selection</p>
+                <p className="text-xs font-mono text-emerald-400">Master Wheeling Candidate Selection</p>
               </div>
 
-              <p className="text-[11px] font-mono text-gray-300 leading-relaxed">
+              <p className="text-xs font-mono text-gray-300 leading-relaxed">
                 Contains all {nextDrawPredictions.unionPoolSize} unique balls from the 5 formula sets. Historically captured 3+ winning numbers in <strong className="text-emerald-300">{verification.unionCoverageRates.atLeastThree.percentage}%</strong> of all draws.
               </p>
             </div>
@@ -393,7 +393,7 @@ export default function LottoDiff35Panel() {
                   </span>
                 ))}
               </div>
-              <div className="text-center text-[10px] font-mono text-emerald-400/90 font-bold">
+              <div className="text-center text-xs font-mono text-emerald-400/90 font-bold">
                 Pool Size: {nextDrawPredictions.unionPoolSize} / 35 Balls
               </div>
             </div>
@@ -405,11 +405,11 @@ export default function LottoDiff35Panel() {
       <div className="glass-panel p-6 rounded-2xl border border-sky-500/20 bg-slate-950/60 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-4">
           <div>
-            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+            <div className="text-xs font-mono text-cyan-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
               <Award className="w-3.5 h-3.5 text-cyan-400" />
               Empirical Backtest Audit
             </div>
-            <h3 className="text-lg font-mono font-black text-white uppercase tracking-tight">
+            <h3 className="text-base font-mono font-black text-white uppercase tracking-tight">
               Historical Verification Across {verification.totalDrawsTested} Draws
             </h3>
             <p className="text-xs text-gray-400 font-mono">
@@ -425,41 +425,41 @@ export default function LottoDiff35Panel() {
         {/* KPI Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
-            <span className="text-[10px] font-mono text-gray-400 uppercase">Portfolio 1+ Match</span>
+            <span className="text-xs font-mono text-gray-400 uppercase">Portfolio 1+ Match</span>
             <div className="text-2xl font-mono font-black text-cyan-300">
               {verification.bestTicketHitRates.atLeastOne.percentage}%
             </div>
-            <span className="text-[10px] font-mono text-gray-500">
+            <span className="text-xs font-mono text-gray-500">
               {verification.bestTicketHitRates.atLeastOne.count} / {verification.totalDrawsTested} draws
             </span>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
-            <span className="text-[10px] font-mono text-gray-400 uppercase">Portfolio 2+ Matches</span>
+            <span className="text-xs font-mono text-gray-400 uppercase">Portfolio 2+ Matches</span>
             <div className="text-2xl font-mono font-black text-emerald-300">
               {verification.bestTicketHitRates.atLeastTwo.percentage}%
             </div>
-            <span className="text-[10px] font-mono text-gray-500">
+            <span className="text-xs font-mono text-gray-500">
               {verification.bestTicketHitRates.atLeastTwo.count} / {verification.totalDrawsTested} draws
             </span>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
-            <span className="text-[10px] font-mono text-gray-400 uppercase">Prize Tier (3+ Hits)</span>
+            <span className="text-xs font-mono text-gray-400 uppercase">Prize Tier (3+ Hits)</span>
             <div className="text-2xl font-mono font-black text-amber-300">
               {verification.bestTicketHitRates.atLeastThree.percentage}%
             </div>
-            <span className="text-[10px] font-mono text-gray-500">
+            <span className="text-xs font-mono text-gray-500">
               {verification.bestTicketHitRates.atLeastThree.count} exact ticket hits
             </span>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
-            <span className="text-[10px] font-mono text-gray-400 uppercase">Pool 3+ Capture</span>
+            <span className="text-xs font-mono text-gray-400 uppercase">Pool 3+ Capture</span>
             <div className="text-2xl font-mono font-black text-purple-300">
               {verification.unionCoverageRates.atLeastThree.percentage}%
             </div>
-            <span className="text-[10px] font-mono text-gray-500">
+            <span className="text-xs font-mono text-gray-500">
               {verification.unionCoverageRates.atLeastThree.count} / {verification.totalDrawsTested} in union
             </span>
           </div>
@@ -492,7 +492,7 @@ export default function LottoDiff35Panel() {
               <div className="flex rounded-lg bg-slate-900 p-0.5 border border-white/10">
                 <button
                   onClick={() => setSelectedFilter("all")}
-                  className={`px-2.5 py-1 text-[10px] font-mono rounded-md transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-mono rounded-md transition-all cursor-pointer ${
                     selectedFilter === "all" ? "bg-cyan-500 text-slate-950 font-bold" : "text-gray-400 hover:text-white"
                   }`}
                 >
@@ -500,7 +500,7 @@ export default function LottoDiff35Panel() {
                 </button>
                 <button
                   onClick={() => setSelectedFilter("3plus")}
-                  className={`px-2.5 py-1 text-[10px] font-mono rounded-md transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-mono rounded-md transition-all cursor-pointer ${
                     selectedFilter === "3plus" ? "bg-amber-500 text-slate-950 font-bold" : "text-gray-400 hover:text-white"
                   }`}
                 >
@@ -508,7 +508,7 @@ export default function LottoDiff35Panel() {
                 </button>
                 <button
                   onClick={() => setSelectedFilter("2plus")}
-                  className={`px-2.5 py-1 text-[10px] font-mono rounded-md transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-mono rounded-md transition-all cursor-pointer ${
                     selectedFilter === "2plus" ? "bg-emerald-500 text-slate-950 font-bold" : "text-gray-400 hover:text-white"
                   }`}
                 >
@@ -516,7 +516,7 @@ export default function LottoDiff35Panel() {
                 </button>
                 <button
                   onClick={() => setSelectedFilter("1plus")}
-                  className={`px-2.5 py-1 text-[10px] font-mono rounded-md transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-mono rounded-md transition-all cursor-pointer ${
                     selectedFilter === "1plus" ? "bg-cyan-500/30 text-cyan-300 font-bold" : "text-gray-400 hover:text-white"
                   }`}
                 >
@@ -529,7 +529,7 @@ export default function LottoDiff35Panel() {
           {/* Audit Table */}
           <div className="overflow-x-auto sleek-scrollbar rounded-xl border border-white/5">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-slate-900/90 text-gray-400 uppercase text-[10px] border-b border-white/10">
+              <thead className="bg-slate-900/90 text-gray-400 uppercase text-xs border-b border-white/10">
                 <tr>
                   <th className="py-2.5 px-3">Draw #</th>
                   <th className="py-2.5 px-3">Date</th>
@@ -560,7 +560,7 @@ export default function LottoDiff35Panel() {
                             {row.actualNumbers.map((n, i) => (
                               <span 
                                 key={i}
-                                className="w-6 h-6 rounded bg-slate-800 text-white font-bold flex items-center justify-center text-[11px]"
+                                className="w-6 h-6 rounded bg-slate-800 text-white font-bold flex items-center justify-center text-xs"
                               >
                                 {n}
                               </span>
@@ -584,19 +584,19 @@ export default function LottoDiff35Panel() {
                         </td>
                         <td className="py-2.5 px-3 text-right">
                           {row.bestHit >= 3 ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-950">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500 text-slate-950">
                               PRIZE TIER WIN
                             </span>
                           ) : row.bestHit === 2 ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/30 text-emerald-300 border border-emerald-500/40">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/30 text-emerald-300 border border-emerald-500/40">
                               2-BALL MATCH
                             </span>
                           ) : row.bestHit === 1 ? (
-                            <span className="px-2 py-0.5 rounded text-[10px] text-cyan-400 bg-cyan-500/10">
+                            <span className="px-2 py-0.5 rounded text-xs text-cyan-400 bg-cyan-500/10">
                               1-BALL MATCH
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded text-[10px] text-gray-500 bg-slate-800">
+                            <span className="px-2 py-0.5 rounded text-xs text-gray-500 bg-slate-800">
                               NO MATCH
                             </span>
                           )}

@@ -116,7 +116,7 @@ export default function CashPotAuditPanel() {
       <div className="rounded-2xl border border-amber-500/20 bg-slate-900/60 p-12 text-center backdrop-blur-md space-y-4 font-mono">
         <RefreshCw className="h-10 w-10 animate-spin text-amber-400 mx-auto" />
         <div className="space-y-1">
-          <h3 className="text-lg font-bold text-white uppercase tracking-wider">
+          <h3 className="text-base font-bold text-white uppercase tracking-wider">
             Auditing Cash Pot Database & Invariants
           </h3>
           <p className="text-xs text-gray-400">
@@ -153,10 +153,10 @@ export default function CashPotAuditPanel() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black uppercase tracking-wider text-white">
+                <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-white">
                   Cash Pot 100% Invariant & Audit System
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                   Live Engine
                 </span>
               </div>
@@ -168,7 +168,7 @@ export default function CashPotAuditPanel() {
 
           {/* Sync Status & Manual Re-Audit Trigger */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="text-right text-[10px] text-gray-400 hidden sm:block">
+            <div className="text-right text-xs text-gray-400 hidden sm:block">
               <div className="flex items-center gap-1.5 text-emerald-400 font-bold justify-end">
                 <Database className="w-3 h-3 text-emerald-400" />
                 <span>TURSO DB CONNECTED</span>
@@ -193,39 +193,39 @@ export default function CashPotAuditPanel() {
         {/* Mathematical Operating Principles Pillbox */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Combinatorial Space</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Combinatorial Space</span>
             <div className="text-xs text-white font-extrabold flex items-center gap-1.5">
               <Calculator className="w-3.5 h-3.5 text-amber-400" />
               <span>C(20, 5) = 15,504</span>
             </div>
-            <span className="text-[9px] text-gray-500">Unordered subsets</span>
+            <span className="text-xs text-gray-500">Unordered subsets</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Multiplier Ball</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Multiplier Ball</span>
             <div className="text-xs text-amber-300 font-extrabold flex items-center gap-1.5">
               <CheckCheck className="w-3.5 h-3.5 text-amber-400" />
               <span>100% EXCLUDED</span>
             </div>
-            <span className="text-[9px] text-gray-500">Main 5 balls analyzed</span>
+            <span className="text-xs text-gray-500">Main 5 balls analyzed</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Ball Draw Sequence</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Ball Draw Sequence</span>
             <div className="text-xs text-purple-300 font-extrabold flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-purple-400" />
               <span>SEQUENCE IGNORED</span>
             </div>
-            <span className="text-[9px] text-gray-500">Set equality order-free</span>
+            <span className="text-xs text-gray-500">Set equality order-free</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Automated Sync</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Automated Sync</span>
             <div className="text-xs text-emerald-300 font-extrabold flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
               <span>EVENT-DRIVEN UPDATE</span>
             </div>
-            <span className="text-[9px] text-gray-500">Recalculates on new draw</span>
+            <span className="text-xs text-gray-500">Recalculates on new draw</span>
           </div>
         </div>
       </div>
@@ -254,39 +254,39 @@ export default function CashPotAuditPanel() {
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Galois Ring Mod 5</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
-              Every modern draw spans <strong>&ge; 2 distinct residue classes modulo 5</strong>. Zero modern draws concentrate in a single remainder class.
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Every modern draw spreads across <strong>at least 2 different number groups</strong> rather than clustering in a single repeating pattern.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              size({"{"}n mod 5 : n &isin; D{"}"}) &ge; 2
+            <div className="text-xs text-emerald-400/80 font-mono">
+              At least 2 groups of 5 represented
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Galois Ring Mod 4</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
-              Every modern draw spans <strong>&ge; 2 distinct residue classes modulo 4</strong>. Zero modern draws concentrate in a single residue class.
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Every modern draw spreads across <strong>at least 2 different groups of 4</strong> rather than clustering into one group.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              size({"{"}n mod 4 : n &isin; D{"}"}) &ge; 2
+            <div className="text-xs text-emerald-400/80 font-mono">
+              At least 2 groups of 4 represented
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Compact Sum Manifold</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
+            <p className="text-xs text-gray-300 leading-relaxed">
               Sum bounded within <strong>[25, 76]</strong>. Eliminates extreme combinatorial tails without pruning winning sets.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              Sum &isin; [25, 76] (Mean: 52.05)
+            <div className="text-xs text-emerald-400/80 font-mono">
+              Total sum between 25 and 76 (Average: 52.05)
             </div>
           </div>
         </div>
@@ -305,12 +305,12 @@ export default function CashPotAuditPanel() {
               </h3>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              Derived from Last Verified Draw #{data.lastVerifiedDraw.draw_number} ({data.lastVerifiedDraw.draw_date}) • Winning Balls: [{data.lastVerifiedDraw.numbers.map(n => String(n).padStart(2, "0")).join(", ")}]
+              Based on Last Verified Draw {data.lastVerifiedDraw.draw_number} ({data.lastVerifiedDraw.draw_date}), Winning Numbers: [{data.lastVerifiedDraw.numbers.map(n => String(n).padStart(2, "0")).join(", ")}]
             </p>
           </div>
 
           <div className="text-xs text-right hidden sm:block">
-            <span className="text-[10px] text-gray-500 block uppercase">Combinatorial Space</span>
+            <span className="text-xs text-gray-500 block uppercase">Combinatorial Space</span>
             <span className="text-amber-400 font-bold">C(20,5) = 15,504 Subsets</span>
           </div>
         </div>
@@ -325,7 +325,7 @@ export default function CashPotAuditPanel() {
                 className="p-4 rounded-xl bg-slate-900/90 border border-white/10 hover:border-amber-400/40 transition flex flex-col justify-between space-y-3 relative group"
               >
                 <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded tracking-wider ${
+                  <span className={`text-xs font-black uppercase px-2 py-0.5 rounded tracking-wider ${
                     idx === 0 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30" :
                     idx === 1 ? "bg-sky-500/20 text-sky-300 border border-sky-400/30" :
                     idx === 2 ? "bg-purple-500/20 text-purple-300 border border-purple-400/30" :
@@ -337,7 +337,7 @@ export default function CashPotAuditPanel() {
 
                   <button
                     onClick={() => handleCopy(set.id, set.numbers)}
-                    className="text-[10px] text-gray-400 hover:text-white flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 transition cursor-pointer"
+                    className="text-xs text-gray-400 hover:text-white flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 transition cursor-pointer"
                   >
                     {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                     <span>{isCopied ? "Copied" : "Copy"}</span>
@@ -346,7 +346,7 @@ export default function CashPotAuditPanel() {
 
                 <div>
                   <h4 className="text-xs font-bold text-white mb-1">{set.name}</h4>
-                  <p className="text-[10px] text-gray-400 leading-tight">{set.mathematicalBasis}</p>
+                  <p className="text-xs text-gray-400 leading-tight">{set.mathematicalBasis}</p>
                 </div>
 
                 {/* 5 Ball Number Pills */}
@@ -361,7 +361,7 @@ export default function CashPotAuditPanel() {
                   ))}
                 </div>
 
-                <div className="grid grid-cols-3 gap-1 pt-2 border-t border-white/5 text-[10px] text-gray-400">
+                <div className="grid grid-cols-3 gap-1 pt-2 border-t border-white/5 text-xs text-gray-400">
                   <div>Sum: <strong className="text-white">{set.sum}</strong></div>
                   <div>Parity: <strong className="text-white">{set.oddEvenRatio}</strong></div>
                   <div>Score: <strong className="text-amber-400">{set.resonanceScore}%</strong></div>
@@ -374,7 +374,7 @@ export default function CashPotAuditPanel() {
         {/* Master Attractor Manifold Banner */}
         <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="space-y-0.5">
-            <span className="text-[10px] uppercase font-bold text-amber-400">
+            <span className="text-xs uppercase font-bold text-amber-400">
               Master Attractor Manifold (Portfolio Pool)
             </span>
             <div className="text-xs text-gray-300">
@@ -409,15 +409,15 @@ export default function CashPotAuditPanel() {
           {/* Quick Scoreboard Pills */}
           <div className="flex items-center gap-2 flex-wrap">
             <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1.5">
-              <span>&ge; 1 Hit:</span>
+              <span>At least 1 match:</span>
               <strong className="text-white font-black">{data.auditVerification.atLeast1HitRate.toFixed(2)}%</strong>
             </div>
             <div className="px-3 py-1.5 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-bold flex items-center gap-1.5">
-              <span>&ge; 2 Hits:</span>
+              <span>At least 2 matches:</span>
               <strong className="text-white font-black">{data.auditVerification.atLeast2HitRate.toFixed(2)}%</strong>
             </div>
             <div className="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-bold flex items-center gap-1.5">
-              <span>&ge; 3 Hits:</span>
+              <span>At least 3 matches:</span>
               <strong className="text-white font-black">{data.auditVerification.atLeast3HitRate.toFixed(2)}%</strong>
             </div>
           </div>
@@ -454,7 +454,7 @@ export default function CashPotAuditPanel() {
                 hitFilter === "3plus" ? "bg-purple-500 text-slate-950" : "bg-slate-900 text-purple-400 hover:bg-purple-500/10"
               }`}
             >
-              &ge; 3 Hits ({data.auditVerification.recentAuditLog.filter(e => e.bestTicketHit >= 3).length})
+              3 or more matches ({data.auditVerification.recentAuditLog.filter(e => e.bestTicketHit >= 3).length})
             </button>
             <button
               onClick={() => { setHitFilter("2plus"); setCurrentPage(1); }}
@@ -462,7 +462,7 @@ export default function CashPotAuditPanel() {
                 hitFilter === "2plus" ? "bg-sky-500 text-slate-950" : "bg-slate-900 text-sky-400 hover:bg-sky-500/10"
               }`}
             >
-              &ge; 2 Hits
+              2 or more matches
             </button>
             <button
               onClick={() => { setHitFilter("1plus"); setCurrentPage(1); }}
@@ -470,7 +470,7 @@ export default function CashPotAuditPanel() {
                 hitFilter === "1plus" ? "bg-emerald-500 text-slate-950" : "bg-slate-900 text-emerald-400 hover:bg-emerald-500/10"
               }`}
             >
-              &ge; 1 Hit
+              1 or more matches
             </button>
           </div>
         </div>
@@ -479,7 +479,7 @@ export default function CashPotAuditPanel() {
         <div className="overflow-x-auto rounded-xl border border-white/5">
           <table className="w-full text-left text-xs border-collapse font-mono">
             <thead>
-              <tr className="bg-slate-900/90 text-[10px] text-gray-400 uppercase tracking-wider border-b border-white/10">
+              <tr className="bg-slate-900/90 text-xs text-gray-400 uppercase tracking-wider border-b border-white/10">
                 <th className="py-3 px-3">Draw #</th>
                 <th className="py-3 px-3">Date</th>
                 <th className="py-3 px-3">Actual Winning Balls</th>
@@ -511,12 +511,12 @@ export default function CashPotAuditPanel() {
                           {entry.actualNumbers.map(n => (
                             <span 
                               key={n}
-                              className="w-6 h-6 rounded-md bg-black/60 border border-white/10 text-white font-bold text-[11px] flex items-center justify-center"
+                              className="w-6 h-6 rounded-md bg-black/60 border border-white/10 text-white font-bold text-xs flex items-center justify-center"
                             >
                               {String(n).padStart(2, "0")}
                             </span>
                           ))}
-                          <span className="text-[10px] text-gray-500 ml-1">Sum: {entry.actualSum}</span>
+                          <span className="text-xs text-gray-500 ml-1">Sum: {entry.actualSum}</span>
                         </div>
                       </td>
                       <td className="py-3 px-3">
@@ -527,7 +527,7 @@ export default function CashPotAuditPanel() {
                               return (
                                 <span 
                                   key={n}
-                                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                  className={`px-1.5 py-0.5 rounded text-xs font-bold ${
                                     isHit 
                                       ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_8px_rgba(52,211,153,0.5)]" 
                                       : "bg-slate-800 text-gray-400 border border-white/5"
@@ -538,13 +538,13 @@ export default function CashPotAuditPanel() {
                               );
                             })}
                           </div>
-                          <span className="text-[9px] text-gray-500 block truncate max-w-[200px]">
+                          <span className="text-xs text-gray-500 block truncate max-w-[200px]">
                             {entry.bestSetName}
                           </span>
                         </div>
                       </td>
                       <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-black ${
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-black ${
                           entry.bestTicketHit >= 3
                             ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]"
                             : entry.bestTicketHit === 2
@@ -557,7 +557,7 @@ export default function CashPotAuditPanel() {
                         </span>
                       </td>
                       <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                           <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                           <span>100% PASS</span>
                         </span>

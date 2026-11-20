@@ -171,7 +171,7 @@ export default function CashPotTab() {
       <GameHeaderBanner
         game="cashpot"
         title="Cash Pot"
-        subtitle="5 of 20 Numbers (1–20) + Multiplier • Daily 7:00 PM • 1 in 15,504 Odds • Top Prize $100,000 TTD"
+        subtitle="Pick 5 numbers from 1 to 20 with Multiplier. Draws daily at 7:00 PM except religious holidays. 1 in 15,504 odds for all 5 numbers."
         themeColor="yellow"
         iconSrc="/images/cash_pot_icon.png"
         totalDrawsCount={stats?.totalDraws || totalDraws}
@@ -221,7 +221,7 @@ export default function CashPotTab() {
             <button
               key={tabItem.id}
               onClick={() => setActiveSubTab(tabItem.id as any)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? "bg-yellow-500 text-slate-950 font-black shadow-sm"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/70"
@@ -246,10 +246,10 @@ export default function CashPotTab() {
                   <span className="text-xs font-black uppercase tracking-wider text-yellow-300">
                     Verified Champion Engine — {championPick.engine_name}
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black">
                     {championPick.verified_win_rate_pct ?? championPick.win_rate_pct}% WIN RATE ({(championPick.verified_roi_pct ?? championPick.roi_pct) >= 0 ? "+" : ""}{championPick.verified_roi_pct ?? championPick.roi_pct}% ROI)
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 text-xs font-bold">
                     Target Draw #{championPick.target_draw_number}
                   </span>
                 </div>
@@ -259,7 +259,7 @@ export default function CashPotTab() {
                       triggerHaptic("selection");
                       setShowChampionDrawer(!showChampionDrawer);
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-yellow-300 text-[11px] font-bold transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-yellow-300 text-xs font-bold transition cursor-pointer"
                   >
                     {showChampionDrawer ? "Close Champion Drawer" : "Open 10-Slip & Window Drawer"}
                   </button>
@@ -268,7 +268,7 @@ export default function CashPotTab() {
                       triggerHaptic("selection");
                       setActiveSubTab("wheeling");
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-[11px] uppercase tracking-wider transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-xs uppercase tracking-wider transition cursor-pointer"
                   >
                     Wheeling ({selectedPool.length} Balls)
                   </button>
@@ -281,22 +281,22 @@ export default function CashPotTab() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-gray-400 uppercase block">1-Draw Window</span>
-                          <span className="text-[9px] text-gray-500">{championPick.multi_draw_window_rates.description}</span>
+                          <span className="text-xs text-gray-400 uppercase block">1-Draw Window</span>
+                          <span className="text-xs text-gray-500">{championPick.multi_draw_window_rates.description}</span>
                         </div>
                         <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_1_draw}%</span>
                       </div>
                       <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-gray-400 uppercase block">3-Draw Rolling Window</span>
-                          <span className="text-[9px] text-gray-500">3+ Ball Hit Capture</span>
+                          <span className="text-xs text-gray-400 uppercase block">3-Draw Rolling Window</span>
+                          <span className="text-xs text-gray-500">3+ Ball Hit Capture</span>
                         </div>
                         <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_3_draw}%</span>
                       </div>
                       <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                         <div>
-                          <span className="text-[10px] text-gray-400 uppercase block">5-Draw Saturation Window</span>
-                          <span className="text-[9px] text-gray-500">Multi-Draw Convergence</span>
+                          <span className="text-xs text-gray-400 uppercase block">5-Draw Saturation Window</span>
+                          <span className="text-xs text-gray-500">Multi-Draw Convergence</span>
                         </div>
                         <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_5_draw}%</span>
                       </div>
@@ -313,12 +313,12 @@ export default function CashPotTab() {
                             : "bg-black/40 border-white/10"
                         }`}
                       >
-                        <span className="text-[10px] font-bold text-gray-400">#{idx + 1}</span>
+                        <span className="text-xs font-bold text-gray-400">#{idx + 1}</span>
                         <div className="flex items-center gap-1">
                           {slip.map((n: number, bIdx: number) => (
                             <span
                               key={bIdx}
-                              className="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 font-black text-[11px] flex items-center justify-center"
+                              className="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 font-black text-xs flex items-center justify-center"
                             >
                               {n}
                             </span>
@@ -335,33 +335,33 @@ export default function CashPotTab() {
           {/* Quick Metrics Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono">
             <div className="p-4 rounded-xl bg-slate-900/60 border border-yellow-500/20 space-y-1">
-              <span className="text-[10px] text-gray-400 uppercase">Total Draws Analyzed</span>
+              <span className="text-xs text-gray-400 uppercase">Total Draws Analyzed</span>
               <div className="text-xl font-black text-yellow-300">
                 {stats?.totalDraws ? stats.totalDraws.toLocaleString() : "..."}
               </div>
-              <span className="text-[9px] text-emerald-400">100% Database Records</span>
+              <span className="text-xs text-emerald-400">100% Database Records</span>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-900/60 border border-yellow-500/20 space-y-1">
-              <span className="text-[10px] text-gray-400 uppercase">Combinatorial Odds</span>
+              <span className="text-xs text-gray-400 uppercase">Combinatorial Odds</span>
               <div className="text-xl font-black text-white">1 in 15,504</div>
-              <span className="text-[9px] text-gray-400">C(20, 5) Permutations</span>
+              <span className="text-xs text-gray-400">C(20, 5) Permutations</span>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-900/60 border border-yellow-500/20 space-y-1">
-              <span className="text-[10px] text-gray-400 uppercase">Average Ticket Sum</span>
+              <span className="text-xs text-gray-400 uppercase">Average Ticket Sum</span>
               <div className="text-xl font-black text-yellow-300">
                 {stats?.averageSum || 52.5}
               </div>
-              <span className="text-[9px] text-gray-400">Normal range 40–65</span>
+              <span className="text-xs text-gray-400">Normal range 40–65</span>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-900/60 border border-yellow-500/20 space-y-1">
-              <span className="text-[10px] text-gray-400 uppercase">Chi-Square Randomness</span>
+              <span className="text-xs text-gray-400 uppercase">Chi-Square Randomness</span>
               <div className="text-xl font-black text-emerald-400">
                 {stats?.advancedStats?.chiSquare?.verdict || "Unbiased"}
               </div>
-              <span className="text-[9px] text-gray-400">Fair machine distribution</span>
+              <span className="text-xs text-gray-400">Fair machine distribution</span>
             </div>
           </div>
 
@@ -369,7 +369,7 @@ export default function CashPotTab() {
           <div className="p-6 rounded-2xl bg-slate-900/60 border border-yellow-500/20 space-y-4">
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-sm font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2">
+                <h3 className="text-base font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2">
                   <BarChart2 className="w-4 h-4 text-yellow-400" />
                   Historical Number Frequencies (Balls 1 to 20 across all draws)
                 </h3>
@@ -425,24 +425,24 @@ export default function CashPotTab() {
 
               <div className="space-y-3">
                 <div>
-                  <span className="text-[10px] text-yellow-400 uppercase font-bold block mb-1.5">Top 5 Most Frequent:</span>
+                  <span className="text-xs text-yellow-400 uppercase font-bold block mb-1.5">Top 5 Most Frequent:</span>
                   <div className="flex gap-2">
                     {stats?.rankings?.hotNumbers?.map((item: any) => (
                       <div key={item.number} className="flex-1 p-2 bg-yellow-500/10 border border-yellow-400/30 rounded-xl text-center">
                         <span className="text-sm font-black text-yellow-300 block">#{item.number}</span>
-                        <span className="text-[9px] text-gray-400">{item.count} draws</span>
+                        <span className="text-xs text-gray-400">{item.count} draws</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-gray-400 uppercase font-bold block mb-1.5">Top 5 Least Frequent (Cold / Overdue):</span>
+                  <span className="text-xs text-gray-400 uppercase font-bold block mb-1.5">Top 5 Least Frequent (Cold / Overdue):</span>
                   <div className="flex gap-2">
                     {stats?.rankings?.coldNumbers?.map((item: any) => (
                       <div key={item.number} className="flex-1 p-2 bg-slate-800/40 border border-white/10 rounded-xl text-center">
                         <span className="text-sm font-black text-slate-300 block">#{item.number}</span>
-                        <span className="text-[9px] text-gray-500">{item.count} draws</span>
+                        <span className="text-xs text-gray-500">{item.count} draws</span>
                       </div>
                     ))}
                   </div>
@@ -497,7 +497,7 @@ export default function CashPotTab() {
         <div className="space-y-6">
           <div className="bg-slate-900/60 border border-yellow-500/20 rounded-2xl p-6 backdrop-blur-md space-y-6 font-mono">
             <div>
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <Layers className="w-4 h-4 text-yellow-400" />
                 Abbreviated Set Cover Wheeling Generator (5 of 20 Pool)
               </h3>
@@ -569,17 +569,17 @@ export default function CashPotTab() {
               <div className="space-y-3 pt-4 border-t border-white/10">
                 <div className="flex justify-between items-center text-xs font-bold text-white">
                   <span>Generated Tickets ({generatedTickets.length} lines):</span>
-                  <span className="text-yellow-400 font-mono text-[11px]">
+                  <span className="text-yellow-400 font-mono text-xs">
                     Total Stake: ${generatedTickets.length * 5} TT ($5/ticket)
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   {generatedTickets.map((ticket, idx) => (
                     <div key={idx} className="p-3 bg-black/50 border border-yellow-500/20 rounded-xl flex items-center justify-between">
-                      <span className="text-[10px] text-gray-400">#{idx + 1}</span>
+                      <span className="text-xs text-gray-400">#{idx + 1}</span>
                       <div className="flex gap-1.5">
                         {ticket.map(n => (
-                          <span key={n} className="w-6 h-6 rounded-md bg-yellow-500/20 border border-yellow-400 text-yellow-300 font-bold text-[11px] flex items-center justify-center">
+                          <span key={n} className="w-6 h-6 rounded-md bg-yellow-500/20 border border-yellow-400 text-yellow-300 font-bold text-xs flex items-center justify-center">
                             {n}
                           </span>
                         ))}
@@ -618,7 +618,7 @@ export default function CashPotTab() {
             <div className={`transition-all duration-300 ${selectedCashPotDraw ? "w-full lg:w-2/3" : "w-full"}`}>
               <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-x-auto sleek-scrollbar max-h-[600px] relative">
                 <table className="w-full text-left text-xs min-w-[480px]">
-                  <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md text-gray-400 border-b border-white/5 uppercase text-[10px]">
+                  <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md text-gray-400 border-b border-white/5 uppercase text-xs">
                     <tr>
                       <th className="py-3 px-4 bg-slate-950">Draw #</th>
                       <th className="py-3 px-4 bg-slate-950">Date</th>
@@ -653,7 +653,7 @@ export default function CashPotTab() {
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-1.5">
                                 {[d.num1, d.num2, d.num3, d.num4, d.num5].map((n, i) => (
-                                  <span key={i} className={`w-6 h-6 rounded-md font-bold flex items-center justify-center text-[11px] transition-transform ${
+                                  <span key={i} className={`w-6 h-6 rounded-md font-bold flex items-center justify-center text-xs transition-transform ${
                                     isSelected
                                       ? "bg-yellow-400 text-slate-950 scale-105 shadow-[0_0_8px_rgba(250,204,21,0.5)]"
                                       : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
@@ -664,17 +664,17 @@ export default function CashPotTab() {
                               </div>
                             </td>
                             <td className="py-3 px-4">
-                              <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                                 d.multiplier > 1 ? "bg-red-500/20 text-red-300 border border-red-500/30" : "bg-white/5 text-gray-400"
                               }`}>
                                 {d.multiplier}X
                               </span>
                             </td>
                             <td className="py-3 px-3 text-right">
-                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded transition-colors ${
+                              <span className={`text-xs uppercase font-bold px-2 py-1 rounded transition-colors ${
                                 isSelected ? "bg-yellow-400/20 text-yellow-300" : "text-gray-500 hover:text-white"
                               }`}>
-                                {isSelected ? "Active" : "Inspect →"}
+                                {isSelected ? "Selected" : "Inspect"}
                               </span>
                             </td>
                           </tr>
@@ -719,17 +719,17 @@ export default function CashPotTab() {
                       <h4 className="text-xs font-black uppercase text-white tracking-wider">
                         Cash Pot Draw #{selectedCashPotDraw.draw_number}
                       </h4>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-xs text-gray-400">
                         {selectedCashPotDraw.draw_date}
                       </span>
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedCashPotDraw(null)}
-                    className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition text-xs"
-                    title="Close Investigation Panel"
+                    className="px-2 py-1 rounded-md text-slate-300 hover:text-white hover:bg-white/10 transition text-xs font-sans font-semibold cursor-pointer"
+                    title="Close details panel"
                   >
-                    ✕
+                    Close
                   </button>
                 </div>
 
@@ -748,54 +748,54 @@ export default function CashPotTab() {
                     <div className="space-y-4">
                       {/* Balls Cluster */}
                       <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-2">
-                        <span className="text-[9px] text-gray-400 uppercase tracking-widest block">Drawn Balls (5 of 20)</span>
+                        <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold block">Drawn Numbers (5 of 20)</span>
                         <div className="flex items-center justify-center gap-2 flex-wrap">
                           {nums.map((n, i) => (
-                            <div key={i} className="w-9 h-9 rounded-xl bg-yellow-500/20 border-2 border-yellow-400 text-yellow-200 font-black text-sm flex items-center justify-center shadow-[0_0_10px_rgba(250,204,21,0.3)]">
+                            <div key={i} className="w-9 h-9 rounded-xl bg-yellow-500/20 border-2 border-yellow-400 text-yellow-200 font-bold text-sm flex items-center justify-center">
                               {String(n).padStart(2, "0")}
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      {/* Invariant Coordinates */}
-                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-2.5">
-                        <span className="text-[9px] font-bold text-yellow-400 uppercase tracking-widest block">
-                          Gaussian Manifold Coordinates
+                      {/* Draw Summary Breakdown */}
+                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-2.5 font-sans">
+                        <span className="text-xs font-bold text-yellow-400 uppercase tracking-wider block">
+                          Draw Balance Summary
                         </span>
                         <div className="grid grid-cols-2 gap-2 text-center text-xs">
                           <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Ball Sum</span>
-                            <span className="text-base font-black text-yellow-300">{sum}</span>
-                            <span className={`text-[8px] block mt-0.5 font-bold ${isManifoldPassed ? "text-emerald-400" : "text-amber-400"}`}>
-                              {isManifoldPassed ? "✓ In Manifold [35-70]" : "Tail Distribution"}
+                            <span className="text-xs text-slate-400 block">Total Sum</span>
+                            <span className="text-base font-bold text-yellow-300 font-mono">{sum}</span>
+                            <span className={`text-xs block mt-0.5 font-semibold ${isManifoldPassed ? "text-emerald-400" : "text-amber-400"}`}>
+                              {isManifoldPassed ? "Typical Range (35 to 70)" : "Unusual Sum"}
                             </span>
                           </div>
                           <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Odd : Even</span>
-                            <span className="text-base font-black text-cyan-300">{oddsCount}O : {evensCount}E</span>
-                            <span className="text-[8px] text-gray-400 block mt-0.5">Parity Split</span>
+                            <span className="text-xs text-slate-400 block">Odd and Even</span>
+                            <span className="text-base font-bold text-cyan-300">{oddsCount} Odd, {evensCount} Even</span>
+                            <span className="text-xs text-slate-400 block mt-0.5">Balance Mix</span>
                           </div>
                           <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">High : Low</span>
-                            <span className="text-base font-black text-purple-300">{highsCount}H : {lowsCount}L</span>
-                            <span className="text-[8px] text-gray-400 block mt-0.5">Median Split at 10/11</span>
+                            <span className="text-xs text-slate-400 block">High and Low</span>
+                            <span className="text-base font-bold text-purple-300">{highsCount} High, {lowsCount} Low</span>
+                            <span className="text-xs text-slate-400 block mt-0.5">Split at 10 and 11</span>
                           </div>
                           <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Range Spread</span>
-                            <span className="text-base font-black text-emerald-300">{spread}</span>
-                            <span className="text-[8px] text-gray-400 block mt-0.5">Max ({nums[4]}) - Min ({nums[0]})</span>
+                            <span className="text-xs text-slate-400 block">Number Spread</span>
+                            <span className="text-base font-bold text-emerald-300 font-mono">{spread}</span>
+                            <span className="text-xs text-slate-400 block mt-0.5">Highest ({nums[4]}) minus Lowest ({nums[0]})</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Multiplier Details */}
-                      <div className="p-3 rounded-xl bg-slate-900/80 border border-white/5 flex items-center justify-between text-xs">
-                        <span className="text-gray-400 uppercase text-[10px]">Multiplier Ball:</span>
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-black font-mono ${
-                          selectedCashPotDraw.multiplier > 1 ? "bg-red-500/20 text-red-300 border border-red-500/40" : "bg-white/5 text-gray-300"
+                      <div className="p-3 rounded-xl bg-slate-900/80 border border-white/5 flex items-center justify-between text-xs font-sans">
+                        <span className="text-slate-400 font-semibold">Multiplier Drawn:</span>
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${
+                          selectedCashPotDraw.multiplier > 1 ? "bg-red-500/20 text-red-300 border border-red-500/40" : "bg-white/5 text-slate-300"
                         }`}>
-                          {selectedCashPotDraw.multiplier}X Payout Multiplier
+                          {selectedCashPotDraw.multiplier} times Multiplier
                         </span>
                       </div>
                     </div>
@@ -809,29 +809,29 @@ export default function CashPotTab() {
 
       {/* Subtab Content: How It Works */}
       {activeSubTab === "explain" && (
-        <div className="glass-panel border border-yellow-500/20 p-6 rounded-2xl bg-slate-950/40 space-y-4 font-mono">
-          <h3 className="text-sm font-bold text-yellow-400 uppercase tracking-widest border-b border-white/5 pb-2">
-            How The App Reduces The Odds in NLCB Cash Pot (5 of 20)
+        <div className="glass-panel border border-yellow-500/20 p-6 rounded-2xl bg-slate-950/40 space-y-4 font-sans">
+          <h3 className="text-base font-bold text-yellow-400 border-b border-white/5 pb-2.5">
+            How Ticket Coverage Works in NLCB Cash Pot (5 of 20)
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-gray-300 leading-relaxed">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-300 leading-relaxed">
             <div className="space-y-2">
-              <h4 className="text-yellow-300 font-bold uppercase">1. Multi-Engine Portfolio &amp; Orthogonality</h4>
-              <p className="text-gray-400">
-                Out of <code className="text-yellow-400 font-bold">C(20, 5) = 15,504</code> combinations, the app runs 4 audited engines in parallel: <strong>Winning Formula</strong> (Lag 1–2 kinematic ±1 neighbor core), <strong>Quant 100% Sieve</strong> (CRT mod-5 + Takens velocity + eigenvector centrality), <strong>Forensic Engine</strong> (with &le;2-ball line overlap enforcement), and <strong>Apex Champion Consensus</strong>.
+              <h4 className="text-sm text-yellow-300 font-bold">1. Removing Overlapping Slips</h4>
+              <p className="text-slate-300">
+                Out of <strong className="text-yellow-300">15,504 total combinations</strong>, this app checks multiple models side by side and enforces strict non-overlapping coverage (at most 1 shared number between slips) so your tickets never waste money repeating the same pairs.
               </p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-yellow-300 font-bold uppercase">2. Empirical P10–P90 Corridor [37, 65] &amp; Balance</h4>
-              <p className="text-gray-400">
-                All generated 5-ball lines are constrained to the empirical P10–P90 sum corridor of <strong>[37, 65]</strong> (centered near 52.5) with balanced <strong>2:3 / 3:2</strong> odd-even and low-high splits, eliminating extreme tail collapses.
+              <h4 className="text-sm text-yellow-300 font-bold">2. Balanced Sum Range (37 to 65)</h4>
+              <p className="text-slate-300">
+                Generated 5-number lines stay within the typical sum range of <strong className="text-white">37 to 65</strong> with a balanced odd-and-even and low-and-high mix, avoiding extreme patterns.
               </p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-yellow-300 font-bold uppercase">3. 10-Slip Mandel Wheel &amp; Multiplier Rotation</h4>
-              <p className="text-gray-400">
-                Beyond the 5 primary playable lines, the app builds a 10-slip abbreviated covering wheel over the active attractor pool (tracked via live <strong>10-Slip Wheel Capture %</strong>) alongside Weibull renewal projections for the <strong>x1–x5 Multiplier</strong>.
+              <h4 className="text-sm text-yellow-300 font-bold">3. 10-Slip Coverage and Sure Call Days</h4>
+              <p className="text-slate-300">
+                A 10-slip non-overlapping set covers all 20 numbers and reaches the exact <strong className="text-white">63.34% chance</strong> of matching 3 or more numbers. Playing on Monday, Thursday, or Saturday Sure Call days ensures a 2 to 4 times Multiplier.
               </p>
             </div>
 

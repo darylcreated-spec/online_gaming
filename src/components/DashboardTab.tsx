@@ -159,7 +159,7 @@ export default function DashboardTab({
       {/* Top Controls Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-white">Statistical Analytics</h2>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">Statistical Analytics</h2>
           <p className="text-sm text-gray-400">Real-time frequencies and hot/cold matrix calculations</p>
         </div>
         
@@ -199,10 +199,10 @@ export default function DashboardTab({
       {/* Toggleable Explainer Section */}
       {showHelp && (
         <div className="glass-panel border border-white/5 p-5 rounded-xl bg-slate-950/20 space-y-4">
-          <h3 className="text-xs font-bold text-white uppercase font-mono tracking-widest border-b border-white/5 pb-2">
+          <h3 className="text-base font-bold text-white uppercase font-mono tracking-widest border-b border-white/5 pb-2">
             How The App Helps You Reduce The Odds in Lotto Plus
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-[11px] leading-relaxed text-gray-400 font-mono">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-xs leading-relaxed text-gray-400 font-mono">
             <div className="space-y-1.5">
               <h4 className="text-primary font-bold uppercase">1. COMBINATORIAL ODDS FILTERING</h4>
               <p>
@@ -251,7 +251,7 @@ export default function DashboardTab({
 
           {/* Sample Robustness Progress Track */}
           <div className="mt-3 pt-2 border-t border-white/5 space-y-1">
-            <div className="flex justify-between text-[9px] font-mono text-gray-400">
+            <div className="flex justify-between text-xs font-mono text-gray-400">
               <span>Sample Robustness</span>
               <span className="text-primary font-bold">
                 {Math.min(100, Math.round(((stats?.totalDraws || 0) / 1000) * 100))}%
@@ -293,7 +293,7 @@ export default function DashboardTab({
                       {stats.latestDraw.powerball}
                     </div>
                   </div>
-                  <span className="text-[10px] text-gray-400 font-mono">
+                  <span className="text-xs text-gray-400 font-mono">
                     Next Draw: <span className="text-white font-bold">{getNextDrawDate()}</span>
                   </span>
                 </div>
@@ -309,7 +309,7 @@ export default function DashboardTab({
               const bellPercent = Math.min(100, Math.max(10, Math.round((sum / 175) * 100)));
               const isBell = sum >= 60 && sum <= 120;
               return (
-                <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-gray-400">
+                <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
                   <span>Gaussian Sum: <strong className="text-white">{sum}</strong> (Bell [60-120])</span>
                   <div className="flex items-center gap-2">
                     <div className="w-24 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
@@ -339,12 +339,12 @@ export default function DashboardTab({
               </div>
             </div>
             
-            <p className="text-[10px] text-gray-500 font-mono border-t border-white/5 pt-2">Next Draw: {getNextDrawDate()}</p>
+            <p className="text-xs text-gray-500 font-mono border-t border-white/5 pt-2">Next Draw: {getNextDrawDate()}</p>
           </div>
 
           {/* Jackpot EV Track */}
           <div className="pt-2 border-t border-white/5 space-y-1">
-            <div className="flex justify-between text-[9px] font-mono text-gray-400">
+            <div className="flex justify-between text-xs font-mono text-gray-400">
               <span>+EV Tipping Gauge</span>
               <span className="text-primary font-bold">+EV Active</span>
             </div>
@@ -367,11 +367,11 @@ export default function DashboardTab({
               <span className="text-xs font-black uppercase tracking-wider text-sky-300">
                 Verified Champion Engine — {championPick.engine_name}
               </span>
-              <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">
+              <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black">
                 {championPick.verified_win_rate_pct ?? championPick.win_rate_pct}% WIN RATE ({(championPick.verified_roi_pct ?? championPick.roi_pct) >= 0 ? "+" : ""}{championPick.verified_roi_pct ?? championPick.roi_pct}% ROI)
               </span>
               {championPick.bonus_ball_rotation?.length > 0 && (
-                <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-400/40 text-purple-200 text-[10px] font-bold">
+                <span className="px-2 py-0.5 rounded bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-bold">
                   Top-3 Renewal PB: {championPick.bonus_ball_rotation.join(", ")}
                 </span>
               )}
@@ -381,7 +381,7 @@ export default function DashboardTab({
                 triggerHaptic("selection");
                 setShowChampionDrawer(!showChampionDrawer);
               }}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-300 text-[11px] font-bold transition cursor-pointer shrink-0"
+              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-300 text-xs font-bold transition cursor-pointer shrink-0"
             >
               {showChampionDrawer ? "Close Champion Drawer" : "Open 10-Slip & Window Drawer"}
             </button>
@@ -393,22 +393,22 @@ export default function DashboardTab({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-gray-400 uppercase block">1-Draw Window</span>
-                      <span className="text-[9px] text-gray-500">{championPick.multi_draw_window_rates.description}</span>
+                      <span className="text-xs text-gray-400 uppercase block">1-Draw Window</span>
+                      <span className="text-xs text-gray-500">{championPick.multi_draw_window_rates.description}</span>
                     </div>
                     <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_1_draw}%</span>
                   </div>
                   <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-gray-400 uppercase block">3-Draw Rolling Window</span>
-                      <span className="text-[9px] text-gray-500">3+ Ball Hit Capture</span>
+                      <span className="text-xs text-gray-400 uppercase block">3-Draw Rolling Window</span>
+                      <span className="text-xs text-gray-500">3+ Ball Hit Capture</span>
                     </div>
                     <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_3_draw}%</span>
                   </div>
                   <div className="p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-gray-400 uppercase block">5-Draw Saturation Window</span>
-                      <span className="text-[9px] text-gray-500">Multi-Draw Convergence</span>
+                      <span className="text-xs text-gray-400 uppercase block">5-Draw Saturation Window</span>
+                      <span className="text-xs text-gray-500">Multi-Draw Convergence</span>
                     </div>
                     <span className="text-base font-black text-emerald-400">{championPick.multi_draw_window_rates.window_5_draw}%</span>
                   </div>
@@ -427,18 +427,18 @@ export default function DashboardTab({
                           : "bg-black/40 border-white/10"
                       }`}
                     >
-                      <span className="text-[10px] font-bold text-gray-400">#{idx + 1}</span>
+                      <span className="text-xs font-bold text-gray-400">#{idx + 1}</span>
                       <div className="flex items-center gap-1">
                         {slip.map((n: number, bIdx: number) => (
                           <span
                             key={bIdx}
-                            className="w-5 h-5 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-200 font-black text-[10px] flex items-center justify-center"
+                            className="w-5 h-5 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-200 font-black text-xs flex items-center justify-center"
                           >
                             {n}
                           </span>
                         ))}
                         {slipPb && (
-                          <span className="w-5 h-5 rounded-full bg-purple-500/30 border border-purple-400 text-purple-200 font-black text-[10px] flex items-center justify-center ml-0.5">
+                          <span className="w-5 h-5 rounded-full bg-purple-500/30 border border-purple-400 text-purple-200 font-black text-xs flex items-center justify-center ml-0.5">
                             {slipPb}
                           </span>
                         )}
@@ -463,19 +463,19 @@ export default function DashboardTab({
               <h3 className="text-base font-black uppercase tracking-wider text-white font-mono">
                 Expected Value (EV) Combinatorial Optimizer
               </h3>
-              <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black uppercase border border-emerald-500/30">
+              <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black uppercase border border-emerald-500/30">
                 {mevStats ? `${mevStats.drawsAnalyzed} DRAWS` : "857+ DRAWS"}
               </span>
             </div>
             <p className="text-xs text-gray-400 font-mono max-w-2xl">
               Scores 25,000 stochastic candidates against 6 weighted factors derived from every historical Lotto Plus draw:
-              Frequency Weight · Recency Decay · Companion Pair Synergy · Positional Matrix · Balance Score · Overdue Mean-Reversion.
+              Combines draw frequency, recent appearances, partner pairs, number balance, and overdue gaps.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
             <div className="flex items-center gap-2 bg-slate-900/80 border border-white/10 px-3 py-1.5 rounded-lg">
-              <span className="text-[10px] text-gray-400 font-mono uppercase">Lines:</span>
+              <span className="text-xs text-gray-400 font-mono uppercase">Lines:</span>
               <select
                 value={mevTicketCount}
                 onChange={(e) => setMevTicketCount(parseInt(e.target.value))}
@@ -518,7 +518,7 @@ export default function DashboardTab({
           <div className="space-y-4">
             {/* Engine Stats Bar */}
             {mevStats && (
-              <div className="flex flex-wrap gap-4 text-[10px] font-mono text-gray-400 uppercase bg-slate-950/40 border border-white/5 px-4 py-2 rounded-lg">
+              <div className="flex flex-wrap gap-4 text-xs font-mono text-gray-400 uppercase bg-slate-950/40 border border-white/5 px-4 py-2 rounded-lg">
                 <span>Draws Analyzed: <strong className="text-emerald-400">{mevStats.drawsAnalyzed}</strong></span>
                 <span>Candidates Scored: <strong className="text-emerald-400">{mevStats.candidatesScored.toLocaleString()}</strong></span>
                 <span>Score Cutoff: <strong className="text-emerald-400">{mevStats.topScoreCutoff}</strong></span>
@@ -548,11 +548,11 @@ export default function DashboardTab({
                   >
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/40 border border-white/10 text-gray-300">
+                      <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black/40 border border-white/10 text-gray-300">
                         Line #{idx + 1}
                       </span>
                       <span className={`text-xs font-black ${gradeTextColors[ticket.grade] || "text-gray-400"}`}>
-                        {ticket.grade} · {ticket.mevScore}
+                        Grade {ticket.grade} (Score {ticket.mevScore})
                       </span>
                     </div>
 
@@ -566,14 +566,14 @@ export default function DashboardTab({
                           {String(num).padStart(2, "0")}
                         </div>
                       ))}
-                      <span className="text-gray-500 font-bold text-[10px] mx-0.5">+</span>
+                      <span className="text-gray-500 font-bold text-xs mx-0.5">+</span>
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-white to-gray-200 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.3)] border border-white/30">
                         {String(ticket.powerball).padStart(2, "0")}
                       </div>
                     </div>
 
                     {/* Score Breakdown */}
-                    <div className="space-y-1 text-[9px] border-t border-white/5 pt-2">
+                    <div className="space-y-1 text-xs border-t border-white/5 pt-2">
                       {[
                         { label: "Frequency", val: ticket.breakdown.frequencyScore, color: "bg-blue-400" },
                         { label: "Recency", val: ticket.breakdown.recencyScore, color: "bg-emerald-400" },
@@ -616,7 +616,7 @@ export default function DashboardTab({
         <div className="xl:col-span-2 glass-panel p-6 rounded-xl space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-bold tracking-tight text-white">Main Numbers Frequency</h3>
+              <h3 className="text-base font-bold tracking-tight text-white">Main Numbers Frequency</h3>
               <p className="text-xs text-gray-400">Total times drawn for numbers 1 to 35</p>
             </div>
             <div className="p-2 bg-primary/5 rounded-lg border border-primary/10 text-primary">
@@ -663,7 +663,7 @@ export default function DashboardTab({
         {/* Hot / Cold Matrix - Span 1 */}
         <div className="glass-panel p-6 rounded-xl space-y-6">
           <div>
-            <h3 className="text-lg font-bold tracking-tight text-white">Hot & Cold Matrix</h3>
+            <h3 className="text-base font-bold tracking-tight text-white">Hot & Cold Matrix</h3>
             <p className="text-xs text-gray-400">Ranked by draw frequency in timeframe</p>
           </div>
           
@@ -719,7 +719,7 @@ export default function DashboardTab({
       {/* Powerball Frequencies Bar Chart */}
       <div className="glass-panel p-6 rounded-xl space-y-4">
         <div>
-          <h3 className="text-lg font-bold tracking-tight text-white">Powerball Number Frequency</h3>
+          <h3 className="text-base font-bold tracking-tight text-white">Powerball Number Frequency</h3>
           <p className="text-xs text-gray-400">Total times drawn for Powerball numbers 1 to 10</p>
         </div>
         
@@ -762,7 +762,7 @@ export default function DashboardTab({
       {/* Delta Dispersion Scatter Plot */}
       <div className="glass-panel p-6 rounded-xl space-y-4">
         <div>
-          <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+          <h3 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" />
             Delta Gap Dispersion Scatter Plot
           </h3>
@@ -805,7 +805,7 @@ export default function DashboardTab({
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="bg-slate-950/90 border border-white/10 p-2.5 rounded-lg shadow-xl font-mono text-[10px]">
+                        <div className="bg-slate-950/90 border border-white/10 p-2.5 rounded-lg shadow-xl font-mono text-xs">
                           <div className="text-primary font-bold">Delta Gap: {data.gap}</div>
                           <div className="text-white">Occurrences: {data.count} times</div>
                         </div>
@@ -833,8 +833,8 @@ export default function DashboardTab({
           <div className="flex items-center gap-2 border-b border-white/5 pb-3">
             <TrendingUp className="w-5 h-5 text-primary" />
             <div>
-              <h3 className="text-lg font-bold tracking-tight text-white">Advanced Statistical Intelligence</h3>
-              <p className="text-xs text-gray-400">EWMA · RTM Z-Score · Chi-Square · Entropy · Bayesian · Monte Carlo</p>
+              <h3 className="text-base font-bold tracking-tight text-white">Advanced Statistical Intelligence</h3>
+              <p className="text-xs text-gray-400">Recent trends, rebound signals, fairness check, randomness score, and simulations</p>
             </div>
           </div>
 
@@ -844,9 +844,9 @@ export default function DashboardTab({
             <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-emerald-400">RTM Rebound Candidates</span>
+                <span className="text-xs font-bold font-mono uppercase tracking-widest text-emerald-400">RTM Rebound Candidates</span>
               </div>
-              <p className="text-[10px] text-gray-500 font-mono leading-snug">Statistically underdrawn main numbers (Z &lt; -1.5). Due for regression toward the mean.</p>
+              <p className="text-xs text-gray-500 font-mono leading-snug">Statistically underdrawn main numbers (Z &lt; -1.5). Due for regression toward the mean.</p>
               <div className="flex flex-wrap gap-1.5">
                 {(stats.advancedStats.rtmRebound?.candidates || []).map((n: number) => (
                   <span key={n} className="px-2 py-1 rounded bg-emerald-950/50 border border-emerald-500/30 text-emerald-300 font-mono font-bold text-xs">
@@ -854,7 +854,7 @@ export default function DashboardTab({
                   </span>
                 ))}
                 {(!stats.advancedStats.rtmRebound?.candidates || stats.advancedStats.rtmRebound?.candidates.length === 0) && (
-                  <span className="text-xs text-gray-500 font-mono">None currently (Z &ge; -1.5)</span>
+                  <span className="text-xs text-gray-500 font-mono">None currently (all numbers within normal range)</span>
                 )}
               </div>
             </div>
@@ -863,17 +863,17 @@ export default function DashboardTab({
             <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-blue-400">Chi-Square &amp; EWMA Hot</span>
+                <span className="text-xs font-bold font-mono uppercase tracking-widest text-blue-400">Chi-Square &amp; EWMA Hot</span>
               </div>
               <div className="space-y-2">
                 <div className="bg-slate-900/60 rounded-lg p-2 border border-white/5">
-                  <p className="text-[10px] font-mono text-gray-400">Chi-Square Test (p-val)</p>
+                  <p className="text-xs font-mono text-gray-400">Chi-Square Test (p-val)</p>
                   <p className="text-sm font-black font-mono text-blue-300">
                     {stats.advancedStats.chiSquare?.mainNumbers?.pValue?.toFixed(4)} — {stats.advancedStats.chiSquare?.mainNumbers?.signal?.toUpperCase()}
                   </p>
                 </div>
                 <div className="bg-slate-900/60 rounded-lg p-2 border border-white/5">
-                  <p className="text-[10px] font-mono text-gray-400">Top EWMA Recency Picks</p>
+                  <p className="text-xs font-mono text-gray-400">Top EWMA Recency Picks</p>
                   <div className="flex gap-1 mt-1">
                     {(stats.advancedStats.ewma?.top3 || []).map((n: number) => (
                       <span key={n} className="px-1.5 py-0.5 rounded bg-blue-950/60 border border-blue-500/20 text-blue-300 font-mono font-bold text-xs">
@@ -889,7 +889,7 @@ export default function DashboardTab({
             <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-amber-400">Shannon Entropy</span>
+                <span className="text-xs font-bold font-mono uppercase tracking-widest text-amber-400">Shannon Entropy</span>
               </div>
               {(() => {
                 const ent = stats.advancedStats.entropy?.mainNumbers?.ratio ?? stats.advancedStats.entropy?.mainNumbers?.entropyNormalized;
@@ -902,7 +902,7 @@ export default function DashboardTab({
                     <p className="text-xs font-mono font-bold text-amber-300">
                       {pct}% — {stats.advancedStats.entropy?.mainNumbers?.signal?.toUpperCase()}
                     </p>
-                    <p className="text-[10px] text-gray-500 font-mono">{stats.advancedStats.entropy?.mainNumbers?.interpretation?.slice(0, 60)}...</p>
+                    <p className="text-xs text-gray-500 font-mono">{stats.advancedStats.entropy?.mainNumbers?.interpretation?.slice(0, 60)}...</p>
                   </>
                 );
               })()}
@@ -912,25 +912,25 @@ export default function DashboardTab({
             <div className="bg-slate-950/60 rounded-xl p-4 border border-white/5 space-y-3">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo</span>
+                <span className="text-xs font-bold font-mono uppercase tracking-widest text-violet-400">Monte Carlo</span>
               </div>
               <div className="bg-violet-950/30 border border-violet-500/20 rounded-lg px-3 py-2">
-                <p className="text-[10px] font-mono text-gray-400">Top-5 Bayesian picks coverage</p>
+                <p className="text-xs font-mono text-gray-400">Top-5 Bayesian picks coverage</p>
                 <p className="text-2xl font-black font-mono text-violet-300">{stats.advancedStats.monteCarlo?.coveragePercent}%</p>
-                <p className="text-[9px] font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulated draws</p>
+                <p className="text-xs font-mono text-gray-500">in {(stats.advancedStats.monteCarlo?.simulations || 0).toLocaleString()} simulated draws</p>
               </div>
             </div>
           </div>
 
           {/* Bayesian Top-10 */}
           <div className="space-y-2">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Bayesian Posterior Probability — Top 10 Main Numbers</p>
+            <p className="text-xs font-mono uppercase tracking-widest text-gray-500">Bayesian Posterior Probability — Top 10 Main Numbers</p>
             <div className="flex flex-wrap gap-2">
               {(stats.advancedStats.bayesian?.top10 || []).map((b: any, i: number) => (
                 <div key={b.number} className="flex items-center gap-1.5 bg-slate-900 border border-white/5 rounded-lg px-2.5 py-1.5">
-                  <span className="text-[9px] font-mono text-gray-500">#{i+1}</span>
+                  <span className="text-xs font-mono text-gray-500">#{i+1}</span>
                   <span className="text-sm font-black font-mono text-white">{String(b.number).padStart(2, "0")}</span>
-                  <span className="text-[9px] font-mono text-primary">{b.posteriorProb}%</span>
+                  <span className="text-xs font-mono text-primary">{b.posteriorProb}%</span>
                 </div>
               ))}
             </div>
@@ -942,7 +942,7 @@ export default function DashboardTab({
       <div className="glass-panel p-6 rounded-xl space-y-4">
         <div className="flex justify-between items-center border-b border-white/5 pb-3">
           <div>
-            <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            <h3 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
               <Database className="w-5 h-5 text-primary" />
               Lotto Plus Slips Workspace Tracker
             </h3>
@@ -1063,7 +1063,7 @@ export default function DashboardTab({
                       <td className="py-3 text-right">
                         <button
                           onClick={() => handleDeleteSlip(slip.id)}
-                          className="text-red-500 hover:text-red-400 font-extrabold underline tracking-widest uppercase text-[10px] ml-4 cursor-pointer"
+                          className="text-red-500 hover:text-red-400 font-extrabold underline tracking-widest uppercase text-xs ml-4 cursor-pointer"
                         >
                           DELETE
                         </button>

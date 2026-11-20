@@ -820,8 +820,8 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold tracking-tight text-white">Utility Suite</h2>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase border ${
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">Utility Suite</h2>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold font-mono uppercase border ${
               activeTool === "scanner" 
                 ? "bg-purple-500/20 text-purple-300 border-purple-400/30" 
                 : "bg-cyan-500/20 text-cyan-300 border-cyan-400/30"
@@ -896,7 +896,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
             <option value="pick4">Pick 4 (Active)</option>
           </select>
         </div>
-        <div className="text-[10px] text-gray-500 font-mono">
+        <div className="text-xs text-gray-500 font-mono">
           SCANNING PORTAL
         </div>
       </div>
@@ -913,7 +913,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                 <Upload className="w-6 h-6" />
               </div>
               
-              <h3 className="font-bold text-white mb-2">Scan Your Ticket</h3>
+              <h3 className="text-base font-bold text-white mb-2">Scan Your Ticket</h3>
               <p className="text-xs text-gray-400 max-w-xs mx-auto mb-6">
                 Upload an image or take a photo of your NLCB Lotto Plus ticket to run the OCR extractor.
               </p>
@@ -1037,7 +1037,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
               {/* Universal Draw Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Draw Number</label>
+                  <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Draw Number</label>
                   <input
                     type="number"
                     value={ticketDrawNum}
@@ -1048,7 +1048,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                 </div>
                 {selectedGame === "play-whe" || selectedGame === "pick4" ? (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Time Slot</label>
+                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold text-primary">Time Slot</label>
                     <select
                       value={ticketTimeSlot}
                       onChange={(e) => setTicketTimeSlot(e.target.value)}
@@ -1062,7 +1062,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Draw Date (Optional)</label>
+                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Draw Date (Optional)</label>
                     <input
                       type="text"
                       value={ticketDate}
@@ -1078,7 +1078,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
               {selectedGame === "pick4" && (
                 <div className="flex items-center justify-between p-2.5 bg-slate-950/80 rounded-lg border border-white/10">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Bet Mode:</span>
+                    <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Bet Mode:</span>
                     <button
                       type="button"
                       onClick={() => setPick4BetType("STRAIGHT")}
@@ -1088,7 +1088,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                           : "bg-slate-900 text-gray-400 hover:text-white"
                       }`}
                     >
-                      STRAIGHT (Exact Order · $5,000)
+                      Exact Order ($5,000 Top Prize)
                     </button>
                     <button
                       type="button"
@@ -1099,10 +1099,10 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                           : "bg-slate-900 text-gray-400 hover:text-white"
                       }`}
                     >
-                      BOX (Any Order · Up to $1,250)
+                      Any Order Box (Up to $1,250)
                     </button>
                   </div>
-                  <span className="text-[9px] text-gray-500 font-mono hidden sm:inline">$1.00 BASE</span>
+                  <span className="text-xs text-gray-500 font-mono hidden sm:inline">$1.00 BASE</span>
                 </div>
               )}
 
@@ -1110,7 +1110,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
               {multiPlays.length > 0 ? (
                 <div className="space-y-4 border-t border-white/5 pt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-extrabold">Multiple Plays Detected ({multiPlays.length})</span>
+                    <span className="text-xs text-gray-400 uppercase tracking-wider font-extrabold">Multiple Plays Detected ({multiPlays.length})</span>
                     <button
                       onClick={() => {
                         const nextLabel = String.fromCharCode(65 + multiPlays.length);
@@ -1140,7 +1140,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                               const updated = multiPlays.filter((_, idx) => idx !== playIdx);
                               setMultiPlays(updated);
                             }}
-                            className="text-[10px] text-red-400 hover:text-red-300 font-bold cursor-pointer"
+                            className="text-xs text-red-400 hover:text-red-300 font-bold cursor-pointer"
                           >
                             REMOVE
                           </button>
@@ -1148,7 +1148,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
 
                         {selectedGame === "play-whe" ? (
                           <div className="space-y-1.5">
-                            <label className="text-[10px] text-gray-500 uppercase">Mark Number (1-36)</label>
+                            <label className="text-xs text-gray-500 uppercase">Mark Number (1-36)</label>
                             <input
                               type="number"
                               min="1"
@@ -1165,7 +1165,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                           </div>
                         ) : selectedGame === "pick4" ? (
                           <div className="space-y-1">
-                            <label className="text-[10px] text-gray-500 uppercase">4 Digits (0-9)</label>
+                            <label className="text-xs text-gray-500 uppercase">4 Digits (0-9)</label>
                             <div className="grid grid-cols-4 gap-2">
                               {play.numbers.slice(0, 4).map((d, dIdx) => (
                                 <input
@@ -1188,7 +1188,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                         ) : (
                           <div className="flex gap-2 items-end">
                             <div className="flex-1 space-y-1">
-                              <label className="text-[10px] text-gray-500 uppercase">Numbers</label>
+                              <label className="text-xs text-gray-500 uppercase">Numbers</label>
                               <div className="flex gap-1.5">
                                 {play.numbers.map((num, numIdx) => (
                                   <input
@@ -1210,7 +1210,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                             </div>
 
                             <div className="w-16 space-y-1">
-                              <label className="text-[10px] text-gray-500 uppercase">
+                              <label className="text-xs text-gray-500 uppercase">
                                 {selectedGame === "win-for-life" ? "CB" : selectedGame === "cashpot" ? "MULT" : "PB"}
                               </label>
                               <input
@@ -1236,7 +1236,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
               ) : (
                 <div className="space-y-4 border-t border-white/5 pt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wider font-extrabold">Single Play Review</span>
+                    <span className="text-xs text-gray-400 uppercase tracking-wider font-extrabold">Single Play Review</span>
                     <button
                       onClick={() => {
                         const count = selectedGame === "win-for-life" ? 6 : selectedGame === "play-whe" ? 1 : selectedGame === "pick4" ? 4 : 5;
@@ -1248,7 +1248,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                           }
                         ]);
                       }}
-                      className="text-[10px] text-primary hover:text-primary/80 font-bold cursor-pointer"
+                      className="text-xs text-primary hover:text-primary/80 font-bold cursor-pointer"
                     >
                       SWITCH TO MULTI-PLAY
                     </button>
@@ -1257,7 +1257,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                   {selectedGame === "play-whe" ? (
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5 col-span-2">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Your Mark Number (1-36)</label>
+                        <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold text-primary">Your Mark Number (1-36)</label>
                         <input
                           type="number"
                           min="1"
@@ -1271,7 +1271,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                     </div>
                   ) : selectedGame === "pick4" ? (
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-primary">Your 4 Digits (0-9)</label>
+                      <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block text-primary">Your 4 Digits (0-9)</label>
                       <div className="grid grid-cols-4 gap-2">
                         {ticketNumbers.slice(0, 4).map((num, idx) => (
                           <input
@@ -1294,7 +1294,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                   ) : selectedGame === "cashpot" ? (
                     <>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-amber-400">Multiplier (1-5)</label>
+                        <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold text-amber-400">Multiplier (1-5)</label>
                         <input
                           type="number"
                           min="1"
@@ -1307,7 +1307,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-20)</label>
+                        <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-20)</label>
                         <div className="flex gap-2">
                           {ticketNumbers.slice(0, 5).map((num, idx) => (
                             <input
@@ -1331,7 +1331,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                   ) : selectedGame === "win-for-life" ? (
                     <>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Cash Ball (1-3)</label>
+                        <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold text-primary">Cash Ball (1-3)</label>
                         <input
                           type="number"
                           min="1"
@@ -1344,7 +1344,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (6 Balls, 1-28)</label>
+                        <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (6 Balls, 1-28)</label>
                         <div className="flex gap-2">
                           {ticketNumbers.slice(0, 6).map((num, idx) => (
                             <input
@@ -1368,7 +1368,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                   ) : (
                     <>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold text-primary">Powerball (1-10)</label>
+                        <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold text-primary">Powerball (1-10)</label>
                         <input
                           type="number"
                           min="1"
@@ -1381,7 +1381,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-35)</label>
+                        <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block">Ticket Numbers (5 Balls, 1-35)</label>
                         <div className="flex gap-2">
                           {ticketNumbers.slice(0, 5).map((num, idx) => (
                             <input
@@ -1441,7 +1441,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
               <div className="space-y-4 font-mono border-t border-white/5 pt-3">
                 {selectedGame === "play-whe" ? (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Winning Number (1-36)</label>
+                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Winning Number (1-36)</label>
                     <input
                       type="number"
                       min="1"
@@ -1454,7 +1454,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                   </div>
                 ) : selectedGame === "pick4" ? (
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Winning Digits (4 Digits, 0-9)</label>
+                    <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Winning Digits (4 Digits, 0-9)</label>
                     <div className="grid grid-cols-4 gap-2">
                       {manualWinningNumbers.slice(0, 4).map((num, idx) => (
                         <input
@@ -1477,7 +1477,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                 ) : selectedGame === "cashpot" ? (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5 col-span-2">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Official Winning Numbers (5 Balls, 1-20)</label>
+                      <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block">Official Winning Numbers (5 Balls, 1-20)</label>
                       <div className="flex gap-2">
                         {manualWinningNumbers.slice(0, 5).map((num, idx) => (
                           <input
@@ -1498,7 +1498,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                       </div>
                     </div>
                     <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-amber-400">Official Multiplier (1-5)</label>
+                      <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block text-amber-400">Official Multiplier (1-5)</label>
                       <input
                         type="number"
                         min="1"
@@ -1513,7 +1513,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                 ) : selectedGame === "win-for-life" ? (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5 col-span-2">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Official Winning Numbers (6 Balls, 1-28)</label>
+                      <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block">Official Winning Numbers (6 Balls, 1-28)</label>
                       <div className="flex gap-2">
                         {manualWinningNumbers.slice(0, 6).map((num, idx) => (
                           <input
@@ -1534,7 +1534,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                       </div>
                     </div>
                     <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Cash Ball (1-3)</label>
+                      <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Cash Ball (1-3)</label>
                       <input
                         type="number"
                         min="1"
@@ -1549,7 +1549,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5 col-span-2">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block">Official Winning Numbers (5 Balls, 1-35)</label>
+                      <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block">Official Winning Numbers (5 Balls, 1-35)</label>
                       <div className="flex gap-2">
                         {manualWinningNumbers.slice(0, 5).map((num, idx) => (
                           <input
@@ -1570,7 +1570,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                       </div>
                     </div>
                     <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                      <label className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Powerball (1-10)</label>
+                      <label className="text-xs text-gray-500 uppercase tracking-wider font-semibold block text-primary">Official Powerball (1-10)</label>
                       <input
                         type="number"
                         min="1"
@@ -1603,7 +1603,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
           
           <div className="border-b border-white/5 pb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-green-400" />
                 Draw Verification Report
               </h3>
@@ -1614,7 +1614,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
 
             {selectedGame !== "play-whe" && (
               <div className="bg-slate-950/80 px-4 py-2 rounded-lg border border-white/5 font-mono text-left md:text-right shrink-0">
-                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1">Official Winning Numbers</span>
+                <span className="text-xs text-gray-500 font-bold uppercase tracking-wider block mb-1">Official Winning Numbers</span>
                 <div className="flex gap-1.5 items-center">
                   {selectedGame === "pick4" ? (
                     <>
@@ -1624,7 +1624,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                         </div>
                       ))}
                       {winningDraw.draw_time_slot && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-gray-400 border border-white/10 ml-1">
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-slate-900 text-gray-400 border border-white/10 ml-1">
                           {winningDraw.draw_time_slot}
                         </span>
                       )}
@@ -1632,33 +1632,33 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                   ) : selectedGame === "cashpot" ? (
                     <>
                       {[winningDraw.num1, winningDraw.num2, winningDraw.num3, winningDraw.num4, winningDraw.num5].map((num, i) => (
-                        <div key={i} className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                        <div key={i} className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs">
                           {num}
                         </div>
                       ))}
-                      <div className="w-6 h-6 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-400 flex items-center justify-center font-bold text-[10px]">
+                      <div className="w-6 h-6 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-400 flex items-center justify-center font-bold text-xs">
                         {winningDraw.multiplier ? `${winningDraw.multiplier}X` : "1X"}
                       </div>
                     </>
                   ) : selectedGame === "win-for-life" ? (
                     <>
                       {[winningDraw.num1, winningDraw.num2, winningDraw.num3, winningDraw.num4, winningDraw.num5, winningDraw.num6].map((num, i) => (
-                        <div key={i} className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                        <div key={i} className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs">
                           {num}
                         </div>
                       ))}
-                      <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-[10px]">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-xs">
                         {winningDraw.cash_ball}
                       </div>
                     </>
                   ) : (
                     <>
                       {[winningDraw.num1, winningDraw.num2, winningDraw.num3, winningDraw.num4, winningDraw.num5].map((num, i) => (
-                        <div key={i} className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                        <div key={i} className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold text-xs">
                           {num}
                         </div>
                       ))}
-                      <div className="w-6 h-6 rounded-full bg-primary/30 border border-primary/50 text-white flex items-center justify-center font-bold text-[10px]">
+                      <div className="w-6 h-6 rounded-full bg-primary/30 border border-primary/50 text-white flex items-center justify-center font-bold text-xs">
                         {winningDraw.powerball}
                       </div>
                     </>
@@ -1679,7 +1679,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                 <div key={idx} className="bg-slate-950/40 p-4 rounded-xl border border-white/5 space-y-3 font-mono">
                   <div className="flex justify-between items-center border-b border-white/5 pb-2">
                     <span className="text-xs font-bold text-white uppercase tracking-wider">Play {resultItem.label}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ${
                       isWinner ? "bg-green-500/20 text-green-400 border border-green-500/30" : "bg-slate-900 text-gray-500 border border-white/5"
                     }`}>
                       {grade.tierName}
@@ -1696,7 +1696,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                         </div>
                         <div>
                           <span className="text-xs font-bold text-white uppercase">{CHINAPOO_CHART[parseInt(resultItem.numbers[0])]?.mark || "Unknown"}</span>
-                          <span className="text-[10px] text-gray-500 block">PLAYED VALUE</span>
+                          <span className="text-xs text-gray-500 block">PLAYED VALUE</span>
                         </div>
                       </div>
                       
@@ -1725,12 +1725,12 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                                   : "bg-slate-900 border-white/10 text-gray-400"
                               }`}
                             >
-                              <span className="text-[9px] text-gray-400 leading-none">D{i + 1}</span>
+                              <span className="text-xs text-gray-400 leading-none">D{i + 1}</span>
                               <span className="text-sm">{digitStr}</span>
                             </div>
                           );
                         })}
-                        <span className="text-[10px] text-gray-400 font-mono ml-2">
+                        <span className="text-xs text-gray-400 font-mono ml-2">
                           Type: <strong className="text-primary">{pick4BetType}</strong>
                         </span>
                       </div>
@@ -1751,7 +1751,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                           return (
                             <div
                               key={i}
-                              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border ${
+                              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs border ${
                                 matched
                                   ? "bg-green-500 border-green-500 text-slate-950 shadow-[0_0_8px_rgba(74,222,128,0.3)]"
                                   : "bg-slate-900 border-white/10 text-gray-500"
@@ -1763,7 +1763,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                         })}
                         {selectedGame === "cashpot" ? (
                           <div
-                            className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border ${
+                            className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs border ${
                               resultItem.pb && parseInt(resultItem.pb) > 1
                                 ? "bg-amber-400 border-amber-400 text-slate-950 shadow-[0_0_8px_rgba(251,191,36,0.3)]"
                                 : "bg-slate-900 border-white/10 text-gray-400"
@@ -1774,7 +1774,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                           </div>
                         ) : (
                           <div
-                            className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] border ${
+                            className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs border ${
                               grade.pbMatched
                                 ? selectedGame === "win-for-life"
                                   ? "bg-emerald-500 border-emerald-555 text-slate-950 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
@@ -1808,7 +1808,7 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
                 <h4 className="text-lg font-black text-green-400 tracking-wider uppercase font-mono">
                   WINNING TICKET VERIFIED
                 </h4>
-                <p className="text-[10px] text-gray-400 mt-1">
+                <p className="text-xs text-gray-400 mt-1">
                   {selectedGame === "play-whe"
                     ? "Play Whe payouts are fixed at 26-to-1 based on official NLCB regulations."
                     : selectedGame === "pick4"
@@ -1827,21 +1827,21 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
               <div className="glass-panel border border-white/10 p-3 rounded-lg bg-slate-950/60 max-w-md mx-auto text-left font-mono space-y-2">
                 <div className="flex items-center justify-between text-xs border-b border-white/5 pb-1.5">
                   <span className="text-gray-400 font-bold uppercase">NLCB Tax Auditor (Trinidad & Tobago)</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-black">
+                  <span className="text-xs px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-black">
                     TAX CODE 10%
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <span className="text-[10px] text-gray-500 block uppercase">Tax Exemption Threshold</span>
+                    <span className="text-xs text-gray-500 block uppercase">Tax Exemption Threshold</span>
                     <span className="text-white font-bold">$1,000.00 TT</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-gray-500 block uppercase">Government Tax Rate</span>
+                    <span className="text-xs text-gray-500 block uppercase">Government Tax Rate</span>
                     <span className="text-amber-400 font-bold">10% Withholding</span>
                   </div>
                 </div>
-                <p className="text-[9px] text-gray-400 leading-normal border-t border-white/5 pt-1">
+                <p className="text-xs text-gray-400 leading-normal border-t border-white/5 pt-1">
                   *Prizes of <strong>$1,000 TT or less</strong> are 100% tax-exempt. For prizes exceeding $1,000 TT, NLCB automatically withholds 10% tax for the Board of Inland Revenue.
                 </p>
               </div>
@@ -1895,8 +1895,8 @@ export default function CheckerTab({ initialTool = "scanner", onToolChange }: Ch
         <div role="dialog" aria-modal="true" className="fixed inset-0 bg-slate-950/95 z-[999] flex flex-col justify-between p-3 sm:p-6 overflow-y-auto sleek-scrollbar font-mono">
           <div className="flex justify-between items-center border-b border-white/5 pb-3">
             <div className="space-y-0.5">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">Ticket Scanner Camera</h3>
-              <p className="text-[10px] text-gray-500">Align ticket inside the frame box</p>
+              <h3 className="text-base font-bold text-white uppercase tracking-wider">Ticket Scanner Camera</h3>
+              <p className="text-xs text-gray-500">Align ticket inside the frame box</p>
             </div>
             <button
               onClick={stopCamera}

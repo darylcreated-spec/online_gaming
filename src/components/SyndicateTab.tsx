@@ -328,7 +328,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                 alt="Syndicate" 
                 className="w-8 h-8 object-contain rounded-lg shadow-[0_0_12px_rgba(168,85,247,0.4)]" 
               />
-              <h2 className="text-xl sm:text-2xl font-black uppercase text-white tracking-widest flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-black uppercase text-white tracking-widest flex items-center gap-2">
                 <span>Syndicate Hub &amp; Live Chat</span>
               </h2>
             </div>
@@ -459,20 +459,20 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                 >
                   <div className="space-y-2">
                     <div className="flex justify-between items-start">
-                      <span className="text-[10px] font-black text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
+                      <span className="text-xs font-black text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
                         {s.code}
                       </span>
-                      <span className="text-[9px] text-gray-400 uppercase font-bold px-2 py-0.5 bg-slate-900 rounded border border-white/5">
+                      <span className="text-xs text-gray-400 uppercase font-bold px-2 py-0.5 bg-slate-900 rounded border border-white/5">
                         {s.game_type}
                       </span>
                     </div>
 
-                    <h3 className="text-sm font-bold text-white uppercase group-hover:text-primary transition line-clamp-1">
+                    <h3 className="text-base font-bold text-white uppercase group-hover:text-primary transition line-clamp-1">
                       {s.name}
                     </h3>
                     
                     {s.notes && (
-                      <p className="text-[11px] text-gray-400 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
                         {s.notes}
                       </p>
                     )}
@@ -481,20 +481,20 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                   <div className="space-y-3 pt-3 border-t border-white/5">
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 bg-slate-900/60 rounded-lg border border-white/5">
-                        <span className="text-[8px] text-gray-500 block uppercase">Stake</span>
+                        <span className="text-xs text-gray-500 block uppercase">Stake</span>
                         <strong className="text-xs text-emerald-400">${s.total_stake?.toFixed(0)}</strong>
                       </div>
                       <div className="p-2 bg-slate-900/60 rounded-lg border border-white/5">
-                        <span className="text-[8px] text-gray-500 block uppercase">Tickets</span>
+                        <span className="text-xs text-gray-500 block uppercase">Tickets</span>
                         <strong className="text-xs text-amber-400">{s.ticket_count}</strong>
                       </div>
                       <div className="p-2 bg-slate-900/60 rounded-lg border border-white/5">
-                        <span className="text-[8px] text-gray-500 block uppercase">Members</span>
+                        <span className="text-xs text-gray-500 block uppercase">Members</span>
                         <strong className="text-xs text-sky-400">{s.member_count || 1}</strong>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1">
+                    <div className="flex items-center justify-between text-xs text-gray-400 pt-1">
                       <span>By: <strong className="text-gray-200">{s.creator_name}</strong></span>
                       <span className="flex items-center gap-1 text-primary font-bold group-hover:translate-x-1 transition">
                         View Pool <ArrowRight className="w-3 h-3" />
@@ -525,11 +525,11 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                     {selectedSyndicate.game_type} Pool
                   </span>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-black text-white uppercase">
+                <h2 className="text-lg sm:text-xl font-black text-white uppercase">
                   {selectedSyndicate.name}
                 </h2>
                 <p className="text-xs text-gray-400">
-                  Target Draw: <strong className="text-amber-400">{selectedSyndicate.target_draw_date}</strong> · Creator: <strong className="text-gray-200">{selectedSyndicate.creator_name}</strong>
+                  Target Draw: <strong className="text-amber-400">{selectedSyndicate.target_draw_date}</strong>, Created by: <strong className="text-gray-200">{selectedSyndicate.creator_name}</strong>
                 </p>
               </div>
 
@@ -552,19 +552,19 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
             {/* Quick Stats Banner */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="p-3.5 bg-slate-900/80 rounded-xl border border-white/5">
-                <span className="text-[9px] text-gray-400 uppercase font-bold block">Total Pool Stake</span>
+                <span className="text-xs text-gray-400 uppercase font-bold block">Total Pool Stake</span>
                 <span className="text-lg font-black text-emerald-400">${selectedSyndicate.total_stake?.toFixed(2)} TT</span>
               </div>
               <div className="p-3.5 bg-slate-900/80 rounded-xl border border-white/5">
-                <span className="text-[9px] text-gray-400 uppercase font-bold block">Pooled Tickets</span>
+                <span className="text-xs text-gray-400 uppercase font-bold block">Pooled Tickets</span>
                 <span className="text-lg font-black text-amber-400">{selectedSyndicate.tickets?.length || 0} Lines</span>
               </div>
               <div className="p-3.5 bg-slate-900/80 rounded-xl border border-white/5">
-                <span className="text-[9px] text-gray-400 uppercase font-bold block">Active Members</span>
+                <span className="text-xs text-gray-400 uppercase font-bold block">Active Members</span>
                 <span className="text-lg font-black text-sky-400">{selectedSyndicate.members?.length || 0} Players</span>
               </div>
               <div className="p-3.5 bg-slate-900/80 rounded-xl border border-white/5">
-                <span className="text-[9px] text-gray-400 uppercase font-bold block">Coverage Factor</span>
+                <span className="text-xs text-gray-400 uppercase font-bold block">Coverage Factor</span>
                 <span className="text-lg font-black text-violet-400">{(selectedSyndicate.tickets?.length || 1) * 35}x Matrix</span>
               </div>
             </div>
@@ -575,7 +575,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
             {/* Left: Pooled Tickets Deck */}
             <div className="lg:col-span-7 space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold uppercase text-white flex items-center gap-2">
+                <h3 className="text-base font-bold uppercase text-white flex items-center gap-2">
                   <Ticket className="w-4 h-4 text-amber-400" />
                   <span>Pooled Tickets ({selectedSyndicate.tickets?.length || 0})</span>
                 </h3>
@@ -583,7 +583,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
 
               {/* Add Ticket Form */}
               <form onSubmit={handleAddTicket} className="p-4 bg-slate-950/80 rounded-xl border border-white/5 space-y-3">
-                <span className="text-[10px] font-bold text-gray-400 uppercase block">Add Line to Pool:</span>
+                <span className="text-xs font-bold text-gray-400 uppercase block">Add Line to Pool:</span>
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
                   <input
                     type="text"
@@ -620,7 +620,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                   selectedSyndicate.tickets?.map((t: any, idx: number) => (
                     <div key={t.id} className="p-3 bg-slate-950/60 border border-white/5 rounded-xl flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-gray-500 font-bold">Line #{idx + 1}</span>
+                        <span className="text-xs text-gray-500 font-bold">Line #{idx + 1}</span>
                         <div className="flex flex-wrap gap-1.5 items-center">
                           {t.numbers.split(",").map((num: string, nIdx: number) => (
                             <div
@@ -640,7 +640,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                           )}
                         </div>
                       </div>
-                      <span className="text-[10px] text-gray-400 font-bold">${t.cost?.toFixed(2)} TT</span>
+                      <span className="text-xs text-gray-400 font-bold">${t.cost?.toFixed(2)} TT</span>
                     </div>
                   ))
                 )}
@@ -652,14 +652,14 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
               
               {/* Member Contribution List */}
               <div className="space-y-3">
-                <h3 className="text-sm font-bold uppercase text-white flex items-center gap-2">
+                <h3 className="text-base font-bold uppercase text-white flex items-center gap-2">
                   <Users className="w-4 h-4 text-sky-400" />
                   <span>Members &amp; Shares ({selectedSyndicate.members?.length || 0})</span>
                 </h3>
 
                 {/* Join / Add Member Form */}
                 <form onSubmit={handleAddMember} className="p-4 bg-slate-950/80 rounded-xl border border-white/5 space-y-2.5">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase block">Contribute to Pool:</span>
+                  <span className="text-xs font-bold text-gray-400 uppercase block">Contribute to Pool:</span>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -693,11 +693,11 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                     <div key={m.id} className="p-3 bg-slate-950/50 rounded-xl border border-white/5 flex items-center justify-between text-xs">
                       <div>
                         <div className="font-bold text-white">{m.member_name}</div>
-                        <div className="text-[9px] text-gray-500 mt-0.5">Contributed: ${m.contribution_amount?.toFixed(2)} TT</div>
+                        <div className="text-xs text-gray-500 mt-0.5">Contributed: ${m.contribution_amount?.toFixed(2)} TT</div>
                       </div>
                       <div className="text-right">
                         <div className="text-xs font-black text-primary">{m.share_percentage}%</div>
-                        <div className="text-[8px] text-gray-400">of Payout</div>
+                        <div className="text-xs text-gray-400">of Payout</div>
                       </div>
                     </div>
                   ))}
@@ -714,7 +714,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] text-gray-400">
+                  <div className="flex justify-between text-xs text-gray-400">
                     <span>Estimated Winning Pot ($TT):</span>
                     <strong className="text-emerald-400">${Number(hypoJackpot || 0).toLocaleString()} TT</strong>
                   </div>
@@ -733,7 +733,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                   {selectedSyndicate.members?.map((m: any) => {
                     const estimatedPrize = ((Number(hypoJackpot) || 0) * (m.share_percentage / 100));
                     return (
-                      <div key={m.id} className="flex justify-between items-center text-[10px]">
+                      <div key={m.id} className="flex justify-between items-center text-xs">
                         <span className="text-gray-300 truncate max-w-[120px]">{m.member_name}:</span>
                         <strong className="text-emerald-300 font-mono">
                           ${estimatedPrize.toLocaleString(undefined, { maximumFractionDigits: 0 })} TT
@@ -759,7 +759,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <h3 className="text-lg font-black uppercase text-white">Live Community Discussion</h3>
+                <h3 className="text-base font-black uppercase text-white">Live Community Discussion</h3>
               </div>
               <p className="text-xs text-gray-400">
                 Discuss mark frequencies, share lucky dream journal tokens, and coordinate pool strategies with fellow players.
@@ -772,7 +772,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                 <button
                   key={tag}
                   onClick={() => setChatTag(tag)}
-                  className={`px-3 py-1 rounded text-[10px] font-bold uppercase transition cursor-pointer ${
+                  className={`px-3 py-1 rounded text-xs font-bold uppercase transition cursor-pointer ${
                     chatTag === tag
                       ? "bg-primary text-slate-950 font-black"
                       : "text-gray-400 hover:text-white"
@@ -799,7 +799,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-white">{msg.user_name}</span>
-                      <span className={`text-[8px] font-black px-1.5 py-0.2 rounded uppercase ${
+                      <span className={`text-xs font-black px-1.5 py-0.2 rounded uppercase ${
                         msg.game_tag === "LOTTO"
                           ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
                           : msg.game_tag === "PLAYWHE"
@@ -811,7 +811,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                         {msg.game_tag}
                       </span>
                     </div>
-                    <span className="text-[9px] text-gray-500">{msg.created_at?.slice(11, 16) || "Now"}</span>
+                    <span className="text-xs text-gray-500">{msg.created_at?.slice(11, 16) || "Now"}</span>
                   </div>
 
                   <p className="text-xs text-gray-300 leading-relaxed">
@@ -820,8 +820,8 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
 
                   {msg.lucky_numbers && (
                     <div className="flex items-center gap-1.5 pt-1">
-                      <span className="text-[9px] text-amber-400 font-bold uppercase">Lucky Picks:</span>
-                      <span className="text-[10px] font-bold text-white bg-slate-950 px-2 py-0.5 rounded border border-white/10">
+                      <span className="text-xs text-amber-400 font-bold uppercase">Lucky Picks:</span>
+                      <span className="text-xs font-bold text-white bg-slate-950 px-2 py-0.5 rounded border border-white/10">
                         {msg.lucky_numbers}
                       </span>
                     </div>
@@ -875,7 +875,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="bg-slate-950 border border-white/10 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
             <div className="flex justify-between items-center border-b border-white/5 pb-3">
-              <h3 className="text-sm font-black uppercase text-white flex items-center gap-2">
+              <h3 className="text-base font-black uppercase text-white flex items-center gap-2">
                 <Users className="w-4 h-4 text-primary" />
                 <span>Create New Syndicate Pool</span>
               </h3>
@@ -883,13 +883,13 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                 onClick={() => setShowCreateModal(false)}
                 className="text-gray-400 hover:text-white text-sm font-bold cursor-pointer"
               >
-                ✕
+                Close
               </button>
             </div>
 
             <form onSubmit={handleCreateSyndicate} className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-[10px] text-gray-400 uppercase font-bold">Syndicate Name:</label>
+                <label className="text-xs text-gray-400 uppercase font-bold">Syndicate Name:</label>
                 <input
                   type="text"
                   value={newSyndName}
@@ -902,7 +902,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-400 uppercase font-bold">Your Name (Admin):</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">Your Name (Admin):</label>
                   <input
                     type="text"
                     value={newCreatorName}
@@ -913,7 +913,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-400 uppercase font-bold">Initial Stake ($TT):</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">Initial Stake ($TT):</label>
                   <input
                     type="number"
                     value={newInitialContrib}
@@ -926,7 +926,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-400 uppercase font-bold">Target Game:</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">Target Game:</label>
                   <select
                     value={newGameType}
                     onChange={(e) => setNewGameType(e.target.value)}
@@ -938,7 +938,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-400 uppercase font-bold">Target Draw Date:</label>
+                  <label className="text-xs text-gray-400 uppercase font-bold">Target Draw Date:</label>
                   <input
                     type="text"
                     value={newDrawDate}
@@ -950,7 +950,7 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] text-gray-400 uppercase font-bold">Notes &amp; Strategy (Optional):</label>
+                <label className="text-xs text-gray-400 uppercase font-bold">Notes &amp; Strategy (Optional):</label>
                 <textarea
                   value={newNotes}
                   onChange={(e) => setNewNotes(e.target.value)}

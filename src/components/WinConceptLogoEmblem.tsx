@@ -88,7 +88,7 @@ export default function WinConceptLogoEmblem({
           <span className="text-base sm:text-lg font-black tracking-widest text-white uppercase font-mono drop-shadow-[0_0_12px_rgba(255,255,255,0.25)]">
             The Win Concept
           </span>
-          <span className="text-[10px] tracking-wider text-sky-400 font-mono font-semibold uppercase flex items-center gap-1">
+          <span className="text-xs tracking-wider text-sky-400 font-mono font-semibold uppercase flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
             Your Online Gaming Resource
           </span>

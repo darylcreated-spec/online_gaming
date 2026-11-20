@@ -56,7 +56,7 @@ export default function PlayWhePlaceholder() {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-white">Play Whe Suite</h2>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">Play Whe Suite</h2>
           <p className="text-sm text-gray-400">Traditional Trinidad & Tobago Chinapoo Mark Matrix</p>
         </div>
         <div className="bg-slate-900 border border-secondary/30 px-3.5 py-1.5 rounded-lg flex items-center gap-2">
@@ -72,7 +72,7 @@ export default function PlayWhePlaceholder() {
           <Cpu className="w-6 h-6" />
         </div>
         <div className="space-y-1">
-          <h3 className="font-bold text-white text-sm">Play Whe Integration Coming Soon</h3>
+          <h3 className="text-base font-bold text-white">Play Whe Integration Coming Soon</h3>
           <p className="text-xs text-gray-400 leading-relaxed max-w-2xl font-sans">
             We are working on bringing a full Play Whe engine to **the Win Concept**. This will include automated daily drawing scraping, historical mark frequency logs, and ticket scanning support. Explore the symbol layout below.
           </p>
@@ -106,12 +106,12 @@ export default function PlayWhePlaceholder() {
                 >
                   <div className="flex justify-between items-start w-full">
                     <span className="font-mono text-sm font-bold">{item.num}</span>
-                    <span className="text-[8px] font-mono text-gray-500">
+                    <span className="text-xs font-mono text-gray-500">
                       f: {freq}
                     </span>
                   </div>
                   <div className="space-y-0.5">
-                    <div className={`text-[10px] font-bold ${isSelected ? "text-secondary" : "text-gray-400"}`}>
+                    <div className={`text-xs font-bold ${isSelected ? "text-secondary" : "text-gray-400"}`}>
                       {item.mark}
                     </div>
                   </div>
@@ -150,7 +150,7 @@ export default function PlayWhePlaceholder() {
                   <span className="text-green-400 font-bold">5 draws ago</span>
                 </div>
                 
-                <div className="p-3 bg-slate-950/60 rounded-lg border border-white/5 text-[10px] text-gray-400 font-sans leading-relaxed flex gap-2">
+                <div className="p-3 bg-slate-950/60 rounded-lg border border-white/5 text-xs text-gray-400 font-sans leading-relaxed flex gap-2">
                   <Info className="w-3.5 h-3.5 text-secondary shrink-0 mt-0.5" />
                   <span>
                     When connected, this panel will calculate standard deviations, hot/cold indices, and match history for the mark **{PLAY_WHE_MARKS[selectedMark - 1].mark}**.
@@ -165,7 +165,7 @@ export default function PlayWhePlaceholder() {
             )}
           </div>
 
-          <div className="border-t border-white/5 pt-4 text-[9px] text-gray-500 font-mono">
+          <div className="border-t border-white/5 pt-4 text-xs text-gray-500 font-mono">
             PLAY WHE ANALYTICAL FRAMEWORK
           </div>
         </div>

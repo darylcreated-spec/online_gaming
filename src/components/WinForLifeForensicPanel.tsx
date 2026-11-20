@@ -150,17 +150,17 @@ export default function WinForLifeForensicPanel() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-slate-950 shadow-md">
+              <span className="px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-widest bg-emerald-500 text-slate-950 shadow-md">
                 Forensic Quantitative Generator
               </span>
-              <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
+              <span className="px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
                 Database Calibrated (All {data.totalDrawsInDb} Draws)
               </span>
-              <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-semibold bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
+              <span className="px-2.5 py-1 rounded-md text-xs font-mono font-semibold bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
                 Unordered Set Universe: C(28, 6) = 376,740
               </span>
             </div>
-            <h2 className="text-xl md:text-2xl font-black text-white tracking-tight flex items-center gap-2 font-mono">
+            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight flex items-center gap-2 font-mono">
               <Target className="w-6 h-6 text-emerald-400" />
               Win For Life Forensic Law Engine
             </h2>
@@ -200,12 +200,12 @@ export default function WinForLifeForensicPanel() {
               {data.latestDraw.numbers.map((n, idx) => (
                 <span
                   key={idx}
-                  className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center font-bold text-[11px]"
+                  className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center font-bold text-xs"
                 >
                   {n}
                 </span>
               ))}
-              <span className="ml-1 px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-300 border border-amber-500/50 text-[10px] font-black">
+              <span className="ml-1 px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-300 border border-amber-500/50 text-xs font-black">
                 CB: {data.latestDraw.cash_ball}
               </span>
             </div>
@@ -219,37 +219,37 @@ export default function WinForLifeForensicPanel() {
       {/* 2. DYNAMIC QUANTITATIVE TELEMETRY BAR */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 font-mono">
         <div className="p-3 rounded-xl bg-slate-950/70 border border-emerald-500/20 text-center">
-          <span className="text-[10px] text-gray-500 block uppercase font-bold">Avg Composite</span>
+          <span className="text-xs text-gray-500 block uppercase font-bold">Avg Composite</span>
           <span className="text-base font-black text-emerald-400">
             {data.averageCompositeScore !== undefined ? data.averageCompositeScore.toFixed(1) : "—"}
           </span>
         </div>
         <div className="p-3 rounded-xl bg-slate-950/70 border border-cyan-500/20 text-center">
-          <span className="text-[10px] text-gray-500 block uppercase font-bold">Median Score</span>
+          <span className="text-xs text-gray-500 block uppercase font-bold">Median Score</span>
           <span className="text-base font-black text-cyan-400">
             {data.medianCompositeScore !== undefined ? data.medianCompositeScore.toFixed(1) : "—"}
           </span>
         </div>
         <div className="p-3 rounded-xl bg-slate-950/70 border border-indigo-500/20 text-center">
-          <span className="text-[10px] text-gray-500 block uppercase font-bold">Top Ball Score</span>
+          <span className="text-xs text-gray-500 block uppercase font-bold">Top Ball Score</span>
           <span className="text-base font-black text-indigo-400">
             {data.topRankedBallScore !== undefined ? data.topRankedBallScore.toFixed(1) : "—"}
           </span>
         </div>
         <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-700/40 text-center">
-          <span className="text-[10px] text-gray-500 block uppercase font-bold">Bottom Ball Score</span>
+          <span className="text-xs text-gray-500 block uppercase font-bold">Bottom Ball Score</span>
           <span className="text-base font-black text-gray-400">
             {data.bottomRankedBallScore !== undefined ? data.bottomRankedBallScore.toFixed(1) : "—"}
           </span>
         </div>
         <div className="p-3 rounded-xl bg-slate-950/70 border border-amber-500/20 text-center">
-          <span className="text-[10px] text-gray-500 block uppercase font-bold">Candidate Coverage</span>
+          <span className="text-xs text-gray-500 block uppercase font-bold">Candidate Coverage</span>
           <span className="text-base font-black text-amber-400">
             {data.candidateSetCoverageRate !== undefined ? `${data.candidateSetCoverageRate.toFixed(1)}%` : "100%"}
           </span>
         </div>
         <div className="p-3 rounded-xl bg-slate-950/70 border border-rose-500/20 text-center">
-          <span className="text-[10px] text-gray-500 block uppercase font-bold">Cash Ball Match</span>
+          <span className="text-xs text-gray-500 block uppercase font-bold">Cash Ball Match</span>
           <span className="text-base font-black text-rose-400">
             {data.cashBallMatchRate !== undefined ? `${data.cashBallMatchRate.toFixed(1)}%` : `${data.audit.cashBallAccuracyPercent.toFixed(1)}%`}
           </span>
@@ -262,11 +262,11 @@ export default function WinForLifeForensicPanel() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-2">
             <div className="flex items-center gap-2">
               <Binary className="w-4 h-4 text-emerald-400" />
-              <h3 className="text-xs font-black uppercase text-white tracking-wider">
+              <h3 className="text-base font-black uppercase text-white tracking-wider">
                 Order Statistics Corridors (Sorted Invariant Bounds Across {data.totalDrawsInDb} Draws)
               </h3>
             </div>
-            <div className="flex items-center gap-2 text-[10px] text-gray-400">
+            <div className="flex items-center gap-2 text-xs text-gray-400">
               <span>Adjacent Step Gaps: {data.stepDeltaDistribution?.slice(0, 3).map(s => `+${s.diff} (${s.pct}%)`).join(", ")}</span>
             </div>
           </div>
@@ -274,16 +274,16 @@ export default function WinForLifeForensicPanel() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
             {data.positionalCorridors.map(c => (
               <div key={c.ballIndex} className="p-2.5 rounded-xl bg-slate-900/60 border border-white/5 text-center space-y-1">
-                <span className="text-[10px] font-bold text-emerald-400 block">Ball #{c.ballIndex}</span>
+                <span className="text-xs font-bold text-emerald-400 block">Ball #{c.ballIndex}</span>
                 <div className="text-xs font-black text-white">Median: {c.median}</div>
-                <div className="text-[10px] text-cyan-300">90% CI: [{c.p5} - {c.p95}]</div>
-                <div className="text-[9px] text-gray-500">Range: {c.min} - {c.max} (Avg {c.avg})</div>
+                <div className="text-xs text-cyan-300">90% CI: [{c.p5} - {c.p95}]</div>
+                <div className="text-xs text-gray-500">Range: {c.min} - {c.max} (Avg {c.avg})</div>
               </div>
             ))}
           </div>
 
           {data.consecutiveStats && (
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5 text-[11px] text-gray-400">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5 text-xs text-gray-400">
               <div>
                 <span className="text-gray-300 font-bold">Consecutive Stepping Invariant:</span> {data.consecutiveStats.pairRatePercent}% draws contain &gt;=1 adjacent pair ({'{'}x, x+1{'}'}); {data.consecutiveStats.tripletRatePercent}% contain triplets.
               </div>
@@ -299,19 +299,19 @@ export default function WinForLifeForensicPanel() {
       {showTheory && (
         <div className="p-5 rounded-2xl bg-slate-900/90 border border-emerald-500/30 font-mono space-y-4 animate-in fade-in duration-300">
           <div className="flex items-center justify-between border-b border-white/10 pb-2">
-            <h3 className="text-xs font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1.5">
+            <h3 className="text-base font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4" />
               6 Empirical Invariant Laws Discovered Across All 469 Draws
             </h3>
-            <span className="text-[10px] text-gray-500">Grounded in Turso Cloud DB Historical Archive</span>
+            <span className="text-xs text-gray-500">Grounded in Turso Cloud DB Historical Archive</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5 space-y-1">
               <div className="font-bold text-emerald-300 flex items-center justify-between">
                 <span>1. Gaussian Centroid Law</span>
-                <span className="text-[10px] text-emerald-400 bg-emerald-950/80 px-1.5 rounded">66.1%</span>
+                <span className="text-xs text-emerald-400 bg-emerald-950/80 px-1.5 rounded">66.1%</span>
               </div>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-xs text-gray-400">
                 Sum strictly bounded within [70, 105] (Mean 87.28, Std 17.71). Eliminates &gt;58% of dead combinations outside 1.0 sigma.
               </p>
             </div>
@@ -319,9 +319,9 @@ export default function WinForLifeForensicPanel() {
             <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5 space-y-1">
               <div className="font-bold text-emerald-300 flex items-center justify-between">
                 <span>2. Consecutive Pair Law</span>
-                <span className="text-[10px] text-emerald-400 bg-emerald-950/80 px-1.5 rounded">71.9%</span>
+                <span className="text-xs text-emerald-400 bg-emerald-950/80 px-1.5 rounded">71.9%</span>
               </div>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-xs text-gray-400">
                 At least one adjacent consecutive pair (difference delta = 1) appears in 71.9% of winning draws.
               </p>
             </div>
@@ -329,9 +329,9 @@ export default function WinForLifeForensicPanel() {
             <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5 space-y-1">
               <div className="font-bold text-emerald-300 flex items-center justify-between">
                 <span>3. Carryover Anchor Law</span>
-                <span className="text-[10px] text-emerald-400 bg-emerald-950/80 px-1.5 rounded">82.9%</span>
+                <span className="text-xs text-emerald-400 bg-emerald-950/80 px-1.5 rounded">82.9%</span>
               </div>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-xs text-gray-400">
                 82.9% of draws contain 1 or 2 numbers repeated from the immediate preceding draw (Lag 1). Zero carryover happens only 17.1%.
               </p>
             </div>
@@ -339,9 +339,9 @@ export default function WinForLifeForensicPanel() {
             <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5 space-y-1">
               <div className="font-bold text-emerald-300 flex items-center justify-between">
                 <span>4. Parity Manifold (3:3, 4:2, 2:4)</span>
-                <span className="text-[10px] text-emerald-400 bg-emerald-950/80 px-1.5 rounded">82.9%</span>
+                <span className="text-xs text-emerald-400 bg-emerald-950/80 px-1.5 rounded">82.9%</span>
               </div>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-xs text-gray-400">
                 Balanced Odd:Even partitions eliminate extreme parity skews (6:0, 0:6, 5:1, 1:5) which occur under 17% of the time.
               </p>
             </div>
@@ -349,9 +349,9 @@ export default function WinForLifeForensicPanel() {
             <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5 space-y-1">
               <div className="font-bold text-emerald-300 flex items-center justify-between">
                 <span>5. High / Low Partition (1-14 vs 15-28)</span>
-                <span className="text-[10px] text-emerald-400 bg-emerald-950/80 px-1.5 rounded">82.3%</span>
+                <span className="text-xs text-emerald-400 bg-emerald-950/80 px-1.5 rounded">82.3%</span>
               </div>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-xs text-gray-400">
                 Balanced 3:3, 4:2, or 2:4 split between low and high halves guarantees broad board coverage.
               </p>
             </div>
@@ -359,9 +359,9 @@ export default function WinForLifeForensicPanel() {
             <div className="p-3 rounded-xl bg-slate-950/70 border border-white/5 space-y-1">
               <div className="font-bold text-emerald-300 flex items-center justify-between">
                 <span>6. Multi-Lag Harmonic Waves</span>
-                <span className="text-[10px] text-emerald-400 bg-emerald-950/80 px-1.5 rounded">70.0%</span>
+                <span className="text-xs text-emerald-400 bg-emerald-950/80 px-1.5 rounded">70.0%</span>
               </div>
-              <p className="text-[11px] text-gray-400">
+              <p className="text-xs text-gray-400">
                 70.0% of winning balls have a drought &lt;= 4 (drawn in the last 5 draws). Balls cluster in rolling harmonic waves.
               </p>
             </div>
@@ -375,14 +375,14 @@ export default function WinForLifeForensicPanel() {
           <div className="flex items-center gap-2">
             <Cpu className="w-5 h-5 text-indigo-400" />
             <div>
-              <h3 className="text-sm font-black uppercase text-white tracking-wider flex items-center gap-2">
+              <h3 className="text-base font-black uppercase text-white tracking-wider flex items-center gap-2">
                 <span>Unified Invariant Attractor Subspace</span>
-                <span className="px-2 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                <span className="px-2 py-0.5 rounded text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
                   {data.invariantSubspace.poolSize}-Ball Core
                 </span>
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">
-                Synthesizes CRT Galois rings (Z₄ × Z₇), 70% wave law, Takens 6D kinematics, and graph hubs.
+                Combines remainder groups, recent draw waves, movement patterns, and frequently paired numbers.
               </p>
             </div>
           </div>
@@ -399,28 +399,28 @@ export default function WinForLifeForensicPanel() {
         {/* Rolling Multi-Draw Window Capture Banner */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-xs">
           <div className="p-2 rounded-xl bg-slate-950/70 border border-white/5">
-            <span className="text-[10px] text-gray-500 block uppercase">Single Draw 4+</span>
+            <span className="text-xs text-gray-500 block uppercase">Single Draw 4+</span>
             <span className="font-black text-cyan-400 text-sm">{data.invariantSubspace.rollingWindowCaptureRates.singleDrawFourPlusRate}%</span>
           </div>
           <div className="p-2 rounded-xl bg-slate-950/70 border border-white/5">
-            <span className="text-[10px] text-gray-500 block uppercase">2-Draw Window</span>
+            <span className="text-xs text-gray-500 block uppercase">2-Draw Window</span>
             <span className="font-black text-emerald-400 text-sm">{data.invariantSubspace.rollingWindowCaptureRates.windowTwoDrawsRate}%</span>
           </div>
           <div className="p-2 rounded-xl bg-slate-950/70 border border-white/5">
-            <span className="text-[10px] text-gray-500 block uppercase">3-Draw Window</span>
+            <span className="text-xs text-gray-500 block uppercase">3-Draw Window</span>
             <span className="font-black text-indigo-400 text-sm">{data.invariantSubspace.rollingWindowCaptureRates.windowThreeDrawsRate}%</span>
           </div>
           <div className="p-2 rounded-xl bg-slate-950/70 border border-white/5">
-            <span className="text-[10px] text-gray-500 block uppercase">5-Draw Window</span>
+            <span className="text-xs text-gray-500 block uppercase">5-Draw Window</span>
             <span className="font-black text-amber-400 text-sm">{data.invariantSubspace.rollingWindowCaptureRates.windowFiveDrawsRate}% (~100%)</span>
           </div>
         </div>
 
         {/* Ball Pool Balls */}
         <div className="space-y-2">
-          <div className="text-[11px] text-gray-400 uppercase font-bold tracking-wider flex items-center justify-between">
+          <div className="text-xs text-gray-400 uppercase font-bold tracking-wider flex items-center justify-between">
             <span>Active Invariant Core for Draw #{data.nextTargetDrawNumber}:</span>
-            <span className="text-[10px] text-indigo-300 font-mono">{data.invariantSubspace.crtSignature}</span>
+            <span className="text-xs text-indigo-300 font-mono">{data.invariantSubspace.crtSignature}</span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {data.invariantSubspace.pool.map((ball) => (
@@ -436,9 +436,9 @@ export default function WinForLifeForensicPanel() {
 
         {/* Syndicate Covering Slips */}
         <div className="pt-3 border-t border-white/5 space-y-2">
-          <div className="text-[11px] text-gray-400 uppercase font-bold tracking-wider flex items-center justify-between">
+          <div className="text-xs text-gray-400 uppercase font-bold tracking-wider flex items-center justify-between">
             <span>Combinatorial Covering Slips (Stefan Mandel Invariant Wheel):</span>
-            <span className="text-[10px] text-indigo-400 font-bold">10 Strategic Slips</span>
+            <span className="text-xs text-indigo-400 font-bold">10 Strategic Slips</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
             {(data.coveringPortfolio && data.coveringPortfolio.length > 0
@@ -458,20 +458,20 @@ export default function WinForLifeForensicPanel() {
                 className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5 flex flex-col justify-between text-xs space-y-2 hover:border-indigo-500/30 transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-indigo-400">#{slip.slipIndex}</span>
-                  <span className="text-[9px] text-gray-400 font-mono">
+                  <span className="text-xs font-bold text-indigo-400">#{slip.slipIndex}</span>
+                  <span className="text-xs text-gray-400 font-mono">
                     Sum: {slip.sum} | {slip.oddEvenRatio}
                   </span>
                 </div>
                 <div className="flex items-center justify-center gap-1 font-bold flex-wrap py-1 bg-slate-900/40 rounded-lg">
                   {slip.numbers.map((b) => (
-                    <span key={b} className="w-5 h-5 rounded-full bg-slate-800 text-gray-200 text-[10px] flex items-center justify-center font-bold">
+                    <span key={b} className="w-5 h-5 rounded-full bg-slate-800 text-gray-200 text-xs flex items-center justify-center font-bold">
                       {b}
                     </span>
                   ))}
                 </div>
                 <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                  <span className="text-[9px] text-gray-500 font-mono">{slip.highLowRatio}</span>
+                  <span className="text-xs text-gray-500 font-mono">{slip.highLowRatio}</span>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleCopySlip(slip.numbers, idx)}
@@ -500,11 +500,11 @@ export default function WinForLifeForensicPanel() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-sm font-black uppercase text-white tracking-wider font-mono">
+            <h3 className="text-base font-black uppercase text-white tracking-wider font-mono">
               Calibrated Candidate Sets for Draw #{data.nextTargetDrawNumber}
             </h3>
           </div>
-          <span className="text-[11px] font-mono text-gray-400">
+          <span className="text-xs font-mono text-gray-400">
             {data.nextCandidateSets.length} Synthesis &amp; Unconventional Strategies
           </span>
         </div>
@@ -517,10 +517,10 @@ export default function WinForLifeForensicPanel() {
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                  <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
                     {candidate.strategyName}
                   </span>
-                  <span className="text-[10px] text-gray-400 font-bold">
+                  <span className="text-xs text-gray-400 font-bold">
                     Score: {candidate.compositeScore}
                   </span>
                 </div>
@@ -543,7 +543,7 @@ export default function WinForLifeForensicPanel() {
                 </div>
 
                 {/* STATS PILLS */}
-                <div className="grid grid-cols-3 gap-1.5 text-[10px] text-center">
+                <div className="grid grid-cols-3 gap-1.5 text-xs text-center">
                   <div className="p-1 rounded bg-slate-900 border border-white/5">
                     <span className="text-gray-500 block">Sum</span>
                     <span className="text-gray-300 font-bold">{candidate.sum}</span>
@@ -558,7 +558,7 @@ export default function WinForLifeForensicPanel() {
                   </div>
                 </div>
 
-                <p className="text-[11px] text-gray-400 leading-relaxed">
+                <p className="text-xs text-gray-400 leading-relaxed">
                   {candidate.rationale}
                 </p>
               </div>
@@ -601,10 +601,10 @@ export default function WinForLifeForensicPanel() {
           <div>
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-amber-400" />
-              <h3 className="text-sm font-black uppercase text-white tracking-wider">
+              <h3 className="text-base font-black uppercase text-white tracking-wider">
                 Walk-Forward Hit &amp; Miss Empirical Audit
               </h3>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
+              <span className="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
                 {data.audit.testedDrawsCount} Draws
               </span>
             </div>
@@ -685,56 +685,56 @@ export default function WinForLifeForensicPanel() {
         {/* AUDIT METRICS BANNER */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-2.5">
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Audit Depth</span>
+            <span className="text-xs text-gray-500 uppercase tracking-widest block">Audit Depth</span>
             <div className="text-lg font-black text-white">{data.audit.testedDrawsCount} Draws</div>
-            <span className="text-[10px] text-emerald-400">Strict Walk-Forward</span>
+            <span className="text-xs text-emerald-400">Strict Walk-Forward</span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 6 Grand Annuity</span>
+            <span className="text-xs text-gray-500 uppercase tracking-widest block">Match 6 Grand Annuity</span>
             <div className="text-lg font-black text-amber-400">
               {data.audit.sixHitsCount} Hits
             </div>
-            <span className="text-[10px] text-amber-300 font-bold">$480,000 TT Prize</span>
+            <span className="text-xs text-amber-300 font-bold">$480,000 TT Prize</span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 5 Major Hits</span>
+            <span className="text-xs text-gray-500 uppercase tracking-widest block">Match 5 Major Hits</span>
             <div className="text-lg font-black text-cyan-400">
               {data.audit.fiveHitsCount} Draws
             </div>
-            <span className="text-[10px] text-cyan-300 font-bold">$1,000 TT | {data.audit.fourHitsCount} Match 4s</span>
+            <span className="text-xs text-cyan-300 font-bold">$1,000 TT | {data.audit.fourHitsCount} Match 4s</span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Match 3+ Prize Rate</span>
+            <span className="text-xs text-gray-500 uppercase tracking-widest block">Match 3+ Prize Rate</span>
             <div className="text-lg font-black text-emerald-400">{data.audit.atLeastThreeHitsRatePercent}%</div>
-            <span className="text-[10px] text-emerald-300 font-bold">
+            <span className="text-xs text-emerald-300 font-bold">
               {data.audit.threeHitsCount + data.audit.fourHitsCount + data.audit.fiveHitsCount + data.audit.sixHitsCount} / {data.audit.testedDrawsCount} Prize Wins
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">16-Ball Pool 6/6</span>
+            <span className="text-xs text-gray-500 uppercase tracking-widest block">16-Ball Pool 6/6</span>
             <div className="text-lg font-black text-indigo-400">
               {data.audit.drawByDrawLog.filter(e => e.invariantPoolCapturedCount === 6).length} Perfect
             </div>
-            <span className="text-[10px] text-indigo-300">
+            <span className="text-xs text-indigo-300">
               {data.audit.drawByDrawLog.filter(e => e.invariantPoolCapturedCount >= 5).length} Draws 5+ Hits
             </span>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Simulated Payout</span>
+            <span className="text-xs text-gray-500 uppercase tracking-widest block">Simulated Payout</span>
             <div className="text-lg font-black text-emerald-400">${data.audit.totalSimulatedPayoutTT.toLocaleString()} TT</div>
-            <span className="text-[10px] text-gray-400">NLCB Cash &amp; Slips</span>
+            <span className="text-xs text-gray-400">NLCB Cash &amp; Slips</span>
           </div>
         </div>
 
         {/* AUDIT LOG TABLE */}
         <div className="overflow-x-auto rounded-xl border border-white/5">
           <table className="w-full text-left text-xs font-mono">
-            <thead className="bg-slate-900/90 text-gray-400 uppercase text-[10px] tracking-wider border-b border-white/10">
+            <thead className="bg-slate-900/90 text-gray-400 uppercase text-xs tracking-wider border-b border-white/10">
               <tr>
                 <th className="py-2.5 px-3">Draw</th>
                 <th className="py-2.5 px-3">Date</th>
@@ -764,12 +764,12 @@ export default function WinForLifeForensicPanel() {
                         {entry.drawnNumbers.map((n, i) => (
                           <span
                             key={i}
-                            className="w-5 h-5 rounded-full bg-slate-800 text-gray-200 flex items-center justify-center text-[10px] font-bold"
+                            className="w-5 h-5 rounded-full bg-slate-800 text-gray-200 flex items-center justify-center text-xs font-bold"
                           >
                             {n}
                           </span>
                         ))}
-                        <span className="ml-1 px-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-bold">
+                        <span className="ml-1 px-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">
                           CB:{entry.drawnCashBall}
                         </span>
                       </div>
@@ -783,7 +783,7 @@ export default function WinForLifeForensicPanel() {
                           return (
                             <span
                               key={i}
-                              className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
                                 isMatch
                                   ? "bg-emerald-500 text-slate-950 shadow-sm"
                                   : "bg-slate-900 text-gray-500"
@@ -800,7 +800,7 @@ export default function WinForLifeForensicPanel() {
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-1.5">
                         <span
-                          className={`px-2 py-0.5 rounded text-[11px] font-black ${
+                          className={`px-2 py-0.5 rounded text-xs font-black ${
                             entry.bestPortfolioHitCount >= 5
                               ? "bg-amber-400 text-slate-950 shadow-md animate-pulse"
                               : entry.bestPortfolioHitCount === 4
@@ -814,7 +814,7 @@ export default function WinForLifeForensicPanel() {
                         >
                           {entry.bestPortfolioHitCount} Hits
                         </span>
-                        <span className="text-[10px] text-gray-400 truncate max-w-[130px]" title={entry.bestStrategyName}>
+                        <span className="text-xs text-gray-400 truncate max-w-[130px]" title={entry.bestStrategyName}>
                           {entry.bestStrategyName}
                         </span>
                       </div>
@@ -823,15 +823,15 @@ export default function WinForLifeForensicPanel() {
                     {/* 16-Ball Invariant Pool Capture */}
                     <td className="py-2.5 px-3">
                       {entry.invariantPoolCapturedCount === 6 ? (
-                        <span className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px] shadow-md animate-bounce">
+                        <span className="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-xs shadow-md animate-bounce">
                           6/6 PERFECT CAPTURE!
                         </span>
                       ) : entry.invariantPoolCapturedCount === 5 ? (
-                        <span className="px-2 py-0.5 rounded bg-indigo-500 text-white font-bold text-[10px]">
+                        <span className="px-2 py-0.5 rounded bg-indigo-500 text-white font-bold text-xs">
                           5/6 Major Capture
                         </span>
                       ) : (
-                        <span className="text-gray-400 text-[11px]">
+                        <span className="text-gray-400 text-xs">
                           {entry.invariantPoolCapturedCount} of 6 in Core
                         </span>
                       )}
@@ -840,11 +840,11 @@ export default function WinForLifeForensicPanel() {
                     {/* Prize Won */}
                     <td className="py-2.5 px-3">
                       {entry.isWinningTier ? (
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-[10px]">
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-xs">
                           {entry.prizeWon}
                         </span>
                       ) : (
-                        <span className="text-gray-500 text-[10px]">{entry.prizeWon}</span>
+                        <span className="text-gray-500 text-xs">{entry.prizeWon}</span>
                       )}
                     </td>
                   </tr>

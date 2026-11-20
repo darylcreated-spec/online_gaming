@@ -75,7 +75,7 @@ export default function BudgetOddsExplorer({
     return getCashPotSureCallStatus();
   }, [mounted, game.key]);
 
-  // Inline Steiner-Johnson zero-overlap slips for supported games & tiers
+  // Inline zero-overlap slips for supported games and tiers
   const steinerPortfolio = useMemo(() => {
     if (
       !tier.steinerSupported ||
@@ -105,18 +105,18 @@ export default function BudgetOddsExplorer({
     if (!steinerPortfolio) return;
     triggerHaptic("success");
     const targetNum = targetDrawNumbers[game.key];
-    const header = `${game.name.toUpperCase()} — ${tier.label} ($${tier.costTT} TT) | Steiner-Johnson Zero-Overlap${
-      targetNum ? ` | Target Draw #${targetNum}` : ""
+    const header = `${game.name.toUpperCase()} - ${tier.label} ($${tier.costTT} TTD) | Non-Overlapping Slips${
+      targetNum ? ` | Next Draw ${targetNum}` : ""
     }`;
-    const meta = `Exact Any-Prize: ${tier.anyPrizePct}% | Zero-Return Risk: ${zeroReturnPct}% | Jackpot: ${tier.jackpotOdds}`;
+    const meta = `Chance of any prize: ${tier.anyPrizePct}% | Chance of winning $0: ${zeroReturnPct}% | Top Prize Odds: ${tier.jackpotOdds}`;
     const rows = steinerPortfolio.slips.map((slip, idx) => {
-      const nums = slip.map((n) => String(n).padStart(2, "0")).join(" - ");
+      const nums = slip.map((n) => String(n).padStart(2, "0")).join(", ");
       const bonus = steinerPortfolio.bonusBalls[idx];
       const bonusTag =
         bonus !== undefined
           ? game.key === "win-for-life"
-            ? ` + CB ${bonus}`
-            : ` + PB ${bonus}`
+            ? ` | Cash Ball ${bonus}`
+            : ` | Powerball ${bonus}`
           : "";
       return `Slip ${String(idx + 1).padStart(2, "0")}: ${nums}${bonusTag}`;
     });
@@ -127,11 +127,11 @@ export default function BudgetOddsExplorer({
 
   // === PRECISION SVG BUDGET CURVE GEOMETRY ===
   const svgW = 420;
-  const svgH = 200;
-  const padL = 36;
-  const padR = 20;
-  const padT = 22;
-  const padB = 34;
+  const svgH = 208;
+  const padL = 38;
+  const padR = 22;
+  const padT = 24;
+  const padB = 38;
   const plotW = svgW - padL - padR;
   const plotH = svgH - padT - padB;
 
@@ -170,10 +170,10 @@ export default function BudgetOddsExplorer({
 
   return (
     <section
-      aria-label="Global Budget Curve & Exact Odds Planner"
+      aria-label="Global Budget Curve and Exact Odds Planner"
       className="relative rounded-2xl bg-[#0a0f1a] border border-white/[0.09] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.85)] overflow-hidden"
     >
-      {/* Crisp subtle top specular edge */}
+      {/* Subtle top edge highlight */}
       <div
         className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-400/40 to-transparent pointer-events-none"
         aria-hidden="true"
@@ -181,27 +181,27 @@ export default function BudgetOddsExplorer({
 
       {/* Section Header */}
       <div className="px-4 sm:px-6 pt-5 pb-4 border-b border-white/[0.06] flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.14em] text-sky-400 font-semibold">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Exact Odds &amp; Global Budget Planner</span>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-sky-400 font-sans">
+            <TrendingUp className="w-4 h-4 shrink-0" />
+            <span>Exact Odds and Budget Planner</span>
           </div>
-          <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-50 font-sans">
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-50 font-sans">
             See Your Exact Odds Before You Spend a Dollar
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 font-sans max-w-2xl leading-relaxed">
-            Select any NLCB game and budget below to see your exact mathematical chance of winning a real prize, your risk of a $0 draw, and your zero-overlap covering slips.
+          <p className="text-sm text-slate-400 font-sans max-w-2xl leading-relaxed">
+            Pick any NLCB game and budget below to see your true mathematical chance of winning a prize, your chance of winning nothing, and non-overlapping slips ready to play.
           </p>
         </div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-white/[0.08] text-[11px] font-mono text-slate-300 shrink-0 self-start sm:self-auto">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-          <span>100% Exact Combinatorics · Zero Fake Stats</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-white/[0.08] text-xs font-medium text-slate-300 font-sans shrink-0 self-start sm:self-auto">
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>Exact Math Only, No Fake Stats</span>
         </div>
       </div>
 
       {/* Step 1: 6-Game Clean Segmented Bar (with Desktop Hover Preview Popup) */}
       <div
-        className="relative px-4 sm:px-6 py-3 bg-slate-950/60 border-b border-white/[0.06]"
+        className="relative px-4 sm:px-6 py-3.5 bg-slate-950/60 border-b border-white/[0.06]"
         onMouseLeave={() => setHoveredGameKey(null)}
       >
         <div className="flex items-center gap-2 overflow-x-auto sleek-scrollbar pb-0.5">
@@ -213,7 +213,7 @@ export default function BudgetOddsExplorer({
                 type="button"
                 onClick={() => handleSelectGameTab(g.key)}
                 onMouseEnter={() => setHoveredGameKey(g.key)}
-                className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl border text-left transition-all cursor-pointer ${
+                className={`shrink-0 flex items-center gap-2.5 px-3.5 py-2 rounded-xl border text-left transition-all cursor-pointer ${
                   isSelected
                     ? "bg-slate-800/95 border-sky-400/60 text-white shadow-[0_0_0_1px_rgba(56,189,248,0.2)]"
                     : "bg-slate-900/50 border-white/[0.06] text-slate-400 hover:text-slate-200 hover:border-white/15"
@@ -222,12 +222,12 @@ export default function BudgetOddsExplorer({
                 <img
                   src={g.iconSrc}
                   alt={g.name}
-                  className="w-5 h-5 rounded-md object-contain shrink-0"
+                  className="w-6 h-6 rounded-md object-contain shrink-0"
                 />
-                <div className="leading-tight">
-                  <div className="text-xs font-bold font-sans whitespace-nowrap">{g.shortName}</div>
-                  <div className="text-[10px] font-mono text-emerald-400/90 whitespace-nowrap">
-                    {g.unitCostTT === 1 ? "From $1" : g.unitCostTT === 2 ? "From $2" : `$${g.unitCostTT}/play`}
+                <div className="leading-snug">
+                  <div className="text-sm font-bold font-sans whitespace-nowrap">{g.shortName}</div>
+                  <div className="text-xs font-medium text-emerald-400/90 whitespace-nowrap font-sans">
+                    {g.unitCostTT === 1 ? "From $1" : `$${g.unitCostTT} per play`}
                   </div>
                 </div>
               </button>
@@ -240,24 +240,24 @@ export default function BudgetOddsExplorer({
           const hg = NLCB_GAME_GUIDE.find((x) => x.key === hoveredGameKey);
           if (!hg) return null;
           return (
-            <div className="hidden md:block pointer-events-none absolute left-6 right-6 top-full mt-1.5 z-40 rounded-xl bg-[#0d1424]/95 border border-sky-400/30 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.9)] backdrop-blur-md p-3.5">
+            <div className="hidden md:block pointer-events-none absolute left-6 right-6 top-full mt-1.5 z-40 rounded-xl bg-[#0d1424]/95 border border-sky-400/30 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.9)] backdrop-blur-md p-4">
               <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <img src={hg.iconSrc} alt={hg.name} className="w-8 h-8 rounded-lg object-contain border border-white/10 shrink-0" />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-white font-sans">{hg.name}</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img src={hg.iconSrc} alt={hg.name} className="w-9 h-9 rounded-lg object-contain border border-white/10 shrink-0" />
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-bold text-white font-sans">{hg.name}</span>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-sans">
                         {hg.costPerPlay}
                       </span>
-                      <span className="text-[10px] font-mono text-slate-400">{hg.schedule}</span>
+                      <span className="text-xs text-slate-400 font-sans">{hg.schedule}</span>
                     </div>
-                    <p className="text-[11px] text-slate-300 font-sans mt-0.5 truncate">{hg.whatWins}</p>
+                    <p className="text-xs text-slate-300 font-sans leading-relaxed">{hg.whatWins}</p>
                   </div>
                 </div>
-                <div className="text-right font-mono shrink-0">
-                  <div className="text-[10px] text-slate-400 uppercase">Top Prize</div>
-                  <div className="text-xs font-bold text-amber-300">{hg.topPrize}</div>
+                <div className="text-right font-sans shrink-0">
+                  <div className="text-xs text-slate-400 uppercase font-semibold">Top Prize</div>
+                  <div className="text-sm font-bold text-amber-300">{hg.topPrize}</div>
                 </div>
               </div>
             </div>
@@ -268,14 +268,14 @@ export default function BudgetOddsExplorer({
       {/* Main Content Area */}
       <div className="p-4 sm:p-6 space-y-5">
         {/* Step 2: Budget Tier Selector (with Desktop Hover Breakdown Popup) */}
-        <div className="space-y-2 relative" onMouseLeave={() => setHoveredTierIdx(null)}>
-          <div className="flex items-center justify-between text-[11px] font-mono">
-            <span className="text-slate-400 uppercase tracking-wider font-semibold">
+        <div className="space-y-2.5 relative" onMouseLeave={() => setHoveredTierIdx(null)}>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-sans">
+            <span className="text-slate-300 uppercase tracking-wider font-semibold">
               Choose Your {game.name} Budget
             </span>
             <span className="text-slate-400">{game.schedule}</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
             {points.map((pt, idx) => {
               const active = idx === activeTierIdx;
               return (
@@ -284,24 +284,24 @@ export default function BudgetOddsExplorer({
                   type="button"
                   onClick={() => handleSelectTier(idx)}
                   onMouseEnter={() => setHoveredTierIdx(idx)}
-                  className={`px-3 py-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                  className={`px-3.5 py-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                     active
                       ? "bg-emerald-500/12 border-emerald-400/70 text-white"
                       : "bg-slate-900/60 border-white/[0.07] text-slate-300 hover:border-sky-400/40 hover:bg-slate-900"
                   }`}
                 >
                   <div className="flex items-baseline justify-between gap-1">
-                    <span className="text-xs font-bold font-sans">{pt.label}</span>
+                    <span className="text-sm font-bold font-sans">{pt.label}</span>
                     <span
-                      className={`text-xs font-mono font-bold tabular-nums ${
+                      className={`text-sm font-mono font-bold tabular-nums ${
                         active ? "text-emerald-300" : "text-slate-400"
                       }`}
                     >
                       ${pt.costTT}
                     </span>
                   </div>
-                  <div className="mt-0.5 text-[11px] font-mono tabular-nums text-slate-400">
-                    {pt.anyPrizePct.toFixed(pt.anyPrizePct < 1 ? 2 : 1)}% prize
+                  <div className="mt-1 text-xs font-sans tabular-nums text-slate-400">
+                    {pt.anyPrizePct.toFixed(pt.anyPrizePct < 1 ? 2 : 1)}% win chance
                   </div>
                 </button>
               );
@@ -318,20 +318,20 @@ export default function BudgetOddsExplorer({
                 ? Math.round((hp.anyPrizePct - hp.naiveOverlapPct) * 10) / 10
                 : null;
             return (
-              <div className="hidden md:flex pointer-events-none absolute left-0 right-0 top-full mt-1.5 z-30 rounded-xl bg-[#0d1424]/95 border border-emerald-400/30 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.9)] backdrop-blur-md px-4 py-2.5 items-center justify-between gap-4 text-xs">
-                <div className="font-sans text-slate-300 min-w-0">
-                  <span className="font-mono font-bold text-white mr-2">
-                    {hp.label} (${hp.costTT} TT):
+              <div className="hidden md:flex pointer-events-none absolute left-0 right-0 top-full mt-1.5 z-30 rounded-xl bg-[#0d1424]/95 border border-emerald-400/30 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.9)] backdrop-blur-md px-4 py-3 items-center justify-between gap-4 text-xs font-sans">
+                <div className="text-slate-300 min-w-0 leading-relaxed">
+                  <span className="font-bold text-white mr-1.5">
+                    {hp.label} (${hp.costTT} TTD):
                   </span>
                   <span>{hp.note}</span>
                 </div>
-                <div className="flex items-center gap-3 font-mono text-[11px] shrink-0 tabular-nums">
+                <div className="flex items-center gap-3 shrink-0 tabular-nums font-medium">
                   <span className="text-emerald-300 font-bold">
-                    {hp.anyPrizePct.toFixed(hp.anyPrizePct < 1 ? 2 : 2)}% Win
-                    {hDelta !== null ? ` (+${hDelta}%)` : ""}
+                    {hp.anyPrizePct.toFixed(2)}% Win
+                    {hDelta !== null ? ` (${hDelta}% gain)` : ""}
                   </span>
-                  <span className="text-slate-400">{hZero}% $0</span>
-                  <span className="text-sky-300">3-Draw: {h3}%</span>
+                  <span className="text-slate-400">{hZero}% No Prize</span>
+                  <span className="text-sky-300">Over 3 Draws: {h3}%</span>
                   <span className="text-amber-300">{hp.jackpotOdds}</span>
                 </div>
               </div>
@@ -343,29 +343,29 @@ export default function BudgetOddsExplorer({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
           {/* Left Column: Honest Odds Readout */}
           <div className="lg:col-span-6 rounded-xl bg-[#070b14] border border-white/[0.07] p-4 sm:p-5 flex flex-col justify-between space-y-4">
-            <div className="space-y-3">
+            <div className="space-y-4">
               {/* Hero Probability Split */}
               <div className="flex items-end justify-between gap-3">
                 <div>
-                  <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
-                    Exact Any-Prize Chance (1 Draw)
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">
+                    Chance of Any Prize (1 Draw)
                   </div>
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-0.5">
+                  <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1.5 mt-1">
                     <span className="text-3xl sm:text-4xl font-extrabold font-mono tabular-nums tracking-tight text-emerald-400">
-                      {tier.anyPrizePct.toFixed(tier.anyPrizePct < 1 ? 2 : 2)}%
+                      {tier.anyPrizePct.toFixed(2)}%
                     </span>
                     {edgeGain !== null && (
-                      <span className="text-[10px] sm:text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 whitespace-nowrap">
-                        +{edgeGain}% vs overlap
+                      <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-sans">
+                        {edgeGain}% higher than overlapping slips
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
+                <div className="text-right shrink-0">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">
                     Chance of $0
                   </div>
-                  <div className="text-base sm:text-lg font-bold font-mono tabular-nums text-slate-300">
+                  <div className="text-lg font-bold font-mono tabular-nums text-slate-300 mt-0.5">
                     {zeroReturnPct.toFixed(zeroReturnPct > 99 ? 2 : 1)}%
                   </div>
                 </div>
@@ -379,62 +379,60 @@ export default function BudgetOddsExplorer({
                     style={{ width: `${Math.max(1.5, Math.min(100, tier.anyPrizePct))}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-[10px] font-mono text-slate-500">
-                  <span>Prize Zone ({tier.anyPrizePct.toFixed(tier.anyPrizePct < 1 ? 2 : 1)}%)</span>
-                  <span>No-Prize Zone ({zeroReturnPct.toFixed(1)}%)</span>
+                <div className="flex justify-between text-xs font-sans text-slate-400">
+                  <span>Chance of a Prize ({tier.anyPrizePct.toFixed(tier.anyPrizePct < 1 ? 2 : 1)}%)</span>
+                  <span>No Prize ({zeroReturnPct.toFixed(1)}%)</span>
                 </div>
               </div>
 
-              {/* 3 Structured Micro-Metric Tiles */}
-              <div className="grid grid-cols-3 gap-2 pt-1">
-                <div className="p-2.5 rounded-lg bg-slate-900/70 border border-white/[0.06]">
-                  <div className="text-[10px] font-mono uppercase text-slate-500">Total Cost</div>
-                  <div className="text-sm font-bold font-mono tabular-nums text-white mt-0.5">
-                    ${tier.costTT} TT
+              {/* 3 Structured Metric Tiles */}
+              <div className="grid grid-cols-3 gap-2.5 pt-1">
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-white/[0.06]">
+                  <div className="text-xs font-semibold uppercase text-slate-400 font-sans">Total Cost</div>
+                  <div className="text-base font-bold font-mono tabular-nums text-white mt-1">
+                    ${tier.costTT} TTD
                   </div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-slate-900/70 border border-white/[0.06]">
-                  <div className="text-[10px] font-mono uppercase text-slate-500 truncate">
-                    {tier.tier2Label || "Tier 2"}
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-white/[0.06]">
+                  <div className="text-xs font-semibold uppercase text-slate-400 font-sans truncate">
+                    {tier.tier2Label || "Higher Tier"}
                   </div>
-                  <div className="text-sm font-bold font-mono tabular-nums text-sky-300 mt-0.5">
-                    {tier.tier2Pct !== undefined
-                      ? `${tier.tier2Pct.toFixed(tier.tier2Pct < 1 ? 2 : 2)}%`
-                      : "—"}
+                  <div className="text-base font-bold font-mono tabular-nums text-sky-300 mt-1">
+                    {tier.tier2Pct !== undefined ? `${tier.tier2Pct.toFixed(2)}%` : "Not set"}
                   </div>
                 </div>
-                <div className="p-2.5 rounded-lg bg-slate-900/70 border border-white/[0.06]">
-                  <div className="text-[10px] font-mono uppercase text-slate-500">Top Odds</div>
-                  <div className="text-[11px] sm:text-sm font-bold font-mono tabular-nums text-amber-300 mt-0.5 whitespace-nowrap">
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-white/[0.06]">
+                  <div className="text-xs font-semibold uppercase text-slate-400 font-sans">Top Odds</div>
+                  <div className="text-sm sm:text-base font-bold font-mono tabular-nums text-amber-300 mt-1 whitespace-nowrap">
                     {tier.jackpotOdds}
                   </div>
                 </div>
               </div>
 
               {/* Multi-Draw Analytical Horizon Strip */}
-              <div className="p-2.5 rounded-lg bg-slate-950/90 border border-white/[0.06] flex items-center justify-between gap-2 text-[11px] font-mono">
-                <span className="text-slate-400">Hit ≥1 Prize Over:</span>
+              <div className="p-3 rounded-lg bg-slate-950/90 border border-white/[0.06] flex flex-wrap items-center justify-between gap-2 text-xs font-sans">
+                <span className="text-slate-400 font-medium">Chance of at least 1 prize over:</span>
                 <div className="flex items-center gap-3 tabular-nums">
                   <span className="text-slate-300">
-                    1 Draw <strong className="text-white">{tier.anyPrizePct.toFixed(1)}%</strong>
+                    1 Draw <strong className="text-white font-mono">{tier.anyPrizePct.toFixed(1)}%</strong>
                   </span>
                   <span className="text-slate-300">
-                    3 Draws <strong className="text-sky-300">{multi3Pct}%</strong>
+                    3 Draws <strong className="text-sky-300 font-mono">{multi3Pct}%</strong>
                   </span>
                   <span className="text-slate-300">
-                    5 Draws <strong className="text-emerald-300">{multi5Pct}%</strong>
+                    5 Draws <strong className="text-emerald-300 font-mono">{multi5Pct}%</strong>
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Plain-English Rules & Zero-Return Clarity */}
-            <div className="pt-3 border-t border-white/[0.06] space-y-1 text-xs font-sans">
-              <div className="text-slate-300 leading-snug">
+            <div className="pt-3.5 border-t border-white/[0.06] space-y-1.5 text-sm font-sans">
+              <div className="text-slate-300 leading-relaxed">
                 <span className="font-semibold text-emerald-400">What wins: </span>
                 {game.whatWins}
               </div>
-              <div className="text-slate-400 leading-snug">
+              <div className="text-slate-400 leading-relaxed">
                 <span className="font-semibold text-slate-200">Pays $0: </span>
                 {game.whatPaysZero}
               </div>
@@ -443,20 +441,20 @@ export default function BudgetOddsExplorer({
 
           {/* Right Column: Precision SVG Global Budget-vs-Odds Curve */}
           <div className="lg:col-span-6 rounded-xl bg-[#070b14] border border-white/[0.07] p-4 sm:p-5 flex flex-col justify-between space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
-                  {game.name} Global Budget Curve
-                </div>
-                <div className="text-xs text-slate-500 font-sans">
-                  Tap any point on the curve to compare budget vs. exact prize probability
-                </div>
+            <div className="flex items-start justify-between gap-2">
+              <div className="space-y-0.5">
+                <h3 className="text-base font-bold text-white font-sans">
+                  {game.name} Budget Curve
+                </h3>
+                <p className="text-xs text-slate-400 font-sans">
+                  Select any point on the chart to compare budget and exact prize odds
+                </p>
               </div>
               {hasBaseline && (
-                <div className="hidden sm:flex items-center gap-3 text-[10px] font-mono">
+                <div className="hidden sm:flex items-center gap-3 text-xs font-sans shrink-0 pt-0.5">
                   <span className="flex items-center gap-1.5 text-emerald-300">
                     <span className="w-3 h-0.5 bg-emerald-400 inline-block" />
-                    Optimal
+                    No Overlap
                   </span>
                   <span className="flex items-center gap-1.5 text-slate-400">
                     <span className="w-3 h-0.5 border-t border-dashed border-slate-500 inline-block" />
@@ -470,39 +468,39 @@ export default function BudgetOddsExplorer({
               {/* Desktop-only SVG Data Point Hover Tooltip */}
               {hoveredCurveIdx !== null && points[hoveredCurveIdx] && (() => {
                 const hp = points[hoveredCurveIdx];
-                const leftPct = Math.min(62, Math.max(4, (getX(hoveredCurveIdx) / svgW) * 100 - 16));
+                const leftPct = Math.min(56, Math.max(4, (getX(hoveredCurveIdx) / svgW) * 100 - 16));
                 const gain =
                   hp.naiveOverlapPct !== undefined && hp.anyPrizePct > hp.naiveOverlapPct
                     ? Math.round((hp.anyPrizePct - hp.naiveOverlapPct) * 10) / 10
                     : null;
                 return (
                   <div
-                    className="hidden md:block pointer-events-none absolute top-0 z-30 w-52 rounded-xl bg-[#0d1424]/95 border border-sky-400/40 shadow-2xl backdrop-blur-md p-2.5 font-mono text-[10.5px] space-y-1"
+                    className="hidden md:block pointer-events-none absolute top-0 z-30 w-60 rounded-xl bg-[#0d1424]/95 border border-sky-400/40 shadow-2xl backdrop-blur-md p-3 font-sans text-xs space-y-1.5"
                     style={{ left: `${leftPct}%` }}
                   >
-                    <div className="flex items-center justify-between border-b border-white/10 pb-1">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
                       <span className="font-bold text-white">{hp.label}</span>
-                      <span className="text-emerald-300 font-bold">${hp.costTT} TT</span>
+                      <span className="text-emerald-300 font-mono font-bold">${hp.costTT} TTD</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Optimal Prize:</span>
-                      <span className="text-emerald-300 font-bold">
-                        {hp.anyPrizePct.toFixed(hp.anyPrizePct < 1 ? 2 : 2)}%
+                      <span className="text-slate-400">Win Any Prize:</span>
+                      <span className="text-emerald-300 font-mono font-bold">
+                        {hp.anyPrizePct.toFixed(2)}%
                       </span>
                     </div>
                     {gain !== null && (
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Overlap Gain:</span>
-                        <span className="text-sky-300 font-bold">+{gain}%</span>
+                        <span className="text-slate-400">Gain Over Overlap:</span>
+                        <span className="text-sky-300 font-mono font-bold">{gain}% higher</span>
                       </div>
                     )}
                     <div className="flex justify-between">
                       <span className="text-slate-400">Chance of $0:</span>
-                      <span className="text-slate-200">{(100 - hp.anyPrizePct).toFixed(1)}%</span>
+                      <span className="text-slate-200 font-mono">{(100 - hp.anyPrizePct).toFixed(1)}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Top Odds:</span>
-                      <span className="text-amber-300 font-bold">{hp.jackpotOdds}</span>
+                      <span className="text-slate-400">Top Prize Odds:</span>
+                      <span className="text-amber-300 font-mono font-bold">{hp.jackpotOdds}</span>
                     </div>
                   </div>
                 );
@@ -521,7 +519,7 @@ export default function BudgetOddsExplorer({
                   </linearGradient>
                 </defs>
 
-                {/* Horizontal Gridlines & Y-Axis Labels */}
+                {/* Horizontal Gridlines and Y-Axis Labels */}
                 {yTicks.map((v) => {
                   const y = getY(v);
                   return (
@@ -538,7 +536,7 @@ export default function BudgetOddsExplorer({
                         x={padL - 7}
                         y={y + 3.5}
                         textAnchor="end"
-                        className="fill-slate-500 text-[9px] font-mono"
+                        className="fill-slate-400 text-[10px] font-mono"
                       >
                         {v}%
                       </text>
@@ -560,7 +558,7 @@ export default function BudgetOddsExplorer({
                 {/* Area Under Optimal Curve */}
                 <path d={optimalAreaPath} fill={`url(#curveFill-${game.key})`} />
 
-                {/* Standard Overlapping / Unstratified Baseline Curve */}
+                {/* Standard Overlapping Baseline Curve */}
                 {hasBaseline && (
                   <path
                     d={baselinePath}
@@ -571,7 +569,7 @@ export default function BudgetOddsExplorer({
                   />
                 )}
 
-                {/* Optimal Steiner-Johnson Curve */}
+                {/* Non-Overlapping Curve */}
                 <path
                   d={optimalLinePath}
                   fill="none"
@@ -616,9 +614,9 @@ export default function BudgetOddsExplorer({
                       {/* Exact % Value Above Node */}
                       <text
                         x={cx}
-                        y={Math.max(11, cy - 10)}
+                        y={Math.max(12, cy - 10)}
                         textAnchor="middle"
-                        className={`text-[9.5px] font-mono ${
+                        className={`text-[10px] font-mono ${
                           isActive ? "fill-emerald-300 font-bold" : "fill-slate-400"
                         }`}
                       >
@@ -627,9 +625,9 @@ export default function BudgetOddsExplorer({
                       {/* Cost Label on X-Axis */}
                       <text
                         x={cx}
-                        y={padT + plotH + 16}
+                        y={padT + plotH + 17}
                         textAnchor="middle"
-                        className={`text-[9.5px] font-mono ${
+                        className={`text-[10px] font-mono ${
                           isActive ? "fill-white font-bold" : "fill-slate-400"
                         }`}
                       >
@@ -637,9 +635,9 @@ export default function BudgetOddsExplorer({
                       </text>
                       <text
                         x={cx}
-                        y={padT + plotH + 28}
+                        y={padT + plotH + 31}
                         textAnchor="middle"
-                        className="fill-slate-500 text-[8px] font-mono"
+                        className="fill-slate-400 text-[9px] font-sans"
                       >
                         {pt.label}
                       </text>
@@ -649,18 +647,18 @@ export default function BudgetOddsExplorer({
               </svg>
             </div>
 
-            {/* Active Tier Mathematical Note */}
-            <div className="p-3 rounded-lg bg-slate-900/70 border border-white/[0.06] text-xs font-sans text-slate-300 leading-relaxed">
-              <strong className="text-white font-semibold">{tier.label} (${tier.costTT} TT): </strong>
+            {/* Active Tier Plain-English Explanation */}
+            <div className="p-3.5 rounded-lg bg-slate-900/70 border border-white/[0.06] text-sm font-sans text-slate-300 leading-relaxed">
+              <strong className="text-white font-semibold">{tier.label} (${tier.costTT} TTD): </strong>
               {tier.note}
             </div>
           </div>
         </div>
 
-        {/* Step 4: Cash Pot Live Sure Call Timing Banner OR Game Math Edge Strip */}
+        {/* Step 4: Cash Pot Live Sure Call Timing Banner OR Game Math Summary */}
         {sureCall ? (
           <div
-            className={`px-4 py-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-sans ${
+            className={`px-4 py-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm font-sans ${
               sureCall.isSureCallDay
                 ? "bg-emerald-950/35 border-emerald-500/35 text-emerald-100"
                 : "bg-amber-950/30 border-amber-500/30 text-amber-100"
@@ -668,35 +666,35 @@ export default function BudgetOddsExplorer({
           >
             <div className="flex items-start gap-2.5">
               <AlertCircle
-                className={`w-4 h-4 shrink-0 mt-0.5 ${
+                className={`w-4 h-4 shrink-0 mt-1 ${
                   sureCall.isSureCallDay ? "text-emerald-400" : "text-amber-400"
                 }`}
               />
-              <div>
-                <span className="font-bold font-mono uppercase tracking-wider text-[11px] block">
+              <div className="space-y-0.5 leading-relaxed">
+                <div className="font-bold text-sm text-white">
                   {sureCall.isSureCallDay
-                    ? `Sure Call Multiplier Day Active — ${sureCall.nextDrawDayName} (2.95x Historical Avg · +56% EV)`
-                    : `Standard Multiplier Day — ${sureCall.nextDrawDayName} (1.89x Historical Avg · ~53% Chance of 1x)`}
-                </span>
-                <span className="text-slate-300">
+                    ? `Sure Call Multiplier Day Active: ${sureCall.nextDrawDayName} (2.95 times average Multiplier, 56% higher expected return)`
+                    : `Standard Multiplier Day: ${sureCall.nextDrawDayName} (1.89 times average Multiplier, about 53% chance of 1 time)`}
+                </div>
+                <p className="text-sm text-slate-300 leading-relaxed">
                   {sureCall.isSureCallDay
-                    ? "Across all 2026 Mon / Thu / Sat draws (108/108), Cash Pot Multiplier has NEVER dropped 1x. Best nights for 10–15 slips."
-                    : "Mon, Thu, and Sat draws guarantee 2x–4x Multipliers (108/108 in 2026). Consider focusing larger Cash Pot plays on those 3 days."}
-                </span>
+                    ? "Across all 108 Monday, Thursday, and Saturday draws in 2026, the Cash Pot Multiplier has never dropped to 1 time. These are the strongest nights for 10 to 15 slips."
+                    : "Monday, Thursday, and Saturday draws guarantee 2 to 4 times Multipliers (all 108 draws in 2026). Consider focusing larger Cash Pot budgets on those 3 days."}
+                </p>
               </div>
             </div>
           </div>
         ) : (
-          <div className="px-4 py-3 rounded-xl bg-slate-900/60 border border-white/[0.07] flex items-start gap-2.5 text-xs font-sans text-slate-300">
-            <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+          <div className="px-4 py-3.5 rounded-xl bg-slate-900/60 border border-white/[0.07] flex items-start gap-2.5 text-sm font-sans text-slate-300 leading-relaxed">
+            <Info className="w-4 h-4 text-sky-400 shrink-0 mt-1" />
             <div>
-              <span className="font-semibold text-white">Mathematical Reality: </span>
+              <span className="font-semibold text-white">How the math works: </span>
               {game.mathEdgeSummary}
             </div>
           </div>
         )}
 
-        {/* Step 5: Primary Action Bar + Inline Optimal Slips Drawer */}
+        {/* Step 5: Primary Action Bar + Inline Non-Overlapping Slips Drawer */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
           {steinerPortfolio ? (
             <button
@@ -705,44 +703,43 @@ export default function BudgetOddsExplorer({
                 triggerHaptic("selection");
                 setShowSlipsDrawer((v) => !v);
               }}
-              className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm font-sans transition flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm font-sans transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <Layers className="w-4 h-4" />
               <span>
                 {showSlipsDrawer
-                  ? `Hide Optimal ${tier.label} ($${tier.costTT} TT)`
-                  : `View & Copy Optimal ${tier.label} ($${tier.costTT} TT)`}
+                  ? `Hide Non-Overlapping ${tier.label} ($${tier.costTT} TTD)`
+                  : `View and Copy Non-Overlapping ${tier.label} ($${tier.costTT} TTD)`}
               </span>
               {showSlipsDrawer ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
           ) : (
-            <div className="text-xs text-slate-400 font-sans">
-              Select a 5, 10, 15, or 20-slip tier on Cash Pot, Lotto Plus, or Win For Life to generate zero-overlap Steiner slips inline, or open the game workspace.
+            <div className="text-sm text-slate-400 font-sans leading-relaxed">
+              Choose a 5, 10, 15, or 20-slip budget on Cash Pot, Lotto Plus, or Win For Life to generate non-overlapping slips here, or open the full game page.
             </div>
           )}
 
           <button
             type="button"
             onClick={() => onSelectGame && onSelectGame(game.key)}
-            className="py-3 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/15 text-slate-100 font-semibold text-xs sm:text-sm font-sans transition flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            className="py-3 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/15 text-slate-100 font-semibold text-sm font-sans transition flex items-center justify-center gap-2 cursor-pointer shrink-0"
           >
-            <span>Open {game.name} Workspace</span>
+            <span>Open {game.name} Page</span>
             <ArrowRight className="w-4 h-4 text-sky-400" />
           </button>
         </div>
 
-        {/* Inline Zero-Overlap Steiner-Johnson Slips Drawer */}
+        {/* Inline Non-Overlapping Slips Drawer */}
         {showSlipsDrawer && steinerPortfolio && (
-          <div className="rounded-xl bg-[#070b14] border border-emerald-500/30 p-4 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-white/[0.06]">
-              <div>
-                <div className="text-xs font-bold font-mono text-emerald-300 uppercase tracking-wider">
-                  {game.name} · {steinerPortfolio.slips.length} Steiner-Johnson Slips (${tier.costTT} TT)
-                </div>
-                <div className="text-[11px] font-mono text-slate-400">
-                  MaxOverlap ≤ {steinerPortfolio.maxPairOverlap} · {steinerPortfolio.coveredBallsCount}/
-                  {steinerPortfolio.totalBalls} Balls Covered · Anti-Crowding {steinerPortfolio.antiCrowdingScore}%
-                </div>
+          <div className="rounded-xl bg-[#070b14] border border-emerald-500/30 p-4 space-y-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-white/[0.06]">
+              <div className="space-y-1">
+                <h3 className="text-base font-bold font-sans text-emerald-300">
+                  {game.name}: {steinerPortfolio.slips.length} Non-Overlapping Slips (${tier.costTT} TTD)
+                </h3>
+                <p className="text-xs font-sans text-slate-400">
+                  At most {steinerPortfolio.maxPairOverlap} shared number between any two slips, covering {steinerPortfolio.coveredBallsCount} of {steinerPortfolio.totalBalls} numbers, Uniqueness score {steinerPortfolio.antiCrowdingScore}%
+                </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
                 <button
@@ -751,15 +748,15 @@ export default function BudgetOddsExplorer({
                     triggerHaptic("selection");
                     setShowExportModal(true);
                   }}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-mono font-bold transition cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-sans font-bold transition cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  <span>Print / Export</span>
+                  <span>Print or Export</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleCopySlips}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-xs font-mono font-semibold text-white transition cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-xs font-sans font-semibold text-white transition cursor-pointer"
                 >
                   {copiedSlips ? (
                     <>
@@ -776,24 +773,24 @@ export default function BudgetOddsExplorer({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-72 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
               {steinerPortfolio.slips.map((slip, idx) => {
                 const bonus = steinerPortfolio.bonusBalls[idx];
                 return (
                   <div
                     key={idx}
-                    className="px-3 py-2 rounded-lg bg-slate-900/75 border border-white/[0.06] flex items-center justify-between font-mono text-xs"
+                    className="px-3.5 py-2.5 rounded-lg bg-slate-900/75 border border-white/[0.06] flex items-center justify-between gap-2 text-xs"
                   >
-                    <span className="text-slate-500 text-[11px]">
-                      #{String(idx + 1).padStart(2, "0")}
+                    <span className="text-slate-400 font-sans font-semibold shrink-0">
+                      Slip {String(idx + 1).padStart(2, "0")}
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-slate-100 font-bold tracking-wider tabular-nums">
-                        {slip.map((n) => String(n).padStart(2, "0")).join(" · ")}
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      <span className="text-slate-100 font-mono font-bold tracking-wider tabular-nums text-sm">
+                        {slip.map((n) => String(n).padStart(2, "0")).join("  ")}
                       </span>
                       {bonus !== undefined && (
-                        <span className="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[10px] font-bold">
-                          {game.key === "win-for-life" ? `CB ${bonus}` : `PB ${bonus}`}
+                        <span className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-400/40 text-amber-300 text-xs font-sans font-semibold">
+                          {game.key === "win-for-life" ? `Cash Ball ${bonus}` : `Powerball ${bonus}`}
                         </span>
                       )}
                     </div>
@@ -801,8 +798,8 @@ export default function BudgetOddsExplorer({
                 );
               })}
             </div>
-            <p className="text-[11px] text-slate-500 font-sans">
-              These slips are generated for free analysis — play your chosen numbers in person at any official NLCB Lotto booth.
+            <p className="text-xs text-slate-400 font-sans leading-relaxed">
+              These slips are created to help you plan your numbers. Buy your official tickets in person at any authorized NLCB Lotto booth.
             </p>
           </div>
         )}

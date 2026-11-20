@@ -123,20 +123,20 @@ export default function Pick4Diff9Panel() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_12px_rgba(168,85,247,0.2)]">
+              <span className="px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_12px_rgba(168,85,247,0.2)]">
                 <Binary className="w-3.5 h-3.5 animate-pulse text-purple-400" />
                 QUANTITATIVE STATISTICAL ENGINE
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1">
                 <Sigma className="w-3 h-3 text-emerald-400" />
                 Radix 9's Complement
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono font-bold uppercase tracking-wider">
-                Sequence Invariant • Box Combinatorics
+              <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold uppercase tracking-wider">
+                Any-order Box combinations
               </span>
             </div>
 
-            <h2 className="text-xl md:text-2xl font-black text-white font-mono uppercase tracking-tight flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-black text-white font-mono uppercase tracking-tight flex items-center gap-2">
               Pick 4 Sum-9 Difference Model &amp; 4-Set Prediction
             </h2>
 
@@ -171,11 +171,11 @@ export default function Pick4Diff9Panel() {
           <div className="flex items-center justify-between border-b border-purple-500/20 pb-3">
             <div className="flex items-center gap-2">
               <Sigma className="w-5 h-5 text-purple-400" />
-              <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
+              <h3 className="text-base font-mono font-bold text-white uppercase tracking-wider">
                 Pick 4 Mathematical Foundations &amp; Combinatorial Invariants
               </h3>
             </div>
-            <span className="text-[10px] font-mono text-purple-400/80">Decimal Radix-Minus-One Involution</span>
+            <span className="text-xs font-mono text-purple-400/80">Decimal Radix-Minus-One Involution</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono text-gray-300 leading-relaxed">
@@ -216,7 +216,7 @@ export default function Pick4Diff9Panel() {
       <div className="glass-panel p-6 rounded-2xl border border-purple-500/20 bg-slate-950/60 space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
           <div>
-            <div className="text-[10px] font-mono text-purple-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+            <div className="text-xs font-mono text-purple-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
               Latest Official Database Draw
             </div>
@@ -248,7 +248,7 @@ export default function Pick4Diff9Panel() {
         <div className="space-y-3">
           <div className="text-xs font-mono font-bold text-gray-300 uppercase tracking-wider flex items-center justify-between">
             <span>9's Complement Decomposition: x_i + d_i = 9</span>
-            <span className="text-[11px] text-purple-400 font-normal">
+            <span className="text-xs text-purple-400 font-normal">
               Parity Flip: {latestDraw.oddCount}O/{latestDraw.evenCount}E &#8594; {latestDraw.complementOddCount}O/{latestDraw.complementEvenCount}E
             </span>
           </div>
@@ -261,7 +261,7 @@ export default function Pick4Diff9Panel() {
                   key={idx}
                   className="p-3.5 rounded-xl bg-slate-900/70 border border-purple-500/20 flex flex-col items-center justify-center space-y-2 relative group hover:border-purple-500/50 transition-all shadow-[0_0_15px_rgba(0,0,0,0.4)]"
                 >
-                  <span className="text-[9px] font-mono text-gray-500 uppercase tracking-wider">Digit {idx + 1}</span>
+                  <span className="text-xs font-mono text-gray-500 uppercase tracking-wider">Digit {idx + 1}</span>
                   
                   <div className="flex items-center gap-2">
                     {/* Actual Digit */}
@@ -277,7 +277,7 @@ export default function Pick4Diff9Panel() {
                     </div>
                   </div>
 
-                  <div className="text-[10px] font-mono text-gray-400">
+                  <div className="text-xs font-mono text-gray-400">
                     {digit} + {comp} = <span className="text-purple-300 font-bold">9</span>
                   </div>
                 </div>
@@ -291,11 +291,11 @@ export default function Pick4Diff9Panel() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <div className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+            <div className="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-emerald-400" />
               Mathematical Forecast (Sequence Invariant Box Play)
             </div>
-            <h3 className="text-lg font-mono font-black text-white uppercase tracking-tight flex items-center gap-2">
+            <h3 className="text-base font-mono font-black text-white uppercase tracking-tight flex items-center gap-2">
               <span>4 Formula Sets for Next Draw #{nextDrawPredictions.targetDrawNumber}</span>
               <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
                 {nextDrawPredictions.targetSlot}
@@ -318,7 +318,7 @@ export default function Pick4Diff9Panel() {
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase text-white bg-gradient-to-r ${set.badgeColor}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase text-white bg-gradient-to-r ${set.badgeColor}`}>
                       {set.badge}
                     </span>
                     <button
@@ -332,10 +332,10 @@ export default function Pick4Diff9Panel() {
 
                   <div>
                     <h4 className="text-sm font-mono font-bold text-white tracking-wide">{set.name}</h4>
-                    <p className="text-[10px] font-mono text-purple-400/80">{set.subtitle}</p>
+                    <p className="text-xs font-mono text-purple-400/80">{set.subtitle}</p>
                   </div>
 
-                  <p className="text-[11px] font-mono text-gray-400 leading-relaxed min-h-[38px]">
+                  <p className="text-xs font-mono text-gray-400 leading-relaxed min-h-[38px]">
                     {set.description}
                   </p>
                 </div>
@@ -353,7 +353,7 @@ export default function Pick4Diff9Panel() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] font-mono text-gray-400">
+                  <div className="flex items-center justify-between text-xs font-mono text-gray-400">
                     <span>Sum: <strong className="text-white">{set.sum}</strong></span>
                     <span>Box: <strong className="text-purple-300">{set.boxType}</strong></span>
                   </div>
@@ -367,12 +367,12 @@ export default function Pick4Diff9Panel() {
         <div className="glass-panel p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-500">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-500">
                 WHEELING SUPER-POOL
               </span>
               <span className="text-xs font-mono font-bold text-white">4-Set Combined Candidate Pool</span>
             </div>
-            <p className="text-[11px] font-mono text-gray-300">
+            <p className="text-xs font-mono text-gray-300">
               Captures &#8805; 3 winning digits in <strong className="text-emerald-300">{verification.unionCoverageRates.atLeastThree.percentage}%</strong> of all draws, and <strong className="text-emerald-300">ALL 4 WINNING DIGITS</strong> in <strong className="text-emerald-300">{verification.unionCoverageRates.allFour.percentage}%</strong> of all draws.
             </p>
           </div>
@@ -404,11 +404,11 @@ export default function Pick4Diff9Panel() {
       <div className="glass-panel p-6 rounded-2xl border border-purple-500/20 bg-slate-950/60 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-4">
           <div>
-            <div className="text-[10px] font-mono text-purple-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+            <div className="text-xs font-mono text-purple-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
               <Award className="w-3.5 h-3.5 text-purple-400" />
               Empirical Backtest Audit (Unordered Box Play)
             </div>
-            <h3 className="text-lg font-mono font-black text-white uppercase tracking-tight">
+            <h3 className="text-base font-mono font-black text-white uppercase tracking-tight">
               Historical Verification Across {verification.totalDrawsTested} Consecutive Draws
             </h3>
             <p className="text-xs text-gray-400 font-mono">
@@ -424,51 +424,51 @@ export default function Pick4Diff9Panel() {
         {/* KPI Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
-            <span className="text-[10px] font-mono text-gray-400 uppercase">Portfolio 1+ Match</span>
+            <span className="text-xs font-mono text-gray-400 uppercase">Portfolio 1+ Match</span>
             <div className="text-2xl font-mono font-black text-purple-300">
               {verification.bestTicketHitRates.atLeastOne.percentage}%
             </div>
-            <span className="text-[10px] font-mono text-gray-500">
+            <span className="text-xs font-mono text-gray-500">
               {verification.bestTicketHitRates.atLeastOne.count} / {verification.totalDrawsTested} draws
             </span>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
-            <span className="text-[10px] font-mono text-gray-400 uppercase">Portfolio 2+ Matches</span>
+            <span className="text-xs font-mono text-gray-400 uppercase">Portfolio 2+ Matches</span>
             <div className="text-2xl font-mono font-black text-cyan-300">
               {verification.bestTicketHitRates.atLeastTwo.percentage}%
             </div>
-            <span className="text-[10px] font-mono text-gray-500">
+            <span className="text-xs font-mono text-gray-500">
               {verification.bestTicketHitRates.atLeastTwo.count} / {verification.totalDrawsTested} draws
             </span>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
-            <span className="text-[10px] font-mono text-gray-400 uppercase">3-Digit Box Match</span>
+            <span className="text-xs font-mono text-gray-400 uppercase">3-Digit Box Match</span>
             <div className="text-2xl font-mono font-black text-amber-300">
               {verification.bestTicketHitRates.atLeastThree.percentage}%
             </div>
-            <span className="text-[10px] font-mono text-gray-500">
+            <span className="text-xs font-mono text-gray-500">
               {verification.bestTicketHitRates.atLeastThree.count} ticket hits
             </span>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
-            <span className="text-[10px] font-mono text-gray-400 uppercase">Pool 3+ Capture</span>
+            <span className="text-xs font-mono text-gray-400 uppercase">Pool 3+ Capture</span>
             <div className="text-2xl font-mono font-black text-emerald-300">
               {verification.unionCoverageRates.atLeastThree.percentage}%
             </div>
-            <span className="text-[10px] font-mono text-gray-500">
+            <span className="text-xs font-mono text-gray-500">
               {verification.unionCoverageRates.atLeastThree.count} in union
             </span>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-white/5 space-y-1">
-            <span className="text-[10px] font-mono text-gray-400 uppercase">Pool 4/4 Capture</span>
+            <span className="text-xs font-mono text-gray-400 uppercase">Pool 4/4 Capture</span>
             <div className="text-2xl font-mono font-black text-pink-300">
               {verification.unionCoverageRates.allFour.percentage}%
             </div>
-            <span className="text-[10px] font-mono text-gray-500">
+            <span className="text-xs font-mono text-gray-500">
               {verification.unionCoverageRates.allFour.count} draws
             </span>
           </div>
@@ -501,7 +501,7 @@ export default function Pick4Diff9Panel() {
               <div className="flex rounded-lg bg-slate-900 p-0.5 border border-white/10">
                 <button
                   onClick={() => setSelectedFilter("all")}
-                  className={`px-2.5 py-1 text-[10px] font-mono rounded-md transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-mono rounded-md transition-all cursor-pointer ${
                     selectedFilter === "all" ? "bg-purple-500 text-slate-950 font-bold" : "text-gray-400 hover:text-white"
                   }`}
                 >
@@ -509,7 +509,7 @@ export default function Pick4Diff9Panel() {
                 </button>
                 <button
                   onClick={() => setSelectedFilter("4win")}
-                  className={`px-2.5 py-1 text-[10px] font-mono rounded-md transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-mono rounded-md transition-all cursor-pointer ${
                     selectedFilter === "4win" ? "bg-pink-500 text-slate-950 font-bold" : "text-gray-400 hover:text-white"
                   }`}
                 >
@@ -517,7 +517,7 @@ export default function Pick4Diff9Panel() {
                 </button>
                 <button
                   onClick={() => setSelectedFilter("3plus")}
-                  className={`px-2.5 py-1 text-[10px] font-mono rounded-md transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-mono rounded-md transition-all cursor-pointer ${
                     selectedFilter === "3plus" ? "bg-amber-500 text-slate-950 font-bold" : "text-gray-400 hover:text-white"
                   }`}
                 >
@@ -525,7 +525,7 @@ export default function Pick4Diff9Panel() {
                 </button>
                 <button
                   onClick={() => setSelectedFilter("2plus")}
-                  className={`px-2.5 py-1 text-[10px] font-mono rounded-md transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-mono rounded-md transition-all cursor-pointer ${
                     selectedFilter === "2plus" ? "bg-cyan-500 text-slate-950 font-bold" : "text-gray-400 hover:text-white"
                   }`}
                 >
@@ -533,7 +533,7 @@ export default function Pick4Diff9Panel() {
                 </button>
                 <button
                   onClick={() => setSelectedFilter("1plus")}
-                  className={`px-2.5 py-1 text-[10px] font-mono rounded-md transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-mono rounded-md transition-all cursor-pointer ${
                     selectedFilter === "1plus" ? "bg-purple-500/30 text-purple-300 font-bold" : "text-gray-400 hover:text-white"
                   }`}
                 >
@@ -546,7 +546,7 @@ export default function Pick4Diff9Panel() {
           {/* Audit Table */}
           <div className="overflow-x-auto sleek-scrollbar rounded-xl border border-white/5">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-slate-900/90 text-gray-400 uppercase text-[10px] border-b border-white/10">
+              <thead className="bg-slate-900/90 text-gray-400 uppercase text-xs border-b border-white/10">
                 <tr>
                   <th className="py-2.5 px-3">Draw #</th>
                   <th className="py-2.5 px-3">Slot / Date</th>
@@ -570,8 +570,8 @@ export default function Pick4Diff9Panel() {
                       <td className="py-2.5 px-3 font-bold text-white">#{row.drawNumber}</td>
                       <td className="py-2.5 px-3">
                         <div className="flex flex-col">
-                          <span className="text-purple-300 font-bold text-[11px]">{row.drawTimeSlot}</span>
-                          <span className="text-[10px] text-gray-500">{row.drawDate}</span>
+                          <span className="text-purple-300 font-bold text-xs">{row.drawTimeSlot}</span>
+                          <span className="text-xs text-gray-500">{row.drawDate}</span>
                         </div>
                       </td>
                       <td className="py-2.5 px-3">
@@ -579,7 +579,7 @@ export default function Pick4Diff9Panel() {
                           {row.actualDigits.map((d, i) => (
                             <span 
                               key={i}
-                              className="w-6 h-6 rounded bg-slate-800 text-white font-bold flex items-center justify-center text-[11px]"
+                              className="w-6 h-6 rounded bg-slate-800 text-white font-bold flex items-center justify-center text-xs"
                             >
                               {d}
                             </span>
@@ -605,23 +605,23 @@ export default function Pick4Diff9Panel() {
                       </td>
                       <td className="py-2.5 px-3 text-right">
                         {row.bestHit === 4 ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-black bg-pink-500 text-slate-950">
+                          <span className="px-2 py-0.5 rounded text-xs font-black bg-pink-500 text-slate-950">
                             4/4 EXACT BOX WIN
                           </span>
                         ) : row.bestHit === 3 ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/30 text-amber-300 border border-amber-500/40">
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/30 text-amber-300 border border-amber-500/40">
                             3-DIGIT MATCH
                           </span>
                         ) : row.bestHit === 2 ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] text-cyan-300 bg-cyan-500/10">
+                          <span className="px-2 py-0.5 rounded text-xs text-cyan-300 bg-cyan-500/10">
                             2-DIGIT MATCH
                           </span>
                         ) : row.bestHit === 1 ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] text-purple-400 bg-purple-500/10">
+                          <span className="px-2 py-0.5 rounded text-xs text-purple-400 bg-purple-500/10">
                             1-DIGIT MATCH
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded text-[10px] text-gray-500 bg-slate-800">
+                          <span className="px-2 py-0.5 rounded text-xs text-gray-500 bg-slate-800">
                             NO MATCH
                           </span>
                         )}

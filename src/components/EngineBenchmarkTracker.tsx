@@ -98,17 +98,17 @@ export default function EngineBenchmarkTracker() {
   const getGamePortfolioNotice = (gameKey: string, slipCount: number) => {
     switch (gameKey) {
       case "cashpot":
-        return `Grades all ${slipCount} Steiner-Johnson slips together ($5.00 TT/slip = $${slipCount * 5}.00 TT/draw with Mult). Official NLCB rules: Match 3 ($5 base × mult), Match 4 (pari-mutuel × mult), Match 5 Jackpot (no mult); Match 2 pays $0. Global mathematical ceiling for 10 slips = 63.34% Match 3+ (MaxOverlap = 1, 20/20 balls). Mon / Thu / Sat are Sure Call days (100% Multiplier >= 2x, 2.95x avg).`;
+        return `Checks all ${slipCount} non-overlapping slips together ($5.00 TTD per slip, totaling $${slipCount * 5}.00 TTD per draw with Multiplier). Official NLCB rules: Match 3 ($5 base times the Multiplier), Match 4 (shared prize times the Multiplier), Match 5 Jackpot (no Multiplier); Match 2 pays $0. Highest possible odds for 10 slips: 63.34% chance of matching 3 or more numbers (at most 1 shared number, all 20 numbers covered). Monday, Thursday, and Saturday are Sure Call days (Multiplier is always 2 to 4 times, 2.95 times average).`;
       case "win-for-life":
-        return `Grades all ${slipCount} Steiner-Johnson slips together ($10.00 TT/line = $${slipCount * 10}.00 TT/draw). Prizes start at Match 3 ($25 TT) up to Match 6 + Cash Ball. Exact 10-slip ceiling = 72.13% Match 3+, 9.55% Match 4+ (MaxOverlap = 1, 28/28 balls + full 1..10 Cash Ball stratification).`;
+        return `Checks all ${slipCount} non-overlapping lines together ($10.00 TTD per line, totaling $${slipCount * 10}.00 TTD per draw). Prizes start at Match 3 ($25 TTD) up to Match 6 plus the Cash Ball. 10-line odds: 72.13% chance of matching 3 or more numbers, 9.55% chance of matching 4 or more (at most 1 shared number, all 28 numbers and all 10 Cash Balls covered).`;
       case "lotto-plus":
-        return `Grades all ${slipCount} Steiner-Johnson slips together ($5.00 TT/play = $${slipCount * 5}.00 TT/draw). Prizes start at Match 1+PB ($5 TT) or Match 3 ($25 TT). Full 1..10 Powerball stratification guarantees 100% PB capture (62.93% any-prize odds across 35/35 balls, MaxOverlap = 1).`;
+        return `Checks all ${slipCount} non-overlapping plays together ($5.00 TTD per play, totaling $${slipCount * 5}.00 TTD per draw). Prizes start at Match 1 plus Powerball ($5 TTD) or Match 3 ($25 TTD). Covering every Powerball from 1 to 10 guarantees a Powerball match (62.93% chance of any prize across all 35 numbers with at most 1 shared number).`;
       case "play-whe":
-        return `Grades 5 Tactical Marks ($5 TT/draw total). Any 1 of the 5 marks hitting pays $26 TT. Past audit results do not guarantee future draws.`;
+        return `Checks 5 different marks ($5 TTD per draw total). Matching any 1 of the 5 marks pays $26 TTD. Past results do not guarantee future draws.`;
       case "pick4":
-        return `Grades ${slipCount} Box/Twin card sets. Straight pays $5,000, Box pays $200–$1,200, Front/Back 3 pays $500, Pair pays $50. Past audit results do not guarantee future draws.`;
+        return `Checks ${slipCount} Box and Exact Order sets. Exact Order pays $5,000, Box pays $200 to $1,200, Front or Back 3 pays $500, Pair pays $50. Past results do not guarantee future draws.`;
       default:
-        return `Grades the full ${slipCount}-slip portfolio together. Past audit results do not guarantee future draws.`;
+        return `Checks the full ${slipCount}-slip set together. Past results do not guarantee future draws.`;
     }
   };
 
@@ -371,10 +371,10 @@ export default function EngineBenchmarkTracker() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded text-[11px] font-mono tracking-wider font-semibold bg-cyan-950/80 border border-cyan-500/40 text-cyan-400">
+              <span className="px-2.5 py-0.5 rounded text-xs font-mono tracking-wider font-semibold bg-cyan-950/80 border border-cyan-500/40 text-cyan-400">
                 NLCB QUANTITATIVE // MULTI-ENGINE BENCHMARK
               </span>
-              <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded text-xs font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 BAYESIAN CALIBRATOR ACTIVE
               </span>
@@ -425,7 +425,7 @@ export default function EngineBenchmarkTracker() {
             </div>
             <button
               onClick={() => setActionBanner(null)}
-              className="text-slate-400 hover:text-white text-[11px] px-2 py-0.5 rounded bg-slate-900/60"
+              className="text-slate-400 hover:text-white text-xs px-2 py-0.5 rounded bg-slate-900/60"
             >
               Dismiss
             </button>
@@ -435,21 +435,21 @@ export default function EngineBenchmarkTracker() {
         {/* Global KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-800/80">
           <div className="bg-[#171c20]/60 p-3 rounded-xl border border-slate-800">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">Total Audited Draws</span>
+            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider block">Total Audited Draws</span>
             <span className="text-lg sm:text-xl font-bold font-mono text-white mt-0.5 block">
               {data?.totalEvaluated || 0}
             </span>
           </div>
 
           <div className="bg-[#171c20]/60 p-3 rounded-xl border border-slate-800">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">Overall Prize Win Rate</span>
+            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider block">Overall Prize Win Rate</span>
             <span className="text-lg sm:text-xl font-bold font-mono text-emerald-400 mt-0.5 block">
               {data?.overallWinRatePct || 0}%
             </span>
           </div>
 
           <div className="bg-[#171c20]/60 p-3 rounded-xl border border-slate-800">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">Net Simulated Profit</span>
+            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider block">Net Simulated Profit</span>
             <span className={`text-lg sm:text-xl font-bold font-mono mt-0.5 block ${
               (data?.totalSimulatedNetProfitTT || 0) >= 0 ? "text-emerald-400" : "text-rose-400"
             }`}>
@@ -458,7 +458,7 @@ export default function EngineBenchmarkTracker() {
           </div>
 
           <div className="bg-[#171c20]/60 p-3 rounded-xl border border-slate-800">
-            <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">Active Regimes Tracked</span>
+            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider block">Active Regimes Tracked</span>
             <span className="text-lg sm:text-xl font-bold font-mono text-cyan-400 mt-0.5 block">
               {data?.leaderboard.length || 0} Regimes
             </span>
@@ -497,7 +497,7 @@ export default function EngineBenchmarkTracker() {
           <div className="flex items-center bg-[#0f1418] rounded-lg p-0.5 border border-slate-800">
             <button
               onClick={() => setChampionOnlyMode(true)}
-              className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded text-xs font-mono transition-all flex items-center gap-1 ${
                 championOnlyMode
                   ? "bg-emerald-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(16,185,129,0.25)]"
                   : "text-slate-400 hover:text-slate-200"
@@ -509,7 +509,7 @@ export default function EngineBenchmarkTracker() {
             </button>
             <button
               onClick={() => setChampionOnlyMode(false)}
-              className={`px-2.5 py-1 rounded text-[11px] font-mono transition-all ${
+              className={`px-2.5 py-1 rounded text-xs font-mono transition-all ${
                 !championOnlyMode
                   ? "bg-cyan-500 text-slate-950 font-bold"
                   : "text-slate-400 hover:text-slate-200"
@@ -521,7 +521,7 @@ export default function EngineBenchmarkTracker() {
           </div>
 
           <div className="flex items-center gap-1">
-            <span className="text-[11px] font-mono text-slate-500 uppercase mr-0.5">Horizon:</span>
+            <span className="text-xs font-mono text-slate-500 uppercase mr-0.5">Horizon:</span>
             {["50", "100", "200", "all"].map(depth => (
               <button
                 key={depth}
@@ -546,10 +546,10 @@ export default function EngineBenchmarkTracker() {
             <div>
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-amber-400" />
-                <h2 className="font-bold text-white text-base sm:text-lg">
+                <h2 className="text-lg sm:text-xl font-bold text-white">
                   Apex Champion Master Picks — Next Draw (N+1)
                 </h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
                   SINGLE REFINED SELECTION PER GAME
                 </span>
               </div>
@@ -581,62 +581,62 @@ export default function EngineBenchmarkTracker() {
                           {pick.target_time_slot ? ` (${pick.target_time_slot})` : ""}
                         </span>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
+                      <span className="px-2 py-0.5 rounded text-xs font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
                         {pick.verified_win_rate_pct}% Real Hit | {pick.verified_roi_pct >= 0 ? "+" : ""}{pick.verified_roi_pct}% ROI
                       </span>
                     </div>
 
-                    {/* Steiner-Johnson Exact Combinatorial Ceiling & Cash Pot Sure Call EV Telemetry */}
+                    {/* Exact Coverage and Cash Pot Sure Call Summary */}
                     {pick.steiner_meta && (
-                      <div className="space-y-1.5 font-mono">
+                      <div className="space-y-2 font-sans">
                         <div className="grid grid-cols-3 gap-1.5 text-center">
-                          <div className="p-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30">
-                            <div className="text-[9px] text-emerald-300/80 uppercase">
-                              {pick.game_key === "lotto-plus" ? "Any Prize (10-PB)" : "Exact 3+ Ceiling"}
+                          <div className="p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/30">
+                            <div className="text-xs text-emerald-300/90 font-semibold">
+                              {pick.game_key === "lotto-plus" ? "Any Prize" : "3 or More"}
                             </div>
-                            <div className="text-xs font-black text-emerald-300">
+                            <div className="text-sm font-bold font-mono text-emerald-300">
                               {pick.game_key === "lotto-plus"
                                 ? `${pick.steiner_meta.exact_any_prize_pct}%`
                                 : `${pick.steiner_meta.exact_match3_pct}%`}
                             </div>
                           </div>
-                          <div className="p-1.5 rounded-lg bg-sky-950/40 border border-sky-500/30">
-                            <div className="text-[9px] text-sky-300/80 uppercase">4+ / Overlap</div>
-                            <div className="text-xs font-black text-sky-300">
-                              {pick.steiner_meta.exact_match4_pct}% · Ov≤{pick.steiner_meta.max_pair_overlap}
+                          <div className="p-2 rounded-lg bg-sky-950/40 border border-sky-500/30">
+                            <div className="text-xs text-sky-300/90 font-semibold">4+ / Shared</div>
+                            <div className="text-sm font-bold font-mono text-sky-300">
+                              {pick.steiner_meta.exact_match4_pct}% (max {pick.steiner_meta.max_pair_overlap})
                             </div>
                           </div>
-                          <div className="p-1.5 rounded-lg bg-amber-950/40 border border-amber-500/30">
-                            <div className="text-[9px] text-amber-300/80 uppercase">Balls · Unshared</div>
-                            <div className="text-xs font-black text-amber-300">
-                              {pick.steiner_meta.covered_balls} · {pick.steiner_meta.anti_crowding_score}%
+                          <div className="p-2 rounded-lg bg-amber-950/40 border border-amber-500/30">
+                            <div className="text-xs text-amber-300/90 font-semibold">Covered</div>
+                            <div className="text-sm font-bold font-mono text-amber-300">
+                              {pick.steiner_meta.covered_balls} ({pick.steiner_meta.anti_crowding_score}%)
                             </div>
                           </div>
                         </div>
 
                         {pick.steiner_meta.sure_call && (
                           <div
-                            className={`px-2.5 py-1.5 rounded-lg border text-[10px] leading-snug ${
+                            className={`px-3 py-2 rounded-lg border text-xs leading-relaxed ${
                               pick.steiner_meta.sure_call.isSureCallDay
-                                ? "bg-emerald-950/50 border-emerald-400/40 text-emerald-200"
-                                : "bg-amber-950/40 border-amber-500/30 text-amber-200"
+                                ? "bg-emerald-950/50 border-emerald-400/40 text-emerald-100"
+                                : "bg-amber-950/40 border-amber-500/30 text-amber-100"
                             }`}
                           >
-                            <span className="font-black uppercase tracking-wider">
+                            <span className="font-bold">
                               {pick.steiner_meta.sure_call.isSureCallDay
-                                ? `SURE CALL EV BOOST (${pick.steiner_meta.sure_call.nextDrawDayName} · 2.95x Avg Mult): `
-                                : `TIMING NOTICE (${pick.steiner_meta.sure_call.nextDrawDayName} · 1.89x Avg Mult): `}
+                                ? `Sure Call Multiplier Boost (${pick.steiner_meta.sure_call.nextDrawDayName}, 2.95 times average): `
+                                : `Timing Tip (${pick.steiner_meta.sure_call.nextDrawDayName}, 1.89 times average): `}
                             </span>
                             {pick.steiner_meta.sure_call.isSureCallDay
-                              ? "100% historical 2x–4x Multiplier (+56% EV vs Tue/Wed/Fri)."
-                              : "~53% historical 1x rate. Best EV days for 10–15 slips are Mon / Thu / Sat."}
+                              ? "Historical Multiplier has always been 2 to 4 times (56% higher expected payout than standard days)."
+                              : "About 53% chance of a 1 time Multiplier. Best value days for 10 to 15 slips are Monday, Thursday, and Saturday."}
                           </div>
                         )}
                       </div>
                     )}
 
                     {/* Selected Champion Engine Name */}
-                    <div className="flex items-center justify-between text-[11px] font-mono bg-slate-900/70 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    <div className="flex items-center justify-between text-xs font-mono bg-slate-900/70 px-2.5 py-1.5 rounded-lg border border-slate-800">
                       <span className="text-slate-400">Winning System:</span>
                       <span className="text-amber-300 font-semibold truncate max-w-[180px]" title={pick.engine_name}>
                         {pick.engine_name}
@@ -647,7 +647,7 @@ export default function EngineBenchmarkTracker() {
                     {(pick.convergence_locks || pick.bonus_ball_rotation || pick.conviction_tier || pick.wheel_10_capture_pct !== undefined) && (
                       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                         {pick.conviction_tier && (
-                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-mono font-bold ${
+                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-mono font-bold ${
                             pick.conviction_tier === "HIGH CONVICTION"
                               ? "bg-emerald-950/70 border-emerald-500/40 text-emerald-300"
                               : pick.conviction_tier === "HIGH ENTROPY"
@@ -662,14 +662,14 @@ export default function EngineBenchmarkTracker() {
                           </div>
                         )}
                         {pick.wheel_10_capture_pct !== undefined && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-950/70 border border-violet-500/40 text-[10px] font-mono">
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-950/70 border border-violet-500/40 text-xs font-mono">
                             <ShieldCheck className="w-3 h-3 text-violet-400" />
                             <span className="text-violet-300 font-semibold">10-Slip Wheel Capture:</span>
                             <span className="text-white font-bold">{pick.wheel_10_capture_pct}%</span>
                           </div>
                         )}
                         {pick.convergence_locks && pick.convergence_locks.length > 0 && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-950/70 border border-cyan-500/40 text-[10px] font-mono">
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-950/70 border border-cyan-500/40 text-xs font-mono">
                             <Crosshair className="w-3 h-3 text-cyan-400" />
                             <span className="text-cyan-300 font-semibold">Convergence Locks:</span>
                             <span className="text-white font-bold">
@@ -678,7 +678,7 @@ export default function EngineBenchmarkTracker() {
                           </div>
                         )}
                         {pick.bonus_ball_rotation && pick.bonus_ball_rotation.length > 0 && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-[10px] font-mono">
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-950/70 border border-amber-500/40 text-xs font-mono">
                             <Target className="w-3 h-3 text-amber-400" />
                             <span className="text-amber-300 font-semibold">
                               {pick.game_key === "cashpot" ? "Top-3 Mult:" : "Top-3 Renewal PB:"}
@@ -693,7 +693,7 @@ export default function EngineBenchmarkTracker() {
 
                     {/* Master Pick Numbers */}
                     <div>
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-semibold block mb-1.5">
+                      <span className="text-xs font-mono uppercase tracking-wider text-emerald-400 font-semibold block mb-1.5">
                         {pick.game_key === "play-whe"
                           ? "5 Playable Tactical Marks (100% Graded Card Parity)"
                           : pick.game_key === "pick4"
@@ -705,13 +705,13 @@ export default function EngineBenchmarkTracker() {
                           <React.Fragment key={i}>
                             <div className="flex flex-col items-center">
                               {pick.game_key === "pick4" && (
-                                <span className="text-[9px] font-mono text-slate-400 mb-0.5">
+                                <span className="text-xs font-mono text-slate-400 mb-0.5">
                                   Pos {i + 1}
                                 </span>
                               )}
                               {pick.game_key === "play-whe" && (
-                                <span className="text-[9px] font-mono text-slate-400 mb-0.5">
-                                  {["Step±1", "Lag2", "Mir37", "Slot", "Drght"][i] || `M${i + 1}`}
+                                <span className="text-xs font-sans text-slate-400 mb-0.5">
+                                  {["Step", "Recent", "Mirror", "Slot", "Due"][i] || `Mark ${i + 1}`}
                                 </span>
                               )}
                               <span className="w-9 h-9 rounded-lg bg-emerald-500/20 border-2 border-emerald-400/70 text-white font-mono font-bold text-sm flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.25)]">
@@ -724,8 +724,12 @@ export default function EngineBenchmarkTracker() {
                           </React.Fragment>
                         ))}
                         {pick.predicted_powerball !== undefined && (
-                          <span className="px-2.5 h-9 rounded-lg bg-amber-500/20 border-2 border-amber-400/70 text-amber-300 font-mono font-bold text-xs flex items-center justify-center">
-                            {pick.game_key === "cashpot" ? `Mult x${pick.predicted_powerball}` : `PB ${pick.predicted_powerball}`}
+                          <span className="px-2.5 h-9 rounded-lg bg-amber-500/20 border-2 border-amber-400/70 text-amber-300 font-sans font-bold text-xs flex items-center justify-center">
+                            {pick.game_key === "cashpot"
+                              ? `Multiplier ${pick.predicted_powerball} times`
+                              : pick.game_key === "win-for-life"
+                              ? `Cash Ball ${pick.predicted_powerball}`
+                              : `Powerball ${pick.predicted_powerball}`}
                           </span>
                         )}
                       </div>
@@ -733,20 +737,20 @@ export default function EngineBenchmarkTracker() {
                       {/* Multi-Draw Window Capture Gauge */}
                       {pick.multi_draw_window_rates && (
                         <div className="mt-2.5 p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
-                          <div className="flex items-center justify-between text-[11px] font-mono">
+                          <div className="flex items-center justify-between text-xs font-mono">
                             <div className="flex items-center gap-1.5 text-cyan-400 font-semibold">
                               <TrendingUp className="w-3.5 h-3.5" />
                               <span>Multi-Draw Capture Horizon</span>
                             </div>
-                            <span className="text-[10px] text-slate-400 font-mono">
+                            <span className="text-xs text-slate-400 font-mono">
                               {pick.multi_draw_window_rates.description}
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-2 pt-1 font-mono text-[11px]">
+                          <div className="grid grid-cols-3 gap-2 pt-1 font-mono text-xs">
                             {/* 1-Draw Horizon */}
                             <div className="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80 flex flex-col justify-between">
-                              <span className="text-[10px] text-slate-400">1-Draw Horizon</span>
+                              <span className="text-xs text-slate-400">1-Draw Horizon</span>
                               <span className="text-sm font-bold text-white mt-1">
                                 {pick.multi_draw_window_rates.window_1_draw}%
                               </span>
@@ -761,7 +765,7 @@ export default function EngineBenchmarkTracker() {
                             {/* 3-Draw Window Persistence */}
                             <div className="p-2 rounded-lg bg-slate-950/80 border border-cyan-500/30 flex flex-col justify-between shadow-[0_0_10px_rgba(6,182,212,0.1)]">
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-cyan-300 font-semibold">3-Draw Window</span>
+                                <span className="text-xs text-cyan-300 font-semibold">3-Draw Window</span>
                                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                               </div>
                               <span className="text-sm font-bold text-cyan-300 mt-1">
@@ -778,8 +782,8 @@ export default function EngineBenchmarkTracker() {
                             {/* 5-Draw Saturation */}
                             <div className="p-2 rounded-lg bg-slate-950/80 border border-emerald-500/30 flex flex-col justify-between shadow-[0_0_10px_rgba(16,185,129,0.1)]">
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-emerald-300 font-semibold">5-Draw Saturation</span>
-                                <span className="text-[9px] px-1 rounded bg-emerald-500/20 text-emerald-400 font-bold">OPTIMAL</span>
+                                <span className="text-xs text-emerald-300 font-semibold">5-Draw Saturation</span>
+                                <span className="text-xs px-1 rounded bg-emerald-500/20 text-emerald-400 font-bold">OPTIMAL</span>
                               </div>
                               <span className="text-sm font-bold text-emerald-400 mt-1">
                                 {pick.multi_draw_window_rates.window_5_draw}%
@@ -798,7 +802,7 @@ export default function EngineBenchmarkTracker() {
                       {/* For Pick 4: Always show the 4 Dual-Regime Playable Combinations (2x 12-Way Twin + 2x 24-Way) */}
                       {pick.game_key === "pick4" && pick.condensed_wheel && pick.condensed_wheel.length > 0 && (
                         <div className="mt-2.5 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
-                          <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold block">
+                          <span className="text-xs font-mono uppercase tracking-wider text-cyan-300 font-semibold block">
                             4 Playable Card Sets (2x 12-Way Twin + 2x 24-Way Box):
                           </span>
                           <div className="grid grid-cols-1 gap-1.5 pt-0.5">
@@ -808,11 +812,11 @@ export default function EngineBenchmarkTracker() {
                               return (
                                 <div
                                   key={sIdx}
-                                  className="px-2.5 py-1.5 rounded bg-slate-950/90 border border-slate-800 flex items-center justify-between text-[11px] font-mono"
+                                  className="px-2.5 py-1.5 rounded bg-slate-950/90 border border-slate-800 flex items-center justify-between text-xs font-mono"
                                 >
                                   <div className="flex items-center gap-1.5">
                                     <span className="text-slate-400">Set #{sIdx + 1}</span>
-                                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                                    <span className={`px-1.5 py-0.2 rounded text-xs font-bold ${
                                       uniqueCount <= 3
                                         ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
                                         : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
@@ -836,7 +840,7 @@ export default function EngineBenchmarkTracker() {
                         const totalSlipsCount = pick.wheel_slips?.length || pick.condensed_wheel.length;
                         return (
                         <div className="mt-2.5 p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
-                          <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold block">
+                          <span className="text-xs font-mono uppercase tracking-wider text-cyan-300 font-semibold block">
                             {pick.wheel_slips && pick.wheel_slips.length > 5 && pick.engine_key === "apex-master"
                               ? `Top 5 of ${totalSlipsCount} Optimal Steiner Slips ($${totalSlipsCount * unitCost} TT Total):`
                               : `5 Orthogonal Playable Lines ($${5 * unitCost} TT Total):`}
@@ -850,15 +854,15 @@ export default function EngineBenchmarkTracker() {
                               return (
                                 <div
                                   key={sIdx}
-                                  className="px-2 py-1 rounded bg-slate-950/90 border border-slate-800 flex items-center justify-between text-[11px] font-mono"
+                                  className="px-2 py-1 rounded bg-slate-950/90 border border-slate-800 flex items-center justify-between text-xs font-mono"
                                 >
-                                  <span className="text-slate-400 text-[10px]">Steiner Slip #{sIdx + 1}:</span>
+                                  <span className="text-slate-400 text-xs">Steiner Slip #{sIdx + 1}:</span>
                                   <div className="flex items-center gap-1.5">
                                     <span className="text-emerald-300 font-bold">
                                       {slip.map(n => String(n).padStart(2, "0")).join(" - ")}
                                     </span>
                                     {linePb !== undefined && (
-                                      <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[10px] font-bold">
+                                      <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-bold">
                                         {pick.game_key === "win-for-life" ? `CB ${linePb}` : `PB ${linePb}`}
                                       </span>
                                     )}
@@ -888,7 +892,7 @@ export default function EngineBenchmarkTracker() {
                         <div className="mt-2">
                           <button
                             onClick={() => setExpandedWheelGame(isExpanded ? null : pick.game_key)}
-                            className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-850 border border-cyan-500/30 text-cyan-300 text-[11px] font-mono font-semibold transition-all flex items-center justify-between cursor-pointer"
+                            className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-850 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-semibold transition-all flex items-center justify-between cursor-pointer"
                           >
                             <span className="flex items-center gap-1.5">
                               <Layers className="w-3.5 h-3.5 text-cyan-400" />
@@ -900,13 +904,13 @@ export default function EngineBenchmarkTracker() {
                           </button>
 
                           {isExpanded && (
-                            <div className="mt-2 p-2.5 rounded-xl bg-slate-950 border border-cyan-500/20 space-y-2 animate-fade-in font-mono text-[11px]">
+                            <div className="mt-2 p-2.5 rounded-xl bg-slate-950 border border-cyan-500/20 space-y-2 animate-fade-in font-mono text-xs">
                               {isCashPot && (
-                                <div className="space-y-1 pb-1.5 border-b border-slate-800">
-                                  <div className="text-[9px] text-slate-400 uppercase tracking-wider">
-                                    Cash Pot Optimal Budget Tier (Exact Match 3+ Guarantee Curve):
+                                <div className="space-y-1.5 pb-2 border-b border-slate-800">
+                                  <div className="text-xs text-slate-300 font-semibold">
+                                    Cash Pot Budget Tier (Exact 3-or-More Odds):
                                   </div>
-                                  <div className="grid grid-cols-4 gap-1">
+                                  <div className="grid grid-cols-4 gap-1.5">
                                     {([
                                       { n: 5 as const, pct: "35.2%", cost: "$25" },
                                       { n: 10 as const, pct: "63.3%", cost: "$50" },
@@ -917,24 +921,24 @@ export default function EngineBenchmarkTracker() {
                                         key={tier.n}
                                         type="button"
                                         onClick={() => setCashPotBudgetTier(tier.n)}
-                                        className={`py-1 px-1 rounded-lg border text-center transition cursor-pointer ${
+                                        className={`py-1.5 px-1 rounded-lg border text-center transition cursor-pointer ${
                                           cashPotBudgetTier === tier.n
-                                            ? "bg-emerald-500/20 border-emerald-400 text-emerald-200 font-black"
-                                            : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600"
+                                            ? "bg-emerald-500/20 border-emerald-400 text-emerald-200 font-bold"
+                                            : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-600"
                                         }`}
                                       >
-                                        <div className="text-[10px]">{tier.n} Slips</div>
-                                        <div className="text-[9px] opacity-85">{tier.pct} · {tier.cost}</div>
+                                        <div className="text-xs font-semibold">{tier.n} Slips</div>
+                                        <div className="text-xs opacity-85">{tier.pct} ({tier.cost})</div>
                                       </button>
                                     ))}
                                   </div>
                                 </div>
                               )}
-                              <div className="flex items-center justify-between gap-2 pb-1 border-b border-slate-800 text-[10px] text-slate-400 uppercase tracking-wider">
-                                <span>Steiner-Johnson J* Packing (Ov ≤ {scaledSteiner ? scaledSteiner.maxPairOverlap : (pick.steiner_meta?.max_pair_overlap ?? 1)})</span>
+                              <div className="flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-slate-800 text-xs text-slate-300">
+                                <span>Non-Overlapping Set (at most {scaledSteiner ? scaledSteiner.maxPairOverlap : (pick.steiner_meta?.max_pair_overlap ?? 1)} shared)</span>
                                 <div className="flex items-center gap-2">
                                   <span className="text-emerald-400 font-bold">
-                                    {activePct3 ? `${activePct3}% Exact 3+` : "Zero Pair Collision"}
+                                    {activePct3 ? `${activePct3}% win chance` : "Zero Repeated Pairs"}
                                   </span>
                                   {(pick.game_key === "cashpot" || pick.game_key === "lotto-plus" || pick.game_key === "win-for-life") && (
                                     <button
@@ -949,10 +953,10 @@ export default function EngineBenchmarkTracker() {
                                           unitCostTT: unitCost
                                         })
                                       }
-                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 font-bold normal-case cursor-pointer"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 font-semibold cursor-pointer"
                                     >
-                                      <Printer className="w-3 h-3" />
-                                      <span>Print / Export</span>
+                                      <Printer className="w-3.5 h-3.5" />
+                                      <span>Print or Export</span>
                                     </button>
                                   )}
                                 </div>
@@ -968,7 +972,7 @@ export default function EngineBenchmarkTracker() {
                                       key={slipIdx}
                                       className="px-2 py-1 rounded bg-slate-900/70 border border-slate-800 flex items-center justify-between"
                                     >
-                                      <span className="text-slate-400 text-[10px]">Slip #{String(slipIdx + 1).padStart(2, "0")}</span>
+                                      <span className="text-slate-400 text-xs">Slip #{String(slipIdx + 1).padStart(2, "0")}</span>
                                       <div className="flex items-center gap-1.5">
                                         <span className="text-white font-bold tracking-wider">
                                           {pick.game_key === "pick4"
@@ -976,7 +980,7 @@ export default function EngineBenchmarkTracker() {
                                             : slip.map(n => String(n).padStart(2, "0")).join(" - ")}
                                         </span>
                                         {slipPb !== undefined && (
-                                          <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[10px] font-bold">
+                                          <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-bold">
                                             {pick.game_key === "win-for-life" ? `CB ${slipPb}` : `PB ${slipPb}`}
                                           </span>
                                         )}
@@ -996,7 +1000,7 @@ export default function EngineBenchmarkTracker() {
                     <div className="pt-1">
                       <button
                         onClick={() => setExpandedRulesGame(expandedRulesGame === pick.game_key ? null : pick.game_key)}
-                        className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-amber-500/30 text-amber-300 text-[11px] font-mono font-semibold transition-all flex items-center justify-between cursor-pointer"
+                        className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-amber-500/30 text-amber-300 text-xs font-mono font-semibold transition-all flex items-center justify-between cursor-pointer"
                       >
                         <span className="flex items-center gap-1.5">
                           <Target className="w-3.5 h-3.5 text-amber-400" />
@@ -1009,8 +1013,8 @@ export default function EngineBenchmarkTracker() {
                         const slipCount = pick.wheel_slips?.length || pick.condensed_wheel?.length || 1;
                         const gameLatestCamp = (data?.multiDrawCampaigns || []).find(c => c.game_key === pick.game_key);
                         return (
-                          <div className="mt-2 p-3 rounded-xl bg-slate-950/90 border border-amber-500/25 space-y-2.5 font-mono text-[11px]">
-                            <div className="text-[10px] text-amber-200/90 leading-relaxed bg-amber-950/20 border border-amber-500/20 rounded-lg p-2">
+                          <div className="mt-2 p-3 rounded-xl bg-slate-950/90 border border-amber-500/25 space-y-2.5 font-mono text-xs">
+                            <div className="text-xs text-amber-200/90 leading-relaxed bg-amber-950/20 border border-amber-500/20 rounded-lg p-2">
                               <strong className="text-amber-300 uppercase block mb-0.5">
                                 {getGameLabel(pick.game_key)} Portfolio Scope:
                               </strong>
@@ -1019,9 +1023,9 @@ export default function EngineBenchmarkTracker() {
 
                             {gameLatestCamp && (
                               <div className="space-y-1.5">
-                                <div className="flex items-center justify-between text-[10px]">
+                                <div className="flex items-center justify-between text-xs">
                                   <span className="text-slate-400">
-                                    Tracked Group (Draw #{gameLatestCamp.anchor_draw_number} → #{gameLatestCamp.anchor_draw_number + 4}):
+                                    Tracked Group (Draw {gameLatestCamp.anchor_draw_number} to {gameLatestCamp.anchor_draw_number + 4}):
                                   </span>
                                   <span className="text-emerald-300 font-bold">
                                     {gameLatestCamp.draws_completed}/5 Verified
@@ -1031,7 +1035,7 @@ export default function EngineBenchmarkTracker() {
                                   {gameLatestCamp.steps.map(st => (
                                     <div
                                       key={st.step}
-                                      className={`p-1.5 rounded border text-center text-[9px] ${
+                                      className={`p-1.5 rounded border text-center text-xs ${
                                         st.status !== "VERIFIED"
                                           ? "bg-slate-900/50 border-slate-800 border-dashed text-slate-500"
                                           : st.is_prize_winner
@@ -1052,7 +1056,7 @@ export default function EngineBenchmarkTracker() {
                     </div>
 
                     {/* Calibrated Corridor & Contributing Models */}
-                    <div className="text-[11px] font-mono text-slate-400 space-y-1 pt-1">
+                    <div className="text-xs font-mono text-slate-400 space-y-1 pt-1">
                       <div className="flex items-center justify-between">
                         <span>Calibrated Sum Corridor:</span>
                         <span className="text-cyan-300 font-semibold">{pick.sum_corridor}</span>
@@ -1112,7 +1116,7 @@ export default function EngineBenchmarkTracker() {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Target className="w-5 h-5 text-cyan-400" />
-                <h2 className="font-bold text-white text-base sm:text-lg">
+                <h2 className="text-lg sm:text-xl font-bold text-white">
                   Multi-Draw Play Tracker (1-Draw, 3-Draw &amp; 5-Draw Windows)
                 </h2>
               </div>
@@ -1125,7 +1129,7 @@ export default function EngineBenchmarkTracker() {
               <div className="flex items-center bg-[#171c20] rounded-lg p-0.5 border border-slate-800 text-xs font-mono">
                 <button
                   onClick={() => setMultiDrawViewMode("stepper")}
-                  className={`px-3 py-1.5 rounded text-[11px] font-semibold transition-all ${
+                  className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${
                     multiDrawViewMode === "stepper"
                       ? "bg-cyan-500 text-slate-950 font-bold"
                       : "text-slate-400 hover:text-white"
@@ -1135,7 +1139,7 @@ export default function EngineBenchmarkTracker() {
                 </button>
                 <button
                   onClick={() => setMultiDrawViewMode("ledger")}
-                  className={`px-3 py-1.5 rounded text-[11px] font-semibold transition-all ${
+                  className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${
                     multiDrawViewMode === "ledger"
                       ? "bg-emerald-500 text-slate-950 font-bold"
                       : "text-slate-400 hover:text-white"
@@ -1150,7 +1154,7 @@ export default function EngineBenchmarkTracker() {
                   <button
                     key={st}
                     onClick={() => setMultiDrawFilterState(st)}
-                    className={`px-2.5 py-1.5 rounded text-[11px] font-semibold transition-all ${
+                    className={`px-2.5 py-1.5 rounded text-xs font-semibold transition-all ${
                       multiDrawFilterState === st
                         ? "bg-slate-700 text-white font-bold"
                         : "text-slate-400 hover:text-white"
@@ -1187,10 +1191,10 @@ export default function EngineBenchmarkTracker() {
             <div className="p-4 rounded-xl bg-slate-950/80 border border-amber-500/30 space-y-3 font-mono">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h3 className="text-xs font-bold text-amber-300 uppercase">
+                  <h3 className="text-base font-bold text-amber-300 uppercase">
                     Track Your Group of Numbers (Up to 5 Consecutive Draws)
                   </h3>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-xs text-slate-400">
                     Enter 1 or more lines (one slip per line, comma or space separated). The tracker will automatically grade all lines as each of the next 5 draws completes.
                   </p>
                 </div>
@@ -1258,12 +1262,12 @@ export default function EngineBenchmarkTracker() {
                     }`}>
                       {getGameLabel(sum.game_key)}
                     </span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-xs text-slate-400">
                       Avg Hit: <strong className="text-emerald-400">{sum.avg_draws_to_first_hit}d</strong>
                     </span>
                   </div>
 
-                  <div className="space-y-1.5 text-[11px] w-full">
+                  <div className="space-y-1.5 text-xs w-full">
                     <div className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/80 border border-slate-800/80">
                       <span className="text-slate-400">1-Draw Win:</span>
                       <span className="text-white font-bold">{sum.w1_slip_win_rate_pct}%</span>
@@ -1278,7 +1282,7 @@ export default function EngineBenchmarkTracker() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/70 w-full">
+                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-800/70 w-full">
                     <span>{sum.total_campaigns_evaluated} Windows</span>
                     <span className={isCardSelected ? "text-cyan-300 font-bold" : "text-amber-400 font-semibold"}>
                       {isCardSelected ? "Selected" : "Click to Filter"}
@@ -1350,14 +1354,14 @@ export default function EngineBenchmarkTracker() {
                             </span>
                             <button
                               onClick={() => setExpandedCampaignId(isSlipsOpen ? null : camp.campaign_id)}
-                              className="px-2 py-0.5 rounded text-[10px] bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 font-semibold cursor-pointer"
+                              className="px-2 py-0.5 rounded text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 font-semibold cursor-pointer"
                             >
                               {isSlipsOpen ? "Hide Played Slips" : `View ${camp.wheel_slips.length} Played Slips`}
                             </button>
                           </div>
 
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
                               camp.window_3.slip_prize_hit
                                 ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
                                 : camp.window_3.completed
@@ -1366,7 +1370,7 @@ export default function EngineBenchmarkTracker() {
                             }`}>
                               3-Draw: {camp.window_3.slip_prize_hit ? `WON ${camp.window_3.slip_win_count}/3 ($${camp.window_3.cumulative_payout_tt} TT)` : camp.window_3.completed ? "0/3 Won" : `${camp.window_3.draws_completed}/3 Draws`}
                             </span>
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
                               camp.window_5.slip_prize_hit
                                 ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
                                 : camp.window_5.completed
@@ -1379,7 +1383,7 @@ export default function EngineBenchmarkTracker() {
                         </div>
 
                         {isSlipsOpen && (
-                          <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1.5 text-[10px]">
+                          <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1.5 text-xs">
                             {camp.wheel_slips.map((sl, slIdx) => (
                               <div key={slIdx} className="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
                                 <span className="text-slate-500">Slip #{slIdx + 1}</span>
@@ -1407,7 +1411,7 @@ export default function EngineBenchmarkTracker() {
                                     : "bg-slate-900/70 border-slate-800"
                                 }`}
                               >
-                                <div className="flex items-center justify-between text-[10px]">
+                                <div className="flex items-center justify-between text-xs">
                                   <span className="font-bold text-slate-300">
                                     Draw {st.step} {st.step === 1 ? "(1D)" : st.step === 3 ? "(3D)" : st.step === 5 ? "(5D)" : ""}
                                   </span>
@@ -1416,10 +1420,10 @@ export default function EngineBenchmarkTracker() {
 
                                 {isVerified ? (
                                   <>
-                                    <div className="text-[10px] text-slate-400">
+                                    <div className="text-xs text-slate-400">
                                       Result: <strong className="text-white">{fmtNums(camp.game_key, st.actual_numbers || [])}</strong>
                                     </div>
-                                    <div className="text-[10px]">
+                                    <div className="text-xs">
                                       <span className="text-slate-500 block">Best Slip #{st.best_slip_index || 1}:</span>
                                       <div className="flex flex-wrap gap-0.5 mt-0.5">
                                         {bestSlip.map((n, bIdx) => {
@@ -1429,7 +1433,7 @@ export default function EngineBenchmarkTracker() {
                                           return (
                                             <span
                                               key={bIdx}
-                                              className={`px-1 rounded text-[10px] font-bold ${
+                                              className={`px-1 rounded text-xs font-bold ${
                                                 hit ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/40" : "bg-slate-800 text-slate-400"
                                               }`}
                                             >
@@ -1439,16 +1443,16 @@ export default function EngineBenchmarkTracker() {
                                         })}
                                       </div>
                                     </div>
-                                    <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded text-center ${
+                                    <div className={`text-xs font-bold px-1.5 py-0.5 rounded text-center ${
                                       isWin
                                         ? "bg-emerald-500/20 text-emerald-300"
                                         : "bg-slate-800 text-slate-400"
                                     }`}>
-                                      {isWin ? `WON $${st.payout_tt} • ${st.prize_tier.split("(")[0].trim()}` : `No Prize (${st.best_slip_match} Match)`}
+                                      {isWin ? `WON $${st.payout_tt} (${st.prize_tier.split("(")[0].trim()})` : `No Prize (${st.best_slip_match} Match)`}
                                     </div>
                                   </>
                                 ) : (
-                                  <div className="py-4 text-center text-[10px] text-amber-400/80 font-semibold">
+                                  <div className="py-4 text-center text-xs text-amber-400/80 font-semibold">
                                     Awaiting Draw #{st.target_draw_number}
                                   </div>
                                 )}
@@ -1466,7 +1470,7 @@ export default function EngineBenchmarkTracker() {
             return (
               <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
                 <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-[#171c20] border-b border-slate-800 text-[11px] text-slate-400 uppercase sticky top-0">
+                  <thead className="bg-[#171c20] border-b border-slate-800 text-xs text-slate-400 uppercase sticky top-0">
                     <tr>
                       <th className="py-3 px-3">Anchor Draw</th>
                       <th className="py-3 px-3">Game &amp; Play</th>
@@ -1482,12 +1486,12 @@ export default function EngineBenchmarkTracker() {
                       <tr key={camp.campaign_id} className="hover:bg-slate-900/40">
                         <td className="py-2.5 px-3 font-bold text-white whitespace-nowrap">
                           {camp.anchor_draw_date && (
-                            <span className="block text-[10px] text-cyan-400 font-normal">{camp.anchor_draw_date}</span>
+                            <span className="block text-xs text-cyan-400 font-normal">{camp.anchor_draw_date}</span>
                           )}
-                          #{camp.anchor_draw_number} → #{camp.anchor_draw_number + 4}
+                          Draw {camp.anchor_draw_number} to {camp.anchor_draw_number + 4}
                         </td>
                         <td className="py-2.5 px-3">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-cyan-300 mr-1.5">
+                          <span className="px-1.5 py-0.5 rounded text-xs bg-slate-800 text-cyan-300 mr-1.5">
                             {getGameLabel(camp.game_key)}
                           </span>
                           <span className="text-emerald-300 font-bold">
@@ -1495,7 +1499,7 @@ export default function EngineBenchmarkTracker() {
                           </span>
                         </td>
                         <td className="py-2.5 px-3 text-center">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                             camp.draws_completed === 5
                               ? "bg-emerald-950/70 text-emerald-300 border border-emerald-500/30"
                               : "bg-amber-950/70 text-amber-300 border border-amber-500/30"
@@ -1513,7 +1517,7 @@ export default function EngineBenchmarkTracker() {
                           )}
                         </td>
                         <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                             camp.window_3.slip_prize_hit
                               ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
                               : camp.window_3.core_target_hit
@@ -1521,14 +1525,14 @@ export default function EngineBenchmarkTracker() {
                               : "bg-slate-900 text-slate-400"
                           }`}>
                             {camp.window_3.slip_prize_hit
-                              ? `WIN (${camp.window_3.slip_win_count}/3 Draws • Hit Draw #${camp.window_3.first_hit_step})`
+                              ? `Won (${camp.window_3.slip_win_count} of 3 draws, hit on Draw ${camp.window_3.first_hit_step})`
                               : camp.window_3.core_target_hit
-                              ? "3+/4+ Core Hit"
-                              : `${camp.window_3.draws_completed}/3 Done`}
+                              ? "Core Numbers Matched"
+                              : `${camp.window_3.draws_completed} of 3 Checked`}
                           </span>
                         </td>
                         <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                             camp.window_5.slip_prize_hit
                               ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
                               : camp.window_5.core_target_hit
@@ -1536,10 +1540,10 @@ export default function EngineBenchmarkTracker() {
                               : "bg-slate-900 text-slate-400"
                           }`}>
                             {camp.window_5.slip_prize_hit
-                              ? `WIN (${camp.window_5.slip_win_count}/5 Draws • Hit Draw #${camp.window_5.first_hit_step})`
+                              ? `Won (${camp.window_5.slip_win_count} of 5 draws, hit on Draw ${camp.window_5.first_hit_step})`
                               : camp.window_5.core_target_hit
-                              ? "3+/4+ Core Hit"
-                              : `${camp.window_5.draws_completed}/5 Done`}
+                              ? "Core Numbers Matched"
+                              : `${camp.window_5.draws_completed} of 5 Checked`}
                           </span>
                         </td>
                         <td className="py-2.5 px-3 text-right font-bold text-emerald-400">
@@ -1566,12 +1570,12 @@ export default function EngineBenchmarkTracker() {
         >
           <div className="flex items-center gap-2.5 flex-wrap">
             <Trophy className="w-5 h-5 text-amber-400" />
-            <h2 className="font-bold text-white text-base">
+            <h2 className="text-lg sm:text-xl font-bold text-white">
               {championOnlyMode
                 ? "Verified #1 Champion Engine Systems (1 Per Game)"
                 : "Comparative Engine Performance Leaderboard (All Tracked Engines)"}
             </h2>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 border border-slate-700 text-slate-300">
+            <span className="px-2 py-0.5 rounded text-xs font-mono bg-slate-800 border border-slate-700 text-slate-300">
               {displayedLeaderboard.length} Systems
             </span>
           </div>
@@ -1595,7 +1599,7 @@ export default function EngineBenchmarkTracker() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#171c20]/80 border-b border-slate-800 text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                  <thead className="bg-[#171c20]/80 border-b border-slate-800 text-xs font-mono text-slate-400 uppercase tracking-wider">
                     <tr>
                       <th className="py-3 px-4">Rank / Engine</th>
                       <th className="py-3 px-4">Game</th>
@@ -1628,13 +1632,13 @@ export default function EngineBenchmarkTracker() {
                               </span>
                               <div>
                                 <span className="font-semibold text-white block">{row.engine_name}</span>
-                                <span className="text-[11px] text-slate-400">{row.engine_key}</span>
+                                <span className="text-xs text-slate-400">{row.engine_key}</span>
                               </div>
                             </div>
                           </td>
 
                           <td className="py-3.5 px-4">
-                            <span className="px-2 py-0.5 rounded text-[11px] bg-slate-800 border border-slate-700 text-slate-300">
+                            <span className="px-2 py-0.5 rounded text-xs bg-slate-800 border border-slate-700 text-slate-300">
                               {getGameLabel(row.game_key)}
                             </span>
                           </td>
@@ -1647,7 +1651,7 @@ export default function EngineBenchmarkTracker() {
                             <span className={row.prize_win_rate_pct >= 25 ? "text-emerald-400" : row.prize_win_rate_pct >= 15 ? "text-cyan-400" : "text-rose-400"}>
                               {row.prize_win_rate_pct}%
                             </span>
-                            <span className="block text-[10px] text-slate-400 font-normal">({row.prize_hits} hits)</span>
+                            <span className="block text-xs text-slate-400 font-normal">({row.prize_hits} hits)</span>
                           </td>
 
                           <td className="py-3.5 px-4 text-center text-slate-300">
@@ -1673,7 +1677,7 @@ export default function EngineBenchmarkTracker() {
                           </td>
 
                           <td className="py-3.5 px-4 text-center">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
                               isPrime ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40" :
                               isDrift ? "bg-rose-950/80 text-rose-300 border border-rose-500/40" :
                               isCalib ? "bg-amber-950/80 text-amber-300 border border-amber-500/40" :
@@ -1705,11 +1709,11 @@ export default function EngineBenchmarkTracker() {
           >
             <div className="flex items-center gap-2.5 flex-wrap">
               <Sliders className="w-5 h-5 text-cyan-400" />
-              <h2 className="font-bold text-white text-base">
+              <h2 className="text-lg sm:text-xl font-bold text-white">
                 Mathematical Calibration &amp; Diagnostic Advisories
               </h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-300">
-                {data?.calibrationProfiles?.length || 0} Calibrated Regimes • {data?.diagnostics?.length || 0} Advisories
+              <span className="px-2 py-0.5 rounded text-xs font-mono bg-emerald-950/60 border border-emerald-500/30 text-emerald-300">
+                {data?.calibrationProfiles?.length || 0} Calibrated Models, {data?.diagnostics?.length || 0} Notes
               </span>
             </div>
             <div className="flex items-center gap-2 text-xs font-mono text-cyan-400">
@@ -1727,7 +1731,7 @@ export default function EngineBenchmarkTracker() {
                     <div>
                       <div className="flex items-center gap-2">
                         <Binary className="w-4 h-4 text-emerald-400" />
-                        <h3 className="font-bold text-white text-sm">
+                        <h3 className="text-base font-bold text-white">
                           Closed-Loop Bayesian Walk-Forward Calibration Profiles
                         </h3>
                       </div>
@@ -1735,7 +1739,7 @@ export default function EngineBenchmarkTracker() {
                         Empirically optimized sub-model posterior weights, sum corridors, and walk-forward test-verification lift across historical winning combinations.
                       </p>
                     </div>
-                    <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 self-start sm:self-auto">
+                    <span className="text-xs font-mono px-2.5 py-1 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 self-start sm:self-auto">
                       MULTIPLICATIVE WEIGHTS + SOFTMAX POSTERIOR
                     </span>
                   </div>
@@ -1753,14 +1757,14 @@ export default function EngineBenchmarkTracker() {
                               <span className="px-2.5 py-0.5 rounded text-xs font-bold font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
                                 {getGameLabel(profile.game_key)}
                               </span>
-                              <span className="text-[11px] font-mono text-emerald-400 font-bold">
+                              <span className="text-xs font-mono text-emerald-400 font-bold">
                                 {profile.calibration_lift_pct >= 0
                                   ? `+${profile.calibration_lift_pct}% Lift`
                                   : `${profile.calibration_lift_pct}% Lift`}
                               </span>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-2 my-2 p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 text-[11px] font-mono">
+                            <div className="grid grid-cols-2 gap-2 my-2 p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 text-xs font-mono">
                               <div>
                                 <span className="text-slate-500 block">Pre-Calib Win Rate</span>
                                 <span className="text-slate-300 font-semibold">{profile.pre_calibration_win_rate_pct}%</span>
@@ -1784,12 +1788,12 @@ export default function EngineBenchmarkTracker() {
                             </div>
 
                             <div className="space-y-1.5 mt-2.5">
-                              <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                              <span className="text-xs font-mono uppercase tracking-wider text-slate-400 block">
                                 Calibrated Sub-Model Weights (Top Regimes)
                               </span>
                               {profile.sub_model_weights.slice(0, 4).map(sw => (
                                 <div key={sw.modelKey} className="space-y-0.5">
-                                  <div className="flex items-center justify-between text-[11px] font-mono">
+                                  <div className="flex items-center justify-between text-xs font-mono">
                                     <span className="text-slate-300 truncate max-w-[175px]" title={sw.modelName}>
                                       {sw.modelName}
                                     </span>
@@ -1808,7 +1812,7 @@ export default function EngineBenchmarkTracker() {
                             </div>
                           </div>
 
-                          <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                          <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400">
                             <span className="truncate max-w-[180px]" title={profile.dominant_strategy}>
                               Lead: <strong className="text-slate-200">{profile.dominant_strategy}</strong>
                             </span>
@@ -1831,7 +1835,7 @@ export default function EngineBenchmarkTracker() {
               {data?.diagnostics && data.diagnostics.length > 0 && (
                 <div className="space-y-3 pt-2 border-t border-slate-800/80">
                   <div>
-                    <h3 className="font-bold text-white text-sm">Diagnostic Advisories &amp; Regime Alerts</h3>
+                    <h3 className="text-base font-bold text-white">Diagnostic Advisories &amp; Regime Alerts</h3>
                     <p className="text-xs text-slate-400">
                       Automated recommendations based on empirical hit rates and mathematical regime shifts.
                     </p>
@@ -1853,19 +1857,19 @@ export default function EngineBenchmarkTracker() {
                         >
                           <div>
                             <div className="flex items-center justify-between gap-2 mb-2">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                              <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
                                 isCrit ? "bg-rose-500/20 text-rose-300" :
                                 isOpt ? "bg-emerald-500/20 text-emerald-300" :
                                 "bg-amber-500/20 text-amber-300"
                               }`}>
                                 {diag.severity}
                               </span>
-                              <span className="text-[11px] font-mono text-slate-400">
+                              <span className="text-xs font-mono text-slate-400">
                                 {getGameLabel(diag.game_key)}
                               </span>
                             </div>
 
-                            <h3 className="font-semibold text-white text-sm mb-1.5">{diag.title}</h3>
+                            <h3 className="text-base font-semibold text-white mb-1.5">{diag.title}</h3>
                             <p className="text-xs text-slate-300 mb-2 leading-relaxed">{diag.anomalyDescription}</p>
                             <p className="text-xs text-slate-400 italic mb-4">
                               <span className="font-semibold text-slate-200">Recommendation:</span> {diag.recommendation}
@@ -1877,7 +1881,7 @@ export default function EngineBenchmarkTracker() {
                             disabled={calibrating}
                             className="pt-2 border-t border-slate-800 flex items-center justify-between w-full text-left hover:opacity-90 transition-opacity disabled:opacity-50"
                           >
-                            <span className="text-[11px] font-mono text-cyan-400 font-semibold">{diag.suggestedAction}</span>
+                            <span className="text-xs font-mono text-cyan-400 font-semibold">{diag.suggestedAction}</span>
                             <ArrowUpRight className="w-4 h-4 text-cyan-400" />
                           </button>
                         </div>
@@ -1897,7 +1901,7 @@ export default function EngineBenchmarkTracker() {
           <div>
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-cyan-400" />
-              <h2 className="font-bold text-white text-base">Draw-by-Draw Verification Audit Ledger</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-white">Draw-by-Draw Verification Audit Ledger</h2>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
               Individual predictions graded deterministically against actual winning draws.
@@ -1911,7 +1915,7 @@ export default function EngineBenchmarkTracker() {
                 <button
                   key={tier}
                   onClick={() => setAuditFilter(tier)}
-                  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
+                  className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
                     auditFilter === tier
                       ? "bg-cyan-500 text-slate-950 font-bold"
                       : "text-slate-400 hover:text-white"
@@ -1943,7 +1947,7 @@ export default function EngineBenchmarkTracker() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#171c20]/80 border-b border-slate-800 text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+              <thead className="bg-[#171c20]/80 border-b border-slate-800 text-xs font-mono text-slate-400 uppercase tracking-wider">
                 <tr>
                   <th className="py-3 px-4">Target Draw</th>
                   <th className="py-3 px-4">Game</th>
@@ -1979,33 +1983,33 @@ export default function EngineBenchmarkTracker() {
                     <tr key={audit.id} className="hover:bg-slate-900/40 transition-colors">
                       <td className="py-3 px-4 font-bold text-white whitespace-nowrap">
                         {audit.target_draw_date && (
-                          <span className="block text-[10px] text-cyan-400/80 font-normal mb-0.5">
+                          <span className="block text-xs text-cyan-400/80 font-normal mb-0.5">
                             {audit.target_draw_date}
                           </span>
                         )}
                         #{audit.target_draw_number}
                         {audit.target_time_slot && (
-                          <span className="block text-[10px] text-slate-400 font-normal">
+                          <span className="block text-xs text-slate-400 font-normal">
                             {audit.target_time_slot}
                           </span>
                         )}
                       </td>
 
                       <td className="py-3 px-4">
-                        <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300">
+                        <span className="px-2 py-0.5 rounded text-xs bg-slate-800 text-slate-300">
                           {getGameLabel(audit.game_key)}
                         </span>
                       </td>
 
                       <td className="py-3 px-4 font-sans">
                         <span className="font-semibold text-white block">{audit.engine_name}</span>
-                        <span className="text-[11px] text-slate-400">{audit.strategy_name}</span>
+                        <span className="text-xs text-slate-400">{audit.strategy_name}</span>
                       </td>
 
                       <td className="py-3 px-4">
                         <div className="space-y-1">
                           {allSlips.length > 1 && (
-                            <span className="text-[10px] text-cyan-400 block">
+                            <span className="text-xs text-cyan-400 block">
                               {bestSlipIdx === 0 ? `Slip #1 of ${allSlips.length}` : `Winning Slip #${bestSlipIdx + 1} of ${allSlips.length}`}
                             </span>
                           )}
@@ -2017,7 +2021,7 @@ export default function EngineBenchmarkTracker() {
                               return (
                                 <span
                                   key={nIdx}
-                                  className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
+                                  className={`px-1.5 py-0.5 rounded text-xs font-bold ${
                                     isMatch
                                       ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
                                       : "bg-slate-800 text-slate-400"
@@ -2028,7 +2032,7 @@ export default function EngineBenchmarkTracker() {
                               );
                             })}
                             {audit.predicted_powerball !== undefined && (
-                              <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                              <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
                                 PB {audit.predicted_powerball}
                               </span>
                             )}
@@ -2040,12 +2044,12 @@ export default function EngineBenchmarkTracker() {
                         {audit.actual_numbers ? (
                           <div className="flex flex-wrap gap-1">
                             {audit.actual_numbers.map((an, aIdx) => (
-                              <span key={aIdx} className="px-1 py-0.5 rounded text-[10px] bg-slate-900 border border-slate-800 text-slate-300">
+                              <span key={aIdx} className="px-1 py-0.5 rounded text-xs bg-slate-900 border border-slate-800 text-slate-300">
                                 {audit.game_key === "pick4" ? String(an) : String(an).padStart(2, "0")}
                               </span>
                             ))}
                             {audit.actual_powerball && (
-                              <span className="px-1 py-0.5 rounded text-[10px] bg-slate-900 text-amber-400">
+                              <span className="px-1 py-0.5 rounded text-xs bg-slate-900 text-amber-400">
                                 PB {audit.actual_powerball}
                               </span>
                             )}
@@ -2060,7 +2064,7 @@ export default function EngineBenchmarkTracker() {
                           {audit.match_count}
                         </span>
                         {audit.best_wheel_match > 0 && (
-                          <span className="block text-[10px] text-cyan-400">Wheel: {audit.best_wheel_match}</span>
+                          <span className="block text-xs text-cyan-400">Wheel: {audit.best_wheel_match}</span>
                         )}
                       </td>
 
@@ -2088,44 +2092,44 @@ export default function EngineBenchmarkTracker() {
         )}
       </div>
 
-      {/* 6. Up-to-Date Engine Guide & Telemetry Notes */}
-      <div className="rounded-2xl bg-slate-950/80 border border-slate-800 p-5 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      {/* 6. Engine Guide */}
+      <div className="rounded-2xl bg-slate-950/80 border border-slate-800 p-5 space-y-4 font-sans">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-              Tracked Engine Notes &amp; Telemetry Guide
+            <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+              How the Tracking Engines Work
             </h2>
           </div>
-          <span className="text-[10px] font-mono text-slate-500 uppercase">Merit-Ranked Closed-Loop Architecture</span>
+          <span className="text-xs text-slate-400 font-medium">Ranked by Verified Past Results</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs font-mono text-slate-400 leading-relaxed">
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-            <div className="text-emerald-400 font-bold uppercase">Winning Formula Engine</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-slate-300 leading-relaxed">
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1.5">
+            <h3 className="text-base font-bold text-emerald-400">Winning Formula Engine</h3>
             <p>
-              Uses Lag 1–2 ±1 kinematic neighbors, Sigma involution mirrors, and empirical P10–P90 sum-corridor enforcement (<span className="text-slate-200">[37, 65]</span> Cash Pot, <span className="text-slate-200">[65, 118]</span> Lotto Plus, <span className="text-slate-200">[66, 111]</span> Win For Life) with balanced parity.
+              Tracks nearby neighbor numbers (within 1 of recent draws), mirror patterns, and balanced sum ranges (<span className="text-white font-semibold">37 to 65</span> for Cash Pot, <span className="text-white font-semibold">65 to 118</span> for Lotto Plus, <span className="text-white font-semibold">66 to 111</span> for Win For Life) with an even odd-to-even mix.
             </p>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-            <div className="text-cyan-400 font-bold uppercase">Quant 100% Sieve Engine</div>
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1.5">
+            <h3 className="text-base font-bold text-cyan-400">Full Archive Sieve Engine</h3>
             <p>
-              Combines Chinese Remainder Theorem (CRT) residue classes, eigenvector co-occurrence centrality, Takens phase-space velocity, and Stefan Mandel sieve pruning with corridor &amp; overlap constraints.
+              Combines remainder groups, frequently paired numbers, movement speed across draws, and non-overlapping ticket filtering to remove repeated combinations.
             </p>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-            <div className="text-amber-400 font-bold uppercase">Forensic Quantitative Engine</div>
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1.5">
+            <h3 className="text-base font-bold text-amber-400">Deep Pattern Audit Engine</h3>
             <p>
-              Synthesizes multi-lag momentum, Poisson drought tension, and graph affinity hubs while enforcing &le;2-ball line orthogonality in Cash Pot and dual-regime 12-Way/24-Way splits in Pick 4.
+              Combines recent momentum, overdue number gaps, and frequently linked pairs while keeping overlap to at most 2 numbers in Cash Pot and balancing 12-Way and 24-Way Boxes in Pick 4.
             </p>
           </div>
 
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
-            <div className="text-purple-400 font-bold uppercase">Apex Champion Consensus</div>
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1.5">
+            <h3 className="text-base font-bold text-purple-400">Combined Consensus Set</h3>
             <p>
-              Cross-engine consensus portfolio fusing top Forensic and Quant 100% signals into 5 orthogonal playable lines plus a 10-slip Mandel covering wheel and Top-3 Weibull Powerball rotation.
+              Brings together the highest-scoring picks into non-overlapping playable lines plus a 10-slip covering wheel and rotating Powerball or Cash Ball coverage.
             </p>
           </div>
 

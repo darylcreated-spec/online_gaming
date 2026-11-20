@@ -46,7 +46,7 @@ export default function BetSlipExportModal({
 
   const maxBall = gameKey === "cashpot" ? 20 : gameKey === "win-for-life" ? 28 : 35;
   const gridCols = gameKey === "win-for-life" ? 7 : 5;
-  const bonusLabel = gameKey === "win-for-life" ? "CB" : gameKey === "lotto-plus" ? "PB" : "";
+  const bonusFullName = gameKey === "win-for-life" ? "Cash Ball" : gameKey === "lotto-plus" ? "Powerball" : "";
   const totalCostTT = slips.length * unitCostTT;
 
   // Group slips into physical 5-panel NLCB cards (Panels A, B, C, D, E)
@@ -66,24 +66,24 @@ export default function BetSlipExportModal({
 
   const buildPlainText = () => {
     const lines: string[] = [
-      `THE WIN CONCEPT — NLCB BETTING SLIP SHEET`,
-      `Game: ${gameName.toUpperCase()}${targetDrawNumber ? ` | Target Draw #${targetDrawNumber}` : ""}`,
-      `Slips: ${slips.length} (${cards.length} physical 5-panel card${cards.length > 1 ? "s" : ""}) | Est. Total: $${totalCostTT}.00 TT${
-        gameKey === "cashpot" && multiplierIncluded ? " (w/ Multiplier)" : ""
+      `THE WIN CONCEPT - NLCB PLAYSLIP SHEET`,
+      `Game: ${gameName}${targetDrawNumber ? ` | Target Draw ${targetDrawNumber}` : ""}`,
+      `Slips: ${slips.length} (${cards.length} official 5-panel card${cards.length > 1 ? "s" : ""}) | Estimated Total: $${totalCostTT}.00 TTD${
+        gameKey === "cashpot" && multiplierIncluded ? " (with Multiplier)" : ""
       }`,
       `======================================================`,
       ""
     ];
     for (const card of cards) {
-      lines.push(`CARD #${card.cardNum} (Panels A–${card.panels[card.panels.length - 1].letter})`);
+      lines.push(`CARD ${card.cardNum} (Panels A to ${card.panels[card.panels.length - 1].letter})`);
       for (const p of card.panels) {
-        const numStr = p.nums.map((n) => String(n).padStart(2, "0")).join(" - ");
-        const bStr = p.bonus !== undefined && bonusLabel ? `  + ${bonusLabel} ${String(p.bonus).padStart(2, "0")}` : "";
+        const numStr = p.nums.map((n) => String(n).padStart(2, "0")).join(", ");
+        const bStr = p.bonus !== undefined && bonusFullName ? ` | ${bonusFullName}: ${String(p.bonus).padStart(2, "0")}` : "";
         lines.push(`  Panel ${p.letter}:  ${numStr}${bStr}`);
       }
       lines.push("");
     }
-    lines.push("Note: Copy these marks onto official NLCB playslip cards or present to an NLCB booth operator.");
+    lines.push("Note: Copy these numbers onto official NLCB playslip cards or hand this list to an NLCB booth operator.");
     return lines.join("\n");
   };
 
@@ -113,10 +113,10 @@ export default function BetSlipExportModal({
     const header = [
       "Card",
       "Panel",
-      "SlipNo",
-      ...Array.from({ length: pickLen }, (_, i) => `Ball${i + 1}`),
-      ...(bonusLabel ? [bonusLabel] : []),
-      "CostTT"
+      "SlipNumber",
+      ...Array.from({ length: pickLen }, (_, i) => `Number${i + 1}`),
+      ...(bonusFullName ? [bonusFullName.replace(/\s+/g, "")] : []),
+      "CostTTD"
     ].join(",");
     const rows = cards.flatMap((card) =>
       card.panels.map((p) =>
@@ -125,7 +125,7 @@ export default function BetSlipExportModal({
           p.letter,
           p.slipIdx + 1,
           ...p.nums,
-          ...(bonusLabel ? [p.bonus ?? ""] : []),
+          ...(bonusFullName ? [p.bonus ?? ""] : []),
           unitCostTT
         ].join(",")
       )
@@ -141,7 +141,7 @@ export default function BetSlipExportModal({
     URL.revokeObjectURL(url);
   };
 
-  // Opens a crisp, ink-friendly white-background printable HTML sheet (Save PDF or Print)
+  // Opens an ink-friendly white-background printable HTML sheet (Save PDF or Print)
   const handlePrintSheet = () => {
     triggerHaptic("medium");
     const printWin = window.open("", "_blank", "width=900,height=750");
@@ -156,9 +156,9 @@ export default function BetSlipExportModal({
       }).join("");
 
       const bonusHtml =
-        bonusLabel && bonus !== undefined
+        bonusFullName && bonus !== undefined
           ? `<div class="bonus-row">
-              <span class="bonus-title">${bonusLabel}:</span>
+              <span class="bonus-title">${bonusFullName}:</span>
               ${Array.from({ length: 10 }, (_, i) => {
                 const b = i + 1;
                 return `<span class="bcell ${b === bonus ? "bmarked" : ""}">${b}</span>`;
@@ -177,8 +177,8 @@ export default function BetSlipExportModal({
         (card) => `
       <div class="card">
         <div class="card-head">
-          <span>OFFICIAL PLAYSLIP CARD #${card.cardNum} (Panels A–${card.panels[card.panels.length - 1].letter})</span>
-          <span>${gameName.toUpperCase()} · ${card.panels.length} Panels · $${card.panels.length * unitCostTT}.00 TT${
+          <span>OFFICIAL PLAYSLIP CARD ${card.cardNum} (Panels A to ${card.panels[card.panels.length - 1].letter})</span>
+          <span>${gameName} | ${card.panels.length} Panels | $${card.panels.length * unitCostTT}.00 TTD${
             gameKey === "cashpot" && multiplierIncluded ? " (CHECK MULTIPLIER: YES)" : ""
           }</span>
         </div>
@@ -188,9 +188,9 @@ export default function BetSlipExportModal({
               (p) =>
                 `<div class="op-row"><strong>Panel ${p.letter}:</strong> <span class="op-nums">${p.nums
                   .map((n) => String(n).padStart(2, "0"))
-                  .join("  -  ")}</span>${
-                  p.bonus !== undefined && bonusLabel
-                    ? ` <span class="op-bonus">+ ${bonusLabel} ${String(p.bonus).padStart(2, "0")}</span>`
+                  .join(", ")}</span>${
+                  p.bonus !== undefined && bonusFullName
+                    ? ` <span class="op-bonus">${bonusFullName} ${String(p.bonus).padStart(2, "0")}</span>`
                     : ""
                 }</div>`
             )
@@ -201,7 +201,7 @@ export default function BetSlipExportModal({
             .map(
               (p) => `
             <div class="panel">
-              <div class="panel-title">PANEL ${p.letter} <span>${p.nums.map((n) => String(n).padStart(2, "0")).join("-")}</span></div>
+              <div class="panel-title">PANEL ${p.letter} <span>${p.nums.map((n) => String(n).padStart(2, "0")).join(" ")}</span></div>
               ${renderBubbleGridHtml(p.nums, p.bonus)}
             </div>
           `
@@ -222,22 +222,22 @@ export default function BetSlipExportModal({
     * { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #111827; margin: 18px; background: #fff; }
     .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #111827; padding-bottom: 8px; margin-bottom: 12px; }
-    .header h1 { margin: 0; font-size: 18px; letter-spacing: 0.04em; text-transform: uppercase; }
-    .header .meta { font-size: 12px; color: #374151; font-family: monospace; text-align: right; }
-    .notice { font-size: 11px; background: #f3f4f6; border: 1px solid #d1d5db; padding: 7px 10px; border-radius: 6px; margin-bottom: 14px; color: #1f2937; }
+    .header h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; }
+    .header .meta { font-size: 12px; color: #374151; text-align: right; }
+    .notice { font-size: 12px; background: #f3f4f6; border: 1px solid #d1d5db; padding: 8px 12px; border-radius: 6px; margin-bottom: 14px; color: #1f2937; line-height: 1.5; }
     .card { border: 1.5px solid #111827; border-radius: 8px; padding: 10px; margin-bottom: 16px; page-break-inside: avoid; }
-    .card-head { display: flex; justify-content: space-between; font-weight: 800; font-size: 12px; font-family: monospace; border-bottom: 1px solid #d1d5db; padding-bottom: 6px; margin-bottom: 8px; }
-    .operator-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 16px; background: #f9fafb; border: 1px solid #e5e7eb; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-family: monospace; font-size: 13px; }
-    .op-nums { font-weight: 800; letter-spacing: 0.05em; }
-    .op-bonus { font-weight: 800; background: #111827; color: #fff; padding: 1px 5px; border-radius: 3px; font-size: 11px; margin-left: 4px; }
+    .card-head { display: flex; justify-content: space-between; font-weight: 700; font-size: 12px; border-bottom: 1px solid #d1d5db; padding-bottom: 6px; margin-bottom: 8px; }
+    .operator-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 16px; background: #f9fafb; border: 1px solid #e5e7eb; padding: 8px; border-radius: 6px; margin-bottom: 10px; font-family: monospace; font-size: 13px; }
+    .op-nums { font-weight: 800; letter-spacing: 0.04em; }
+    .op-bonus { font-weight: 700; background: #111827; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 11px; margin-left: 4px; }
     .panels-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
     .panel { border: 1px solid #9ca3af; border-radius: 6px; padding: 6px; }
-    .panel-title { font-size: 10px; font-weight: 800; font-family: monospace; display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; }
+    .panel-title { font-size: 11px; font-weight: 700; font-family: monospace; display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; }
     .grid { display: grid; gap: 2px; }
-    .cell { font-family: monospace; font-size: 9px; text-align: center; padding: 2px 0; border: 1px solid #d1d5db; border-radius: 3px; color: #6b7280; }
+    .cell { font-family: monospace; font-size: 10px; text-align: center; padding: 2px 0; border: 1px solid #d1d5db; border-radius: 3px; color: #6b7280; }
     .cell.marked { background: #111827; color: #ffffff; border-color: #111827; font-weight: 900; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .bonus-row { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-top: 5px; padding-top: 4px; border-top: 1px dashed #d1d5db; font-family: monospace; font-size: 8px; }
-    .bonus-title { font-weight: 800; margin-right: 2px; }
+    .bonus-row { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin-top: 5px; padding-top: 4px; border-top: 1px dashed #d1d5db; font-family: monospace; font-size: 9px; }
+    .bonus-title { font-weight: 700; margin-right: 2px; }
     .bcell { padding: 1px 3px; border: 1px solid #d1d5db; border-radius: 2px; color: #6b7280; }
     .bcell.bmarked { background: #111827; color: #fff; border-color: #111827; font-weight: 900; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     @media print {
@@ -249,18 +249,18 @@ export default function BetSlipExportModal({
 <body>
   <div class="header">
     <div>
-      <h1>The Win Concept — ${gameName} Playslip Sheet</h1>
-      <div style="font-size: 11px; color: #4b5563; margin-top: 2px;">Steiner-Johnson Zero-Pair-Overlap Portfolio${
-        targetDrawNumber ? ` · Target Draw #${targetDrawNumber}` : ""
+      <h1>The Win Concept: ${gameName} Playslip Sheet</h1>
+      <div style="font-size: 12px; color: #4b5563; margin-top: 2px;">Non-Overlapping Ticket Set${
+        targetDrawNumber ? ` for Draw ${targetDrawNumber}` : ""
       }</div>
     </div>
     <div class="meta">
       <div><strong>${slips.length} Slips</strong> (${cards.length} Official Card${cards.length > 1 ? "s" : ""})</div>
-      <div>Total: <strong>$${totalCostTT}.00 TT</strong></div>
+      <div>Total: <strong>$${totalCostTT}.00 TTD</strong></div>
     </div>
   </div>
   <div class="notice">
-    <strong>Booth &amp; OMR Notice:</strong> NLCB optical scanner terminals only accept official NLCB playslip stock (infrared dropout ink &amp; timing marks). Use the darkened grids below to shade your official NLCB Panels A–E accurately in seconds, or hand the bold Panel A–E list to your NLCB operator for manual terminal entry.
+    <strong>Booth and Machine Notice:</strong> NLCB ticket machines only scan official NLCB playslip paper printed with special scanner ink and edge marks. Use the darkened boxes below to shade your official Panels A to E accurately in seconds, or hand the Panel A to E list to your NLCB booth operator to enter directly.
   </div>
   ${cardsHtml}
   <script>window.onload = () => { window.print(); };</script>
@@ -273,7 +273,7 @@ export default function BetSlipExportModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-5">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-5 font-sans">
       <div
         className="absolute inset-0 bg-black/75 backdrop-blur-sm"
         onClick={onClose}
@@ -281,29 +281,30 @@ export default function BetSlipExportModal({
       <div className="relative z-10 w-full max-w-3xl max-h-[88vh] flex flex-col rounded-2xl bg-[#0a0f1a] border border-white/15 shadow-2xl overflow-hidden">
         {/* Modal Header */}
         <div className="px-4 sm:px-6 py-4 border-b border-white/[0.08] flex items-center justify-between gap-3 bg-slate-950/80">
-          <div>
-            <h3 className="text-sm sm:text-base font-bold text-white font-sans">
-              Export &amp; Print {gameName} Betting Slips
-            </h3>
-            <p className="text-[11px] font-mono text-slate-400">
-              {slips.length} Slips · {cards.length} Official 5-Panel Card{cards.length > 1 ? "s" : ""} · Total ${totalCostTT}.00 TT
-              {targetDrawNumber ? ` · Draw #${targetDrawNumber}` : ""}
+          <div className="space-y-0.5">
+            <h2 className="text-lg sm:text-xl font-bold text-white">
+              Print and Export {gameName} Betting Slips
+            </h2>
+            <p className="text-xs text-slate-400">
+              {slips.length} slips across {cards.length} official 5-panel card{cards.length > 1 ? "s" : ""}, estimated total ${totalCostTT}.00 TTD
+              {targetDrawNumber ? ` for Draw ${targetDrawNumber}` : ""}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
+            aria-label="Close export modal"
+            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Honest NLCB OMR Machine Notice */}
-        <div className="px-4 sm:px-6 py-2.5 bg-amber-950/25 border-b border-amber-500/20 flex items-start gap-2.5 text-[11px] font-sans text-amber-100/90">
-          <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        {/* Plain-English NLCB Machine Notice */}
+        <div className="px-4 sm:px-6 py-3 bg-amber-950/25 border-b border-amber-500/20 flex items-start gap-2.5 text-sm text-amber-100/90 leading-relaxed">
+          <Info className="w-4 h-4 text-amber-400 shrink-0 mt-1" />
           <span>
-            <strong className="text-amber-300">About NLCB Scanner Machines:</strong> NLCB OMR readers only scan official NLCB playslip paper (infrared dropout ink + edge timing tracks). Use this printable sheet either as a <strong>1-to-1 Panel A–E shading guide</strong> for your official card, or hand the <strong>Booth Operator Sheet</strong> directly to the agent to key in.
+            <strong className="text-amber-300">About NLCB Ticket Machines:</strong> NLCB optical scanners only read official NLCB paper slips. Use this printable sheet as a <strong>Panel A to E shading guide</strong> for your official card, or hand the <strong>Booth Agent List</strong> directly to the operator to key in.
           </span>
         </div>
 
@@ -313,31 +314,31 @@ export default function BetSlipExportModal({
             <button
               type="button"
               onClick={handlePrintSheet}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold font-sans transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print / Save PDF</span>
+              <span>Print or Save PDF</span>
             </button>
             <button
               type="button"
               onClick={handleDownloadTxt}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-100 text-xs font-mono font-semibold transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-100 text-xs font-semibold transition cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-sky-400" />
-              <span>.TXT</span>
+              <span>Text File</span>
             </button>
             <button
               type="button"
               onClick={handleDownloadCsv}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-100 text-xs font-mono font-semibold transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-100 text-xs font-semibold transition cursor-pointer"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-              <span>.CSV</span>
+              <span>Spreadsheet (CSV)</span>
             </button>
             <button
               type="button"
               onClick={handleCopyText}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-100 text-xs font-mono font-semibold transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-100 text-xs font-semibold transition cursor-pointer"
             >
               {copied ? (
                 <>
@@ -347,31 +348,31 @@ export default function BetSlipExportModal({
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5 text-slate-300" />
-                  <span>Copy</span>
+                  <span>Copy All</span>
                 </>
               )}
             </button>
           </div>
 
-          <div className="inline-flex rounded-lg bg-slate-900 border border-white/10 p-0.5 text-[11px] font-mono">
+          <div className="inline-flex rounded-lg bg-slate-900 border border-white/10 p-0.5 text-xs">
             <button
               type="button"
               onClick={() => setViewMode("visual")}
-              className={`px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer transition ${
+              className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 cursor-pointer transition ${
                 viewMode === "visual" ? "bg-slate-800 text-white font-bold" : "text-slate-400 hover:text-white"
               }`}
             >
-              <Grid className="w-3 h-3" />
+              <Grid className="w-3.5 h-3.5" />
               <span>Bubble Grid</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode("operator")}
-              className={`px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer transition ${
+              className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 cursor-pointer transition ${
                 viewMode === "operator" ? "bg-slate-800 text-white font-bold" : "text-slate-400 hover:text-white"
               }`}
             >
-              <List className="w-3 h-3" />
+              <List className="w-3.5 h-3.5" />
               <span>Agent List</span>
             </button>
           </div>
@@ -384,31 +385,31 @@ export default function BetSlipExportModal({
               key={card.cardNum}
               className="rounded-xl bg-[#070b14] border border-white/[0.08] p-4 space-y-3"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-white/[0.06] font-mono text-xs">
-                <span className="font-bold text-white uppercase">
-                  Official NLCB Card #{card.cardNum} (Panels A–{card.panels[card.panels.length - 1].letter})
-                </span>
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-white/[0.06] text-xs">
+                <h3 className="text-base font-bold text-white">
+                  Official NLCB Card {card.cardNum} (Panels A to {card.panels[card.panels.length - 1].letter})
+                </h3>
                 <span className="text-emerald-300 font-semibold">
-                  {card.panels.length} Slips · ${card.panels.length * unitCostTT}.00 TT
-                  {gameKey === "cashpot" && multiplierIncluded ? " · Multiplier: YES" : ""}
+                  {card.panels.length} slips, ${card.panels.length * unitCostTT}.00 TTD
+                  {gameKey === "cashpot" && multiplierIncluded ? ", Multiplier: Yes" : ""}
                 </span>
               </div>
 
               {viewMode === "operator" ? (
-                <div className="space-y-1.5 font-mono">
+                <div className="space-y-2">
                   {card.panels.map((p) => (
                     <div
                       key={p.letter}
-                      className="px-3 py-2.5 rounded-lg bg-slate-900/80 border border-white/[0.06] flex items-center justify-between gap-2"
+                      className="px-3.5 py-2.5 rounded-lg bg-slate-900/80 border border-white/[0.06] flex items-center justify-between gap-2"
                     >
-                      <span className="text-xs font-bold text-slate-400">PANEL {p.letter}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm sm:text-base font-black text-white tracking-wider tabular-nums">
-                          {p.nums.map((n) => String(n).padStart(2, "0")).join(" - ")}
+                      <span className="text-xs font-bold text-slate-400 uppercase">Panel {p.letter}</span>
+                      <div className="flex items-center gap-2 flex-wrap justify-end">
+                        <span className="text-base font-mono font-bold text-white tracking-wider tabular-nums">
+                          {p.nums.map((n) => String(n).padStart(2, "0")).join(", ")}
                         </span>
-                        {p.bonus !== undefined && bonusLabel && (
-                          <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-bold">
-                            {bonusLabel} {String(p.bonus).padStart(2, "0")}
+                        {p.bonus !== undefined && bonusFullName && (
+                          <span className="px-2.5 py-0.5 rounded bg-amber-500/20 border border-amber-400/50 text-amber-300 text-xs font-bold">
+                            {bonusFullName} {String(p.bonus).padStart(2, "0")}
                           </span>
                         )}
                       </div>
@@ -424,14 +425,14 @@ export default function BetSlipExportModal({
                         key={p.letter}
                         className="p-3 rounded-xl bg-slate-900/70 border border-white/[0.07] space-y-2"
                       >
-                        <div className="flex items-center justify-between font-mono text-[11px] pb-1 border-b border-white/[0.06]">
-                          <span className="font-bold text-sky-300">PANEL {p.letter}</span>
-                          <span className="text-slate-200 font-bold tabular-nums">
-                            {p.nums.map((n) => String(n).padStart(2, "0")).join("-")}
+                        <div className="flex items-center justify-between text-xs pb-1.5 border-b border-white/[0.06]">
+                          <span className="font-bold text-sky-300">Panel {p.letter}</span>
+                          <span className="text-slate-200 font-mono font-bold tabular-nums">
+                            {p.nums.map((n) => String(n).padStart(2, "0")).join(" ")}
                           </span>
                         </div>
                         <div
-                          className="grid gap-1 font-mono text-[10px]"
+                          className="grid gap-1 font-mono text-xs"
                           style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}
                         >
                           {Array.from({ length: maxBall }, (_, i) => {
@@ -443,7 +444,7 @@ export default function BetSlipExportModal({
                                 className={`py-1 rounded text-center tabular-nums border ${
                                   isMarked
                                     ? "bg-emerald-400 text-slate-950 border-emerald-300 font-black"
-                                    : "bg-slate-950/70 text-slate-600 border-white/[0.05]"
+                                    : "bg-slate-950/70 text-slate-500 border-white/[0.05]"
                                 }`}
                               >
                                 {String(n).padStart(2, "0")}
@@ -451,20 +452,22 @@ export default function BetSlipExportModal({
                             );
                           })}
                         </div>
-                        {p.bonus !== undefined && bonusLabel && (
-                          <div className="pt-1.5 border-t border-white/[0.06] flex items-center justify-between font-mono text-[10px]">
-                            <span className="text-slate-400 font-bold">{bonusLabel} (1–10):</span>
-                            <div className="flex items-center gap-0.5">
+                        {p.bonus !== undefined && bonusFullName && (
+                          <div className="pt-2 border-t border-white/[0.06] space-y-1.5">
+                            <span className="text-xs text-slate-400 font-semibold block">
+                              {bonusFullName} (1 to 10):
+                            </span>
+                            <div className="grid grid-cols-10 gap-1 font-mono text-xs">
                               {Array.from({ length: 10 }, (_, i) => {
                                 const b = i + 1;
                                 const marked = b === p.bonus;
                                 return (
                                   <span
                                     key={b}
-                                    className={`w-4 h-4 rounded flex items-center justify-center text-[9px] ${
+                                    className={`py-0.5 rounded flex items-center justify-center ${
                                       marked
                                         ? "bg-amber-400 text-slate-950 font-black"
-                                        : "bg-slate-950 text-slate-600"
+                                        : "bg-slate-950 text-slate-500"
                                     }`}
                                   >
                                     {b}

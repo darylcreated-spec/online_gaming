@@ -150,14 +150,14 @@ export default function CashPotForensicPanel() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-md">
-                MASTER FORENSIC SYNTHESIS · 5/20
+              <span className="px-2.5 py-0.5 text-xs font-black uppercase tracking-widest bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-md">
+                Deep Pattern Summary (5 of 20)
               </span>
-              <span className="text-[10px] font-mono text-gray-400">
+              <span className="text-xs font-mono text-gray-400">
                 {data.totalDrawsInDb.toLocaleString()} Draws Analyzed
               </span>
             </div>
-            <h2 className="text-xl md:text-2xl font-black text-white font-mono tracking-tight flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-black text-white font-mono tracking-tight flex items-center gap-2">
               <Cpu className="w-6 h-6 text-cyan-400" />
               Cash Pot Forensic Quantitative Engine
             </h2>
@@ -191,7 +191,7 @@ export default function CashPotForensicPanel() {
               <div className="text-cyan-400 font-bold flex items-center gap-1.5">
                 <Binary className="w-4 h-4" /> 1. CRT Galois Ring Partition
               </div>
-              <p className="text-[11px] text-gray-400 leading-normal">
+              <p className="text-xs text-gray-400 leading-normal">
                 Z_20 = Z_4 x Z_5 creates a bijective residue partition. 100% of historical draws span at least 2 distinct residues mod 4 and mod 5 without collapse.
               </p>
             </div>
@@ -199,7 +199,7 @@ export default function CashPotForensicPanel() {
               <div className="text-cyan-400 font-bold flex items-center gap-1.5">
                 <Target className="w-4 h-4" /> 2. Mandel Covering Condensation
               </div>
-              <p className="text-[11px] text-gray-400 leading-normal">
+              <p className="text-xs text-gray-400 leading-normal">
                 10-slip covering array wheel over the 14-ball Invariant Attractor Core captures dense 5/5, 4/5, and 3/5 overlaps with lower-tier mathematical guarantees.
               </p>
             </div>
@@ -207,7 +207,7 @@ export default function CashPotForensicPanel() {
               <div className="text-cyan-400 font-bold flex items-center gap-1.5">
                 <TrendingUp className="w-4 h-4" /> 3. Dual-Manifold Candidate Strategy
               </div>
-              <p className="text-[11px] text-gray-400 leading-normal">
+              <p className="text-xs text-gray-400 leading-normal">
                 Balances core Gaussian centroid sets with Non-Linear Parity Inversions and Topological Triplet Cascades to catch asymmetric prize-yielding draws.
               </p>
             </div>
@@ -220,7 +220,7 @@ export default function CashPotForensicPanel() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Binary className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+            <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">
               Dual-Manifold Candidate Portfolio (Target Draw #{data.nextTargetDrawNumber})
             </h3>
           </div>
@@ -238,10 +238,10 @@ export default function CashPotForensicPanel() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 text-[9px] font-black uppercase font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded">
-                      SET #{idx + 1} · {candidate.strategyTag}
+                    <span className="px-2 py-0.5 text-xs font-black uppercase font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded">
+                      Set {idx + 1}: {candidate.strategyTag}
                     </span>
-                    <span className="text-[10px] font-mono text-gray-400">
+                    <span className="text-xs font-mono text-gray-400">
                       Score: {candidate.compositeScore}
                     </span>
                   </div>
@@ -279,7 +279,7 @@ export default function CashPotForensicPanel() {
                   </span>
                 ))}
                 <div className="flex items-center gap-1 ml-2">
-                  <span className="text-[10px] font-mono text-gray-500 uppercase">MULT:</span>
+                  <span className="text-xs font-mono text-gray-500 uppercase">MULT:</span>
                   <span className="w-10 h-10 rounded-xl bg-amber-950 border border-amber-500/50 flex items-center justify-center text-sm font-black text-amber-300 font-mono shadow-md">
                     {candidate.multiplier}x
                   </span>
@@ -287,26 +287,26 @@ export default function CashPotForensicPanel() {
               </div>
 
               {/* Metrics */}
-              <div className="grid grid-cols-4 gap-2 pt-2 border-t border-white/5 text-[10px] font-mono text-gray-400">
+              <div className="grid grid-cols-4 gap-2 pt-2 border-t border-white/5 text-xs font-mono text-gray-400">
                 <div>
-                  <span className="block text-gray-500 text-[8px] uppercase">Sum</span>
+                  <span className="block text-gray-500 text-xs uppercase">Sum</span>
                   <span className="font-bold text-gray-200">{candidate.sum}</span>
                 </div>
                 <div>
-                  <span className="block text-gray-500 text-[8px] uppercase">Odd:Even</span>
+                  <span className="block text-gray-500 text-xs uppercase">Odd:Even</span>
                   <span className="font-bold text-gray-200">{candidate.oddEvenRatio}</span>
                 </div>
                 <div>
-                  <span className="block text-gray-500 text-[8px] uppercase">Low:High</span>
+                  <span className="block text-gray-500 text-xs uppercase">Low:High</span>
                   <span className="font-bold text-gray-200">{candidate.highLowRatio}</span>
                 </div>
                 <div>
-                  <span className="block text-gray-500 text-[8px] uppercase">Pairs</span>
+                  <span className="block text-gray-500 text-xs uppercase">Pairs</span>
                   <span className="font-bold text-gray-200">{candidate.consecutivePairs.length ? candidate.consecutivePairs.join(",") : "None"}</span>
                 </div>
               </div>
 
-              <p className="text-[11px] text-gray-400 font-mono leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-white/5">
+              <p className="text-xs text-gray-400 font-mono leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-white/5">
                 {candidate.rationale}
               </p>
             </div>
@@ -320,7 +320,7 @@ export default function CashPotForensicPanel() {
           <div>
             <div className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-cyan-400" />
-              <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+              <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">
                 Stefan Mandel Combinatorial Covering Sieve (10-Slip Wheel)
               </h3>
             </div>
@@ -339,7 +339,7 @@ export default function CashPotForensicPanel() {
               key={sIdx}
               className="p-3 rounded-xl bg-slate-950/80 border border-white/10 hover:border-cyan-500/30 transition space-y-2"
             >
-              <div className="flex items-center justify-between text-[10px] font-mono text-gray-400">
+              <div className="flex items-center justify-between text-xs font-mono text-gray-400">
                 <span className="font-bold text-cyan-400">SLIP #{sIdx + 1}</span>
                 <button
                   onClick={() => handleCopySlip(slip, sIdx)}
@@ -367,32 +367,32 @@ export default function CashPotForensicPanel() {
       {/* 4. INVARIANT ATTRACTOR SUBSPACE & TELEMETRY */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-          <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">Single-Draw 3+ Capture</span>
+          <span className="text-xs font-mono text-gray-500 uppercase tracking-wider block">Single-Draw 3+ Capture</span>
           <span className="text-2xl font-black font-mono text-cyan-400">
             {data.invariantSubspace.rollingWindowCaptureRates.singleDrawThreePlusRate}%
           </span>
-          <span className="text-[10px] font-mono text-gray-400 block">Historical 14-ball core rate</span>
+          <span className="text-xs font-mono text-gray-400 block">Historical 14-ball core rate</span>
         </div>
         <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-          <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">2-Draw Window 3+ Rate</span>
+          <span className="text-xs font-mono text-gray-500 uppercase tracking-wider block">2-Draw Window 3+ Rate</span>
           <span className="text-2xl font-black font-mono text-emerald-400">
             {data.invariantSubspace.rollingWindowCaptureRates.windowTwoDrawsRate}%
           </span>
-          <span className="text-[10px] font-mono text-gray-400 block">Rolling 2-draw capture</span>
+          <span className="text-xs font-mono text-gray-400 block">Rolling 2-draw capture</span>
         </div>
         <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-          <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">3-Draw Window 3+ Rate</span>
+          <span className="text-xs font-mono text-gray-500 uppercase tracking-wider block">3-Draw Window 3+ Rate</span>
           <span className="text-2xl font-black font-mono text-amber-400">
             {data.invariantSubspace.rollingWindowCaptureRates.windowThreeDrawsRate}%
           </span>
-          <span className="text-[10px] font-mono text-gray-400 block">Rolling 3-draw capture</span>
+          <span className="text-xs font-mono text-gray-400 block">Rolling 3-draw capture</span>
         </div>
         <div className="p-4 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
-          <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider block">5-Draw Window 3+ Rate</span>
+          <span className="text-xs font-mono text-gray-500 uppercase tracking-wider block">5-Draw Window 3+ Rate</span>
           <span className="text-2xl font-black font-mono text-indigo-400">
             {data.invariantSubspace.rollingWindowCaptureRates.windowFiveDrawsRate}%
           </span>
-          <span className="text-[10px] font-mono text-gray-400 block">Rolling 5-draw capture</span>
+          <span className="text-xs font-mono text-gray-400 block">Rolling 5-draw capture</span>
         </div>
       </div>
 
@@ -402,7 +402,7 @@ export default function CashPotForensicPanel() {
           <div>
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-cyan-400" />
-              <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+              <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">
                 Out-of-Sample Walk-Forward Backtest Audit
               </h3>
             </div>
@@ -432,27 +432,27 @@ export default function CashPotForensicPanel() {
         {/* Audit Stats KPI Grid */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
-            <span className="text-[10px] font-mono text-gray-500 uppercase block">Tested Draws</span>
+            <span className="text-xs font-mono text-gray-500 uppercase block">Tested Draws</span>
             <span className="text-xl font-black font-mono text-white">{data.audit.testedDrawsCount}</span>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
-            <span className="text-[10px] font-mono text-gray-500 uppercase block">Any Hit (≥1)</span>
+            <span className="text-xs font-mono text-gray-500 uppercase block">At Least 1 Match</span>
             <span className="text-xl font-black font-mono text-cyan-400">{data.audit.overallCaptureRatePercent}%</span>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
-            <span className="text-[10px] font-mono text-gray-500 uppercase block">Prize Tier (≥2)</span>
+            <span className="text-xs font-mono text-gray-500 uppercase block">2 or More Matches</span>
             <span className="text-xl font-black font-mono text-emerald-400">{data.audit.atLeastTwoHitsRatePercent}%</span>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
-            <span className="text-[10px] font-mono text-gray-500 uppercase block">Match 3 Hits</span>
+            <span className="text-xs font-mono text-gray-500 uppercase block">Match 3 Hits</span>
             <span className="text-xl font-black font-mono text-amber-400">{data.audit.threeHitsCount}</span>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
-            <span className="text-[10px] font-mono text-gray-500 uppercase block">Match 4 Hits</span>
+            <span className="text-xs font-mono text-gray-500 uppercase block">Match 4 Hits</span>
             <span className="text-xl font-black font-mono text-indigo-400">{data.audit.fourHitsCount}</span>
           </div>
           <div className="p-3.5 rounded-xl bg-slate-950 border border-white/5">
-            <span className="text-[10px] font-mono text-gray-500 uppercase block">Total Payout</span>
+            <span className="text-xs font-mono text-gray-500 uppercase block">Total Payout</span>
             <span className="text-xl font-black font-mono text-emerald-300">${data.audit.totalSimulatedPayoutTT.toLocaleString()} TT</span>
           </div>
         </div>
@@ -475,7 +475,7 @@ export default function CashPotForensicPanel() {
               <button
                 key={tier}
                 onClick={() => setFilterTier(tier)}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition cursor-pointer ${
                   filterTier === tier
                     ? "bg-cyan-500/30 text-cyan-300 border border-cyan-500/40"
                     : "bg-slate-950 text-gray-400 hover:text-white border border-white/5"
@@ -490,7 +490,7 @@ export default function CashPotForensicPanel() {
         {/* Audit Draw-by-Draw Table */}
         <div className="overflow-x-auto max-h-96 overflow-y-auto rounded-xl border border-white/5">
           <table className="w-full text-left font-mono text-xs">
-            <thead className="bg-slate-950 text-gray-500 text-[10px] uppercase sticky top-0">
+            <thead className="bg-slate-950 text-gray-500 text-xs uppercase sticky top-0">
               <tr>
                 <th className="p-3">Draw #</th>
                 <th className="p-3">Date</th>
@@ -510,7 +510,7 @@ export default function CashPotForensicPanel() {
                       {entry.drawnNumbers.map((n, i) => (
                         <span
                           key={i}
-                          className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${
+                          className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
                             entry.exactHits.includes(n)
                               ? "bg-cyan-500 text-slate-950 font-black"
                               : "bg-slate-800 text-gray-300"
@@ -519,13 +519,13 @@ export default function CashPotForensicPanel() {
                           {String(n).padStart(2, "0")}
                         </span>
                       ))}
-                      <span className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ml-1 bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <span className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold ml-1 bg-amber-500/20 text-amber-300 border border-amber-500/30">
                         {entry.drawnMultiplier}x
                       </span>
                     </div>
                   </td>
                   <td className="p-3 font-bold">
-                    <span className={`px-2 py-0.5 rounded text-[10px] ${
+                    <span className={`px-2 py-0.5 rounded text-xs ${
                       entry.bestPortfolioHitCount >= 5
                         ? "bg-indigo-500/30 text-indigo-300 border border-indigo-500/50"
                         : entry.bestPortfolioHitCount === 4
@@ -539,7 +539,7 @@ export default function CashPotForensicPanel() {
                       {entry.bestPortfolioHitCount}/5 HITS
                     </span>
                   </td>
-                  <td className="p-3 text-gray-300 text-[11px]">{entry.bestStrategyName}</td>
+                  <td className="p-3 text-gray-300 text-xs">{entry.bestStrategyName}</td>
                   <td className="p-3 font-bold">
                     <span className={entry.payoutTT > 0 ? "text-emerald-400" : "text-gray-500"}>
                       {entry.prizeWon}
@@ -562,7 +562,7 @@ export default function CashPotForensicPanel() {
             {data.topAffinityPairs.slice(0, 5).map((pair, pIdx) => (
               <div key={pIdx} className="flex items-center justify-between p-2 rounded-lg bg-slate-950/60 border border-white/5">
                 <span className="text-gray-300 font-bold">{pair.pair}</span>
-                <span className="text-cyan-400 text-[10px]">{pair.count} co-occurrences</span>
+                <span className="text-cyan-400 text-xs">{pair.count} co-occurrences</span>
               </div>
             ))}
           </div>
@@ -576,7 +576,7 @@ export default function CashPotForensicPanel() {
             {data.criticalTensionBalls.slice(0, 5).map((ball, bIdx) => (
               <div key={bIdx} className="flex items-center justify-between p-2 rounded-lg bg-slate-950/60 border border-white/5">
                 <span className="text-gray-300 font-bold">Ball #{String(ball.ball).padStart(2, "0")}</span>
-                <span className="text-rose-400 text-[10px]">Drought: {ball.drought} (Ratio: {ball.tensionRatio}x)</span>
+                <span className="text-rose-400 text-xs">Drought: {ball.drought} (Ratio: {ball.tensionRatio}x)</span>
               </div>
             ))}
           </div>
@@ -590,7 +590,7 @@ export default function CashPotForensicPanel() {
             {data.hotMomentumBalls.slice(0, 5).map((ball, mIdx) => (
               <div key={mIdx} className="flex items-center justify-between p-2 rounded-lg bg-slate-950/60 border border-white/5">
                 <span className="text-gray-300 font-bold">Ball #{String(ball.ball).padStart(2, "0")}</span>
-                <span className="text-emerald-400 text-[10px]">{ball.hitsLast20} hits in last 20</span>
+                <span className="text-emerald-400 text-xs">{ball.hitsLast20} hits in last 20</span>
               </div>
             ))}
           </div>

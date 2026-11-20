@@ -28,7 +28,7 @@ export const Toast: React.FC<ToastProps> = ({ id, message, type, onClose }) => {
     <div className={`glass-panel border px-4 py-3 rounded-lg shadow-lg flex items-center justify-between min-w-[250px] animate-slide-in-right ${bgColor}`}>
       <span className="font-mono text-sm">{message}</span>
       <button onClick={() => onClose(id)} className="ml-4 text-white/50 hover:text-white transition">
-        &times;
+        Close
       </button>
     </div>
   );
@@ -121,7 +121,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         role="dialog"
         aria-modal="true"
       >
-        <h3 className="text-lg font-bold text-primary font-mono mb-2 uppercase tracking-wide">{title}</h3>
+        <h3 className="text-base font-bold text-primary font-mono mb-2 uppercase tracking-wide">{title}</h3>
         <p className="text-sm text-gray-300 font-mono mb-4">{message}</p>
         
         {inputPlaceholder && (

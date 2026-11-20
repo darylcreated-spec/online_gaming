@@ -117,7 +117,7 @@ export default function LottoAuditPanel() {
       <div className="rounded-2xl border border-sky-500/20 bg-slate-900/60 p-12 text-center backdrop-blur-md space-y-4 font-mono">
         <RefreshCw className="h-10 w-10 animate-spin text-sky-400 mx-auto" />
         <div className="space-y-1">
-          <h3 className="text-lg font-bold text-white uppercase tracking-wider">
+          <h3 className="text-base font-bold text-white uppercase tracking-wider">
             Auditing Lotto Plus Database & Invariants
           </h3>
           <p className="text-xs text-gray-400">
@@ -154,10 +154,10 @@ export default function LottoAuditPanel() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black uppercase tracking-wider text-white">
+                <h2 className="text-lg sm:text-xl font-black uppercase tracking-wider text-white">
                   Lotto Plus 100% Invariant & Audit System
                 </h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-widest bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                   Live Engine
                 </span>
               </div>
@@ -169,7 +169,7 @@ export default function LottoAuditPanel() {
 
           {/* Sync Status & Manual Re-Audit Trigger */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="text-right text-[10px] text-gray-400 hidden sm:block">
+            <div className="text-right text-xs text-gray-400 hidden sm:block">
               <div className="flex items-center gap-1.5 text-emerald-400 font-bold justify-end">
                 <Database className="w-3 h-3 text-emerald-400" />
                 <span>TURSO DB CONNECTED</span>
@@ -194,39 +194,39 @@ export default function LottoAuditPanel() {
         {/* Mathematical Operating Principles Pillbox */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Combinatorial Space</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Combinatorial Space</span>
             <div className="text-xs text-white font-extrabold flex items-center gap-1.5">
               <Calculator className="w-3.5 h-3.5 text-sky-400" />
               <span>C(35, 5) = 324,632</span>
             </div>
-            <span className="text-[9px] text-gray-500">Unordered subsets</span>
+            <span className="text-xs text-gray-500">Unordered subsets</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Powerball Filter</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Powerball Filter</span>
             <div className="text-xs text-amber-300 font-extrabold flex items-center gap-1.5">
               <CheckCheck className="w-3.5 h-3.5 text-amber-400" />
               <span>100% EXCLUDED</span>
             </div>
-            <span className="text-[9px] text-gray-500">Main 5 balls analyzed</span>
+            <span className="text-xs text-gray-500">Main 5 balls analyzed</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Ball Draw Sequence</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Ball Draw Sequence</span>
             <div className="text-xs text-purple-300 font-extrabold flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-purple-400" />
               <span>SEQUENCE IGNORED</span>
             </div>
-            <span className="text-[9px] text-gray-500">Set equality order-free</span>
+            <span className="text-xs text-gray-500">Set equality order-free</span>
           </div>
 
           <div className="p-3 bg-black/40 rounded-xl border border-white/5 space-y-1">
-            <span className="text-[10px] text-gray-400 uppercase font-bold block">Automated Sync</span>
+            <span className="text-xs text-gray-400 uppercase font-bold block">Automated Sync</span>
             <div className="text-xs text-emerald-300 font-extrabold flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
               <span>EVENT-DRIVEN UPDATE</span>
             </div>
-            <span className="text-[9px] text-gray-500">Recalculates on new draw</span>
+            <span className="text-xs text-gray-500">Recalculates on new draw</span>
           </div>
         </div>
       </div>
@@ -254,39 +254,39 @@ export default function LottoAuditPanel() {
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Galois Ring Mod 5</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
-              Every modern draw spans <strong>&ge; 2 distinct residue classes modulo 5</strong>. Zero modern draws concentrate in a single remainder class.
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Every modern draw spreads across <strong>at least 2 different number groups of 5</strong> rather than clustering in one pattern.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              size({"{"}n mod 5 : n &isin; D{"}"}) &ge; 2
+            <div className="text-xs text-emerald-400/80 font-mono">
+              At least 2 groups of 5 represented
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Galois Ring Mod 7</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% PASS</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
-              Every modern draw spans <strong>&ge; 2 distinct residue classes modulo 7</strong>. Tickets with identical mod 7 remainder are eliminated.
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Every modern draw spreads across <strong>at least 2 different number groups of 7</strong>. Tickets stuck in one repeating group are filtered out.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              size({"{"}n mod 7 : n &isin; D{"}"}) &ge; 2
+            <div className="text-xs text-emerald-400/80 font-mono">
+              At least 2 groups of 7 represented
             </div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/20 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-emerald-300 uppercase">Master Attractor Manifold</span>
-              <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% CAPTURE</span>
+              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-bold rounded">100% CAPTURE</span>
             </div>
-            <p className="text-[11px] text-gray-300 leading-relaxed">
+            <p className="text-xs text-gray-300 leading-relaxed">
               The dual cyclic attractor pool ({data.masterAttractorManifold.poolSize} balls) has captured winning balls in <strong>100.00% of tested draws</strong> with 0 zero-hit draws.
             </p>
-            <div className="text-[10px] text-emerald-400/80 font-mono">
-              size(D &cap; M) &ge; 1
+            <div className="text-xs text-emerald-400/80 font-mono">
+              At least 1 matching mirror pair
             </div>
           </div>
         </div>
@@ -309,51 +309,51 @@ export default function LottoAuditPanel() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
           
           <div className="p-3.5 bg-slate-900/80 rounded-xl border border-white/5 space-y-1 text-center">
-            <span className="text-[10px] text-gray-400 uppercase block font-bold">&ge; 1 Ball Hit</span>
+            <span className="text-xs text-gray-400 uppercase block font-bold">At Least 1 Match</span>
             <div className="text-xl font-black text-white">
               {data.auditVerification.bestTicketHitRates.atLeastOne.percentage.toFixed(1)}%
             </div>
-            <span className="text-[10px] text-gray-400">
+            <span className="text-xs text-gray-400">
               {data.auditVerification.bestTicketHitRates.atLeastOne.count} draws
             </span>
           </div>
 
           <div className="p-3.5 bg-slate-900/80 rounded-xl border border-sky-500/20 space-y-1 text-center">
-            <span className="text-[10px] text-sky-400 uppercase block font-bold">&ge; 2 Balls Hit</span>
+            <span className="text-xs text-sky-400 uppercase block font-bold">At Least 2 Matches</span>
             <div className="text-xl font-black text-sky-300">
               {data.auditVerification.bestTicketHitRates.atLeastTwo.percentage.toFixed(1)}%
             </div>
-            <span className="text-[10px] text-gray-400">
+            <span className="text-xs text-gray-400">
               {data.auditVerification.bestTicketHitRates.atLeastTwo.count} draws
             </span>
           </div>
 
           <div className="p-3.5 bg-slate-900/80 rounded-xl border border-emerald-500/30 space-y-1 text-center shadow-[0_0_15px_rgba(52,211,153,0.15)]">
-            <span className="text-[10px] text-emerald-400 uppercase block font-black">&ge; 3 Hits (Prize Tier)</span>
+            <span className="text-xs text-emerald-400 uppercase block font-black">3 or More Matches (Prize)</span>
             <div className="text-xl font-black text-emerald-300">
               {data.auditVerification.bestTicketHitRates.atLeastThree.percentage.toFixed(1)}%
             </div>
-            <span className="text-[10px] text-emerald-400/80 font-bold">
+            <span className="text-xs text-emerald-400/80 font-bold">
               {data.auditVerification.bestTicketHitRates.atLeastThree.count} prize hits
             </span>
           </div>
 
           <div className="p-3.5 bg-slate-900/80 rounded-xl border border-purple-500/20 space-y-1 text-center">
-            <span className="text-[10px] text-purple-400 uppercase block font-bold">&ge; 4 Hits</span>
+            <span className="text-xs text-purple-400 uppercase block font-bold">4 or More Matches</span>
             <div className="text-xl font-black text-purple-300">
               {data.auditVerification.bestTicketHitRates.atLeastFour.percentage.toFixed(2)}%
             </div>
-            <span className="text-[10px] text-gray-400">
+            <span className="text-xs text-gray-400">
               {data.auditVerification.bestTicketHitRates.atLeastFour.count} draws
             </span>
           </div>
 
           <div className="p-3.5 bg-slate-900/80 rounded-xl border border-amber-500/20 space-y-1 text-center">
-            <span className="text-[10px] text-amber-400 uppercase block font-bold">5/5 Jackpot Match</span>
+            <span className="text-xs text-amber-400 uppercase block font-bold">5/5 Jackpot Match</span>
             <div className="text-xl font-black text-amber-300">
               {data.auditVerification.bestTicketHitRates.allFive?.percentage ? `${data.auditVerification.bestTicketHitRates.allFive.percentage.toFixed(3)}%` : "0.00%"}
             </div>
-            <span className="text-[10px] text-gray-400">
+            <span className="text-xs text-gray-400">
               Targeted by Wheeling Sieve
             </span>
           </div>
@@ -376,7 +376,7 @@ export default function LottoAuditPanel() {
             </p>
           </div>
           <span className="text-xs text-sky-300 bg-sky-500/15 border border-sky-400/30 px-3 py-1 rounded-full font-bold uppercase">
-            Order Unordered • Powerball Excluded
+            Any order, main numbers only (excluding Powerball)
           </span>
         </div>
 
@@ -389,7 +389,7 @@ export default function LottoAuditPanel() {
             >
               <div className="space-y-1 max-w-lg">
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase border ${
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-black uppercase border ${
                     set.badgeColor === "emerald" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" :
                     set.badgeColor === "cyan" ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" :
                     set.badgeColor === "amber" ? "bg-amber-500/20 text-amber-300 border-amber-500/40" :
@@ -398,7 +398,7 @@ export default function LottoAuditPanel() {
                   }`}>
                     {set.badge}
                   </span>
-                  <span className="text-[11px] text-gray-400 font-bold">Resonance: {set.resonanceScore}%</span>
+                  <span className="text-xs text-gray-400 font-bold">Resonance: {set.resonanceScore}%</span>
                 </div>
                 <h4 className="text-sm font-bold text-white font-mono">{set.name}</h4>
                 <p className="text-xs text-gray-400 leading-relaxed">{set.mathematicalBasis}</p>
@@ -417,7 +417,7 @@ export default function LottoAuditPanel() {
                   ))}
                 </div>
 
-                <div className="text-right text-[10px] text-gray-400 space-y-0.5 hidden lg:block">
+                <div className="text-right text-xs text-gray-400 space-y-0.5 hidden lg:block">
                   <div>Sum: <strong className="text-white">{set.sum}</strong></div>
                   <div>Parity: <strong className="text-gray-300">{set.oddEvenRatio}</strong></div>
                 </div>
@@ -444,7 +444,7 @@ export default function LottoAuditPanel() {
               Master 100% Attractor Manifold Pool ({data.masterAttractorManifold.poolSize} Balls)
             </h4>
           </div>
-          <span className="text-[10px] font-bold text-emerald-300 bg-emerald-500/15 px-2.5 py-0.5 rounded border border-emerald-400/30">
+          <span className="text-xs font-bold text-emerald-300 bg-emerald-500/15 px-2.5 py-0.5 rounded border border-emerald-400/30">
             100.00% Historical Capture Rate
           </span>
         </div>
@@ -492,7 +492,7 @@ export default function LottoAuditPanel() {
             <div className="flex items-center gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
               <button
                 onClick={() => { setHitFilter("all"); setCurrentPage(1); }}
-                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded text-xs font-bold uppercase transition cursor-pointer ${
                   hitFilter === "all" ? "bg-sky-500 text-slate-950 font-black shadow-sm" : "text-gray-400 hover:text-white"
                 }`}
               >
@@ -500,27 +500,27 @@ export default function LottoAuditPanel() {
               </button>
               <button
                 onClick={() => { setHitFilter("3plus"); setCurrentPage(1); }}
-                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded text-xs font-bold uppercase transition cursor-pointer ${
                   hitFilter === "3plus" ? "bg-emerald-400 text-slate-950 font-black shadow-sm" : "text-gray-400 hover:text-emerald-300"
                 }`}
               >
-                &ge; 3 Hits
+                3 or more matches
               </button>
               <button
                 onClick={() => { setHitFilter("2plus"); setCurrentPage(1); }}
-                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded text-xs font-bold uppercase transition cursor-pointer ${
                   hitFilter === "2plus" ? "bg-sky-400 text-slate-950 font-black shadow-sm" : "text-gray-400 hover:text-sky-300"
                 }`}
               >
-                &ge; 2 Hits
+                2 or more matches
               </button>
               <button
                 onClick={() => { setHitFilter("1plus"); setCurrentPage(1); }}
-                className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded text-xs font-bold uppercase transition cursor-pointer ${
                   hitFilter === "1plus" ? "bg-purple-400 text-slate-950 font-black shadow-sm" : "text-gray-400 hover:text-purple-300"
                 }`}
               >
-                &ge; 1 Hit
+                1 or more matches
               </button>
             </div>
           </div>
@@ -530,7 +530,7 @@ export default function LottoAuditPanel() {
         <div className="overflow-x-auto sleek-scrollbar">
           <table className="w-full text-left border-collapse text-xs font-mono">
             <thead>
-              <tr className="border-b border-white/10 text-gray-400 text-[10px] uppercase font-bold tracking-wider bg-black/40">
+              <tr className="border-b border-white/10 text-gray-400 text-xs uppercase font-bold tracking-wider bg-black/40">
                 <th className="py-3 px-3">Draw #</th>
                 <th className="py-3 px-3">Date</th>
                 <th className="py-3 px-3">Actual Winning Balls (5)</th>
@@ -575,7 +575,7 @@ export default function LottoAuditPanel() {
                           {entry.actualNumbers.map((n) => (
                             <span
                               key={n}
-                              className="w-7 h-7 rounded-md bg-slate-900 border border-white/20 text-white font-bold flex items-center justify-center text-[11px]"
+                              className="w-7 h-7 rounded-md bg-slate-900 border border-white/20 text-white font-bold flex items-center justify-center text-xs"
                             >
                               {String(n).padStart(2, "0")}
                             </span>
@@ -592,7 +592,7 @@ export default function LottoAuditPanel() {
                               return (
                                 <span
                                   key={n}
-                                  className={`w-7 h-7 rounded-md font-bold flex items-center justify-center text-[11px] transition ${
+                                  className={`w-7 h-7 rounded-md font-bold flex items-center justify-center text-xs transition ${
                                     isHit
                                       ? "bg-emerald-500 text-slate-950 font-black shadow-[0_0_8px_rgba(52,211,153,0.6)] border border-emerald-300"
                                       : "bg-slate-950/80 text-gray-400 border border-white/10"
@@ -603,7 +603,7 @@ export default function LottoAuditPanel() {
                               );
                             })}
                           </div>
-                          <span className="text-[9px] text-gray-500 block truncate max-w-[200px]">
+                          <span className="text-xs text-gray-500 block truncate max-w-[200px]">
                             {entry.bestSetName}
                           </span>
                         </div>
@@ -611,7 +611,7 @@ export default function LottoAuditPanel() {
 
                       {/* Hit Count Badge */}
                       <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-black ${
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-black ${
                           entry.bestTicketHit >= 3
                             ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]"
                             : entry.bestTicketHit === 2
@@ -626,7 +626,7 @@ export default function LottoAuditPanel() {
 
                       {/* Invariant Status Checkmark */}
                       <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                           <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                           <span>100% PASS</span>
                         </span>

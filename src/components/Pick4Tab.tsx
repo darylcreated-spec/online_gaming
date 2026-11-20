@@ -168,7 +168,7 @@ export default function Pick4Tab() {
       <GameHeaderBanner
         game="pick4"
         title="Pick 4"
-        subtitle="4 Digits (0000–9999) • Daily 4 Slots • Straight Payout $5,000 • 24-Way / 12-Way Box"
+        subtitle="Pick 4 digits from 0 to 9. Draws 4 times daily from Monday to Saturday starting at $1.00 per play. Play Exact Order or 24-Way Box."
         themeColor="purple"
         iconSrc="/images/pick_four_icon.png"
         totalDrawsCount={stats?.totalDraws || totalDraws}
@@ -189,7 +189,7 @@ export default function Pick4Tab() {
                         {d}
                       </span>
                     ))}
-                    <span className="text-[10px] text-gray-400 font-mono ml-1">
+                    <span className="text-xs text-gray-400 font-mono ml-1">
                       (Sum: {Number(latestDrawItem.digit1) + Number(latestDrawItem.digit2) + Number(latestDrawItem.digit3) + Number(latestDrawItem.digit4)})
                     </span>
                   </div>
@@ -203,7 +203,7 @@ export default function Pick4Tab() {
       <div className="flex bg-slate-900/60 p-1 rounded-xl border border-purple-500/20 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
         <button
           onClick={() => setActiveSubTab("dashboard")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             activeSubTab === "dashboard"
               ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.3)]"
               : "text-gray-400 hover:text-purple-300 hover:bg-purple-500/10"
@@ -215,7 +215,7 @@ export default function Pick4Tab() {
 
         <button
           onClick={() => setActiveSubTab("math")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             activeSubTab === "math"
               ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.3)]"
               : "text-purple-400/90 hover:text-purple-300 hover:bg-purple-500/10"
@@ -227,7 +227,7 @@ export default function Pick4Tab() {
 
         <button
           onClick={() => setActiveSubTab("diff-9")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             activeSubTab === "diff-9"
               ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.3)]"
               : "text-purple-400/90 hover:text-purple-300 hover:bg-purple-500/10"
@@ -239,7 +239,7 @@ export default function Pick4Tab() {
 
         <button
           onClick={() => setActiveSubTab("audit")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             activeSubTab === "audit"
               ? "bg-emerald-400 text-slate-950 font-black shadow-[0_0_15px_rgba(52,211,153,0.4)]"
               : "text-emerald-400/90 hover:text-emerald-300 hover:bg-emerald-500/10"
@@ -251,7 +251,7 @@ export default function Pick4Tab() {
 
         <button
           onClick={() => setActiveSubTab("forensic")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             activeSubTab === "forensic"
               ? "bg-violet-500 text-slate-950 font-black shadow-[0_0_15px_rgba(139,92,246,0.4)]"
               : "text-violet-400/90 hover:text-violet-300 hover:bg-violet-500/10"
@@ -266,7 +266,7 @@ export default function Pick4Tab() {
             setActiveSubTab("backtest");
             if (!backtestData) fetchMathEngine(true);
           }}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             activeSubTab === "backtest"
               ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.3)]"
               : "text-gray-400 hover:text-purple-300 hover:bg-purple-500/10"
@@ -278,7 +278,7 @@ export default function Pick4Tab() {
 
         <button
           onClick={() => setActiveSubTab("archive")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             activeSubTab === "archive"
               ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.3)]"
               : "text-gray-400 hover:text-purple-300 hover:bg-purple-500/10"
@@ -290,7 +290,7 @@ export default function Pick4Tab() {
 
         <button
           onClick={() => setActiveSubTab("explain")}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             activeSubTab === "explain"
               ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.3)]"
               : "text-gray-400 hover:text-purple-300 hover:bg-purple-500/10"
@@ -306,7 +306,7 @@ export default function Pick4Tab() {
         <div className="space-y-6 font-mono">
           {/* Positional Frequency Matrix */}
           <div className="p-6 rounded-2xl bg-slate-900/60 border border-purple-500/20 space-y-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
               <BarChart2 className="w-4 h-4 text-purple-400" />
               Global Digit Frequency Across 100% of Draws (Digits 0 to 9)
             </h3>
@@ -360,7 +360,7 @@ export default function Pick4Tab() {
                             style={{ width: `${(item.count / maxFreq) * 100}%` }}
                           />
                         </div>
-                        <span className="text-[10px] text-gray-400">{item.count}</span>
+                        <span className="text-xs text-gray-400">{item.count}</span>
                       </div>
                     ))}
                   </div>
@@ -377,19 +377,19 @@ export default function Pick4Tab() {
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                  <span className="text-gray-400 block text-[10px]">24-WAY (ALL 4 UNIQUE)</span>
+                  <span className="text-gray-400 block text-xs">24-WAY (ALL 4 UNIQUE)</span>
                   <span className="text-lg font-black text-white">{stats.patternCounts.unique}</span>
                 </div>
                 <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                  <span className="text-gray-400 block text-[10px]">12-WAY (ONE PAIR)</span>
+                  <span className="text-gray-400 block text-xs">12-WAY (ONE PAIR)</span>
                   <span className="text-lg font-black text-purple-300">{stats.patternCounts.double}</span>
                 </div>
                 <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                  <span className="text-gray-400 block text-[10px]">4-WAY (TRIPLE)</span>
+                  <span className="text-gray-400 block text-xs">4-WAY (TRIPLE)</span>
                   <span className="text-lg font-black text-white">{stats.patternCounts.triple}</span>
                 </div>
                 <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                  <span className="text-gray-400 block text-[10px]">1-WAY (QUAD / 4 EQUAL)</span>
+                  <span className="text-gray-400 block text-xs">1-WAY (QUAD / 4 EQUAL)</span>
                   <span className="text-lg font-black text-white">{stats.patternCounts.quad}</span>
                 </div>
               </div>
@@ -443,10 +443,10 @@ export default function Pick4Tab() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* 1. Optimal Straight Ticket */}
                 <div className="p-5 rounded-2xl bg-slate-900/60 border border-purple-500/30 shadow-xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 px-3 py-1 bg-purple-500/20 text-purple-300 text-[10px] font-bold rounded-bl-xl border-l border-b border-purple-500/30">
+                  <div className="absolute top-0 right-0 px-3 py-1 bg-purple-500/20 text-purple-300 text-xs font-bold rounded-bl-xl border-l border-b border-purple-500/30">
                     EXACT ORDER (STRAIGHT)
                   </div>
-                  <span className="text-[11px] text-gray-400 block mb-1">
+                  <span className="text-xs text-gray-400 block mb-1">
                     Maximum Joint MAP Posterior
                   </span>
                   <div className="flex items-center gap-2 my-3">
@@ -476,10 +476,10 @@ export default function Pick4Tab() {
 
                 {/* 2. Optimal 24-Way Box Ticket */}
                 <div className="p-5 rounded-2xl bg-slate-900/60 border border-white/10 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 px-3 py-1 bg-white/10 text-gray-300 text-[10px] font-bold rounded-bl-xl border-l border-b border-white/10">
+                  <div className="absolute top-0 right-0 px-3 py-1 bg-white/10 text-gray-300 text-xs font-bold rounded-bl-xl border-l border-b border-white/10">
                     24-WAY BOX (ANY ORDER)
                   </div>
-                  <span className="text-[11px] text-gray-400 block mb-1">
+                  <span className="text-xs text-gray-400 block mb-1">
                     4 Distinct High-Probability Digits
                   </span>
                   <div className="flex items-center gap-2 my-3">
@@ -509,10 +509,10 @@ export default function Pick4Tab() {
 
                 {/* 3. Optimal 12-Way Box Ticket */}
                 <div className="p-5 rounded-2xl bg-slate-900/60 border border-white/10 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 px-3 py-1 bg-white/10 text-gray-300 text-[10px] font-bold rounded-bl-xl border-l border-b border-white/10">
+                  <div className="absolute top-0 right-0 px-3 py-1 bg-white/10 text-gray-300 text-xs font-bold rounded-bl-xl border-l border-b border-white/10">
                     12-WAY BOX (ONE PAIR)
                   </div>
-                  <span className="text-[11px] text-gray-400 block mb-1">
+                  <span className="text-xs text-gray-400 block mb-1">
                     Pair Cluster Multiplier
                   </span>
                   <div className="flex items-center gap-2 my-3">
@@ -550,7 +550,7 @@ export default function Pick4Tab() {
                 <div className="overflow-x-auto sleek-scrollbar">
                   <table className="w-full text-center text-xs min-w-[580px]">
                     <thead>
-                      <tr className="border-b border-white/10 text-gray-400 text-[11px]">
+                      <tr className="border-b border-white/10 text-gray-400 text-xs">
                         <th className="py-2 px-3 text-left">Position</th>
                         {Array.from({ length: 10 }, (_, i) => (
                           <th key={i} className="py-2 px-2">{i}</th>
@@ -568,7 +568,7 @@ export default function Pick4Tab() {
                             const isMax = p === Math.max(...mathData.positionalProbabilities[pos]);
                             return (
                               <td key={d} className="py-2.5 px-2">
-                                <span className={`px-2 py-1 rounded font-bold text-[11px] ${
+                                <span className={`px-2 py-1 rounded font-bold text-xs ${
                                   isMax 
                                     ? "bg-purple-500 text-slate-950 font-black shadow-sm" 
                                     : p > 0.12 
@@ -603,7 +603,7 @@ export default function Pick4Tab() {
         <div className="space-y-6 font-mono">
           <div className="flex justify-between items-center bg-slate-900/60 p-4 rounded-xl border border-purple-500/20">
             <div>
-              <h3 className="text-sm font-bold text-white uppercase">Walk-Forward Accuracy Grading</h3>
+              <h3 className="text-base font-bold text-white uppercase">Walk-Forward Accuracy Grading</h3>
               <p className="text-xs text-gray-400">Backtested against past historical Pick 4 winning draws.</p>
             </div>
             <button
@@ -630,24 +630,24 @@ export default function Pick4Tab() {
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-                  <div className="text-gray-500 text-[10px]">STRAIGHT EXACT HITS</div>
+                  <div className="text-gray-500 text-xs">STRAIGHT EXACT HITS</div>
                   <div className="text-lg font-black text-white mt-1">{backtestData.straightMatches}</div>
-                  <div className="text-[10px] text-gray-400">Rate: {(backtestData.straightMatchRate * 100).toFixed(2)}%</div>
+                  <div className="text-xs text-gray-400">Rate: {(backtestData.straightMatchRate * 100).toFixed(2)}%</div>
                 </div>
                 <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-                  <div className="text-gray-500 text-[10px]">BOX ANY-ORDER HITS</div>
+                  <div className="text-gray-500 text-xs">BOX ANY-ORDER HITS</div>
                   <div className="text-lg font-black text-purple-400 mt-1">{backtestData.boxMatches}</div>
-                  <div className="text-[10px] text-gray-400">Rate: {(backtestData.boxMatchRate * 100).toFixed(2)}%</div>
+                  <div className="text-xs text-gray-400">Rate: {(backtestData.boxMatchRate * 100).toFixed(2)}%</div>
                 </div>
                 <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-                  <div className="text-gray-500 text-[10px]">3-OF-4 DIGITS MATCHED</div>
+                  <div className="text-gray-500 text-xs">3-OF-4 DIGITS MATCHED</div>
                   <div className="text-lg font-black text-white mt-1">{backtestData.threeDigitMatches}</div>
-                  <div className="text-[10px] text-gray-400">Rate: {(backtestData.threeDigitMatchRate * 100).toFixed(2)}%</div>
+                  <div className="text-xs text-gray-400">Rate: {(backtestData.threeDigitMatchRate * 100).toFixed(2)}%</div>
                 </div>
                 <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-                  <div className="text-gray-500 text-[10px]">2-OF-4 DIGITS MATCHED</div>
+                  <div className="text-gray-500 text-xs">2-OF-4 DIGITS MATCHED</div>
                   <div className="text-lg font-black text-white mt-1">{backtestData.twoDigitMatches}</div>
-                  <div className="text-[10px] text-gray-400">Rate: {(backtestData.twoDigitMatchRate * 100).toFixed(2)}%</div>
+                  <div className="text-xs text-gray-400">Rate: {(backtestData.twoDigitMatchRate * 100).toFixed(2)}%</div>
                 </div>
               </div>
             </div>
@@ -684,7 +684,7 @@ export default function Pick4Tab() {
             <div className={`transition-all duration-300 ${selectedPick4Draw ? "w-full lg:w-2/3" : "w-full"}`}>
               <div className="bg-slate-900/60 border border-white/10 rounded-2xl overflow-x-auto sleek-scrollbar max-h-[600px] relative">
                 <table className="w-full text-left text-xs min-w-[480px]">
-                  <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md text-gray-400 border-b border-white/5 uppercase text-[10px]">
+                  <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md text-gray-400 border-b border-white/5 uppercase text-xs">
                     <tr>
                       <th className="py-3 px-4 bg-slate-950">Draw #</th>
                       <th className="py-3 px-4 bg-slate-950">Date</th>
@@ -716,14 +716,14 @@ export default function Pick4Tab() {
                             <td className="py-3 px-4 font-bold text-white">#{d.draw_number}</td>
                             <td className="py-3 px-4 text-gray-400">{d.draw_date}</td>
                             <td className="py-3 px-4">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/5 border border-white/10 text-gray-300">
+                              <span className="px-2 py-0.5 rounded text-xs font-bold bg-white/5 border border-white/10 text-gray-300">
                                 {d.draw_time_slot}
                               </span>
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-1.5">
                                 {[d.digit1, d.digit2, d.digit3, d.digit4].map((digit, i) => (
-                                  <span key={i} className={`w-6 h-6 rounded-md font-bold flex items-center justify-center text-[11px] transition-transform ${
+                                  <span key={i} className={`w-6 h-6 rounded-md font-bold flex items-center justify-center text-xs transition-transform ${
                                     isSelected 
                                       ? "bg-purple-400 text-slate-950 scale-105 shadow-[0_0_8px_rgba(168,85,247,0.5)]" 
                                       : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
@@ -735,10 +735,10 @@ export default function Pick4Tab() {
                             </td>
                             <td className="py-3 px-4 font-bold text-purple-300">{sum}</td>
                             <td className="py-3 px-3 text-right">
-                              <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded transition-colors ${
+                              <span className={`text-xs uppercase font-bold px-2 py-1 rounded transition-colors ${
                                 isSelected ? "bg-purple-400/20 text-purple-300" : "text-gray-500 hover:text-white"
                               }`}>
-                                {isSelected ? "Active" : "Inspect →"}
+                                {isSelected ? "Selected" : "Inspect"}
                               </span>
                             </td>
                           </tr>
@@ -783,17 +783,17 @@ export default function Pick4Tab() {
                       <h4 className="text-xs font-black uppercase text-white tracking-wider">
                         Draw #{selectedPick4Draw.draw_number} Deep-Dive
                       </h4>
-                      <span className="text-[10px] text-gray-400">
-                        {selectedPick4Draw.draw_date} • {selectedPick4Draw.draw_time_slot}
+                      <span className="text-xs text-slate-400">
+                        {selectedPick4Draw.draw_date}, {selectedPick4Draw.draw_time_slot}
                       </span>
                     </div>
                   </div>
                   <button
                     onClick={() => setSelectedPick4Draw(null)}
-                    className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition text-xs font-mono"
-                    title="Close Investigation Panel"
+                    className="px-2 py-1 rounded-md text-slate-300 hover:text-white hover:bg-white/10 transition text-xs font-sans font-semibold cursor-pointer"
+                    title="Close details panel"
                   >
-                    ✕
+                    Close
                   </button>
                 </div>
 
@@ -845,28 +845,28 @@ export default function Pick4Tab() {
                         {digits.map((d, i) => (
                           <div key={i} className="w-12 h-14 rounded-xl bg-purple-500/20 border-2 border-purple-400 text-purple-200 font-black text-2xl flex flex-col items-center justify-center shadow-[0_0_12px_rgba(168,85,247,0.3)]">
                             <span>{d}</span>
-                            <span className="text-[7px] text-gray-400 uppercase font-normal">Pos {i + 1}</span>
+                            <span className="text-xs text-gray-400 uppercase font-normal">Pos {i + 1}</span>
                           </div>
                         ))}
                       </div>
 
-                      {/* Invariant Coordinates */}
-                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-2.5">
-                        <span className="text-[9px] font-bold text-purple-400 uppercase tracking-widest block">
-                          Gaussian Sum & Digital Root Coordinates
+                      {/* Draw Sum and Digit Root Summary */}
+                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-2.5 font-sans">
+                        <span className="text-xs font-bold text-purple-400 uppercase tracking-wider block">
+                          Digit Sum and Pattern Summary
                         </span>
                         <div className="grid grid-cols-2 gap-2 text-center">
                           <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Digit Sum (S)</span>
-                            <span className="text-base font-black text-purple-300">{sum}</span>
-                            <span className={`text-[8px] block mt-0.5 font-bold ${isManifoldPassed ? "text-emerald-400" : "text-rose-400"}`}>
-                              {isManifoldPassed ? "✓ In Manifold [6-30]" : "Outside Manifold"}
+                            <span className="text-xs text-slate-400 block">Digit Sum</span>
+                            <span className="text-base font-bold text-purple-300 font-mono">{sum}</span>
+                            <span className={`text-xs block mt-0.5 font-semibold ${isManifoldPassed ? "text-emerald-400" : "text-rose-400"}`}>
+                              {isManifoldPassed ? "Typical Range (6 to 30)" : "Unusual Sum"}
                             </span>
                           </div>
                           <div className="p-2.5 rounded-lg bg-slate-900 border border-white/5">
-                            <span className="text-[8px] text-gray-500 block uppercase">Digital Root R₉</span>
-                            <span className="text-base font-black text-cyan-300">{digitalRoot}</span>
-                            <span className="text-[8px] text-gray-400 block mt-0.5">Sum mod 9</span>
+                            <span className="text-xs text-slate-400 block">Digital Root</span>
+                            <span className="text-base font-bold text-cyan-300 font-mono">{digitalRoot}</span>
+                            <span className="text-xs text-slate-400 block mt-0.5">Reduced sum (1 to 9)</span>
                           </div>
                         </div>
                       </div>
@@ -874,25 +874,25 @@ export default function Pick4Tab() {
                       {/* Box Permutation Details */}
                       <div className="p-3.5 rounded-xl bg-slate-900/80 border border-white/5 space-y-2 text-xs">
                         <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                          <span className="text-[10px] text-gray-400 uppercase">Permutation Type</span>
-                          <span className="font-bold text-white text-[11px]">{boxType}</span>
+                          <span className="text-xs text-gray-400 uppercase">Permutation Type</span>
+                          <span className="font-bold text-white text-xs">{boxType}</span>
                         </div>
                         <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                          <span className="text-[10px] text-gray-400 uppercase">Fixed Box Payout</span>
+                          <span className="text-xs text-gray-400 uppercase">Fixed Box Payout</span>
                           <span className="font-bold text-emerald-400 font-mono">{boxPayout}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-gray-400 uppercase">Box Hit Odds</span>
+                          <span className="text-xs text-gray-400 uppercase">Box Hit Odds</span>
                           <span className="font-bold text-purple-300">{boxOdds}</span>
                         </div>
                       </div>
 
                       {/* Parity Sequence */}
-                      <div className="p-3 rounded-xl bg-black/40 border border-white/5 text-[10px] flex items-center justify-between text-gray-400">
+                      <div className="p-3 rounded-xl bg-black/40 border border-white/5 text-xs flex items-center justify-between text-gray-400">
                         <span>Parity Pattern:</span>
                         <div className="flex items-center gap-1 font-bold">
                           {digits.map((d, i) => (
-                            <span key={i} className={`px-1.5 py-0.5 rounded text-[9px] ${
+                            <span key={i} className={`px-1.5 py-0.5 rounded text-xs ${
                               d % 2 === 0 ? "bg-sky-500/20 text-sky-300" : "bg-amber-500/20 text-amber-300"
                             }`}>
                               {d % 2 === 0 ? "E" : "O"}
@@ -911,36 +911,36 @@ export default function Pick4Tab() {
 
       {/* Subtab: How It Works */}
       {activeSubTab === "explain" && (
-        <div className="glass-panel border border-purple-500/20 p-6 rounded-2xl bg-slate-950/40 space-y-4 font-mono">
-          <h3 className="text-sm font-bold text-purple-400 uppercase tracking-widest border-b border-white/5 pb-2">
-            How The App Reduces The Odds in NLCB Pick 4
+        <div className="glass-panel border border-purple-500/20 p-6 rounded-2xl bg-slate-950/40 space-y-4 font-sans">
+          <h3 className="text-base font-bold text-purple-400 border-b border-white/5 pb-2.5">
+            How Pick 4 Analysis Works
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-gray-300 leading-relaxed">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-300 leading-relaxed">
             <div className="space-y-2">
-              <h4 className="text-purple-300 font-bold uppercase">1. Positional Markov &amp; 4 Audited Engines</h4>
-              <p className="text-gray-400">
-                Pick 4 allows digit repetition across Positions 1–4. The app evaluates <strong>Forensic Engine</strong>, <strong>Quant 100% Sieve</strong> (mod-9 / involution mirror), <strong>Winning Formula</strong>, and <strong>Apex Champion Consensus</strong> using positional Markov transitions and Lag-1/Lag-2 digit bridges.
+              <h4 className="text-sm text-purple-300 font-bold">1. Position Tracking Across 4 Models</h4>
+              <p className="text-slate-300">
+                Pick 4 allows repeated digits across positions 1 to 4. The app tracks recent position patterns across 4 independent models and compares every result against official draws.
               </p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-purple-300 font-bold uppercase">2. Dual-Regime 12-Way Twin &amp; 24-Way Box</h4>
-              <p className="text-gray-400">
-                Each playable card pairs <strong>2× 12-Way Twin</strong> sets (catching repeated-digit draws) with <strong>2× 24-Way Distinct</strong> sets, graded across Straight (\$5,000), Box, Front-3 / Back-3 (\$500), and Front-2 / Back-2 / Split-2 Pair Hits (\$50).
+              <h4 className="text-sm text-purple-300 font-bold">2. Pairing 12-Way and 24-Way Box Plays</h4>
+              <p className="text-slate-300">
+                Each tracked card pairs <strong className="text-white">two 12-Way Box</strong> sets (covering draws with one repeated digit) with <strong className="text-white">two 24-Way Box</strong> sets (4 different digits), checked for Exact Order ($5,000), Box, Front or Back 3 ($500), and Pair hits ($50).
               </p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-purple-300 font-bold uppercase">3. Calibrated Sum Corridor [11, 23]</h4>
-              <p className="text-gray-400">
-                Pick 4 digit sums span 0 to 36. Candidate sets are filtered into the calibrated empirical corridor of <strong>[11, 23]</strong> (updated dynamically via Bayesian calibration) to avoid extreme low/high sum tails.
+              <h4 className="text-sm text-purple-300 font-bold">3. Balanced Digit Sum Range (11 to 23)</h4>
+              <p className="text-slate-300">
+                Pick 4 digit sums run from 0 to 36. Most winning draws fall between <strong className="text-white">11 and 23</strong>, so candidate plays stay inside this balanced middle zone.
               </p>
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-purple-300 font-bold uppercase">4. 4-Slot Auto-Grader &amp; Merit Leaderboard</h4>
-              <p className="text-gray-400">
-                Following Morning (10:30 AM), Midday (1:00 PM), Afternoon (4:00 PM), and Evening (7:00 PM) draws, the <strong>Engine Tracker</strong> grades all 4 sets per engine, recalculates ROI and win rates, and updates the merit-based Champion Pick.
+              <h4 className="text-sm text-purple-300 font-bold">4. Automatic 4-Draw Verification</h4>
+              <p className="text-slate-300">
+                After the Morning (10:30 AM), Midday (1:00 PM), Afternoon (4:00 PM), and Evening (7:00 PM) draws, the <strong className="text-white">Engines</strong> tab checks every tracked pick and updates verified hit rates automatically.
               </p>
             </div>
           </div>
