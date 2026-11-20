@@ -280,12 +280,12 @@ export default function BudgetOddsExplorer({
                   <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
                     Exact Any-Prize Chance (1 Draw)
                   </div>
-                  <div className="flex items-baseline gap-2.5 mt-0.5">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-0.5">
                     <span className="text-3xl sm:text-4xl font-extrabold font-mono tabular-nums tracking-tight text-emerald-400">
                       {tier.anyPrizePct.toFixed(tier.anyPrizePct < 1 ? 2 : 2)}%
                     </span>
                     {edgeGain !== null && (
-                      <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                      <span className="text-[10px] sm:text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 whitespace-nowrap">
                         +{edgeGain}% vs overlap
                       </span>
                     )}
@@ -335,7 +335,7 @@ export default function BudgetOddsExplorer({
                 </div>
                 <div className="p-2.5 rounded-lg bg-slate-900/70 border border-white/[0.06]">
                   <div className="text-[10px] font-mono uppercase text-slate-500">Top Odds</div>
-                  <div className="text-xs sm:text-sm font-bold font-mono tabular-nums text-amber-300 mt-0.5 truncate">
+                  <div className="text-[11px] sm:text-sm font-bold font-mono tabular-nums text-amber-300 mt-0.5 whitespace-nowrap">
                     {tier.jackpotOdds}
                   </div>
                 </div>
