@@ -29,6 +29,11 @@ import {
   EngineCalibrationProfile,
   computeRecentResidualBias
 } from "@/lib/engine_calibrator";
+import {
+  generateOptimalSteinerPortfolio,
+  getCashPotSureCallStatus,
+  SureCallDayInfo
+} from "@/lib/steiner_johnson_engine";
 
 export interface EngineLogEntry {
   id: number;
@@ -115,6 +120,16 @@ export interface ChampionMasterPick {
     window_3_draw: number;
     window_5_draw: number;
     description: string;
+  };
+  steiner_meta?: {
+    exact_match3_pct: number;
+    exact_match4_pct: number;
+    exact_any_prize_pct: number;
+    jackpot_odds_str: string;
+    max_pair_overlap: number;
+    covered_balls: string;
+    anti_crowding_score: number;
+    sure_call?: SureCallDayInfo;
   };
 }
 
@@ -482,7 +497,9 @@ export function evaluatePredictionAgainstDraw(
       }
     }
   } else if (gameKey === "cashpot") {
-    const maxEvalLines = (wheelSlips && wheelSlips.length > 5) || simulatedBetTT >= 30 ? Math.min(10, wheelSlips?.length || 10) : 5;
+    // Official NLCB Cash Pot rules: Match 3 ($5 base x mult), Match 4 (~$75 pari-mutuel est. x mult), Match 5 Jackpot ($20,000+ NO mult).
+    // Match 2 pays $0 (no prize) in real NLCB Cash Pot.
+    const maxEvalLines = (wheelSlips && wheelSlips.length > 5) || simulatedBetTT >= 30 ? Math.min(20, wheelSlips?.length || 10) : 5;
     const playableLines = buildPlayableLines(predNums, wheelSlips || [], maxEvalLines, 5);
     matchCount = predNums.filter(n => actualSet.has(n)).length;
     const mult = actualPowerball && actualPowerball >= 1 ? actualPowerball : 1;
@@ -495,21 +512,18 @@ export function evaluatePredictionAgainstDraw(
       if (m > bestWheelMatch) bestWheelMatch = m;
       if (m > highestMatch) highestMatch = m;
       if (m === 5) {
-        totalCashPayout += 20000.0;
+        totalCashPayout += 20000.0; // Multiplier does NOT apply to Match 5 Jackpot
         winningSlipCount++;
       } else if (m === 4) {
-        totalCashPayout += 250.0 * mult;
+        totalCashPayout += 75.0 * mult; // Pari-mutuel Match 4 realistic base estimate
         winningSlipCount++;
       } else if (m === 3) {
-        totalCashPayout += 25.0 * mult;
-        winningSlipCount++;
-      } else if (m === 2) {
-        totalCashPayout += 5.0 * mult;
+        totalCashPayout += 5.0 * mult; // Fixed $5 base x multiplier
         winningSlipCount++;
       }
     });
 
-    if (highestMatch >= 2) {
+    if (highestMatch >= 3) {
       isPrize = 1;
       simulatedPayoutTT = totalCashPayout;
       const multTag = mult > 1 ? ` x${mult}` : "";
@@ -517,11 +531,9 @@ export function evaluatePredictionAgainstDraw(
       if (highestMatch === 5) {
         prizeTier = `MATCH 5 JACKPOT ($20,000+ TT)${slipTag}`;
       } else if (highestMatch === 4) {
-        prizeTier = `MATCH 4 ($250 TT${multTag})${slipTag}`;
-      } else if (highestMatch === 3) {
-        prizeTier = `MATCH 3 ($25 TT${multTag})${slipTag}`;
+        prizeTier = `MATCH 4 (~$75 TT${multTag})${slipTag}`;
       } else {
-        prizeTier = `MATCH 2 ($5 TT${multTag})${slipTag}`;
+        prizeTier = `MATCH 3 ($5 TT${multTag})${slipTag}`;
       }
     }
   } else if (gameKey === "lotto-plus") {
@@ -1146,11 +1158,10 @@ export function computeDynamicMultiDrawWindowRates(
       description: "Straight / Box / Pair Wave Capture"
     };
   } else {
-    const requiredHits = gameKey === "win-for-life" ? 4 : 3;
-    const coreBalls: number[] = Array.isArray(coreOrPortfolio[0])
-      ? Array.from(new Set((coreOrPortfolio as number[][]).flat()))
-      : (coreOrPortfolio as number[]);
-    const coreSet = new Set(coreBalls);
+    const requiredHits = 3;
+    const playableSlips: number[][] = Array.isArray(coreOrPortfolio[0])
+      ? (coreOrPortfolio as number[][])
+      : [coreOrPortfolio as number[]];
 
     const getDrawBalls = (d: any): number[] => {
       if (Array.isArray(d)) return d;
@@ -1162,35 +1173,33 @@ export function computeDynamicMultiDrawWindowRates(
       return b;
     };
 
+    const hitsRealSlipPrize = (drawn: number[]): boolean => {
+      const dSet = new Set(drawn);
+      return playableSlips.some(slip => slip.filter(b => dSet.has(b)).length >= requiredHits);
+    };
+
     let w1 = 0;
     sample.forEach(d => {
-      const drawn = getDrawBalls(d);
-      if (drawn.filter(b => coreSet.has(b)).length >= requiredHits) w1++;
+      if (hitsRealSlipPrize(getDrawBalls(d))) w1++;
     });
 
     let w3 = 0;
     const count3 = Math.max(1, sample.length - 2);
     for (let i = 0; i < count3; i++) {
-      if ([0, 1, 2].some(offset => {
-        const drawn = getDrawBalls(sample[i + offset]);
-        return drawn.filter(b => coreSet.has(b)).length >= requiredHits;
-      })) w3++;
+      if ([0, 1, 2].some(offset => hitsRealSlipPrize(getDrawBalls(sample[i + offset])))) w3++;
     }
 
     let w5 = 0;
     const count5 = Math.max(1, sample.length - 4);
     for (let i = 0; i < count5; i++) {
-      if ([0, 1, 2, 3, 4].some(offset => {
-        const drawn = getDrawBalls(sample[i + offset]);
-        return drawn.filter(b => coreSet.has(b)).length >= requiredHits;
-      })) w5++;
+      if ([0, 1, 2, 3, 4].some(offset => hitsRealSlipPrize(getDrawBalls(sample[i + offset])))) w5++;
     }
 
     return {
       window_1_draw: Math.round((w1 / sample.length) * 1000) / 10,
       window_3_draw: Math.round((w3 / count3) * 1000) / 10,
       window_5_draw: Math.round((w5 / count5) * 1000) / 10,
-      description: `${requiredHits}+ Prize Ball Core Invariant`
+      description: `Verified Slip-Level ${requiredHits}+ Match Capture`
     };
   }
 }
@@ -1532,27 +1541,24 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             recordedCount++;
           }
 
-          // 4. APEX CHAMPION MASTER CONSENSUS (Turán 3-Tuple Super-Pool + Mandel Portfolio)
+          // 4. APEX CHAMPION MASTER CONSENSUS (Global-Optimum Steiner-Johnson J*(20,5;10) + Anti-Crowding)
           if (forensic.nextCandidateSets?.[0]) {
-            const distinctCp = selectMax3TuplePortfolio(
-              [
-                ...forensic.nextCandidateSets.map(c => c.numbers),
-                ...quantCpLines,
-                ...(forensic.invariantSubspace?.coveringTickets || [])
-              ],
+            const steinerCp = generateOptimalSteinerPortfolio(
+              "cashpot",
+              draws.map(d => d.numbers),
               10,
-              2
+              targetDraw
             );
             await insertOrUpdateEngineLog({
               game_key: "cashpot",
               engine_key: "apex-master",
-              engine_name: "Apex Champion Consensus",
-              strategy_name: "10-Slip Turán 3-Tuple Super-Pool & Mandel Covering Portfolio",
+              engine_name: "Apex Steiner-Johnson Optimal",
+              strategy_name: "10-Slip J*(20,5) Max-Coverage Packing (63.34% Exact 3+ Ceiling, MaxOverlap=1, Anti-Crowding)",
               target_draw_number: targetDraw,
-              predicted_numbers: distinctCp[0],
+              predicted_numbers: steinerCp.slips[0],
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
-              wheel_slips: distinctCp,
-              simulated_bet_tt: distinctCp.length * 5.0
+              wheel_slips: steinerCp.slips,
+              simulated_bet_tt: steinerCp.slips.length * 5.0
             });
             recordedCount++;
           }
@@ -1644,31 +1650,24 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             recordedCount++;
           }
 
-          // 4. APEX CHAMPION MASTER CONSENSUS (Honest 10-Slip Orthogonal + Mandel Portfolio)
+          // 4. APEX CHAMPION MASTER CONSENSUS (Steiner-Johnson J*(35,5;10) + Full 10-Powerball Stratification)
           if (forensic.nextCandidateSets?.[0]) {
-            const apexLotto5Lines = buildMultiBallApex5(
+            const steinerLotto = generateOptimalSteinerPortfolio(
+              "lotto-plus",
               draws.map(d => d.numbers),
-              35,
-              5,
-              forensic.nextCandidateSets.map(c => c.numbers),
-              quantSlips
+              10,
+              targetDraw
             );
-            const distinctLotto = mergeDistinctSlips(
-              apexLotto5Lines,
-              forensic.invariantSubspace?.coveringTickets || [],
-              10
-            );
-            const lottoApexPb = buildDynamicBonusBallRotation(draws.map(d => d.powerball), 10).primary;
             await insertOrUpdateEngineLog({
               game_key: "lotto-plus",
               engine_key: "apex-master",
-              engine_name: "Apex Champion Consensus",
-              strategy_name: "10-Slip Orthogonal Core + Mandel Covering Portfolio",
+              engine_name: "Apex Steiner-Johnson Optimal",
+              strategy_name: "10-Slip J*(35,5) Zero-Pair-Overlap Packing + Full 10-Powerball Stratification (62.93% Any-Prize)",
               target_draw_number: targetDraw,
-              predicted_numbers: distinctLotto[0],
-              predicted_powerball: lottoApexPb,
-              wheel_slips: distinctLotto,
-              simulated_bet_tt: distinctLotto.length
+              predicted_numbers: steinerLotto.slips[0],
+              predicted_powerball: steinerLotto.bonusBalls[0] || 1,
+              wheel_slips: steinerLotto.slips,
+              simulated_bet_tt: steinerLotto.slips.length * 5.0
             });
             recordedCount++;
           }
@@ -1750,33 +1749,24 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             recordedCount++;
           }
 
-          // 4. APEX CHAMPION MASTER CONSENSUS (Turán 3-Tuple Super-Pool + Mandel Portfolio)
+          // 4. APEX CHAMPION MASTER CONSENSUS (Steiner-Johnson J*(28,6;10) + Full 10-Cash-Ball Stratification)
           if (forensic.nextCandidateSets?.[0]) {
-            const d28Wfl = computeWinForLifeDiff28Engine([...quantWflRows].reverse() as any);
-            const fSlips = forensic.nextCandidateSets.map(c => c.numbers);
-            const dSlips = (d28Wfl?.nextDrawPredictions?.sets || []).map(s => s.numbers);
-            const mSlips = forensic.invariantSubspace?.coveringTickets || [];
-            const voteMap = new Map<number, number>();
-            for (const s of [...quantWflLines, ...fSlips.slice(0, 5), ...dSlips]) {
-              for (const b of s) voteMap.set(b, (voteMap.get(b) || 0) + 1);
-            }
-            const distinctWfl = selectMax3TuplePortfolio(
-              [...quantWflLines, ...dSlips, ...fSlips, ...mSlips],
+            const steinerWfl = generateOptimalSteinerPortfolio(
+              "win-for-life",
+              draws.map(d => d.numbers),
               10,
-              3,
-              voteMap
+              targetDraw
             );
-            const wflApexCb = buildDynamicBonusBallRotation(draws.map(d => d.cash_ball), 3).primary;
             await insertOrUpdateEngineLog({
               game_key: "win-for-life",
               engine_key: "apex-master",
-              engine_name: "Apex Champion Consensus",
-              strategy_name: "10-Slip Turán 3-Tuple Super-Pool & Mandel Covering Portfolio",
+              engine_name: "Apex Steiner-Johnson Optimal",
+              strategy_name: "10-Slip J*(28,6) Zero-Pair-Overlap Packing (72.13% Exact 3+, 9.55% 4+ Ceiling, 28/28 Balls)",
               target_draw_number: targetDraw,
-              predicted_numbers: distinctWfl[0],
-              predicted_powerball: wflApexCb,
-              wheel_slips: distinctWfl,
-              simulated_bet_tt: distinctWfl.length
+              predicted_numbers: steinerWfl.slips[0],
+              predicted_powerball: steinerWfl.bonusBalls[0] || 1,
+              wheel_slips: steinerWfl.slips,
+              simulated_bet_tt: steinerWfl.slips.length * 10.0
             });
             recordedCount++;
           }
@@ -2608,29 +2598,26 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: wf5Lines.length * 5.0
             });
 
-            // APEX CHAMPION MASTER CONSENSUS (Cash Pot 10-Slip Turán 3-Tuple Super-Pool)
-            const distinctCp = selectMax3TuplePortfolio(
-              [
-                ...forensic.nextCandidateSets.map(c => c.numbers),
-                ...quantCpLines,
-                ...(forensic.invariantSubspace?.coveringTickets || [])
-              ],
+            // APEX CHAMPION MASTER CONSENSUS (Cash Pot Steiner-Johnson J*(20,5;10) Global Optimum)
+            const steinerCp = generateOptimalSteinerPortfolio(
+              "cashpot",
+              hist.map(d => d.numbers),
               10,
-              2
+              actual.draw_number
             );
             await upsertVerifiedWalkForwardLog({
               game_key: "cashpot",
               engine_key: "apex-master",
-              engine_name: "Apex Champion Consensus",
-              strategy_name: "10-Slip Turán 3-Tuple Super-Pool & Mandel Covering Portfolio",
+              engine_name: "Apex Steiner-Johnson Optimal",
+              strategy_name: "10-Slip J*(20,5) Max-Coverage Packing (63.34% Exact 3+ Ceiling, MaxOverlap=1, Anti-Crowding)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
-              predicted_numbers: distinctCp[0] || forensic5Lines[0],
+              predicted_numbers: steinerCp.slips[0],
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
-              wheel_slips: distinctCp,
+              wheel_slips: steinerCp.slips,
               actual_numbers: actual.numbers,
               actual_powerball: actual.multiplier,
-              simulated_bet_tt: distinctCp.length * 5.0
+              simulated_bet_tt: steinerCp.slips.length * 5.0
             });
           }
         }
@@ -2741,37 +2728,27 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: 5.0
             });
 
-            // APEX CHAMPION MASTER CONSENSUS (Lotto Plus 10-Slip Portfolio)
-            const apexLotto5Lines = buildMultiBallApex5(
+            // APEX CHAMPION MASTER CONSENSUS (Lotto Plus Steiner-Johnson J*(35,5;10) + Full 10-PB Stratification)
+            const steinerLotto = generateOptimalSteinerPortfolio(
+              "lotto-plus",
               hist.map(d => d.numbers),
-              35,
-              5,
-              forensic.nextCandidateSets.map(c => c.numbers),
-              quantSlips
-            );
-            const distinctLotto = mergeDistinctSlips(
-              apexLotto5Lines,
-              forensic.invariantSubspace?.coveringTickets || [],
-              10
-            );
-            const lottoApexPbs = Array.from(
-              { length: distinctLotto.length },
-              (_, idx) => pbRot[idx % pbRot.length] ?? pbRenewalHist
+              10,
+              actual.draw_number
             );
             await upsertVerifiedWalkForwardLog({
               game_key: "lotto-plus",
               engine_key: "apex-master",
-              engine_name: "Apex Champion Consensus",
-              strategy_name: "10-Slip Orthogonal Core + Mandel Covering Portfolio",
+              engine_name: "Apex Steiner-Johnson Optimal",
+              strategy_name: "10-Slip J*(35,5) Zero-Pair-Overlap Packing + Full 10-Powerball Stratification (62.93% Any-Prize)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
-              predicted_numbers: distinctLotto[0] || apexLotto5Lines[0],
-              predicted_powerball: pbRenewalHist,
-              line_powerballs: lottoApexPbs,
-              wheel_slips: distinctLotto,
+              predicted_numbers: steinerLotto.slips[0],
+              predicted_powerball: steinerLotto.bonusBalls[0] || 1,
+              line_powerballs: steinerLotto.bonusBalls,
+              wheel_slips: steinerLotto.slips,
               actual_numbers: actual.numbers,
               actual_powerball: actual.powerball,
-              simulated_bet_tt: distinctLotto.length
+              simulated_bet_tt: steinerLotto.slips.length * 5.0
             });
           }
         }
@@ -2857,33 +2834,26 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: 5.0
             });
 
-            // APEX CHAMPION MASTER CONSENSUS (Win For Life 10-Slip Turán 3-Tuple Super-Pool)
-            const d28Wfl = computeWinForLifeDiff28Engine([...quantWflHist].reverse() as any);
-            const fSlips = forensic.nextCandidateSets.map(c => c.numbers);
-            const dSlips = (d28Wfl?.nextDrawPredictions?.sets || []).map(s => s.numbers);
-            const mSlips = forensic.invariantSubspace?.coveringTickets || [];
-            const voteMap = new Map<number, number>();
-            for (const s of [...quantWflLines, ...fSlips.slice(0, 5), ...dSlips]) {
-              for (const b of s) voteMap.set(b, (voteMap.get(b) || 0) + 1);
-            }
-            const distinctWfl = selectMax3TuplePortfolio(
-              [...quantWflLines, ...dSlips, ...fSlips, ...mSlips],
+            // APEX CHAMPION MASTER CONSENSUS (Win For Life Steiner-Johnson J*(28,6;10) Global Optimum)
+            const steinerWfl = generateOptimalSteinerPortfolio(
+              "win-for-life",
+              hist.map(d => d.numbers),
               10,
-              3,
-              voteMap
+              actual.draw_number
             );
             await upsertVerifiedWalkForwardLog({
               game_key: "win-for-life",
               engine_key: "apex-master",
-              engine_name: "Apex Champion Consensus",
-              strategy_name: "10-Slip Turán 3-Tuple Super-Pool & Mandel Covering Portfolio",
+              engine_name: "Apex Steiner-Johnson Optimal",
+              strategy_name: "10-Slip J*(28,6) Zero-Pair-Overlap Packing (72.13% Exact 3+, 9.55% 4+ Ceiling, 28/28 Balls)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
-              predicted_numbers: distinctWfl[0] || forensic5Lines[0],
-              wheel_slips: distinctWfl,
+              predicted_numbers: steinerWfl.slips[0],
+              predicted_powerball: steinerWfl.bonusBalls[0] || 1,
+              wheel_slips: steinerWfl.slips,
               actual_numbers: actual.numbers,
               actual_powerball: actual.cash_ball,
-              simulated_bet_tt: distinctWfl.length
+              simulated_bet_tt: steinerWfl.slips.length * 10.0
             });
           }
         }
@@ -3274,20 +3244,52 @@ export async function getEngineLeaderboardStats(
 
       const prof = calibrationProfiles.find(cp => cp.game_key === g);
 
-      // Per-line rotated Powerballs for Lotto Plus (Weibull Renewal cycled across all playable slips)
+      // Per-line Powerballs / Cash Balls: Full 1..10 Stratification for 10-slip Steiner portfolios (100% Bonus Ball Guarantee)
       const targetPbLen = Math.max(5, Math.min(10, wSlips.length || 5));
+      let steinerMeta: ChampionMasterPick["steiner_meta"] = undefined;
+      let stratifiedBonusBalls: number[] | undefined = undefined;
+      if (g === "cashpot" || g === "lotto-plus" || g === "win-for-life") {
+        const histForSteiner = recentDraws.map((r: any) =>
+          g === "win-for-life"
+            ? [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5), Number(r.num6)]
+            : [Number(r.num1), Number(r.num2), Number(r.num3), Number(r.num4), Number(r.num5)]
+        );
+        const stInfo = generateOptimalSteinerPortfolio(
+          g,
+          histForSteiner,
+          wSlips.length >= 10 ? 10 : 5,
+          Number(pRow.target_draw_number) || 1
+        );
+        if (g === "lotto-plus" || g === "win-for-life") {
+          stratifiedBonusBalls = stInfo.bonusBalls;
+        }
+        const coveredBallsSet = new Set(wSlips.flat());
+        steinerMeta = {
+          exact_match3_pct: stInfo.exactMatch3Pct,
+          exact_match4_pct: stInfo.exactMatch4Pct,
+          exact_any_prize_pct: stInfo.exactAnyPrizePct,
+          jackpot_odds_str: stInfo.jackpotOddsStr,
+          max_pair_overlap: stInfo.maxPairOverlap,
+          covered_balls: `${coveredBallsSet.size}/${stInfo.totalBalls}`,
+          anti_crowding_score: stInfo.antiCrowdingScore,
+          sure_call: g === "cashpot" ? getCashPotSureCallStatus() : undefined
+        };
+      }
+
       const linePowerballs =
-        g === "lotto-plus" && bonusRotation && bonusRotation.length > 0
+        (g === "lotto-plus" || g === "win-for-life") && stratifiedBonusBalls && stratifiedBonusBalls.length > 0
+          ? stratifiedBonusBalls.slice(0, targetPbLen)
+          : g === "lotto-plus" && bonusRotation && bonusRotation.length > 0
           ? Array.from(
               { length: targetPbLen },
               (_, idx) => bonusRotation![idx % bonusRotation!.length] ?? bonusRotation![0]
             )
           : undefined;
 
-      // 10-Slip Mandel Wheel Empirical Capture % over recent 60 draws
+      // 10-Slip Steiner-Johnson Empirical Match 3+ Capture % over recent 60 draws (strictly real prize tiers, Match 3+)
       let wheel10CapturePct: number | undefined = undefined;
       if ((g === "cashpot" || g === "lotto-plus" || g === "win-for-life") && wSlips.length > 5 && recentDraws.length > 0) {
-        const minPrizeMatch = g === "cashpot" ? 2 : 3;
+        const minPrizeMatch = 3;
         const slips10 = wSlips.slice(0, 10);
         let captured = 0;
         for (const r of recentDraws) {
@@ -3364,6 +3366,7 @@ export async function getEngineLeaderboardStats(
         conviction_tier: convictionTier,
         entropy_ratio: entropyRatio,
         multi_draw_window_rates: windowRates,
+        steiner_meta: steinerMeta,
         verified_win_rate_pct: champRow.prize_win_rate_pct,
         verified_any_match_pct: champRow.any_match_rate_pct,
         verified_roi_pct: champRow.roi_pct,
