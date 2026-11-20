@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Layers,
   X,
@@ -14,8 +15,11 @@ import {
   RefreshCw,
   HelpCircle,
   ShieldCheck,
-  Zap
+  Zap,
+  Printer
 } from "lucide-react";
+import BetSlipExportModal from "@/components/BetSlipExportModal";
+import { copyTextToClipboard, downloadBlobFile } from "@/lib/export_helpers";
 
 interface CoveringWheelBuilderModalProps {
   isOpen: boolean;
@@ -38,6 +42,12 @@ export default function CoveringWheelBuilderModal({
   const [result, setResult] = useState<any>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showPrintExport, setShowPrintExport] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Pool bounds based on game
   const maxPoolNumber = game === "cashpot" ? 20 : game === "win-for-life" ? 28 : 35;
@@ -134,16 +144,18 @@ export default function CoveringWheelBuilderModal({
     }
   };
 
-  const copySlips = () => {
+  const copySlips = async () => {
     if (!result?.tickets) return;
     const text = result.tickets
       .map((t: number[], i: number) => `Line #${i + 1}: [ ${t.join(", ")} ]`)
       .join("\n");
-    navigator.clipboard.writeText(
+    const ok = await copyTextToClipboard(
       `NLCB ${game.toUpperCase()} COVERING WHEEL\nGuarantee: ${result.guaranteeText}\nTotal Lines: ${result.ticketCount} ($${result.wheeledCostTT} TTD)\n\n${text}`
     );
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
   };
 
   const downloadSlipsTxt = () => {
@@ -159,17 +171,13 @@ export default function CoveringWheelBuilderModal({
       `Full Combinations Cost: $${result.fullCostTT} TTD (${result.costSavingsPct.toFixed(1)}% Cost Savings)\r\n` +
       `========================================================\r\n\r\n`;
 
-    const blob = new Blob([header + text], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `NLCB_${game}_wheel_${result.ticketCount}lines.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadBlobFile(header + text, `NLCB_${game}_wheel_${result.ticketCount}lines.txt`, "text/plain;charset=utf-8");
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[105] flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-[#0b0f13] border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.15)] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-cyan-500/20 bg-slate-900/60">
@@ -430,17 +438,27 @@ export default function CoveringWheelBuilderModal({
                     {result.guaranteeText}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
+                    type="button"
+                    onClick={() => setShowPrintExport(true)}
+                    className="px-2.5 py-1 text-xs rounded-lg bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Print or Export</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={copySlips}
-                    className="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-200 hover:text-white border border-slate-700 flex items-center gap-1.5 transition-all"
+                    className="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-200 hover:text-white border border-slate-700 flex items-center gap-1.5 transition-all cursor-pointer"
                   >
                     {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copied ? "Copied!" : "Copy Slips"}</span>
                   </button>
                   <button
+                    type="button"
                     onClick={downloadSlipsTxt}
-                    className="px-2.5 py-1 text-xs rounded-lg bg-cyan-950 text-cyan-300 hover:bg-cyan-900 border border-cyan-500/40 flex items-center gap-1.5 transition-all"
+                    className="px-2.5 py-1 text-xs rounded-lg bg-cyan-950 text-cyan-300 hover:bg-cyan-900 border border-cyan-500/40 flex items-center gap-1.5 transition-all cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Download TXT</span>
@@ -534,6 +552,26 @@ export default function CoveringWheelBuilderModal({
           )}
         </div>
       </div>
-    </div>
+
+      {result?.tickets && (
+        <BetSlipExportModal
+          isOpen={showPrintExport}
+          onClose={() => setShowPrintExport(false)}
+          gameKey={game}
+          gameName={game === "cashpot" ? "Cash Pot" : game === "win-for-life" ? "Win For Life" : "Lotto Plus"}
+          slips={result.tickets}
+          bonusBalls={
+            game === "lotto-plus"
+              ? result.tickets.map((_: number[], i: number) => (i % 10) + 1)
+              : game === "win-for-life"
+              ? result.tickets.map((_: number[], i: number) => (i % 3) + 1)
+              : []
+          }
+          unitCostTT={game === "cashpot" ? 5 : game === "win-for-life" ? 10 : 5}
+          multiplierIncluded={game === "cashpot"}
+        />
+      )}
+    </div>,
+    document.body
   );
 }

@@ -103,13 +103,13 @@ body {
   animation: toast-slide-out 0.2s ease-in forwards;
 }
 
-/* Tab content fade transition */
+/* Tab content fade transition (no persistent transform so position:fixed modals stay viewport-anchored) */
 @keyframes tab-fade-in {
-  0% { opacity: 0; transform: translateY(8px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: none; }
 }
 .tab-content-enter {
-  animation: tab-fade-in 0.25s ease-out forwards;
+  animation: tab-fade-in 0.22s ease-out;
 }
 
 /* Number ball pop animation */

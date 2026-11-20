@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   Camera,
   X,
@@ -40,6 +41,11 @@ export default function TicketScannerModal({
   const [betAmount, setBetAmount] = useState<number>(1.0);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const scannerElementId = "nlcb-ticket-reader";
@@ -194,10 +200,10 @@ export default function TicketScannerModal({
     }
   }, [isOpen, activeTab]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+  return createPortal(
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[105] flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-2xl max-h-[92vh] flex flex-col bg-[#0b0f13] border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.15)] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-cyan-500/20 bg-slate-900/60">
@@ -462,6 +468,7 @@ export default function TicketScannerModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

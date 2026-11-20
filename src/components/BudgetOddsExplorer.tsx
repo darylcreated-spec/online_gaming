@@ -14,14 +14,26 @@ import {
   Info,
   Printer
 } from "lucide-react";
-import BetSlipExportModal from "@/components/BetSlipExportModal";
+import BetSlipExportModal, { ExportableGameKey } from "@/components/BetSlipExportModal";
 import { NLCB_GAME_GUIDE, GameGuideInfo } from "@/lib/game_guide";
 import {
   generateOptimalSteinerPortfolio,
   getCashPotSureCallStatus,
   SteinerGameKey
 } from "@/lib/steiner_johnson_engine";
+import { CHINAPOO_CHART } from "@/lib/playwhe";
+import { copyTextToClipboard } from "@/lib/export_helpers";
 import { triggerHaptic } from "@/lib/haptics";
+
+function createDeterministicRng(seedInit: number): () => number {
+  let seed = seedInit | 0;
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 export interface BudgetOddsExplorerProps {
   onSelectGame?: (game: GameGuideInfo["key"]) => void;
@@ -75,22 +87,96 @@ export default function BudgetOddsExplorer({
     return getCashPotSureCallStatus();
   }, [mounted, game.key]);
 
-  // Inline zero-overlap slips for supported games and tiers
-  const steinerPortfolio = useMemo(() => {
-    if (
-      !tier.steinerSupported ||
-      (game.key !== "cashpot" && game.key !== "lotto-plus" && game.key !== "win-for-life")
-    ) {
-      return null;
-    }
-    const validCount = ([5, 10, 15, 20].includes(tier.slips) ? tier.slips : 10) as 5 | 10 | 15 | 20;
+  // Ready-to-play non-overlapping sets for all 6 NLCB games and every budget tier
+  const plannedPortfolio = useMemo(() => {
     const drawSeed = targetDrawNumbers[game.key] || 7972;
-    return generateOptimalSteinerPortfolio(game.key as SteinerGameKey, [], validCount, drawSeed);
-  }, [game.key, tier.slips, tier.steinerSupported, targetDrawNumbers]);
+
+    if (game.key === "cashpot" || game.key === "lotto-plus" || game.key === "win-for-life") {
+      if (tier.slips === 1) {
+        const base = generateOptimalSteinerPortfolio(game.key as SteinerGameKey, [], 5, drawSeed);
+        return {
+          slips: base.slips.slice(0, 1),
+          bonusBalls: base.bonusBalls.slice(0, 1),
+          subtitle: `1 balanced slip covering ${base.slips[0]?.length || 5} of ${base.totalBalls} numbers, Uniqueness score ${base.antiCrowdingScore}%`,
+          playLabels: undefined as string[] | undefined
+        };
+      }
+      const validCount = ([5, 10, 15, 20].includes(tier.slips) ? tier.slips : 10) as 5 | 10 | 15 | 20;
+      const res = generateOptimalSteinerPortfolio(game.key as SteinerGameKey, [], validCount, drawSeed);
+      return {
+        slips: res.slips,
+        bonusBalls: res.bonusBalls,
+        subtitle: `At most ${res.maxPairOverlap} shared number between any two slips, covering ${res.coveredBallsCount} of ${res.totalBalls} numbers, Uniqueness score ${res.antiCrowdingScore}%`,
+        playLabels: undefined as string[] | undefined
+      };
+    }
+
+    const rng = createDeterministicRng(drawSeed * 31 + tier.slips * 97 + activeTierIdx * 13);
+
+    if (game.key === "play-whe") {
+      const pool = Array.from({ length: 36 }, (_, i) => i + 1);
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      const chosen = pool.slice(0, tier.slips).sort((a, b) => a - b);
+      return {
+        slips: chosen.map((m) => [m]),
+        bonusBalls: [] as number[],
+        subtitle: `${chosen.length} separate Chinapoo mark${chosen.length === 1 ? "" : "s"} out of 36 with zero repeated bets`,
+        playLabels: chosen.map((m) => CHINAPOO_CHART[m]?.mark || `Mark ${m}`)
+      };
+    }
+
+    if (game.key === "pick4") {
+      const isStraight = tier.label.toLowerCase().includes("straight");
+      const seenKeys = new Set<string>();
+      const slips: number[][] = [];
+      let guard = 0;
+      while (slips.length < tier.slips && guard < 400) {
+        guard++;
+        const digitsPool = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        for (let i = digitsPool.length - 1; i > 0; i--) {
+          const j = Math.floor(rng() * (i + 1));
+          [digitsPool[i], digitsPool[j]] = [digitsPool[j], digitsPool[i]];
+        }
+        const candidate = digitsPool.slice(0, 4);
+        const canonical = [...candidate].sort((a, b) => a - b).join("-");
+        if (!seenKeys.has(canonical)) {
+          seenKeys.add(canonical);
+          slips.push(candidate);
+        }
+      }
+      return {
+        slips,
+        bonusBalls: [] as number[],
+        subtitle: isStraight
+          ? "1 exact-order Straight play with 4 distinct digits"
+          : `${slips.length} separate 24-Way Box set${slips.length === 1 ? "" : "s"} with zero repeated box combinations`,
+        playLabels: slips.map(() => (isStraight ? "Straight (Exact Order)" : "24-Way Box (Any Order)"))
+      };
+    }
+
+    // Fast Cash (38 pockets: 0, 00 represented as 37, and 1..36)
+    const pockets = [0, 37, ...Array.from({ length: 36 }, (_, i) => i + 1)];
+    for (let i = pockets.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [pockets[i], pockets[j]] = [pockets[j], pockets[i]];
+    }
+    const chosen = pockets.slice(0, tier.slips);
+    return {
+      slips: chosen.map((p) => [p]),
+      bonusBalls: [] as number[],
+      subtitle: `${chosen.length} separate Fast Cash board number${chosen.length === 1 ? "" : "s"} out of 38 pockets`,
+      playLabels: undefined as string[] | undefined
+    };
+  }, [game.key, tier.slips, tier.label, activeTierIdx, targetDrawNumbers]);
 
   const handleSelectGameTab = (key: GameGuideInfo["key"]) => {
     triggerHaptic("selection");
     setSelectedGameKey(key);
+    setHoveredGameKey(null);
+    setHoveredTierIdx(null);
     setShowSlipsDrawer(false);
     setCopiedSlips(false);
   };
@@ -98,20 +184,34 @@ export default function BudgetOddsExplorer({
   const handleSelectTier = (idx: number) => {
     triggerHaptic("light");
     setTierIndexByGame((prev) => ({ ...prev, [game.key]: idx }));
+    setHoveredTierIdx(null);
     setCopiedSlips(false);
   };
 
-  const handleCopySlips = () => {
-    if (!steinerPortfolio) return;
+  const handleCopySlips = async () => {
+    if (!plannedPortfolio) return;
     triggerHaptic("success");
     const targetNum = targetDrawNumbers[game.key];
-    const header = `${game.name.toUpperCase()} - ${tier.label} ($${tier.costTT} TTD) | Non-Overlapping Slips${
+    const header = `${game.name.toUpperCase()} - ${tier.label} ($${tier.costTT} TTD)${
       targetNum ? ` | Next Draw ${targetNum}` : ""
     }`;
     const meta = `Chance of any prize: ${tier.anyPrizePct}% | Chance of winning $0: ${zeroReturnPct}% | Top Prize Odds: ${tier.jackpotOdds}`;
-    const rows = steinerPortfolio.slips.map((slip, idx) => {
+    const rows = plannedPortfolio.slips.map((slip, idx) => {
+      if (game.key === "play-whe") {
+        const mark = slip[0];
+        const markName = CHINAPOO_CHART[mark]?.mark || `Mark ${mark}`;
+        return `Mark ${String(idx + 1).padStart(2, "0")}: ${String(mark).padStart(2, "0")} (${markName})`;
+      }
+      if (game.key === "pick4") {
+        const label = plannedPortfolio.playLabels?.[idx] || "24-Way Box";
+        return `Set ${String(idx + 1).padStart(2, "0")}: ${slip.join(" - ")} | ${label}`;
+      }
+      if (game.key === "fast-cash") {
+        const pocket = slip[0] === 37 ? "00" : slip[0] === 0 ? "0" : String(slip[0]).padStart(2, "0");
+        return `Pick ${String(idx + 1).padStart(2, "0")}: ${pocket}`;
+      }
       const nums = slip.map((n) => String(n).padStart(2, "0")).join(", ");
-      const bonus = steinerPortfolio.bonusBalls[idx];
+      const bonus = plannedPortfolio.bonusBalls[idx];
       const bonusTag =
         bonus !== undefined
           ? game.key === "win-for-life"
@@ -120,9 +220,11 @@ export default function BudgetOddsExplorer({
           : "";
       return `Slip ${String(idx + 1).padStart(2, "0")}: ${nums}${bonusTag}`;
     });
-    navigator.clipboard?.writeText([header, meta, "", ...rows].join("\n")).catch(() => {});
-    setCopiedSlips(true);
-    setTimeout(() => setCopiedSlips(false), 2200);
+    const ok = await copyTextToClipboard([header, meta, "", ...rows].join("\n"));
+    if (ok) {
+      setCopiedSlips(true);
+      setTimeout(() => setCopiedSlips(false), 2200);
+    }
   };
 
   // === PRECISION SVG BUDGET CURVE GEOMETRY ===
@@ -696,28 +798,34 @@ export default function BudgetOddsExplorer({
 
         {/* Step 5: Primary Action Bar + Inline Non-Overlapping Slips Drawer */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
-          {steinerPortfolio ? (
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic("selection");
-                setShowSlipsDrawer((v) => !v);
-              }}
-              className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm font-sans transition flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Layers className="w-4 h-4" />
-              <span>
-                {showSlipsDrawer
-                  ? `Hide Non-Overlapping ${tier.label} ($${tier.costTT} TTD)`
-                  : `View and Copy Non-Overlapping ${tier.label} ($${tier.costTT} TTD)`}
-              </span>
-              {showSlipsDrawer ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-          ) : (
-            <div className="text-sm text-slate-400 font-sans leading-relaxed">
-              Choose a 5, 10, 15, or 20-slip budget on Cash Pot, Lotto Plus, or Win For Life to generate non-overlapping slips here, or open the full game page.
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("selection");
+              setShowSlipsDrawer((v) => !v);
+            }}
+            className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm font-sans transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Layers className="w-4 h-4" />
+            <span>
+              {showSlipsDrawer
+                ? `Hide ${tier.label} ($${tier.costTT} TTD)`
+                : `View and Copy ${tier.label} ($${tier.costTT} TTD)`}
+            </span>
+            {showSlipsDrawer ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("selection");
+              setShowExportModal(true);
+            }}
+            className="py-3 px-4 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/45 text-sky-200 font-semibold text-sm font-sans transition flex items-center justify-center gap-2 cursor-pointer shrink-0"
+          >
+            <Printer className="w-4 h-4 text-sky-300" />
+            <span>Print or Export</span>
+          </button>
 
           <button
             type="button"
@@ -730,15 +838,15 @@ export default function BudgetOddsExplorer({
         </div>
 
         {/* Inline Non-Overlapping Slips Drawer */}
-        {showSlipsDrawer && steinerPortfolio && (
+        {showSlipsDrawer && plannedPortfolio && (
           <div className="rounded-xl bg-[#070b14] border border-emerald-500/30 p-4 space-y-3.5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-white/[0.06]">
               <div className="space-y-1">
                 <h3 className="text-base font-bold font-sans text-emerald-300">
-                  {game.name}: {steinerPortfolio.slips.length} Non-Overlapping Slips (${tier.costTT} TTD)
+                  {game.name}: {tier.label} (${tier.costTT} TTD)
                 </h3>
                 <p className="text-xs font-sans text-slate-400">
-                  At most {steinerPortfolio.maxPairOverlap} shared number between any two slips, covering {steinerPortfolio.coveredBallsCount} of {steinerPortfolio.totalBalls} numbers, Uniqueness score {steinerPortfolio.antiCrowdingScore}%
+                  {plannedPortfolio.subtitle}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
@@ -766,7 +874,7 @@ export default function BudgetOddsExplorer({
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5 text-sky-400" />
-                      <span>Copy All {steinerPortfolio.slips.length}</span>
+                      <span>Copy All {plannedPortfolio.slips.length}</span>
                     </>
                   )}
                 </button>
@@ -774,20 +882,40 @@ export default function BudgetOddsExplorer({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
-              {steinerPortfolio.slips.map((slip, idx) => {
-                const bonus = steinerPortfolio.bonusBalls[idx];
+              {plannedPortfolio.slips.map((slip, idx) => {
+                const bonus = plannedPortfolio.bonusBalls[idx];
+                const label = plannedPortfolio.playLabels?.[idx];
                 return (
                   <div
                     key={idx}
                     className="px-3.5 py-2.5 rounded-lg bg-slate-900/75 border border-white/[0.06] flex items-center justify-between gap-2 text-xs"
                   >
                     <span className="text-slate-400 font-sans font-semibold shrink-0">
-                      Slip {String(idx + 1).padStart(2, "0")}
+                      {game.key === "play-whe"
+                        ? `Mark ${String(idx + 1).padStart(2, "0")}`
+                        : game.key === "pick4"
+                        ? `Set ${String(idx + 1).padStart(2, "0")}`
+                        : game.key === "fast-cash"
+                        ? `Pick ${String(idx + 1).padStart(2, "0")}`
+                        : `Slip ${String(idx + 1).padStart(2, "0")}`}
                     </span>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
                       <span className="text-slate-100 font-mono font-bold tracking-wider tabular-nums text-sm">
-                        {slip.map((n) => String(n).padStart(2, "0")).join("  ")}
+                        {game.key === "pick4"
+                          ? slip.join(" - ")
+                          : game.key === "fast-cash"
+                          ? slip[0] === 37
+                            ? "00"
+                            : slip[0] === 0
+                            ? "0"
+                            : String(slip[0]).padStart(2, "0")
+                          : slip.map((n) => String(n).padStart(2, "0")).join("  ")}
                       </span>
+                      {label && (
+                        <span className="px-2 py-0.5 rounded bg-sky-500/15 border border-sky-400/35 text-sky-200 text-xs font-sans font-semibold">
+                          {label}
+                        </span>
+                      )}
                       {bonus !== undefined && (
                         <span className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-400/40 text-amber-300 text-xs font-sans font-semibold">
                           {game.key === "win-for-life" ? `Cash Ball ${bonus}` : `Powerball ${bonus}`}
@@ -805,17 +933,18 @@ export default function BudgetOddsExplorer({
         )}
       </div>
 
-      {steinerPortfolio && (
+      {plannedPortfolio && (
         <BetSlipExportModal
           isOpen={showExportModal}
           onClose={() => setShowExportModal(false)}
-          gameKey={game.key as "cashpot" | "lotto-plus" | "win-for-life"}
+          gameKey={game.key as ExportableGameKey}
           gameName={game.name}
           targetDrawNumber={targetDrawNumbers[game.key]}
-          slips={steinerPortfolio.slips}
-          bonusBalls={steinerPortfolio.bonusBalls}
+          slips={plannedPortfolio.slips}
+          bonusBalls={plannedPortfolio.bonusBalls}
           unitCostTT={game.unitCostTT}
           multiplierIncluded={game.key === "cashpot"}
+          playLabels={plannedPortfolio.playLabels}
         />
       )}
     </section>

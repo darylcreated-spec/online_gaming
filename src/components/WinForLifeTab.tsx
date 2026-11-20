@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary, ShieldCheck, X } from "lucide-react";
+import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary, ShieldCheck, X, Printer } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
@@ -7,6 +7,8 @@ import GameHeaderBanner from "@/components/GameHeaderBanner";
 import WinForLifeDiff28Panel from "@/components/WinForLifeDiff28Panel";
 import WinForLifeQuant100Panel from "@/components/WinForLifeQuant100Panel";
 import WinForLifeForensicPanel from "@/components/WinForLifeForensicPanel";
+import BetSlipExportModal from "@/components/BetSlipExportModal";
+import { downloadBlobFile } from "@/lib/export_helpers";
 
 // Helper to generate all combinations of size k from an array
 function getCombinations(arr: number[], k: number): number[][] {
@@ -162,6 +164,11 @@ export default function WinForLifeTab() {
   const [showHeatmapOverlay, setShowHeatmapOverlay] = useState(true);
   const [championPick, setChampionPick] = useState<any>(null);
   const [showChampionDrawer, setShowChampionDrawer] = useState<boolean>(false);
+  const [exportPayload, setExportPayload] = useState<{
+    slips: number[][];
+    bonusBalls: number[];
+    targetDrawNumber?: number;
+  } | null>(null);
 
   // Network map states
   const [hoveredNode, setHoveredNode] = useState<number | null>(null);
@@ -374,13 +381,18 @@ export default function WinForLifeTab() {
   };
 
   const handleExportTxt = () => {
-    const content = generatedTickets.map((t, idx) => `SLIP #${idx+1}: ${t.join(" - ")} [CB: ${selectedCb || "X"}]`).join("\n");
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `win_for_life_slips_${Date.now()}.txt`;
-    link.click();
+    if (generatedTickets.length === 0) return;
+    const content = generatedTickets
+      .map(
+        (t, idx) =>
+          `Slip ${String(idx + 1).padStart(2, "0")}: ${t.map((n) => String(n).padStart(2, "0")).join(", ")} | Cash Ball: ${selectedCb || ((idx % 3) + 1)}`
+      )
+      .join("\n");
+    downloadBlobFile(
+      `THE WIN CONCEPT - WIN FOR LIFE SLIPS\nTotal Lines: ${generatedTickets.length} ($${generatedTickets.length * 10}.00 TTD)\n\n${content}`,
+      `NLCB_win-for-life_${generatedTickets.length}slips_${Date.now()}.txt`,
+      "text/plain;charset=utf-8"
+    );
   };
 
 
@@ -664,8 +676,32 @@ export default function WinForLifeTab() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
                   <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      const slips = (championPick.wheel_slips || [championPick.predicted_numbers]).slice(0, 10);
+                      const bonusBalls = slips.map((_: number[], idx: number) => {
+                        const raw =
+                          championPick.line_powerballs?.[idx % (championPick.line_powerballs?.length || 1)] ||
+                          championPick.predicted_powerball ||
+                          ((idx % 3) + 1);
+                        return raw >= 1 && raw <= 3 ? raw : ((Math.abs(raw) - 1) % 3) + 1;
+                      });
+                      setExportPayload({
+                        slips,
+                        bonusBalls,
+                        targetDrawNumber: championPick.target_draw_number
+                      });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-sans font-bold text-xs transition cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Print or Export</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => {
                       triggerHaptic("selection");
                       setShowChampionDrawer(!showChampionDrawer);
@@ -675,6 +711,7 @@ export default function WinForLifeTab() {
                     {showChampionDrawer ? "Close Champion Drawer" : "Open 10-Slip & Window Drawer"}
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       triggerHaptic("selection");
                       setSubTab("builder");
@@ -811,11 +848,31 @@ export default function WinForLifeTab() {
               <div className="space-y-4">
                 {/* Engine Stats Bar */}
                 {mevStats && (
-                  <div className="flex flex-wrap gap-4 text-xs font-mono text-gray-400 uppercase bg-slate-950/40 border border-white/5 px-4 py-2 rounded-lg">
-                    <span>Draws Analyzed: <strong className="text-emerald-400">{mevStats.drawsAnalyzed}</strong></span>
-                    <span>Candidates Scored: <strong className="text-emerald-400">{mevStats.candidatesScored.toLocaleString()}</strong></span>
-                    <span>Score Cutoff: <strong className="text-emerald-400">{mevStats.topScoreCutoff}</strong></span>
-                    <span>Compute Time: <strong className="text-emerald-400">{mevStats.computeTimeMs}ms</strong></span>
+                  <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-gray-400 uppercase bg-slate-950/40 border border-white/5 px-4 py-2 rounded-lg">
+                    <div className="flex flex-wrap gap-4">
+                      <span>Draws Analyzed: <strong className="text-emerald-400">{mevStats.drawsAnalyzed}</strong></span>
+                      <span>Candidates Scored: <strong className="text-emerald-400">{mevStats.candidatesScored.toLocaleString()}</strong></span>
+                      <span>Score Cutoff: <strong className="text-emerald-400">{mevStats.topScoreCutoff}</strong></span>
+                      <span>Compute Time: <strong className="text-emerald-400">{mevStats.computeTimeMs}ms</strong></span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic("selection");
+                        setExportPayload({
+                          slips: mevTickets.map((t: any) => t.numbers),
+                          bonusBalls: mevTickets.map((t: any, i: number) => {
+                            const raw = Number(t.cashBall ?? t.powerball ?? ((i % 3) + 1));
+                            return raw >= 1 && raw <= 3 ? raw : ((Math.abs(raw) - 1) % 3) + 1;
+                          }),
+                          targetDrawNumber: championPick?.target_draw_number
+                        });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-sans font-bold normal-case transition cursor-pointer"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Print or Export Lines</span>
+                    </button>
                   </div>
                 )}
 
@@ -1744,9 +1801,24 @@ export default function WinForLifeTab() {
                     Total Stake: ${generatedTickets.length * 10} TT ($10/ticket)
                   </span>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={handleSaveSlips} disabled={isSavingSlips} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 disabled:opacity-50 px-3 py-1.5 text-xs font-bold font-mono transition cursor-pointer"><Save className="w-3 h-3" /> {isSavingSlips ? "SAVING..." : "SAVE SLIPS"}</button>
-                  <button onClick={handleExportTxt} className="flex items-center gap-1.5 border border-white/5 hover:border-emerald-400 hover:text-emerald-400 text-slate-400 px-3 py-1.5 text-xs font-bold font-mono transition cursor-pointer"><Download className="w-3 h-3" /> EXPORT (.TXT)</button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      setExportPayload({
+                        slips: generatedTickets,
+                        bonusBalls: generatedTickets.map((_, idx) => selectedCb || ((idx % 3) + 1)),
+                        targetDrawNumber: championPick?.target_draw_number
+                      });
+                    }}
+                    className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold font-sans transition cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Print or Export</span>
+                  </button>
+                  <button type="button" onClick={handleSaveSlips} disabled={isSavingSlips} className="flex items-center gap-1.5 border border-white/10 hover:border-emerald-400 hover:text-emerald-400 text-slate-300 disabled:opacity-50 px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition cursor-pointer"><Save className="w-3 h-3" /> {isSavingSlips ? "SAVING..." : "SAVE SLIPS"}</button>
+                  <button type="button" onClick={handleExportTxt} className="flex items-center gap-1.5 border border-white/10 hover:border-emerald-400 hover:text-emerald-400 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition cursor-pointer"><Download className="w-3 h-3" /> EXPORT (.TXT)</button>
                 </div>
               </div>
 
@@ -1983,6 +2055,18 @@ export default function WinForLifeTab() {
 
 
 
+      {exportPayload && (
+        <BetSlipExportModal
+          isOpen={true}
+          onClose={() => setExportPayload(null)}
+          gameKey="win-for-life"
+          gameName="Win For Life"
+          targetDrawNumber={exportPayload.targetDrawNumber}
+          slips={exportPayload.slips}
+          bonusBalls={exportPayload.bonusBalls}
+          unitCostTT={10}
+        />
+      )}
     </div>
   );
 }

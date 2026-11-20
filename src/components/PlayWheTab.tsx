@@ -35,12 +35,14 @@ import {
   Zap,
   ShieldCheck,
   Sigma,
-  Binary
+  Binary,
+  Printer
 } from "lucide-react";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PlayWheAuditPanel from "@/components/PlayWheAuditPanel";
 import PlayWheDiff37Panel from "@/components/PlayWheDiff37Panel";
 import PlayWheForensicPanel from "@/components/PlayWheForensicPanel";
+import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { triggerHaptic } from "@/lib/haptics";
 
 const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -117,6 +119,7 @@ export default function PlayWheTab({
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsLimit, setStatsLimit] = useState(999999);
+  const [exportMarks, setExportMarks] = useState<number[] | null>(null);
   
   // Predictor States
   const [predictorData, setPredictorData] = useState<any[]>([]);
@@ -1227,8 +1230,23 @@ export default function PlayWheTab({
                         ))}
                       </div>
                     </div>
-                    <div className="border-t border-white/10 pt-2 text-xs text-emerald-400 font-bold text-center">
-                      Verified ~14.5%–16% hit rate across 19,700+ empirical draws.
+                    <div className="border-t border-white/10 pt-3 flex items-center justify-between gap-2">
+                      <span className="text-xs text-emerald-400 font-bold">
+                        Top 5 recommended marks
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic("selection");
+                          setExportMarks(
+                            mathEngineData.prediction.top5Coverage.map((x: any) => Number(x.number))
+                          );
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-sans font-bold text-xs transition cursor-pointer shrink-0"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        <span>Print or Export</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -3113,6 +3131,17 @@ export default function PlayWheTab({
 
       {/* FORENSIC ENGINE PANEL */}
       {subTab === "forensic" && <PlayWheForensicPanel />}
+
+      {exportMarks && (
+        <BetSlipExportModal
+          isOpen={true}
+          onClose={() => setExportMarks(null)}
+          gameKey="play-whe"
+          gameName="Play Whe"
+          slips={exportMarks.map((m) => [m])}
+          unitCostTT={1}
+        />
+      )}
     </div>
   );
 }

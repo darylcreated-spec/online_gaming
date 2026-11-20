@@ -8,7 +8,9 @@ import { evaluateTicketQuality } from "@/lib/quality_scorer";
 import { runGeneticOptimization, AlphaSlipResult } from "@/lib/geneticOptimizer";
 import { triggerHaptic } from "@/lib/haptics";
 import QuantumSphereTumbler from "@/components/QuantumSphereTumbler";
-import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Target, Play, Award, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
+import BetSlipExportModal from "@/components/BetSlipExportModal";
+import { downloadBlobFile } from "@/lib/export_helpers";
+import { Sliders, Download, Trash2, Cpu, Eye, Compass, Info, Save, Dna, Target, Play, Award, CheckCircle2, ShieldCheck, AlertTriangle, Printer } from "lucide-react";
 
 interface BuilderTabProps {
   historicalDraws: any[];
@@ -95,6 +97,8 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
   
   const [deltaAnalysis, setDeltaAnalysis] = useState<DeltaAnalysis | null>(null);
   const [generatedTickets, setGeneratedTickets] = useState<number[][]>([]);
+  const [generatedPowerballs, setGeneratedPowerballs] = useState<number[]>([]);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [matrixLoading, setMatrixLoading] = useState(false);
   const [hoveredTicket, setHoveredTicket] = useState<number[] | null>(null);
   const [wheelingLoading, setWheelingLoading] = useState(false);
@@ -146,6 +150,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
     setSelectedPb(null);
     setDeltaAnalysis(null);
     setGeneratedTickets([]);
+    setGeneratedPowerballs([]);
   };
 
   // Matrix Quick Pick (1 high-probability combination)
@@ -174,6 +179,7 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
       const data = await res.json();
       if (data.success) {
         setGeneratedTickets(data.combinations);
+        setGeneratedPowerballs([]);
         if (!selectedPb) {
           setSelectedPb(Math.floor(Math.random() * 10) + 1);
         }
@@ -185,12 +191,12 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
     }
   };
 
-  // Quick Pick generator
+  // Quick Pick generator (Lotto Plus main pool is strictly 1 to 35)
   const handleQuickPick = (count: number = 5) => {
     handleClear();
     const numbers: number[] = [];
     while (numbers.length < count) {
-      const rand = Math.floor(Math.random() * 36) + 1;
+      const rand = Math.floor(Math.random() * 35) + 1;
       if (!numbers.includes(rand)) {
         numbers.push(rand);
       }
@@ -235,15 +241,18 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
     }
   };
 
-  // Load Alpha Slips into Generated Tickets Workspace
+  // Load Alpha Slips into Generated Tickets Workspace and open Slip Printer
   const handleLoadAlphaSlipsIntoWorkspace = () => {
     if (geneticResults.length === 0) return;
     const slips = geneticResults.map(r => r.ticket);
+    const pbs = geneticResults.map(r => r.powerballOrBonus || selectedPb || 1);
     setGeneratedTickets(slips);
+    setGeneratedPowerballs(pbs);
     if (!selectedPb && geneticResults[0].powerballOrBonus) {
       setSelectedPb(geneticResults[0].powerballOrBonus);
     }
     setActiveMode("wheel");
+    setShowExportModal(true);
   };
 
   // Live Delta Analyzer trigger
@@ -279,11 +288,13 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
       }
       triggerHaptic("success");
       setGeneratedTickets(wheelRes.tickets.map(t => t.numbers));
+      setGeneratedPowerballs([]);
       return;
     }
 
     setWheelingLoading(true);
     setGeneratedTickets([]);
+    setGeneratedPowerballs([]);
     
     try {
       const tickets = await generateWheelAsync(selectedNums, wheelStrategy as any, 5);
@@ -302,10 +313,15 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
   const handleExportTxt = () => {
     if (generatedTickets.length === 0) return;
     
-    const pbSuffix = selectedPb ? ` [Powerball: ${selectedPb}]` : "";
+    const activePbs =
+      generatedPowerballs.length === generatedTickets.length
+        ? generatedPowerballs
+        : selectedPb
+        ? generatedTickets.map(() => selectedPb)
+        : [];
     const lines = [
       "=============================================",
-      "           the Win Concept - Betting Slips ",
+      "           The Win Concept - Lotto Plus Slips",
       "=============================================",
       `Wheeling Strategy: ${
         wheelStrategy === "full" ? "Full Wheel" : 
@@ -313,22 +329,20 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         "Abbreviated (3-if-3)"
       }`,
       `Selected Pool (${selectedNums.length} numbers): ${selectedNums.join(", ")}`,
-      selectedPb ? `Selected Powerball: ${selectedPb}` : "No Powerball selected",
+      selectedPb ? `Selected Powerball: ${selectedPb}` : activePbs.length > 0 ? "Per-Line Powerballs Assigned" : "No Powerball selected",
       `Total Generated Tickets: ${generatedTickets.length}`,
       "---------------------------------------------",
-      ...generatedTickets.map((ticket, idx) => `Ticket ${String(idx + 1).padStart(3, "0")}: ${ticket.map(n => String(n).padStart(2, "0")).join("  ")}${pbSuffix}`),
+      ...generatedTickets.map((ticket, idx) => {
+        const pb = activePbs[idx];
+        const pbTag = pb ? ` [Powerball: ${pb}]` : "";
+        return `Ticket ${String(idx + 1).padStart(3, "0")}: ${ticket.map(n => String(n).padStart(2, "0")).join("  ")}${pbTag}`;
+      }),
       "---------------------------------------------",
       `Generated on: ${new Date().toLocaleString()}`,
       "============================================="
     ].join("\n");
     
-    const blob = new Blob([lines], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `win_concept_slips_${Date.now()}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadBlobFile(lines, `NLCB_lotto-plus_${generatedTickets.length}slips_${Date.now()}.txt`, "text/plain;charset=utf-8");
   };
 
   // Save generated slips to SQLite database workspace
@@ -1069,15 +1083,28 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
             
             <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic("selection");
+                  setShowExportModal(true);
+                }}
+                className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-lg text-xs font-bold font-sans transition-all duration-200 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print or Export</span>
+              </button>
+              <button
+                type="button"
                 onClick={handleSaveSlips}
-                className="flex items-center gap-1.5 border border-[#1F232B] hover:border-amber-400 hover:text-amber-400 text-slate-400 px-4 py-2 rounded-none text-xs font-semibold font-mono tracking-wider transition-all duration-200 cursor-pointer bg-[#0B0C0E]"
+                className="flex items-center gap-1.5 border border-[#1F232B] hover:border-amber-400 hover:text-amber-400 text-slate-300 px-4 py-2 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all duration-200 cursor-pointer bg-[#0B0C0E]"
               >
                 <Save className="w-3.5 h-3.5 text-amber-400" />
                 SAVE TO WORKSPACE
               </button>
               <button
+                type="button"
                 onClick={handleExportTxt}
-                className="flex items-center gap-1.5 border border-[#1F232B] hover:border-amber-400 hover:text-amber-400 text-slate-400 px-4 py-2 rounded-none text-xs font-semibold font-mono tracking-wider transition-all duration-200 cursor-pointer bg-[#0B0C0E]"
+                className="flex items-center gap-1.5 border border-[#1F232B] hover:border-amber-400 hover:text-amber-400 text-slate-300 px-4 py-2 rounded-lg text-xs font-semibold font-mono tracking-wider transition-all duration-200 cursor-pointer bg-[#0B0C0E]"
               >
                 <Download className="w-3.5 h-3.5" />
                 EXPORT SLIPS (.TXT)
@@ -1194,6 +1221,22 @@ export default function BuilderTab({ historicalDraws }: BuilderTabProps) {
         </div>
 
       </div>
+
+      <BetSlipExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        gameKey="lotto-plus"
+        gameName="Lotto Plus"
+        slips={generatedTickets}
+        bonusBalls={
+          generatedPowerballs.length === generatedTickets.length
+            ? generatedPowerballs
+            : selectedPb
+            ? generatedTickets.map(() => selectedPb)
+            : []
+        }
+        unitCostTT={5}
+      />
 
     </div>
   );

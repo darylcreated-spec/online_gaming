@@ -9,10 +9,13 @@ import {
   CheckCircle2,
   ArrowRight,
   Sliders,
-  X
+  X,
+  Printer
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { CHINAPOO_CHART } from "@/lib/playwhe";
+import BetSlipExportModal from "@/components/BetSlipExportModal";
+import { copyTextToClipboard } from "@/lib/export_helpers";
 
 export type QuickPickGame = "lotto-plus" | "win-for-life" | "cashpot" | "pick4" | "play-whe";
 export type StrategyMode = "balanced" | "hot" | "cold" | "pure";
@@ -173,6 +176,7 @@ export default function QuickPickEngine({
   const [dropIteration, setDropIteration] = useState<number>(0);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [syndicateMsg, setSyndicateMsg] = useState<string | null>(null);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
 
   // Active generated lines
   const [primaryPicks, setPrimaryPicks] = useState<number[]>([]);
@@ -307,7 +311,7 @@ export default function QuickPickEngine({
     executeBallDrop();
   }, [selectedGame]);
 
-  const handleCopyTicket = (numbers: number[], bonus?: number | null, index: number = 0) => {
+  const handleCopyTicket = async (numbers: number[], bonus?: number | null, index: number = 0) => {
     triggerHaptic("selection");
     let text = "";
     if (selectedGame === "pick4") {
@@ -318,17 +322,19 @@ export default function QuickPickEngine({
       text = numbers.map(n => String(n).padStart(2, "0")).join(", ");
       if (bonus && gameConfig.bonusName) text += ` | ${gameConfig.bonusName}: ${bonus}`;
     }
-    navigator.clipboard.writeText(text).catch(() => {});
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
+    const ok = await copyTextToClipboard(text);
+    if (ok) {
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    }
   };
 
-  const handleSendToSyndicate = (numbers: number[], bonus?: number | null) => {
+  const handleSendToSyndicate = async (numbers: number[], bonus?: number | null) => {
     triggerHaptic("success");
     const formatted = numbers.map(n => String(n).padStart(2, "0")).join(", ");
     const bonusText = bonus && gameConfig.bonusName ? ` | ${gameConfig.bonusName}: ${bonus}` : "";
     const text = `${gameConfig.name} Quick Pick: ${formatted}${bonusText}`;
-    navigator.clipboard.writeText(text).catch(() => {});
+    await copyTextToClipboard(text);
     setSyndicateMsg(`Copied ${gameConfig.shortName} numbers (${formatted}) for sharing with your group.`);
     setTimeout(() => setSyndicateMsg(null), 4000);
   };
@@ -762,6 +768,20 @@ export default function QuickPickEngine({
 
           <button
             type="button"
+            onClick={() => {
+              triggerHaptic("selection");
+              setShowExportModal(true);
+            }}
+            disabled={primaryPicks.length === 0}
+            className="px-4 py-3 rounded-xl bg-emerald-500/15 border border-emerald-400/40 hover:bg-emerald-500/25 text-emerald-200 text-sm font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+            title="Print or export Quick Pick lines"
+          >
+            <Printer className="w-4 h-4 text-emerald-300" />
+            <span className="hidden sm:inline">Print / Export</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => handleSendToSyndicate(primaryPicks, primaryBonus)}
             className="px-4 py-3 rounded-xl bg-slate-900 border border-white/10 hover:border-amber-400/40 text-amber-300 hover:text-amber-200 text-sm font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer"
             title="Copy numbers for group pool"
@@ -782,6 +802,32 @@ export default function QuickPickEngine({
           </button>
         )}
       </div>
+
+      {primaryPicks.length > 0 && (
+        <BetSlipExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          gameKey={selectedGame}
+          gameName={gameConfig.name}
+          slips={[primaryPicks, ...additionalLines.map((l) => l.numbers)]}
+          bonusBalls={
+            gameConfig.hasBonus
+              ? [
+                  primaryBonus ?? 1,
+                  ...additionalLines.map((l) => l.bonus ?? primaryBonus ?? 1)
+                ]
+              : []
+          }
+          unitCostTT={
+            selectedGame === "win-for-life"
+              ? 10
+              : selectedGame === "play-whe" || selectedGame === "pick4"
+              ? 1
+              : 5
+          }
+          multiplierIncluded={selectedGame === "cashpot"}
+        />
+      )}
     </section>
   );
 }

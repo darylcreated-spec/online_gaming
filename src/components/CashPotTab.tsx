@@ -19,7 +19,8 @@ import {
   TrendingUp,
   Zap,
   ShieldCheck,
-  Sigma
+  Sigma,
+  Printer
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -35,6 +36,7 @@ import GameHeaderBanner from "@/components/GameHeaderBanner";
 import CashPotAuditPanel from "@/components/CashPotAuditPanel";
 import CashPotDiff20Panel from "@/components/CashPotDiff20Panel";
 import CashPotForensicPanel from "@/components/CashPotForensicPanel";
+import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { generateWheel } from "@/lib/wheeling";
 import { triggerHaptic } from "@/lib/haptics";
 
@@ -72,6 +74,10 @@ export default function CashPotTab() {
   const [generatedTickets, setGeneratedTickets] = useState<number[][]>([]);
   const [championPick, setChampionPick] = useState<any>(null);
   const [showChampionDrawer, setShowChampionDrawer] = useState<boolean>(false);
+  const [exportPayload, setExportPayload] = useState<{
+    slips: number[][];
+    targetDrawNumber?: number;
+  } | null>(null);
 
   const fetchStats = async () => {
     try {
@@ -253,8 +259,24 @@ export default function CashPotTab() {
                     Target Draw #{championPick.target_draw_number}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
                   <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      const slips = (championPick.wheel_slips || [championPick.predicted_numbers]).slice(0, 10);
+                      setExportPayload({
+                        slips,
+                        targetDrawNumber: championPick.target_draw_number
+                      });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-sans font-bold text-xs transition cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Print or Export</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => {
                       triggerHaptic("selection");
                       setShowChampionDrawer(!showChampionDrawer);
@@ -264,6 +286,7 @@ export default function CashPotTab() {
                     {showChampionDrawer ? "Close Champion Drawer" : "Open 10-Slip & Window Drawer"}
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       triggerHaptic("selection");
                       setActiveSubTab("wheeling");
@@ -567,11 +590,27 @@ export default function CashPotTab() {
             {/* Generated Tickets */}
             {generatedTickets.length > 0 && (
               <div className="space-y-3 pt-4 border-t border-white/10">
-                <div className="flex justify-between items-center text-xs font-bold text-white">
+                <div className="flex flex-wrap justify-between items-center gap-2 text-xs font-bold text-white">
                   <span>Generated Tickets ({generatedTickets.length} lines):</span>
-                  <span className="text-yellow-400 font-mono text-xs">
-                    Total Stake: ${generatedTickets.length * 5} TT ($5/ticket)
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-yellow-400 font-mono text-xs">
+                      Total Stake: ${generatedTickets.length * 5} TT ($5/ticket)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic("selection");
+                        setExportPayload({
+                          slips: generatedTickets,
+                          targetDrawNumber: championPick?.target_draw_number
+                        });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-sans font-bold text-xs transition cursor-pointer"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Print or Export</span>
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   {generatedTickets.map((ticket, idx) => (
@@ -843,6 +882,19 @@ export default function CashPotTab() {
             </div>
           </div>
         </div>
+      )}
+
+      {exportPayload && (
+        <BetSlipExportModal
+          isOpen={true}
+          onClose={() => setExportPayload(null)}
+          gameKey="cashpot"
+          gameName="Cash Pot"
+          targetDrawNumber={exportPayload.targetDrawNumber}
+          slips={exportPayload.slips}
+          unitCostTT={5}
+          multiplierIncluded={true}
+        />
       )}
     </div>
   );

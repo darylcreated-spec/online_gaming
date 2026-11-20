@@ -13,9 +13,10 @@ import {
   Scatter,
   ZAxis
 } from "recharts";
-import { RefreshCw, TrendingUp, Calendar, Award, DollarSign, Database, HelpCircle, Zap, Brain, Shield, Compass } from "lucide-react";
+import { RefreshCw, TrendingUp, Calendar, Award, DollarSign, Database, HelpCircle, Zap, Brain, Shield, Compass, Printer } from "lucide-react";
 import { useState, useEffect } from "react";
 import { triggerHaptic } from "@/lib/haptics";
+import BetSlipExportModal from "@/components/BetSlipExportModal";
 
 interface DashboardTabProps {
   stats: any;
@@ -74,6 +75,11 @@ export default function DashboardTab({
   const [loadingSlips, setLoadingSlips] = useState(false);
   const [championPick, setChampionPick] = useState<any>(null);
   const [showChampionDrawer, setShowChampionDrawer] = useState<boolean>(false);
+  const [exportPayload, setExportPayload] = useState<{
+    slips: number[][];
+    bonusBalls: number[];
+    targetDrawNumber?: number;
+  } | null>(null);
 
   // Fetch saved slips & Engines Tab Champion Pick
   const fetchSlips = async () => {
@@ -376,15 +382,39 @@ export default function DashboardTab({
                 </span>
               )}
             </div>
-            <button
-              onClick={() => {
-                triggerHaptic("selection");
-                setShowChampionDrawer(!showChampionDrawer);
-              }}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-300 text-xs font-bold transition cursor-pointer shrink-0"
-            >
-              {showChampionDrawer ? "Close Champion Drawer" : "Open 10-Slip & Window Drawer"}
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic("selection");
+                  const slips = (championPick.wheel_slips || [championPick.predicted_numbers]).slice(0, 10);
+                  const bonusBalls = slips.map((_: number[], idx: number) =>
+                    championPick.line_powerballs?.[idx % (championPick.line_powerballs?.length || 1)] ||
+                    championPick.predicted_powerball ||
+                    ((idx % 10) + 1)
+                  );
+                  setExportPayload({
+                    slips,
+                    bonusBalls,
+                    targetDrawNumber: championPick.target_draw_number
+                  });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-sans font-bold transition cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print or Export</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic("selection");
+                  setShowChampionDrawer(!showChampionDrawer);
+                }}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-300 text-xs font-bold transition cursor-pointer"
+              >
+                {showChampionDrawer ? "Close Champion Drawer" : "Open 10-Slip & Window Drawer"}
+              </button>
+            </div>
           </div>
 
           {showChampionDrawer && (
@@ -518,11 +548,28 @@ export default function DashboardTab({
           <div className="space-y-4">
             {/* Engine Stats Bar */}
             {mevStats && (
-              <div className="flex flex-wrap gap-4 text-xs font-mono text-gray-400 uppercase bg-slate-950/40 border border-white/5 px-4 py-2 rounded-lg">
-                <span>Draws Analyzed: <strong className="text-emerald-400">{mevStats.drawsAnalyzed}</strong></span>
-                <span>Candidates Scored: <strong className="text-emerald-400">{mevStats.candidatesScored.toLocaleString()}</strong></span>
-                <span>Score Cutoff: <strong className="text-emerald-400">{mevStats.topScoreCutoff}</strong></span>
-                <span>Compute Time: <strong className="text-emerald-400">{mevStats.computeTimeMs}ms</strong></span>
+              <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-gray-400 uppercase bg-slate-950/40 border border-white/5 px-4 py-2 rounded-lg">
+                <div className="flex flex-wrap gap-4">
+                  <span>Draws Analyzed: <strong className="text-emerald-400">{mevStats.drawsAnalyzed}</strong></span>
+                  <span>Candidates Scored: <strong className="text-emerald-400">{mevStats.candidatesScored.toLocaleString()}</strong></span>
+                  <span>Score Cutoff: <strong className="text-emerald-400">{mevStats.topScoreCutoff}</strong></span>
+                  <span>Compute Time: <strong className="text-emerald-400">{mevStats.computeTimeMs}ms</strong></span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("selection");
+                    setExportPayload({
+                      slips: mevTickets.map((t: any) => t.numbers),
+                      bonusBalls: mevTickets.map((t: any) => t.powerball),
+                      targetDrawNumber: championPick?.target_draw_number
+                    });
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-sans font-bold normal-case transition cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print or Export Lines</span>
+                </button>
               </div>
             )}
 
@@ -1076,6 +1123,19 @@ export default function DashboardTab({
           </div>
         )}
       </div>
+
+      {exportPayload && (
+        <BetSlipExportModal
+          isOpen={true}
+          onClose={() => setExportPayload(null)}
+          gameKey="lotto-plus"
+          gameName="Lotto Plus"
+          targetDrawNumber={exportPayload.targetDrawNumber}
+          slips={exportPayload.slips}
+          bonusBalls={exportPayload.bonusBalls}
+          unitCostTT={5}
+        />
+      )}
     </div>
   );
 }

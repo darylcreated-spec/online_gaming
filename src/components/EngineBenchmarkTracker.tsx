@@ -28,8 +28,9 @@ import {
   Share2,
   Printer
 } from "lucide-react";
-import BetSlipExportModal from "@/components/BetSlipExportModal";
+import BetSlipExportModal, { ExportableGameKey } from "@/components/BetSlipExportModal";
 import { triggerHaptic } from "@/lib/haptics";
+import { copyTextToClipboard } from "@/lib/export_helpers";
 import {
   EngineLeaderboardRow,
   EngineLogEntry,
@@ -87,7 +88,7 @@ export default function EngineBenchmarkTracker() {
   const [customLocking, setCustomLocking] = useState<boolean>(false);
   const [cashPotBudgetTier, setCashPotBudgetTier] = useState<5 | 10 | 15 | 20>(10);
   const [exportSlipPayload, setExportSlipPayload] = useState<{
-    gameKey: "cashpot" | "lotto-plus" | "win-for-life";
+    gameKey: ExportableGameKey;
     gameName: string;
     targetDrawNumber?: number;
     slips: number[][];
@@ -253,25 +254,82 @@ export default function EngineBenchmarkTracker() {
     }
   };
 
-  const handleCopyChampionPick = (pick: ChampionMasterPick) => {
+  const openExportModalForPick = (pick: ChampionMasterPick) => {
+    triggerHaptic("selection");
+    const gameKey = pick.game_key as ExportableGameKey;
+    const unitCostTT =
+      gameKey === "win-for-life"
+        ? 10
+        : gameKey === "play-whe" || gameKey === "pick4"
+        ? 1
+        : 5;
+
+    let slips: number[][];
+    if (gameKey === "cashpot" && cashPotBudgetTier !== 10) {
+      slips = generateOptimalSteinerPortfolio(
+        "cashpot",
+        [],
+        cashPotBudgetTier,
+        pick.target_draw_number || 1
+      ).slips;
+    } else if (gameKey === "play-whe") {
+      slips = pick.predicted_numbers.map((m) => [m]);
+    } else if (pick.wheel_slips && pick.wheel_slips.length > 0) {
+      slips = pick.wheel_slips;
+    } else if (pick.condensed_wheel && pick.condensed_wheel.length > 0) {
+      slips = pick.condensed_wheel;
+    } else {
+      slips = [pick.predicted_numbers];
+    }
+
+    const bonusBalls =
+      gameKey === "lotto-plus" || gameKey === "win-for-life"
+        ? pick.line_powerballs && pick.line_powerballs.length > 0
+          ? pick.line_powerballs
+          : pick.predicted_powerball !== undefined
+          ? slips.map(() => pick.predicted_powerball as number)
+          : []
+        : [];
+
+    setExportSlipPayload({
+      gameKey,
+      gameName: getGameLabel(pick.game_key),
+      targetDrawNumber: pick.target_draw_number,
+      slips,
+      bonusBalls,
+      unitCostTT
+    });
+  };
+
+  const handleCopyChampionPick = async (pick: ChampionMasterPick) => {
     triggerHaptic("selection");
     const fmt = (arr: number[]) =>
       pick.game_key === "pick4"
         ? arr.map(n => String(n)).join(" - ")
         : arr.map(n => String(n).padStart(2, "0")).join(" - ");
+    const bonusTag =
+      pick.predicted_powerball !== undefined
+        ? pick.game_key === "win-for-life"
+          ? ` | Cash Ball: ${pick.predicted_powerball}`
+          : pick.game_key === "lotto-plus"
+          ? ` | Powerball: ${pick.predicted_powerball}`
+          : ` | Multiplier: ${pick.predicted_powerball}x`
+        : "";
     const lines = [
       `[${getGameLabel(pick.game_key).toUpperCase()} — APEX CHAMPION MASTER PICK | Draw #${pick.target_draw_number}${pick.target_time_slot ? ` (${pick.target_time_slot})` : ""}]`,
-      `Master Anchor Pick: ${fmt(pick.predicted_numbers)}${pick.predicted_powerball ? ` + PB/Mult: ${pick.predicted_powerball}` : ""}`,
+      `Master Anchor Pick: ${fmt(pick.predicted_numbers)}${bonusTag}`,
       ...(pick.condensed_wheel.length > 0
         ? [`Top Refined Combinations:`, ...pick.condensed_wheel.slice(0, 5).map((w, i) => `  Set #${i + 1}: ${fmt(w)}`)]
         : [])
     ];
-    navigator.clipboard?.writeText(lines.join("\n")).catch(() => {});
-    setCopiedGame(pick.game_key);
-    setTimeout(() => setCopiedGame(null), 2200);
+    const ok = await copyTextToClipboard(lines.join("\n"));
+    if (ok) {
+      setCopiedGame(pick.game_key);
+      setTimeout(() => setCopiedGame(null), 2200);
+    }
   };
 
-  const handleSyndicateQuickExport = (pick: ChampionMasterPick) => {
+  const handleSyndicateQuickExport = async (pick: ChampionMasterPick) => {
     triggerHaptic("selection");
     const fmt = (arr: number[]) =>
       pick.game_key === "pick4"
@@ -297,29 +355,36 @@ export default function EngineBenchmarkTracker() {
         ? [`Multi-Engine Convergence Locks: ${pick.convergence_locks.join(", ")}`]
         : []),
       ...(pick.bonus_ball_rotation && pick.bonus_ball_rotation.length > 0
-        ? [`Top-3 Weibull Renewal Bonus Ball Rotation: ${pick.bonus_ball_rotation.join(", ")}`]
+        ? [`Top-3 Renewal Bonus Rotation: ${pick.bonus_ball_rotation.join(", ")}`]
         : []),
       `-------------------------------------------------------`,
       `PORTFOLIO COVERING SLIPS (${slips.length} Tickets):`,
       ...slips.map((slip, i) => {
-        const rotatedPb =
-          pick.game_key === "lotto-plus" && pick.line_powerballs && pick.line_powerballs.length > 0
+        const rotatedBonus =
+          (pick.game_key === "lotto-plus" || pick.game_key === "win-for-life") &&
+          pick.line_powerballs &&
+          pick.line_powerballs.length > 0
             ? pick.line_powerballs[i % pick.line_powerballs.length]
             : pick.predicted_powerball;
-        const pbSuffix = rotatedPb !== undefined
-          ? pick.game_key === "cashpot"
-            ? ` [Mult: x${rotatedPb}]`
-            : ` [PB: ${rotatedPb}]`
-          : "";
+        const pbSuffix =
+          rotatedBonus !== undefined
+            ? pick.game_key === "cashpot"
+              ? ` [Multiplier: ${rotatedBonus}x]`
+              : pick.game_key === "win-for-life"
+              ? ` [Cash Ball: ${rotatedBonus}]`
+              : ` [Powerball: ${rotatedBonus}]`
+            : "";
         return `Slip #${String(i + 1).padStart(2, "0")}:  ${fmt(slip)}${pbSuffix}`;
       }),
       `-------------------------------------------------------`,
       `Syndicate Persistence Horizon: Maintain active slips for 3 consecutive draws.`,
       `=======================================================`
     ];
-    navigator.clipboard?.writeText(lines.join("\n")).catch(() => {});
-    setCopiedSyndicateGame(pick.game_key);
-    setTimeout(() => setCopiedSyndicateGame(null), 2500);
+    const ok = await copyTextToClipboard(lines.join("\n"));
+    if (ok) {
+      setCopiedSyndicateGame(pick.game_key);
+      setTimeout(() => setCopiedSyndicateGame(null), 2500);
+    }
   };
 
   // Determine the #1 Champion Engine per game
@@ -1094,33 +1159,46 @@ export default function EngineBenchmarkTracker() {
                   {/* Card Footer Actions */}
                   <div className="pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
                     <button
+                      type="button"
+                      onClick={() => openExportModalForPick(pick)}
+                      className="flex-1 min-w-[130px] py-1.5 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-sans font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      title="Print or export betting slips for this game"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Print or Export</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleCopyChampionPick(pick)}
-                      className="flex-1 min-w-[120px] py-1.5 px-3 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-semibold transition-colors flex items-center justify-center gap-1.5"
+                      className="flex-1 min-w-[120px] py-1.5 px-3 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       title="Copy primary line / tactical set"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       {isCopied ? "Copied Anchor Line!" : "Copy Anchor Pick"}
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleSyndicateQuickExport(pick)}
-                      className="flex-1 min-w-[130px] py-1.5 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold transition-colors flex items-center justify-center gap-1.5"
-                      title="Export full 5-to-10 slip covering array portfolio to clipboard"
+                      className="flex-1 min-w-[130px] py-1.5 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      title="Export full covering array portfolio to clipboard"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       {isSyndicateCopied ? "Copied Portfolio!" : "Syndicate Quick Export"}
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleManualAction("lock_campaign", pick.game_key, pick.target_draw_number)}
                       disabled={lockingGame === pick.game_key}
-                      className="py-1.5 px-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-mono font-semibold transition-colors flex items-center gap-1"
+                      className="py-1.5 px-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-mono font-semibold transition-colors flex items-center gap-1 cursor-pointer"
                       title="Pin and track this suggested play across its upcoming 3-Draw and 5-Draw windows"
                     >
                       <Target className="w-3.5 h-3.5" />
                       {lockingGame === pick.game_key ? "Locking..." : "Track 3 & 5 Draws"}
                     </button>
                     <button
+                      type="button"
                       onClick={() => setSelectedGame(pick.game_key === selectedGame ? "all" : pick.game_key)}
-                      className="py-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono transition-colors"
+                      className="py-1.5 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono transition-colors cursor-pointer"
                     >
                       {selectedGame === pick.game_key ? "Show All" : "Focus Game"}
                     </button>

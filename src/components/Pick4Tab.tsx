@@ -20,7 +20,8 @@ import {
   Brain,
   HelpCircle,
   Binary,
-  ShieldCheck
+  ShieldCheck,
+  Printer
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -36,6 +37,8 @@ import GameHeaderBanner from "@/components/GameHeaderBanner";
 import Pick4Diff9Panel from "@/components/Pick4Diff9Panel";
 import Pick4AuditPanel from "@/components/Pick4AuditPanel";
 import Pick4ForensicPanel from "@/components/Pick4ForensicPanel";
+import BetSlipExportModal from "@/components/BetSlipExportModal";
+import { copyTextToClipboard } from "@/lib/export_helpers";
 
 interface Pick4Draw {
   id: number;
@@ -63,6 +66,7 @@ export default function Pick4Tab() {
   const [backtestLoading, setBacktestLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
 
   // Archive filters
   const [search, setSearch] = useState("");
@@ -152,10 +156,12 @@ export default function Pick4Tab() {
     fetchMathEngine(false);
   }, [selectedSlot]);
 
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+  const copyToClipboard = async (text: string, id: string) => {
+    const ok = await copyTextToClipboard(text);
+    if (ok) {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
   };
 
   const slots = ["MORNING", "MIDDAY", "AFTERNOON", "EVENING"];
@@ -439,6 +445,19 @@ export default function Pick4Tab() {
             </div>
           ) : mathData ? (
             <>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-sans font-semibold text-slate-300">
+                  Recommended Pick 4 Plays (Straight, 24-Way Box, and 12-Way Box)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowExportModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-sans font-bold text-xs transition cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print or Export All 3</span>
+                </button>
+              </div>
               {/* Top Recommended Tickets Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* 1. Optimal Straight Ticket */}
@@ -952,6 +971,27 @@ export default function Pick4Tab() {
 
       {/* Subtab: Forensic Engine Panel */}
       {activeSubTab === "forensic" && <Pick4ForensicPanel />}
+
+      {mathData && (
+        <BetSlipExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          gameKey="pick4"
+          gameName="Pick 4"
+          targetDrawNumber={latestDrawItem?.draw_number ? latestDrawItem.draw_number + 1 : undefined}
+          slips={[
+            mathData.optimalStraightTicket.digits,
+            mathData.optimalBoxTickets.twentyFourWay.digits,
+            mathData.optimalBoxTickets.twelveWay.digits
+          ]}
+          playLabels={[
+            "Straight (Exact Order)",
+            "24-Way Box (Any Order)",
+            "12-Way Twin Box (Any Order)"
+          ]}
+          unitCostTT={1}
+        />
+      )}
     </div>
   );
 }
