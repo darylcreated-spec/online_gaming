@@ -184,18 +184,18 @@ export const NLCB_GAME_GUIDE: GameGuideInfo[] = [
     key: "win-for-life",
     name: "Win For Life",
     shortName: "Win For Life",
-    tagline: "Pick 6 numbers from 1 to 28 plus 1 Cash Ball from 1 to 10",
+    tagline: "Pick 6 numbers from 1 to 28 plus 1 Cash Ball (1, 2, or 3)",
     costPerPlay: "$10.00 per line",
     unitCostTT: 10,
-    costDetail: "$10.00 TTD per line. A 10-line non-overlapping set covers all 28 main numbers with zero repeated pairs and covers all 10 Cash Balls.",
+    costDetail: "$10.00 TTD per line. A 10-line non-overlapping set covers all 28 main numbers with zero repeated pairs and balances across all 3 Cash Balls (1, 2, and 3).",
     topPrize: "$20,000 per month for 20 years",
-    odds: "1 in 3,767,400 for 6 numbers plus Cash Ball",
+    odds: "1 in 1,130,220 for 6 numbers plus Cash Ball",
     schedule: "Tuesday and Friday at 7:00 PM",
-    whatWins: "Match 3 numbers ($25), Match 4 numbers ($100), Match 5 numbers ($1,000), Match 6 numbers, or Match 6 plus the Cash Ball for the Grand Prize.",
-    whatPaysZero: "Matching 0, 1, or 2 numbers pays $0.",
-    mathEdgeSummary: "A 10-line non-overlapping set reaches a 72.13% chance of matching 3 or more numbers and the exact 9.55% ceiling for matching 4 or more numbers (covering 35,980 of 376,740 draws, at most 1 shared number) plus all 10 Cash Balls from 1 to 10.",
+    whatWins: "Match 3 ($10, or $20 with Cash Ball), Match 4 ($50, or $100 with Cash Ball), Match 5 ($1,000, or $2,000 with Cash Ball), Match 6 ($20,000 per month for 2 years), or Match 6 plus Cash Ball ($20,000 per month for 20 years).",
+    whatPaysZero: "Matching 0, 1, or 2 main numbers pays $0 (even if the Cash Ball matches).",
+    mathEdgeSummary: "A 10-line non-overlapping set reaches a 72.13% chance of matching 3 or more numbers and the exact 9.55% ceiling for matching 4 or more numbers (covering 35,980 of 376,740 draws, at most 1 shared number), balanced across all 3 Cash Balls (1, 2, and 3).",
     howToPlay: [
-      "Choose 6 numbers from 1 to 28 and 1 Cash Ball from 1 to 10 at $10.00 TTD per line.",
+      "Choose 6 numbers from 1 to 28 and 1 Cash Ball (1, 2, or 3) at $10.00 TTD per line.",
       "Use 5 lines ($50 TTD) or 10 lines ($100 TTD, or split with a group) for maximum non-overlapping coverage.",
       "Check Tuesday and Friday 7:00 PM results right inside the Win For Life tab."
     ],
@@ -212,8 +212,8 @@ export const NLCB_GAME_GUIDE: GameGuideInfo[] = [
         naiveOverlapPct: 9.13,
         tier2Pct: 0.96,
         tier2Label: "Match 4 or more",
-        jackpotOdds: "1 in 3,767,400",
-        note: "One 6-number line covers 34,398 winning combinations out of 376,740 possible draws."
+        jackpotOdds: "1 in 1,130,220",
+        note: "One 6-number line covers 34,398 winning combinations out of 376,740 main draws, with a 1 in 3 chance of matching the Cash Ball (1, 2, or 3)."
       },
       {
         slips: 5,
@@ -223,8 +223,8 @@ export const NLCB_GAME_GUIDE: GameGuideInfo[] = [
         naiveOverlapPct: 37.9,
         tier2Pct: 4.78,
         tier2Label: "Match 4 or more",
-        jackpotOdds: "1 in 753,480",
-        note: "Five lines spread evenly across all 28 numbers with almost zero overlap.",
+        jackpotOdds: "1 in 226,044",
+        note: "Five lines spread evenly across all 28 numbers with almost zero overlap, covering all 3 Cash Balls (1, 2, and 3).",
         steinerSupported: true
       },
       {
@@ -235,8 +235,8 @@ export const NLCB_GAME_GUIDE: GameGuideInfo[] = [
         naiveOverlapPct: 60.4,
         tier2Pct: 9.55,
         tier2Label: "Match 4 or more",
-        jackpotOdds: "1 in 376,740",
-        note: "Zero repeated pairs (at most 1 shared number): covers 271,744 of 376,740 possible draws plus all 10 Cash Balls.",
+        jackpotOdds: "1 in 113,022",
+        note: "Zero repeated pairs (at most 1 shared number): covers 271,744 of 376,740 main draws balanced across all 3 Cash Balls (1, 2, and 3).",
         steinerSupported: true
       }
     ]

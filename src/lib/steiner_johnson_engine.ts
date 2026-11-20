@@ -357,7 +357,8 @@ export function generateOptimalSteinerPortfolio(
     exactMatch3Pct = slipCount === 5 ? 43.74 : 72.13;
     exactMatch4Pct = slipCount === 5 ? 4.78 : 9.55;
     exactAnyPrizePct = exactMatch3Pct;
-    jackpotOddsStr = slipCount === 5 ? "1 in 753,480" : "1 in 376,740";
+    // Exact NLCB Win For Life odds: C(28, 6) = 376,740 main sets x 3 Cash Balls (1, 2, 3) = 1,130,220
+    jackpotOddsStr = slipCount === 5 ? "1 in 226,044" : "1 in 113,022";
   } else {
     template = slipCount === 5 ? LOTTO_STEINER_10.slice(0, 5) : LOTTO_STEINER_10;
     exactMatch3Pct = slipCount === 5 ? 6.95 : 13.68;
@@ -438,18 +439,27 @@ export function generateOptimalSteinerPortfolio(
     return scoreB - scoreA;
   });
 
-  // Full 10-Bonus-Ball Stratification for Lotto Plus (Powerball 1..10) & Win For Life (Cash Ball 1..10)
-  // Deterministically rotated by targetDrawNumber so every bonus ball 1..10 appears ONCE across 10 slips -> 100% PB Guarantee!
+  // Bonus-Ball Stratification:
+  // - Lotto Plus: Powerball 1..10 (all 10 distinct Powerballs assigned once across 10 plays)
+  // - Win For Life: Cash Ball 1..3 ONLY (balanced evenly across Cash Balls 1, 2, and 3)
   const bonusBalls: number[] = [];
-  if (game === "lotto-plus" || game === "win-for-life") {
+  if (game === "lotto-plus") {
     const base = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    // Deterministic Fisher-Yates shuffle seeded by targetDrawNumber
     for (let i = base.length - 1; i > 0; i--) {
       const j = Math.floor(rand() * (i + 1));
       [base[i], base[j]] = [base[j], base[i]];
     }
     for (let i = 0; i < currentSlips.length; i++) {
       bonusBalls.push(base[i % 10]);
+    }
+  } else if (game === "win-for-life") {
+    const base = [1, 2, 3];
+    for (let i = base.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [base[i], base[j]] = [base[j], base[i]];
+    }
+    for (let i = 0; i < currentSlips.length; i++) {
+      bonusBalls.push(base[i % 3]);
     }
   }
 

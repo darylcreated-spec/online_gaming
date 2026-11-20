@@ -47,6 +47,7 @@ export default function BetSlipExportModal({
   const maxBall = gameKey === "cashpot" ? 20 : gameKey === "win-for-life" ? 28 : 35;
   const gridCols = gameKey === "win-for-life" ? 7 : 5;
   const bonusFullName = gameKey === "win-for-life" ? "Cash Ball" : gameKey === "lotto-plus" ? "Powerball" : "";
+  const bonusMax = gameKey === "win-for-life" ? 3 : 10;
   const totalCostTT = slips.length * unitCostTT;
 
   // Group slips into physical 5-panel NLCB cards (Panels A, B, C, D, E)
@@ -159,7 +160,7 @@ export default function BetSlipExportModal({
         bonusFullName && bonus !== undefined
           ? `<div class="bonus-row">
               <span class="bonus-title">${bonusFullName}:</span>
-              ${Array.from({ length: 10 }, (_, i) => {
+              ${Array.from({ length: bonusMax }, (_, i) => {
                 const b = i + 1;
                 return `<span class="bcell ${b === bonus ? "bmarked" : ""}">${b}</span>`;
               }).join("")}
@@ -455,10 +456,13 @@ export default function BetSlipExportModal({
                         {p.bonus !== undefined && bonusFullName && (
                           <div className="pt-2 border-t border-white/[0.06] space-y-1.5">
                             <span className="text-xs text-slate-400 font-semibold block">
-                              {bonusFullName} (1 to 10):
+                              {bonusFullName} (1 to {bonusMax}):
                             </span>
-                            <div className="grid grid-cols-10 gap-1 font-mono text-xs">
-                              {Array.from({ length: 10 }, (_, i) => {
+                            <div
+                              className="grid gap-1 font-mono text-xs"
+                              style={{ gridTemplateColumns: `repeat(${bonusMax}, minmax(0, 1fr))` }}
+                            >
+                              {Array.from({ length: bonusMax }, (_, i) => {
                                 const b = i + 1;
                                 const marked = b === p.bonus;
                                 return (

@@ -722,7 +722,7 @@ export default function WelcomeTab({ onSelectGame }: WelcomeTabProps) {
             <span>Honest Odds and Fair Play Notice</span>
           </h3>
           <p className="text-sm text-slate-300 font-sans leading-relaxed">
-            Every NLCB game is a game of chance where the lottery keeps about 40% of ticket sales on shared-jackpot games. No formula can predict which numbers a fair lottery machine will draw next. What math can improve is: removing wasted overlapping pairs across your tickets, covering all 10 Powerball or Cash Ball numbers from 1 to 10, avoiding common date patterns so jackpots are shared less often, and playing Cash Pot on Monday, Thursday, and Saturday Sure Call days for 2 to 4 times Multipliers.
+            Every NLCB game is a game of chance where the lottery keeps about 40% of ticket sales on shared-jackpot games. No formula can predict which numbers a fair lottery machine will draw next. What math can improve is: removing wasted overlapping pairs across your tickets, covering all 10 Powerball numbers (1 to 10) in Lotto Plus or all 3 Cash Ball numbers (1, 2, and 3) in Win For Life, avoiding common date patterns so jackpots are shared less often, and playing Cash Pot on Monday, Thursday, and Saturday Sure Call days for 2 to 4 times Multipliers.
           </p>
           <p className="text-xs text-slate-400 font-sans leading-relaxed">
             This platform is not affiliated with or endorsed by the National Lotteries Control Board (NLCB) of Trinidad and Tobago. Using this tool does not guarantee winnings. Always play within your budget.

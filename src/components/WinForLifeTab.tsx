@@ -432,7 +432,7 @@ export default function WinForLifeTab() {
       <GameHeaderBanner
         game="win-for-life"
         title="Win For Life"
-        subtitle="Pick 6 numbers from 1 to 28 plus 1 Cash Ball from 1 to 10. Draws Tuesday and Friday at 7:00 PM, $10.00 per line."
+        subtitle="Pick 6 numbers from 1 to 28 plus 1 Cash Ball (1, 2, or 3). Draws Tuesday and Friday at 7:00 PM, $10.00 per line."
         themeColor="emerald"
         iconSrc="/images/win_for_life_icon.png"
         totalDrawsCount={stats?.totalDraws || draws.length}
@@ -929,7 +929,7 @@ export default function WinForLifeTab() {
             {/* Cash Ball Frequency Chart */}
             <div className="glass-panel p-6 rounded-xl space-y-4">
               <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                <h3 className="text-base font-bold text-white font-sans">Cash Ball Frequencies (1 to 10)</h3>
+                <h3 className="text-base font-bold text-white font-sans">Cash Ball Frequencies (1 to 3)</h3>
                 <span className="text-xs text-gray-500 font-mono">Draw Count</span>
               </div>
               <div className="h-64 w-full">
@@ -1931,7 +1931,7 @@ export default function WinForLifeTab() {
           <div className="glass-panel p-6 rounded-2xl space-y-5">
             <div className="border-b border-white/5 pb-3 space-y-1">
               <h3 className="text-base font-bold text-white">How Ticket Coverage Works in Win For Life (6 of 28)</h3>
-              <p className="text-sm text-slate-300">Balanced sum ranges, non-overlapping 10-line sets covering all 28 numbers, and full Cash Ball coverage from 1 to 10.</p>
+              <p className="text-sm text-slate-300">Balanced sum ranges, non-overlapping 10-line sets covering all 28 numbers, and balanced Cash Ball coverage across 1, 2, and 3.</p>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-sm text-slate-300 leading-relaxed">
@@ -1939,7 +1939,7 @@ export default function WinForLifeTab() {
                 <div>
                   <h4 className="text-sm font-bold text-emerald-400 mb-1">1. Balanced Sum Range (66 to 111)</h4>
                   <p>
-                    Out of 376,740 possible 6-number combinations (plus Cash Ball 1 to 10), generated lines stay inside the typical <strong className="text-white">66 to 111</strong> sum range with a balanced odd-and-even and low-and-high mix.
+                    Out of 376,740 possible 6-number combinations (times 3 Cash Balls = 1,130,220 grand prize combinations), generated lines stay inside the typical <strong className="text-white">66 to 111</strong> sum range with a balanced odd-and-even and low-and-high mix.
                   </p>
                 </div>
                 <div>
@@ -1951,16 +1951,16 @@ export default function WinForLifeTab() {
                 <div>
                   <h4 className="text-sm font-bold text-emerald-400 mb-1">3. 10-Line Non-Overlapping Coverage</h4>
                   <p>
-                    A 10-line non-overlapping set covers all 28 numbers with at most 1 shared number between any two lines, reaching a <strong className="text-white">72.13% chance</strong> of matching 3 or more numbers and covering all 10 Cash Balls.
+                    A 10-line non-overlapping set covers all 28 numbers with at most 1 shared number between any two lines, reaching a <strong className="text-white">72.13% chance</strong> of matching 3 or more numbers across all 3 Cash Balls (1, 2, and 3).
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-bold text-sky-400 mb-1">4. Cash Ball Coverage (1 to 10)</h4>
+                  <h4 className="text-sm font-bold text-sky-400 mb-1">4. Cash Ball Coverage (1, 2, and 3)</h4>
                   <p>
-                    Assigning every Cash Ball from 1 to 10 once across 10 lines ensures you always match the Cash Ball without wasting duplicate plays on the same bonus number.
+                    Win For Life uses 3 Cash Balls (1, 2, and 3). Spreading your lines evenly across 1, 2, and 3 covers every Cash Ball while keeping every main 6-number combination distinct.
                   </p>
                 </div>
                 <div>

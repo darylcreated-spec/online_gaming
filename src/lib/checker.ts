@@ -439,56 +439,38 @@ export function checkWinForLifeTicket(
   if (matchCount === 6) {
     isWinner = true;
     if (pbMatched) {
-      tierName = "6 Main + Cash Ball (1st PRIZE)";
-      prizeEstimate = "$20,000.00 / Month for 20 Years ($4.8M TT)";
+      tierName = "6 Main + Cash Ball (1st Prize)";
+      prizeEstimate = "$20,000.00 / Month for 20 Years ($4.8M TTD)";
     } else {
-      tierName = "6 Main Numbers (2nd PRIZE)";
-      prizeEstimate = "$20,000.00 / Month for 2 Years ($480K TT)";
+      tierName = "6 Main Numbers (2nd Prize)";
+      prizeEstimate = "$20,000.00 / Month for 2 Years ($480,000 TTD)";
     }
   } else if (matchCount === 5) {
     isWinner = true;
     if (pbMatched) {
       tierName = "5 Main + Cash Ball";
-      prizeEstimate = "$1,000.00 TT";
+      prizeEstimate = "$2,000.00 TTD";
     } else {
       tierName = "5 Main Numbers";
-      prizeEstimate = "$250.00 TT";
+      prizeEstimate = "$1,000.00 TTD";
     }
   } else if (matchCount === 4) {
     isWinner = true;
     if (pbMatched) {
       tierName = "4 Main + Cash Ball";
-      prizeEstimate = "$100.00 TT";
+      prizeEstimate = "$100.00 TTD";
     } else {
       tierName = "4 Main Numbers";
-      prizeEstimate = "$20.00 TT";
+      prizeEstimate = "$50.00 TTD";
     }
   } else if (matchCount === 3) {
     isWinner = true;
     if (pbMatched) {
       tierName = "3 Main + Cash Ball";
-      prizeEstimate = "$10.00 TT";
+      prizeEstimate = "$20.00 TTD";
     } else {
       tierName = "3 Main Numbers";
-      prizeEstimate = "$2.00 TT";
-    }
-  } else if (matchCount === 2) {
-    if (pbMatched) {
-      isWinner = true;
-      tierName = "2 Main + Cash Ball";
-      prizeEstimate = "$5.00 TT";
-    }
-  } else if (matchCount === 1) {
-    if (pbMatched) {
-      isWinner = true;
-      tierName = "1 Main + Cash Ball";
-      prizeEstimate = "Free Quick Pick Ticket";
-    }
-  } else if (matchCount === 0) {
-    if (pbMatched) {
-      isWinner = true;
-      tierName = "Cash Ball Only";
-      prizeEstimate = "Free Quick Pick Ticket";
+      prizeEstimate = "$10.00 TTD";
     }
   }
 

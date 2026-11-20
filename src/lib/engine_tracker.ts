@@ -573,31 +573,50 @@ export function evaluatePredictionAgainstDraw(
       simulatedPayoutTT = bestLinePayout;
     }
   } else if (gameKey === "win-for-life") {
-    const maxEvalLines = simulatedBetTT >= 6 ? Math.min(10, Math.round(simulatedBetTT)) : 5;
+    const maxEvalLines = Math.max(1, Math.min(10, Math.round(simulatedBetTT / 10)));
     const playableLines = buildPlayableLines(predNums, wheelSlips || [], maxEvalLines, 6);
     matchCount = predNums.filter(n => actualSet.has(n)).length;
-    playableLines.forEach(line => {
+
+    const scoreWflLine = (m: number, cbMatch: boolean): { payout: number; tier: string } => {
+      if (m === 6) {
+        return cbMatch
+          ? { payout: 4800000.0, tier: "MATCH 6 + Cash Ball ($20k/mo x 20 yrs)" }
+          : { payout: 480000.0, tier: "MATCH 6 ($20k/mo x 2 yrs)" };
+      }
+      if (m === 5) return { payout: cbMatch ? 2000.0 : 1000.0, tier: cbMatch ? "MATCH 5 + Cash Ball ($2,000)" : "MATCH 5 ($1,000)" };
+      if (m === 4) return { payout: cbMatch ? 100.0 : 50.0, tier: cbMatch ? "MATCH 4 + Cash Ball ($100)" : "MATCH 4 ($50)" };
+      if (m === 3) return { payout: cbMatch ? 20.0 : 10.0, tier: cbMatch ? "MATCH 3 + Cash Ball ($20)" : "MATCH 3 ($10)" };
+      return { payout: 0.0, tier: "NONE" };
+    };
+
+    // Official NLCB Win For Life Cash Balls are ONLY 1, 2, or 3
+    let totalWflPayout = 0.0;
+    let bestLinePayout = 0.0;
+    let bestLineTier = "NONE";
+    playableLines.forEach((line, idx) => {
       const m = line.filter(n => actualSet.has(n)).length;
       if (m > bestWheelMatch) bestWheelMatch = m;
+      const lineCb =
+        linePowerballs && linePowerballs[idx] !== undefined && linePowerballs[idx] >= 1 && linePowerballs[idx] <= 3
+          ? linePowerballs[idx]
+          : idx === 0 && predPowerball !== undefined && predPowerball >= 1 && predPowerball <= 3
+          ? predPowerball
+          : ((idx % 3) + 1);
+      const cbMatch = actualPowerball !== undefined && lineCb === actualPowerball;
+      const res = scoreWflLine(m, cbMatch);
+      if (res.payout > 0) {
+        totalWflPayout += res.payout;
+        if (res.payout > bestLinePayout) {
+          bestLinePayout = res.payout;
+          bestLineTier = res.tier;
+        }
+      }
     });
-    const effectiveMatch = Math.max(matchCount, bestWheelMatch);
 
-    if (effectiveMatch === 6) {
+    if (totalWflPayout > 0) {
       isPrize = 1;
-      prizeTier = "MATCH 6 GRAND ANNUITY ($480k TT)";
-      simulatedPayoutTT = 480000.0;
-    } else if (effectiveMatch === 5) {
-      isPrize = 1;
-      prizeTier = "MATCH 5 ($1,000 TT)";
-      simulatedPayoutTT = 1000.0;
-    } else if (effectiveMatch === 4) {
-      isPrize = 1;
-      prizeTier = "MATCH 4 ($100 TT)";
-      simulatedPayoutTT = 100.0;
-    } else if (effectiveMatch === 3) {
-      isPrize = 1;
-      prizeTier = "MATCH 3 ($25 TT)";
-      simulatedPayoutTT = 25.0;
+      prizeTier = bestLineTier;
+      simulatedPayoutTT = totalWflPayout;
     }
   }
 
@@ -2834,7 +2853,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: 50.0
             });
 
-            // APEX CHAMPION MASTER CONSENSUS (Win For Life Steiner-Johnson J*(28,6;10) Global Optimum)
+            // APEX CHAMPION MASTER CONSENSUS (Win For Life Steiner-Johnson J*(28,6;10) + Cash Ball 1..3)
             const steinerWfl = generateOptimalSteinerPortfolio(
               "win-for-life",
               hist.map(d => d.numbers),
@@ -2845,12 +2864,13 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               game_key: "win-for-life",
               engine_key: "apex-master",
               engine_name: "Apex Steiner-Johnson Optimal",
-              strategy_name: "10-Slip J*(28,6) Zero-Pair-Overlap Packing (72.13% Exact 3+, 9.55% 4+ Ceiling, 28/28 Balls)",
+              strategy_name: "10-Slip J*(28,6) Zero-Pair-Overlap Packing (72.13% Exact 3+, 9.55% 4+ Ceiling, 28/28 Balls, Cash Ball 1-3)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
               predicted_numbers: steinerWfl.slips[0],
               predicted_powerball: steinerWfl.bonusBalls[0] || 1,
               wheel_slips: steinerWfl.slips,
+              line_powerballs: steinerWfl.bonusBalls,
               actual_numbers: actual.numbers,
               actual_powerball: actual.cash_ball,
               simulated_bet_tt: steinerWfl.slips.length * 10.0
