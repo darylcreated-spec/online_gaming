@@ -1598,7 +1598,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_numbers: forensic5Lines[0],
               predicted_powerball: forensic.nextCandidateSets[0].powerball,
               wheel_slips: forensic5Lines,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 25.0
             });
             recordedCount++;
           }
@@ -1626,7 +1626,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_numbers: quantSlips[0],
               predicted_powerball: forensic.nextCandidateSets?.[0]?.powerball || 2,
               wheel_slips: quantSlips,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 25.0
             });
             recordedCount++;
           }
@@ -1645,7 +1645,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_numbers: formula.predictedNumbers,
               predicted_powerball: modalPb,
               wheel_slips: wf5Lines,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 25.0
             });
             recordedCount++;
           }
@@ -1698,7 +1698,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               target_draw_number: targetDraw,
               predicted_numbers: forensic5Lines[0],
               wheel_slips: forensic5Lines,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 50.0
             });
             recordedCount++;
           }
@@ -1727,7 +1727,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_numbers: quantWflLines[0],
               predicted_powerball: forensic.nextCandidateSets?.[0]?.numbers ? draws[draws.length - 1]?.cash_ball : 1,
               wheel_slips: quantWflLines,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 50.0
             });
             recordedCount++;
           }
@@ -1744,7 +1744,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               target_draw_number: targetDraw,
               predicted_numbers: formula.predictedNumbers,
               wheel_slips: wf5Lines,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 50.0
             });
             recordedCount++;
           }
@@ -2674,7 +2674,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               wheel_slips: forensic5Lines,
               actual_numbers: actual.numbers,
               actual_powerball: actual.powerball,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 25.0
             });
 
             const quantHist: LottoDrawRecord[] = rows.slice(0, t).map(r => ({
@@ -2703,7 +2703,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
                 wheel_slips: quantSlips,
                 actual_numbers: actual.numbers,
                 actual_powerball: actual.powerball,
-                simulated_bet_tt: 5.0
+                simulated_bet_tt: 25.0
               });
             }
 
@@ -2725,7 +2725,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               wheel_slips: wf5Lines,
               actual_numbers: actual.numbers,
               actual_powerball: actual.powerball,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 25.0
             });
 
             // APEX CHAMPION MASTER CONSENSUS (Lotto Plus Steiner-Johnson J*(35,5;10) + Full 10-PB Stratification)
@@ -2783,7 +2783,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               wheel_slips: forensic5Lines,
               actual_numbers: actual.numbers,
               actual_powerball: actual.cash_ball,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 50.0
             });
 
             const quantWflHist: WinForLifeDrawRecord[] = hist.map(d => ({
@@ -2811,7 +2811,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
                 wheel_slips: quantWflLines,
                 actual_numbers: actual.numbers,
                 actual_powerball: actual.cash_ball,
-                simulated_bet_tt: 5.0
+                simulated_bet_tt: 50.0
               });
             }
 
@@ -2831,7 +2831,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               wheel_slips: wfWfl5Lines,
               actual_numbers: actual.numbers,
               actual_powerball: actual.cash_ball,
-              simulated_bet_tt: 5.0
+              simulated_bet_tt: 50.0
             });
 
             // APEX CHAMPION MASTER CONSENSUS (Win For Life Steiner-Johnson J*(28,6;10) Global Optimum)
@@ -3145,8 +3145,8 @@ export async function getEngineLeaderboardStats(
         const aQualified = a.total_evaluated >= 10 ? 1 : 0;
         const bQualified = b.total_evaluated >= 10 ? 1 : 0;
         if (bQualified !== aQualified) return bQualified - aQualified;
-        const aScore = a.prize_win_rate_pct * 0.6 + Math.min(200, Math.max(-100, a.roi_pct)) * 0.4;
-        const bScore = b.prize_win_rate_pct * 0.6 + Math.min(200, Math.max(-100, b.roi_pct)) * 0.4;
+        const aScore = a.prize_win_rate_pct * 0.85 + Math.min(200, Math.max(-100, a.roi_pct)) * 0.15;
+        const bScore = b.prize_win_rate_pct * 0.85 + Math.min(200, Math.max(-100, b.roi_pct)) * 0.15;
         return bScore - aScore || b.prize_win_rate_pct - a.prize_win_rate_pct || b.roi_pct - a.roi_pct;
       });
     const champRow = gameLeaderRows[0];
