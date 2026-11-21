@@ -20,11 +20,12 @@ import LottoDiff35Panel from "@/components/LottoDiff35Panel";
 import LottoQuant100Panel from "@/components/LottoQuant100Panel";
 import LottoAuditPanel from "@/components/LottoAuditPanel";
 import LottoForensicPanel from "@/components/LottoForensicPanel";
+import TrevorEnginePanel from "@/components/TrevorEnginePanel";
 import EngineBenchmarkTracker from "@/components/EngineBenchmarkTracker";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PushNotificationBell from "@/components/PushNotificationBell";
 import MemberCheckInPill from "@/components/MemberCheckInPill";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck, Cpu, Zap, Gamepad2, Menu, X, DollarSign } from "lucide-react";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck, Cpu, Zap, Gamepad2, Menu, X, DollarSign, Crosshair } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { getCacheItem, setCacheItem } from "@/lib/idb_cache";
 import WinConceptLogoEmblem from "@/components/WinConceptLogoEmblem";
@@ -103,8 +104,8 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "fast-cash" | "syndicate" | "engine-tracker" | "settings">("welcome");
   const [utilitySubTool, setUtilitySubTool] = useState<"scanner" | "nl-query">("scanner");
-  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "math-engine" | "diff-35" | "quant-100" | "forensic" | "audit" | "history" | "builder" | "explain">("dashboard");
-  const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "transition" | "math-engine" | "diff" | "history" | "translator" | "relationship" | "hits" | "explain" | "network" | "audit" | "forensic">("dashboard");
+  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "trevor-engine" | "math-engine" | "diff-35" | "quant-100" | "forensic" | "audit" | "history" | "builder" | "explain">("dashboard");
+  const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "trevor" | "transition" | "math-engine" | "diff" | "history" | "translator" | "relationship" | "hits" | "explain" | "network" | "audit" | "forensic">("dashboard");
   
   const [mobileSheet, setMobileSheet] = useState<null | "games" | "more">(null);
   const [desktopGamesOpen, setDesktopGamesOpen] = useState(false);
@@ -621,6 +622,7 @@ export default function Home() {
             <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 w-full md:w-fit overflow-x-auto flex-nowrap sleek-scrollbar gap-1 font-sans">
               {[
                 { id: "dashboard", label: "Overview and Stats", icon: BarChart2 },
+                { id: "trevor-engine", label: "Trevor Engine", icon: Crosshair },
                 { id: "math-engine", label: "Math Engine", icon: Brain },
                 { id: "diff-35", label: "Sum-35 Engine", icon: Binary },
                 { id: "quant-100", label: "Full Archive Model", icon: ShieldCheck },
@@ -676,6 +678,12 @@ export default function Home() {
               timeframe={timeframe}
               setTimeframe={setTimeframe}
             />
+          </div>
+        )}
+
+        {activeTab === "lotto-plus" && lottoSubTab === "trevor-engine" && (
+          <div className="tab-content-enter">
+            <TrevorEnginePanel game="lotto-plus" />
           </div>
         )}
 

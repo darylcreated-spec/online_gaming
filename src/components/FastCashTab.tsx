@@ -16,9 +16,11 @@ import {
   Zap
 } from "lucide-react";
 import type { FastCashEngineReport } from "@/lib/fastcash_engine";
+import TrevorEnginePanel from "@/components/TrevorEnginePanel";
 import { triggerHaptic } from "@/lib/haptics";
 
 export default function FastCashTab() {
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "trevor">("dashboard");
   const [report, setReport] = useState<FastCashEngineReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -276,7 +278,37 @@ export default function FastCashTab() {
         )}
       </div>
 
-      {loading && !report ? (
+      {/* Fast Cash Subtab Navigator (Matches Rose Theme) */}
+      <div className="flex bg-slate-900/90 p-1 rounded-xl border border-rose-500/25 w-full md:w-fit overflow-x-auto flex-nowrap scrollbar-none gap-1">
+        <button
+          type="button"
+          onClick={() => setActiveSubTab("dashboard")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "dashboard"
+              ? "bg-rose-500 text-slate-950 font-black shadow-[0_0_15px_rgba(244,63,94,0.35)]"
+              : "text-slate-300 hover:text-rose-200 hover:bg-rose-500/10"
+          }`}
+        >
+          <Activity className="w-3.5 h-3.5" />
+          <span>LIVE ENGINE &amp; AUDIT</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveSubTab("trevor")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "trevor"
+              ? "bg-rose-500 text-slate-950 font-black shadow-[0_0_15px_rgba(244,63,94,0.35)]"
+              : "text-rose-300 hover:text-rose-200 hover:bg-rose-500/10"
+          }`}
+        >
+          <Crosshair className="w-3.5 h-3.5" />
+          <span>TREVOR ENGINE</span>
+        </button>
+      </div>
+
+      {activeSubTab === "trevor" ? (
+        <TrevorEnginePanel game="fast-cash" />
+      ) : loading && !report ? (
         <div className="bg-[#0f1418] rounded-2xl border border-slate-800 p-10 text-center text-slate-400 font-mono text-xs">
           Running Two-Stage Hybrid RNG Replication &amp; Session Window Audit across Fast Cash database...
         </div>

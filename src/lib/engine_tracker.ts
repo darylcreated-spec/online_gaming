@@ -34,6 +34,10 @@ import {
   getCashPotSureCallStatus,
   SureCallDayInfo
 } from "@/lib/steiner_johnson_engine";
+import {
+  executeTrevorEngine,
+  TrevorHistoricalDraw
+} from "@/lib/trevor_engine";
 
 export interface EngineLogEntry {
   id: number;
@@ -1381,6 +1385,28 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             simulated_bet_tt: 5.0
           });
           recordedCount++;
+
+          // 5. TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent Marks)
+          const trevorPwHist: TrevorHistoricalDraw[] = draws.slice(-1500).map(d => ({
+            drawNumber: d.draw_number,
+            drawDate: d.draw_date,
+            timeSlot: d.draw_time_slot,
+            numbers: [d.winning_number]
+          }));
+          const trevorPw = executeTrevorEngine("play-whe", trevorPwHist, { totalPlays: 500 });
+          const trevorPwTop5 = trevorPw.simulation.winningSecondary?.top5 || trevorPw.simulation.winningNumbers;
+          await insertOrUpdateEngineLog({
+            game_key: "play-whe",
+            engine_key: "trevor-engine",
+            engine_name: "Trevor Engine (500-Play Steiner)",
+            strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Top 5 Frequent Marks)",
+            target_draw_number: targetDraw,
+            target_time_slot: targetSlot,
+            predicted_numbers: trevorPwTop5,
+            wheel_slips: [trevorPwTop5],
+            simulated_bet_tt: 5.0
+          });
+          recordedCount++;
         }
       } else if (game === "pick4") {
         const rows = await query<any>(
@@ -1482,6 +1508,28 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               simulated_bet_tt: 4.0
             });
             recordedCount++;
+
+            // 5. TREVOR ENGINE (Top 10 Positional Steiner Picks -> 500 Random Plays -> Top Frequency Sets)
+            const trevorP4Hist: TrevorHistoricalDraw[] = draws.slice(-1500).map(d => ({
+              drawNumber: d.draw_number,
+              drawDate: d.draw_date,
+              timeSlot: d.draw_time_slot,
+              numbers: [d.digit1, d.digit2, d.digit3, d.digit4]
+            }));
+            const trevorP4 = executeTrevorEngine("pick4", trevorP4Hist, { totalPlays: 500 });
+            const trevorP4Sets = trevorP4.simulation.trevorPortfolio5.slice(0, 4);
+            await insertOrUpdateEngineLog({
+              game_key: "pick4",
+              engine_key: "trevor-engine",
+              engine_name: "Trevor Engine (500-Play Steiner)",
+              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (4 Positional Frequency Sets)",
+              target_draw_number: targetDraw,
+              target_time_slot: forensic.nextTargetTimeSlot || formula?.targetPeriod,
+              predicted_numbers: trevorP4.simulation.winningNumbers,
+              wheel_slips: trevorP4Sets,
+              simulated_bet_tt: trevorP4Sets.length * 1.0
+            });
+            recordedCount++;
           }
         }
       } else if (game === "cashpot") {
@@ -1578,6 +1626,27 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
               wheel_slips: steinerCp.slips,
               simulated_bet_tt: steinerCp.slips.length * 5.0
+            });
+            recordedCount++;
+
+            // 5. TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent Numbers)
+            const trevorCpHist: TrevorHistoricalDraw[] = draws.map(d => ({
+              drawNumber: d.draw_number,
+              drawDate: d.draw_date,
+              numbers: d.numbers,
+              bonus: d.multiplier
+            }));
+            const trevorCp = executeTrevorEngine("cashpot", trevorCpHist, { totalPlays: 500 });
+            await insertOrUpdateEngineLog({
+              game_key: "cashpot",
+              engine_key: "trevor-engine",
+              engine_name: "Trevor Engine (500-Play Steiner)",
+              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Slip Set)",
+              target_draw_number: targetDraw,
+              predicted_numbers: trevorCp.simulation.winningNumbers,
+              predicted_powerball: forensic.nextCandidateSets[0].multiplier,
+              wheel_slips: trevorCp.simulation.trevorPortfolio10,
+              simulated_bet_tt: trevorCp.simulation.trevorPortfolio10.length * 5.0
             });
             recordedCount++;
           }
@@ -1689,6 +1758,27 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               simulated_bet_tt: steinerLotto.slips.length * 5.0
             });
             recordedCount++;
+
+            // 5. TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent Numbers + Powerball)
+            const trevorLpHist: TrevorHistoricalDraw[] = draws.map(d => ({
+              drawNumber: d.draw_number,
+              drawDate: d.draw_date,
+              numbers: d.numbers,
+              bonus: d.powerball
+            }));
+            const trevorLp = executeTrevorEngine("lotto-plus", trevorLpHist, { totalPlays: 500 });
+            await insertOrUpdateEngineLog({
+              game_key: "lotto-plus",
+              engine_key: "trevor-engine",
+              engine_name: "Trevor Engine (500-Play Steiner)",
+              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Slip Set + Powerball)",
+              target_draw_number: targetDraw,
+              predicted_numbers: trevorLp.simulation.winningNumbers,
+              predicted_powerball: trevorLp.simulation.winningBonus || 1,
+              wheel_slips: trevorLp.simulation.trevorPortfolio10,
+              simulated_bet_tt: trevorLp.simulation.trevorPortfolio10.length * 5.0
+            });
+            recordedCount++;
           }
         }
       } else if (game === "win-for-life") {
@@ -1786,6 +1876,27 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_powerball: steinerWfl.bonusBalls[0] || 1,
               wheel_slips: steinerWfl.slips,
               simulated_bet_tt: steinerWfl.slips.length * 10.0
+            });
+            recordedCount++;
+
+            // 5. TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent Numbers + Cash Ball 1-3)
+            const trevorWflHist: TrevorHistoricalDraw[] = draws.map(d => ({
+              drawNumber: d.draw_number,
+              drawDate: d.draw_date,
+              numbers: d.numbers,
+              bonus: d.cash_ball >= 1 && d.cash_ball <= 3 ? d.cash_ball : ((Math.abs(d.cash_ball) - 1) % 3) + 1
+            }));
+            const trevorWfl = executeTrevorEngine("win-for-life", trevorWflHist, { totalPlays: 500 });
+            await insertOrUpdateEngineLog({
+              game_key: "win-for-life",
+              engine_key: "trevor-engine",
+              engine_name: "Trevor Engine (500-Play Steiner)",
+              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Line Set + Cash Ball 1-3)",
+              target_draw_number: targetDraw,
+              predicted_numbers: trevorWfl.simulation.winningNumbers,
+              predicted_powerball: trevorWfl.simulation.winningBonus || 1,
+              wheel_slips: trevorWfl.simulation.trevorPortfolio10,
+              simulated_bet_tt: trevorWfl.simulation.trevorPortfolio10.length * 10.0
             });
             recordedCount++;
           }
@@ -2006,7 +2117,12 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
       }
 
       let linePowerballs: number[] | undefined = undefined;
-      if (gameKey === "lotto-plus" && (pred.engine_key === "apex-master" || pred.engine_key === "forensic-engine")) {
+      if (
+        gameKey === "lotto-plus" &&
+        (pred.engine_key === "apex-master" ||
+          pred.engine_key === "forensic-engine" ||
+          pred.engine_key === "trevor-engine")
+      ) {
         try {
           const pbRows = await query<any>(
             "SELECT powerball FROM draws WHERE CAST(draw_number AS INTEGER) < ? ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 30",
@@ -2020,7 +2136,10 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
           const pbHist = (pbRows || []).map((r: any) => Number(r.powerball)).filter((v: number) => !isNaN(v) && v >= 1).reverse();
           if (pbHist.length >= 5) {
             const pbRot = buildDynamicBonusBallRotation(pbHist, 10).rotation;
-            const targetLen = pred.engine_key === "apex-master" ? Math.max(5, Math.min(10, wheelSlips.length || 10)) : 5;
+            const targetLen =
+              pred.engine_key === "apex-master" || pred.engine_key === "trevor-engine"
+                ? Math.max(5, Math.min(10, wheelSlips.length || 10))
+                : 5;
             linePowerballs = Array.from({ length: targetLen }, (_, idx) => pbRot[idx % pbRot.length] ?? pbRot[0]);
           }
         } catch {}
@@ -2416,6 +2535,29 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               actual_numbers: [auditEntry.drawnMark],
               simulated_bet_tt: 5.0
             });
+
+            // 5. TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Top 5 Frequent Marks)
+            const trevorPwSlice: TrevorHistoricalDraw[] = histSlice.slice(-400).map(d => ({
+              drawNumber: d.draw_number,
+              drawDate: d.draw_date,
+              timeSlot: d.draw_time_slot,
+              numbers: [d.winning_number]
+            }));
+            const trevorPwSim = executeTrevorEngine("play-whe", trevorPwSlice, { totalPlays: 500 });
+            const trevorPwMarks = trevorPwSim.simulation.winningSecondary?.top5 || trevorPwSim.simulation.winningNumbers;
+            await upsertVerifiedWalkForwardLog({
+              game_key: "play-whe",
+              engine_key: "trevor-engine",
+              engine_name: "Trevor Engine (500-Play Steiner)",
+              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Top 5 Frequent Marks)",
+              target_draw_number: auditEntry.drawNumber,
+              target_draw_date: auditEntry.drawDate,
+              target_time_slot: auditEntry.timeSlot,
+              predicted_numbers: trevorPwMarks,
+              wheel_slips: [trevorPwMarks],
+              actual_numbers: [auditEntry.drawnMark],
+              simulated_bet_tt: 5.0
+            });
           }
         }
         await db.execute("DELETE FROM prediction_engine_logs WHERE engine_key = 'ensemble-v2'").catch(() => {});
@@ -2533,6 +2675,29 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               actual_numbers: actualDigits,
               simulated_bet_tt: 4.0
             });
+
+            // TREVOR ENGINE (Top 10 Positional Steiner Picks -> 500 Random Plays -> 4 Frequency Sets)
+            const trevorP4Hist: TrevorHistoricalDraw[] = hist.slice(-400).map(d => ({
+              drawNumber: d.draw_number,
+              drawDate: d.draw_date,
+              timeSlot: d.draw_time_slot,
+              numbers: [d.digit1, d.digit2, d.digit3, d.digit4]
+            }));
+            const trevorP4Res = executeTrevorEngine("pick4", trevorP4Hist, { totalPlays: 500 });
+            const trevorP4Sets = trevorP4Res.simulation.trevorPortfolio5.slice(0, 4);
+            await upsertVerifiedWalkForwardLog({
+              game_key: "pick4",
+              engine_key: "trevor-engine",
+              engine_name: "Trevor Engine (500-Play Steiner)",
+              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (4 Positional Frequency Sets)",
+              target_draw_number: actual.draw_number,
+              target_draw_date: actual.draw_date,
+              target_time_slot: actual.draw_time_slot,
+              predicted_numbers: trevorP4Res.simulation.winningNumbers,
+              wheel_slips: trevorP4Sets,
+              actual_numbers: actualDigits,
+              simulated_bet_tt: trevorP4Sets.length * 1.0
+            });
           }
         }
       } else if (game === "cashpot") {
@@ -2637,6 +2802,29 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               actual_numbers: actual.numbers,
               actual_powerball: actual.multiplier,
               simulated_bet_tt: steinerCp.slips.length * 5.0
+            });
+
+            // TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent 10-Slip Set)
+            const trevorCpHist: TrevorHistoricalDraw[] = hist.map(d => ({
+              drawNumber: d.draw_number,
+              drawDate: d.draw_date,
+              numbers: d.numbers,
+              bonus: d.multiplier
+            }));
+            const trevorCpRes = executeTrevorEngine("cashpot", trevorCpHist, { totalPlays: 500 });
+            await upsertVerifiedWalkForwardLog({
+              game_key: "cashpot",
+              engine_key: "trevor-engine",
+              engine_name: "Trevor Engine (500-Play Steiner)",
+              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Slip Set)",
+              target_draw_number: actual.draw_number,
+              target_draw_date: actual.draw_date,
+              predicted_numbers: trevorCpRes.simulation.winningNumbers,
+              predicted_powerball: forensic.nextCandidateSets[0].multiplier,
+              wheel_slips: trevorCpRes.simulation.trevorPortfolio10,
+              actual_numbers: actual.numbers,
+              actual_powerball: actual.multiplier,
+              simulated_bet_tt: trevorCpRes.simulation.trevorPortfolio10.length * 5.0
             });
           }
         }
@@ -2769,6 +2957,30 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               actual_powerball: actual.powerball,
               simulated_bet_tt: steinerLotto.slips.length * 5.0
             });
+
+            // TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent 10-Slip Set + Powerball)
+            const trevorLpHist: TrevorHistoricalDraw[] = hist.map(d => ({
+              drawNumber: d.draw_number,
+              drawDate: d.draw_date,
+              numbers: d.numbers,
+              bonus: d.powerball
+            }));
+            const trevorLpRes = executeTrevorEngine("lotto-plus", trevorLpHist, { totalPlays: 500 });
+            await upsertVerifiedWalkForwardLog({
+              game_key: "lotto-plus",
+              engine_key: "trevor-engine",
+              engine_name: "Trevor Engine (500-Play Steiner)",
+              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Slip Set + Powerball)",
+              target_draw_number: actual.draw_number,
+              target_draw_date: actual.draw_date,
+              predicted_numbers: trevorLpRes.simulation.winningNumbers,
+              predicted_powerball: trevorLpRes.simulation.winningBonus || 1,
+              line_powerballs: trevorLpRes.simulation.trevorPortfolio10Bonus,
+              wheel_slips: trevorLpRes.simulation.trevorPortfolio10,
+              actual_numbers: actual.numbers,
+              actual_powerball: actual.powerball,
+              simulated_bet_tt: trevorLpRes.simulation.trevorPortfolio10.length * 5.0
+            });
           }
         }
       } else if (game === "win-for-life") {
@@ -2874,6 +3086,30 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               actual_numbers: actual.numbers,
               actual_powerball: actual.cash_ball,
               simulated_bet_tt: steinerWfl.slips.length * 10.0
+            });
+
+            // TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent 10-Line Set + Cash Ball 1-3)
+            const trevorWflHist: TrevorHistoricalDraw[] = hist.map(d => ({
+              drawNumber: d.draw_number,
+              drawDate: d.draw_date,
+              numbers: d.numbers,
+              bonus: d.cash_ball >= 1 && d.cash_ball <= 3 ? d.cash_ball : ((Math.abs(d.cash_ball) - 1) % 3) + 1
+            }));
+            const trevorWflRes = executeTrevorEngine("win-for-life", trevorWflHist, { totalPlays: 500 });
+            await upsertVerifiedWalkForwardLog({
+              game_key: "win-for-life",
+              engine_key: "trevor-engine",
+              engine_name: "Trevor Engine (500-Play Steiner)",
+              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Line Set + Cash Ball 1-3)",
+              target_draw_number: actual.draw_number,
+              target_draw_date: actual.draw_date,
+              predicted_numbers: trevorWflRes.simulation.winningNumbers,
+              predicted_powerball: trevorWflRes.simulation.winningBonus || 1,
+              wheel_slips: trevorWflRes.simulation.trevorPortfolio10,
+              line_powerballs: trevorWflRes.simulation.trevorPortfolio10Bonus,
+              actual_numbers: actual.numbers,
+              actual_powerball: actual.cash_ball,
+              simulated_bet_tt: trevorWflRes.simulation.trevorPortfolio10.length * 10.0
             });
           }
         }

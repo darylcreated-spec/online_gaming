@@ -2234,6 +2234,13 @@ export default function EngineBenchmarkTracker() {
             </p>
           </div>
 
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1.5">
+            <h3 className="text-base font-bold text-sky-300">Trevor Engine (500-Play Steiner)</h3>
+            <p>
+              Pulls each game&apos;s Top 10 non-overlapping Steiner picks, gathers their chosen numbers, runs 500 random plays strictly from those numbers, and picks the most frequent numbers to build the winning combination.
+            </p>
+          </div>
+
           <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1">
             <div className="text-sky-400 font-bold uppercase">11-Model Ensemble (Play Whe)</div>
             <p>

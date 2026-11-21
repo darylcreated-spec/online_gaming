@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary, ShieldCheck, X, Printer } from "lucide-react";
+import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary, ShieldCheck, X, Printer, Crosshair } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import MultiBallMathPanel from "@/components/MultiBallMathPanel";
@@ -7,6 +7,7 @@ import GameHeaderBanner from "@/components/GameHeaderBanner";
 import WinForLifeDiff28Panel from "@/components/WinForLifeDiff28Panel";
 import WinForLifeQuant100Panel from "@/components/WinForLifeQuant100Panel";
 import WinForLifeForensicPanel from "@/components/WinForLifeForensicPanel";
+import TrevorEnginePanel from "@/components/TrevorEnginePanel";
 import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { downloadBlobFile } from "@/lib/export_helpers";
 
@@ -134,7 +135,7 @@ const validateTicket = (ticket: number[]) => {
 };
 
 export default function WinForLifeTab() {
-  const [subTab, setSubTab] = useState<"dashboard" | "math-engine" | "diff-28" | "quant-100" | "forensic" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
+  const [subTab, setSubTab] = useState<"dashboard" | "trevor" | "math-engine" | "diff-28" | "quant-100" | "forensic" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   
@@ -489,6 +490,7 @@ export default function WinForLifeTab() {
       <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
         {[
           { id: "dashboard", label: "DASHBOARD & STATS", icon: BarChart2 },
+          { id: "trevor", label: "TREVOR ENGINE", icon: Crosshair },
           { id: "math-engine", label: "MATHEMATICAL ENGINE", icon: Brain },
           { id: "diff-28", label: "SUM-28 QUANT ENGINE", icon: Binary },
           { id: "quant-100", label: "100% QUANT ENGINE", icon: ShieldCheck },
@@ -1152,6 +1154,10 @@ export default function WinForLifeTab() {
       )}
 
       {/* SUBTAB: MATHEMATICAL ENGINE */}
+      {subTab === "trevor" && (
+        <TrevorEnginePanel game="win-for-life" />
+      )}
+
       {subTab === "math-engine" && (
         <MultiBallMathPanel game="win-for-life" />
       )}
