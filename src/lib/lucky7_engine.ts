@@ -846,24 +846,43 @@ function buildContextMetrics(
 function evaluateSlipSet(
   game: Lucky7GameKey,
   slips: { numbers: number[]; bonus?: number }[],
-  actual: TrevorHistoricalDraw
+  actual: TrevorHistoricalDraw,
+  primarySingleOnly: boolean = false
 ): { bestMatch: number; wonPrize: boolean } {
   if (game === "play-whe" || game === "fast-cash") {
-    const hit = slips.some((s) => s.numbers.includes(actual.numbers[0]));
+    const winningVal = actual.numbers[0];
+    const hit = slips.some((s) =>
+      primarySingleOnly ? s.numbers[0] === winningVal : s.numbers.includes(winningVal)
+    );
     return { bestMatch: hit ? 1 : 0, wonPrize: hit };
   }
 
   if (game === "pick4") {
-    const actStr = actual.numbers.join("-");
-    const actSorted = [...actual.numbers].sort((a, b) => a - b).join("-");
+    const act = actual.numbers;
+    const actStr = act.join("-");
+    const actSorted = [...act].sort((a, b) => a - b).join("-");
     let best = 0;
     let won = false;
     for (const s of slips) {
-      const exact = s.numbers.join("-") === actStr;
-      const box = [...s.numbers].sort((a, b) => a - b).join("-") === actSorted;
-      const posM = s.numbers.filter((d, i) => d === actual.numbers[i]).length;
+      const nums = s.numbers;
+      const exact = nums.join("-") === actStr;
+      const box = [...nums].sort((a, b) => a - b).join("-") === actSorted;
+      const front3 = nums[0] === act[0] && nums[1] === act[1] && nums[2] === act[2];
+      const back3 = nums[1] === act[1] && nums[2] === act[2] && nums[3] === act[3];
+      const pairHit =
+        (nums[0] === act[0] && nums[1] === act[1]) ||
+        (nums[2] === act[2] && nums[3] === act[3]) ||
+        (nums[0] === act[0] && nums[3] === act[3]);
+      const posM = nums.filter((d, i) => d === act[i]).length;
+
       if (exact || box) {
         best = 4;
+        won = true;
+      } else if (front3 || back3) {
+        if (best < 3) best = 3;
+        won = true;
+      } else if (pairHit) {
+        if (best < 2) best = 2;
         won = true;
       } else if (posM > best) {
         best = posM;
@@ -950,8 +969,13 @@ export function runLucky7HypothesisAudit(
     const allInUnion = actual.numbers.every((n) => stUnion.has(n));
     if (allInUnion) unionAllCaptured++;
 
-    const stEval = evaluateSlipSet(game, steiner10, actual);
-    const l7Eval = evaluateSlipSet(game, lucky7Plays, actual);
+    const stEval = evaluateSlipSet(
+      game,
+      steiner10,
+      actual,
+      game === "play-whe" || game === "fast-cash"
+    );
+    const l7Eval = evaluateSlipSet(game, lucky7Plays, actual, false);
     const combWon = stEval.wonPrize || l7Eval.wonPrize;
 
     if (stEval.wonPrize) steiner10PrizeHits++;
@@ -1008,8 +1032,8 @@ export function runLucky7HypothesisAudit(
     game === "cashpot" || game === "lotto-plus" || game === "win-for-life"
       ? `Across ${evalCount} real out-of-sample draws, Steiner-10 held all winning numbers in its union ${unionPct}% of the time, but scattered them into non-winning lines in ${fragPct}% of draws. Lucky 7 rescued ${rescuedFragmentedCount} of ${totalSteinerMisses} Steiner-10 misses (${rescuedPct}%), lifting combined prize capture from ${stPct}% to ${combPct}%.`
       : game === "pick4"
-      ? `Across ${evalCount} real draws, Steiner-10's digit pool held all 4 winning digits in ${unionPct}% of draws, yet raw rows scattered them across positions. Lucky 7 splices those digits into 7 zero-duplicate Straight, 24-Way, and 12-Way Box sets covering 98 distinct draw outcomes.`
-      : `Because this game draws 1 winning number per draw, pair fragmentation does not apply. Lucky 7 adapts by spreading 7 non-overlapping picks across all distinct game signals/zones, delivering ${l7Pct}% verified hit rate across ${evalCount} draws.`;
+      ? `Across ${evalCount} real draws, Steiner-10's digit pool held all 4 winning digits in ${unionPct}% of draws, yet raw rows scattered them across positions. Lucky 7 splices those digits into 7 zero-duplicate Straight, 24-Way, and 12-Way Box sets (graded across official Straight, Box, Front/Back 3, and Pair tiers), hitting ${l7Pct}% standalone and lifting combined capture from ${stPct}% to ${combPct}%.`
+      : `Because this game draws 1 winning number per draw, pair fragmentation does not apply. Comparing 10 Steiner primary single picks ($10) against Lucky 7's 7 signal/zone picks ($7), Lucky 7 delivered ${l7Pct}% standalone and lifted combined coverage from ${stPct}% to ${combPct}% across ${evalCount} draws.`;
 
   return {
     drawsAudited: evalCount,
