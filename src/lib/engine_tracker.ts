@@ -38,6 +38,7 @@ import {
   executeTrevorEngine,
   TrevorHistoricalDraw
 } from "@/lib/trevor_engine";
+import { executeLucky7Engine } from "@/lib/lucky7_engine";
 
 export interface EngineLogEntry {
   id: number;
@@ -432,8 +433,9 @@ export function evaluatePredictionAgainstDraw(
 
   if (gameKey === "play-whe") {
     const winningMark = actualNums[0];
-    const playable5 = (predNums || []).slice(0, 5);
-    if (playable5.includes(winningMark)) {
+    const maxMarks = Math.max(1, Math.min(10, Math.round(simulatedBetTT || 5)));
+    const playableMarks = (predNums || []).slice(0, maxMarks);
+    if (playableMarks.includes(winningMark)) {
       matchCount = 1;
       bestWheelMatch = 1;
       isPrize = 1;
@@ -443,7 +445,8 @@ export function evaluatePredictionAgainstDraw(
   } else if (gameKey === "pick4") {
     const actStr = actualNums.join("");
     const actSorted = [...actualNums].sort((a, b) => a - b).join("");
-    const playable4Sets = buildPlayableLines(predNums, wheelSlips || [], 4, 4);
+    const maxSets = Math.max(1, Math.min(10, Math.round(simulatedBetTT || 4)));
+    const playable4Sets = buildPlayableLines(predNums, wheelSlips || [], maxSets, 4);
 
     // Check primary positional match count
     let primPosMatches = 0;
@@ -1407,6 +1410,22 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             simulated_bet_tt: 5.0
           });
           recordedCount++;
+
+          // 6. LUCKY 7 ENGINE (7-Vector Chinapoo Defragmenter — 7 Distinct Signals)
+          const lucky7Pw = executeLucky7Engine("play-whe", trevorPwHist, { includeAudit: false });
+          const lucky7PwMarks = lucky7Pw.lucky7Plays.map(p => p.numbers[0]);
+          await insertOrUpdateEngineLog({
+            game_key: "play-whe",
+            engine_key: "lucky-7",
+            engine_name: "Lucky 7 Defragmenter",
+            strategy_name: "7-Vector Chinapoo Defragmenter (7 Distinct Signal Marks)",
+            target_draw_number: targetDraw,
+            target_time_slot: targetSlot,
+            predicted_numbers: lucky7PwMarks,
+            wheel_slips: [lucky7PwMarks],
+            simulated_bet_tt: lucky7PwMarks.length * 1.0
+          });
+          recordedCount++;
         }
       } else if (game === "pick4") {
         const rows = await query<any>(
@@ -1530,6 +1549,22 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               simulated_bet_tt: trevorP4Sets.length * 1.0
             });
             recordedCount++;
+
+            // 6. LUCKY 7 ENGINE (Cross-Row Positional Splicer — 7 Disjoint Straight/Box Sets)
+            const lucky7P4 = executeLucky7Engine("pick4", trevorP4Hist, { includeAudit: false });
+            const lucky7P4Sets = lucky7P4.lucky7Plays.map(p => p.numbers);
+            await insertOrUpdateEngineLog({
+              game_key: "pick4",
+              engine_key: "lucky-7",
+              engine_name: "Lucky 7 Defragmenter",
+              strategy_name: "Cross-Row Positional Splicer (2 Straight + 3 24-Way Box + 2 12-Way Twin Box)",
+              target_draw_number: targetDraw,
+              target_time_slot: forensic.nextTargetTimeSlot || formula?.targetPeriod,
+              predicted_numbers: lucky7P4Sets[0] || trevorP4.simulation.winningNumbers,
+              wheel_slips: lucky7P4Sets,
+              simulated_bet_tt: lucky7P4Sets.length * 1.0
+            });
+            recordedCount++;
           }
         }
       } else if (game === "cashpot") {
@@ -1647,6 +1682,22 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
               wheel_slips: trevorCp.simulation.trevorPortfolio10,
               simulated_bet_tt: trevorCp.simulation.trevorPortfolio10.length * 5.0
+            });
+            recordedCount++;
+
+            // 6. LUCKY 7 ENGINE (Complement-Graph Defragmenter — 7 Non-Overlapping Cross-Slip Bridges)
+            const lucky7Cp = executeLucky7Engine("cashpot", trevorCpHist, { includeAudit: false });
+            const lucky7CpSlips = lucky7Cp.lucky7Plays.map(p => p.numbers);
+            await insertOrUpdateEngineLog({
+              game_key: "cashpot",
+              engine_key: "lucky-7",
+              engine_name: "Lucky 7 Defragmenter",
+              strategy_name: "Complement-Graph Defragmenter (7 Non-Overlapping Cross-Slip Bridges)",
+              target_draw_number: targetDraw,
+              predicted_numbers: lucky7CpSlips[0] || trevorCp.simulation.winningNumbers,
+              predicted_powerball: forensic.nextCandidateSets[0].multiplier,
+              wheel_slips: lucky7CpSlips,
+              simulated_bet_tt: lucky7CpSlips.length * 5.0
             });
             recordedCount++;
           }
@@ -1779,6 +1830,23 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               simulated_bet_tt: trevorLp.simulation.trevorPortfolio10.length * 5.0
             });
             recordedCount++;
+
+            // 6. LUCKY 7 ENGINE (Cross-Slip Pair Bridge — 7 Edge-Disjoint Slips + 7 Distinct Powerballs)
+            const lucky7Lp = executeLucky7Engine("lotto-plus", trevorLpHist, { includeAudit: false });
+            const lucky7LpSlips = lucky7Lp.lucky7Plays.map(p => p.numbers);
+            const lucky7LpBonuses = lucky7Lp.lucky7Plays.map(p => p.bonus || 1);
+            await insertOrUpdateEngineLog({
+              game_key: "lotto-plus",
+              engine_key: "lucky-7",
+              engine_name: "Lucky 7 Defragmenter",
+              strategy_name: "Cross-Slip Pair Bridge (7 Edge-Disjoint Slips + 7 Distinct Powerballs)",
+              target_draw_number: targetDraw,
+              predicted_numbers: lucky7LpSlips[0] || trevorLp.simulation.winningNumbers,
+              predicted_powerball: lucky7LpBonuses[0] || 1,
+              wheel_slips: lucky7LpSlips,
+              simulated_bet_tt: lucky7LpSlips.length * 5.0
+            });
+            recordedCount++;
           }
         }
       } else if (game === "win-for-life") {
@@ -1897,6 +1965,23 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               predicted_powerball: trevorWfl.simulation.winningBonus || 1,
               wheel_slips: trevorWfl.simulation.trevorPortfolio10,
               simulated_bet_tt: trevorWfl.simulation.trevorPortfolio10.length * 10.0
+            });
+            recordedCount++;
+
+            // 6. LUCKY 7 ENGINE (6-Ball Transversal Recombiner + Full Cash Ball 1-3 Lock)
+            const lucky7Wfl = executeLucky7Engine("win-for-life", trevorWflHist, { includeAudit: false });
+            const lucky7WflSlips = lucky7Wfl.lucky7Plays.map(p => p.numbers);
+            const lucky7WflBonuses = lucky7Wfl.lucky7Plays.map(p => (p.bonus && p.bonus >= 1 && p.bonus <= 3 ? p.bonus : 1));
+            await insertOrUpdateEngineLog({
+              game_key: "win-for-life",
+              engine_key: "lucky-7",
+              engine_name: "Lucky 7 Defragmenter",
+              strategy_name: "6-Ball Transversal Recombiner (7 Cross-Slip Lines + Cash Ball 1-3 Lock)",
+              target_draw_number: targetDraw,
+              predicted_numbers: lucky7WflSlips[0] || trevorWfl.simulation.winningNumbers,
+              predicted_powerball: lucky7WflBonuses[0] || 1,
+              wheel_slips: lucky7WflSlips,
+              simulated_bet_tt: lucky7WflSlips.length * 10.0
             });
             recordedCount++;
           }
@@ -2121,7 +2206,8 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
         gameKey === "lotto-plus" &&
         (pred.engine_key === "apex-master" ||
           pred.engine_key === "forensic-engine" ||
-          pred.engine_key === "trevor-engine")
+          pred.engine_key === "trevor-engine" ||
+          pred.engine_key === "lucky-7")
       ) {
         try {
           const pbRows = await query<any>(
@@ -2137,8 +2223,10 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
           if (pbHist.length >= 5) {
             const pbRot = buildDynamicBonusBallRotation(pbHist, 10).rotation;
             const targetLen =
-              pred.engine_key === "apex-master" || pred.engine_key === "trevor-engine"
-                ? Math.max(5, Math.min(10, wheelSlips.length || 10))
+              pred.engine_key === "apex-master" ||
+              pred.engine_key === "trevor-engine" ||
+              pred.engine_key === "lucky-7"
+                ? Math.max(5, Math.min(10, wheelSlips.length || (pred.engine_key === "lucky-7" ? 7 : 10)))
                 : 5;
             linePowerballs = Array.from({ length: targetLen }, (_, idx) => pbRot[idx % pbRot.length] ?? pbRot[0]);
           }
@@ -2558,6 +2646,23 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               actual_numbers: [auditEntry.drawnMark],
               simulated_bet_tt: 5.0
             });
+
+            // 6. LUCKY 7 ENGINE (7-Vector Chinapoo Defragmenter — 7 Distinct Signals)
+            const lucky7PwSim = executeLucky7Engine("play-whe", trevorPwSlice, { includeAudit: false });
+            const lucky7PwMarks = lucky7PwSim.lucky7Plays.map(p => p.numbers[0]);
+            await upsertVerifiedWalkForwardLog({
+              game_key: "play-whe",
+              engine_key: "lucky-7",
+              engine_name: "Lucky 7 Defragmenter",
+              strategy_name: "7-Vector Chinapoo Defragmenter (7 Distinct Signal Marks)",
+              target_draw_number: auditEntry.drawNumber,
+              target_draw_date: auditEntry.drawDate,
+              target_time_slot: auditEntry.timeSlot,
+              predicted_numbers: lucky7PwMarks,
+              wheel_slips: [lucky7PwMarks],
+              actual_numbers: [auditEntry.drawnMark],
+              simulated_bet_tt: lucky7PwMarks.length * 1.0
+            });
           }
         }
         await db.execute("DELETE FROM prediction_engine_logs WHERE engine_key = 'ensemble-v2'").catch(() => {});
@@ -2698,6 +2803,23 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               actual_numbers: actualDigits,
               simulated_bet_tt: trevorP4Sets.length * 1.0
             });
+
+            // LUCKY 7 ENGINE (Cross-Row Positional Splicer — 7 Disjoint Straight/Box Sets)
+            const lucky7P4Res = executeLucky7Engine("pick4", trevorP4Hist, { includeAudit: false });
+            const lucky7P4Sets = lucky7P4Res.lucky7Plays.map(p => p.numbers);
+            await upsertVerifiedWalkForwardLog({
+              game_key: "pick4",
+              engine_key: "lucky-7",
+              engine_name: "Lucky 7 Defragmenter",
+              strategy_name: "Cross-Row Positional Splicer (2 Straight + 3 24-Way Box + 2 12-Way Twin Box)",
+              target_draw_number: actual.draw_number,
+              target_draw_date: actual.draw_date,
+              target_time_slot: actual.draw_time_slot,
+              predicted_numbers: lucky7P4Sets[0] || trevorP4Res.simulation.winningNumbers,
+              wheel_slips: lucky7P4Sets,
+              actual_numbers: actualDigits,
+              simulated_bet_tt: lucky7P4Sets.length * 1.0
+            });
           }
         }
       } else if (game === "cashpot") {
@@ -2825,6 +2947,24 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               actual_numbers: actual.numbers,
               actual_powerball: actual.multiplier,
               simulated_bet_tt: trevorCpRes.simulation.trevorPortfolio10.length * 5.0
+            });
+
+            // LUCKY 7 ENGINE (Complement-Graph Defragmenter — 7 Non-Overlapping Cross-Slip Bridges)
+            const lucky7CpRes = executeLucky7Engine("cashpot", trevorCpHist, { includeAudit: false });
+            const lucky7CpSlips = lucky7CpRes.lucky7Plays.map(p => p.numbers);
+            await upsertVerifiedWalkForwardLog({
+              game_key: "cashpot",
+              engine_key: "lucky-7",
+              engine_name: "Lucky 7 Defragmenter",
+              strategy_name: "Complement-Graph Defragmenter (7 Non-Overlapping Cross-Slip Bridges)",
+              target_draw_number: actual.draw_number,
+              target_draw_date: actual.draw_date,
+              predicted_numbers: lucky7CpSlips[0] || trevorCpRes.simulation.winningNumbers,
+              predicted_powerball: forensic.nextCandidateSets[0].multiplier,
+              wheel_slips: lucky7CpSlips,
+              actual_numbers: actual.numbers,
+              actual_powerball: actual.multiplier,
+              simulated_bet_tt: lucky7CpSlips.length * 5.0
             });
           }
         }
@@ -2981,6 +3121,26 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               actual_powerball: actual.powerball,
               simulated_bet_tt: trevorLpRes.simulation.trevorPortfolio10.length * 5.0
             });
+
+            // LUCKY 7 ENGINE (Cross-Slip Pair Bridge — 7 Edge-Disjoint Slips + 7 Distinct Powerballs)
+            const lucky7LpRes = executeLucky7Engine("lotto-plus", trevorLpHist, { includeAudit: false });
+            const lucky7LpSlips = lucky7LpRes.lucky7Plays.map(p => p.numbers);
+            const lucky7LpBonuses = lucky7LpRes.lucky7Plays.map(p => p.bonus || 1);
+            await upsertVerifiedWalkForwardLog({
+              game_key: "lotto-plus",
+              engine_key: "lucky-7",
+              engine_name: "Lucky 7 Defragmenter",
+              strategy_name: "Cross-Slip Pair Bridge (7 Edge-Disjoint Slips + 7 Distinct Powerballs)",
+              target_draw_number: actual.draw_number,
+              target_draw_date: actual.draw_date,
+              predicted_numbers: lucky7LpSlips[0] || trevorLpRes.simulation.winningNumbers,
+              predicted_powerball: lucky7LpBonuses[0] || 1,
+              line_powerballs: lucky7LpBonuses,
+              wheel_slips: lucky7LpSlips,
+              actual_numbers: actual.numbers,
+              actual_powerball: actual.powerball,
+              simulated_bet_tt: lucky7LpSlips.length * 5.0
+            });
           }
         }
       } else if (game === "win-for-life") {
@@ -3110,6 +3270,26 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               actual_numbers: actual.numbers,
               actual_powerball: actual.cash_ball,
               simulated_bet_tt: trevorWflRes.simulation.trevorPortfolio10.length * 10.0
+            });
+
+            // LUCKY 7 ENGINE (6-Ball Transversal Recombiner + Full Cash Ball 1-3 Lock)
+            const lucky7WflRes = executeLucky7Engine("win-for-life", trevorWflHist, { includeAudit: false });
+            const lucky7WflSlips = lucky7WflRes.lucky7Plays.map(p => p.numbers);
+            const lucky7WflBonuses = lucky7WflRes.lucky7Plays.map(p => (p.bonus && p.bonus >= 1 && p.bonus <= 3 ? p.bonus : 1));
+            await upsertVerifiedWalkForwardLog({
+              game_key: "win-for-life",
+              engine_key: "lucky-7",
+              engine_name: "Lucky 7 Defragmenter",
+              strategy_name: "6-Ball Transversal Recombiner (7 Cross-Slip Lines + Cash Ball 1-3 Lock)",
+              target_draw_number: actual.draw_number,
+              target_draw_date: actual.draw_date,
+              predicted_numbers: lucky7WflSlips[0] || trevorWflRes.simulation.winningNumbers,
+              predicted_powerball: lucky7WflBonuses[0] || 1,
+              wheel_slips: lucky7WflSlips,
+              line_powerballs: lucky7WflBonuses,
+              actual_numbers: actual.numbers,
+              actual_powerball: actual.cash_ball,
+              simulated_bet_tt: lucky7WflSlips.length * 10.0
             });
           }
         }

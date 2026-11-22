@@ -21,7 +21,8 @@ import {
   ShieldCheck,
   Sigma,
   Printer,
-  Crosshair
+  Crosshair,
+  GitMerge
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -38,6 +39,7 @@ import CashPotAuditPanel from "@/components/CashPotAuditPanel";
 import CashPotDiff20Panel from "@/components/CashPotDiff20Panel";
 import CashPotForensicPanel from "@/components/CashPotForensicPanel";
 import TrevorEnginePanel from "@/components/TrevorEnginePanel";
+import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
 import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { generateWheel } from "@/lib/wheeling";
 import { triggerHaptic } from "@/lib/haptics";
@@ -55,7 +57,7 @@ interface CashPotDraw {
 }
 
 export default function CashPotTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "trevor" | "math" | "diff" | "audit" | "forensic" | "wheeling" | "archive" | "explain">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "lucky7" | "trevor" | "math" | "diff" | "audit" | "forensic" | "wheeling" | "archive" | "explain">("dashboard");
   const [draws, setDraws] = useState<CashPotDraw[]>([]);
   const [latestDraw, setLatestDraw] = useState<CashPotDraw | null>(null);
   const [loading, setLoading] = useState(true);
@@ -215,6 +217,7 @@ export default function CashPotTab() {
       <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
         {[
           { id: "dashboard", label: "DASHBOARD & STATS", icon: BarChart2 },
+          { id: "lucky7", label: "LUCKY 7", icon: GitMerge },
           { id: "trevor", label: "TREVOR ENGINE", icon: Crosshair },
           { id: "math", label: "MATHEMATICAL ENGINE", icon: Brain },
           { id: "diff", label: "SUM-28 / DIFF ENGINE", icon: Sigma },
@@ -494,6 +497,11 @@ export default function CashPotTab() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Subtab Content: Lucky 7 */}
+      {activeSubTab === "lucky7" && (
+        <Lucky7EnginePanel game="cashpot" />
       )}
 
       {/* Subtab Content: Trevor Engine */}

@@ -931,6 +931,8 @@ export default function EngineBenchmarkTracker() {
                           <span className="text-xs font-mono uppercase tracking-wider text-cyan-300 font-semibold block">
                             {pick.wheel_slips && pick.wheel_slips.length > 5 && pick.engine_key === "apex-master"
                               ? `Top 5 of ${totalSlipsCount} Optimal Steiner Slips ($${totalSlipsCount * unitCost} TT Total):`
+                              : pick.wheel_slips && pick.wheel_slips.length > 5 && pick.engine_key === "lucky-7"
+                              ? `Top 5 of ${totalSlipsCount} Lucky 7 Defragmenter Slips ($${totalSlipsCount * unitCost} TT Total):`
                               : `5 Orthogonal Playable Lines ($${5 * unitCost} TT Total):`}
                           </span>
                           <div className="space-y-1 pt-0.5">
@@ -2238,6 +2240,13 @@ export default function EngineBenchmarkTracker() {
             <h3 className="text-base font-bold text-sky-300">Trevor Engine (500-Play Steiner)</h3>
             <p>
               Pulls each game&apos;s Top 10 non-overlapping Steiner picks, gathers their chosen numbers, runs 500 random plays strictly from those numbers, and picks the most frequent numbers to build the winning combination.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1.5">
+            <h3 className="text-base font-bold text-emerald-300">Lucky 7 Defragmenter</h3>
+            <p>
+              Audits and fixes Steiner-10 fragmentation per game: bridges uncovered cross-slip pairs in Cash Pot, Lotto Plus, and Win For Life (with Cash Ball 1-3 lock), splices cross-row Pick 4 digits into 7 non-duplicate Straight/Box sets, and spreads 7 non-overlapping signals/zones in Play Whe and Fast Cash.
             </p>
           </div>
 

@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Cpu,
   Crosshair,
+  GitMerge,
   Layers,
   RefreshCw,
   Search,
@@ -17,10 +18,11 @@ import {
 } from "lucide-react";
 import type { FastCashEngineReport } from "@/lib/fastcash_engine";
 import TrevorEnginePanel from "@/components/TrevorEnginePanel";
+import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
 import { triggerHaptic } from "@/lib/haptics";
 
 export default function FastCashTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "trevor">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "lucky7" | "trevor">("dashboard");
   const [report, setReport] = useState<FastCashEngineReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -294,6 +296,18 @@ export default function FastCashTab() {
         </button>
         <button
           type="button"
+          onClick={() => setActiveSubTab("lucky7")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "lucky7"
+              ? "bg-rose-500 text-slate-950 font-black shadow-[0_0_15px_rgba(244,63,94,0.35)]"
+              : "text-rose-300 hover:text-rose-200 hover:bg-rose-500/10"
+          }`}
+        >
+          <GitMerge className="w-3.5 h-3.5" />
+          <span>LUCKY 7</span>
+        </button>
+        <button
+          type="button"
           onClick={() => setActiveSubTab("trevor")}
           className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
             activeSubTab === "trevor"
@@ -306,7 +320,9 @@ export default function FastCashTab() {
         </button>
       </div>
 
-      {activeSubTab === "trevor" ? (
+      {activeSubTab === "lucky7" ? (
+        <Lucky7EnginePanel game="fast-cash" />
+      ) : activeSubTab === "trevor" ? (
         <TrevorEnginePanel game="fast-cash" />
       ) : loading && !report ? (
         <div className="bg-[#0f1418] rounded-2xl border border-slate-800 p-10 text-center text-slate-400 font-mono text-xs">
