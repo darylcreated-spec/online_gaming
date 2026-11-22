@@ -1417,8 +1417,8 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
           await insertOrUpdateEngineLog({
             game_key: "play-whe",
             engine_key: "lucky-7",
-            engine_name: "Lucky 7 Defragmenter",
-            strategy_name: "7-Vector Chinapoo Defragmenter (7 Distinct Signal Marks)",
+            engine_name: "Lucky 7 (Number Theory & Followers)",
+            strategy_name: "Steiner Pool -> 7 Number-Theory & Follower Marks (Play Whe)",
             target_draw_number: targetDraw,
             target_time_slot: targetSlot,
             predicted_numbers: lucky7PwMarks,
@@ -1556,8 +1556,8 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             await insertOrUpdateEngineLog({
               game_key: "pick4",
               engine_key: "lucky-7",
-              engine_name: "Lucky 7 Defragmenter",
-              strategy_name: "Cross-Row Positional Splicer (2 Straight + 3 24-Way Box + 2 12-Way Twin Box)",
+              engine_name: "Lucky 7 (Number Theory & Followers)",
+              strategy_name: "Steiner Pool -> 7 Positional Follower & Number-Theory Sets (Pick 4)",
               target_draw_number: targetDraw,
               target_time_slot: forensic.nextTargetTimeSlot || formula?.targetPeriod,
               predicted_numbers: lucky7P4Sets[0] || trevorP4.simulation.winningNumbers,
@@ -1691,8 +1691,8 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             await insertOrUpdateEngineLog({
               game_key: "cashpot",
               engine_key: "lucky-7",
-              engine_name: "Lucky 7 Defragmenter",
-              strategy_name: "Complement-Graph Defragmenter (7 Non-Overlapping Cross-Slip Bridges)",
+              engine_name: "Lucky 7 (Number Theory & Followers)",
+              strategy_name: "Steiner Pool -> 7 Out-of-the-Box Number-Theory & Follower Plays (1 to 20)",
               target_draw_number: targetDraw,
               predicted_numbers: lucky7CpSlips[0] || trevorCp.simulation.winningNumbers,
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
@@ -1838,8 +1838,8 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             await insertOrUpdateEngineLog({
               game_key: "lotto-plus",
               engine_key: "lucky-7",
-              engine_name: "Lucky 7 Defragmenter",
-              strategy_name: "Cross-Slip Pair Bridge (7 Edge-Disjoint Slips + 7 Distinct Powerballs)",
+              engine_name: "Lucky 7 (Number Theory & Followers)",
+              strategy_name: "Pure 1 to 35 Number-Theory & Follower Plays + Decoupled Top-3 Powerballs (1 to 10)",
               target_draw_number: targetDraw,
               predicted_numbers: lucky7LpSlips[0] || trevorLp.simulation.winningNumbers,
               predicted_powerball: lucky7LpBonuses[0] || 1,
@@ -1975,8 +1975,8 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             await insertOrUpdateEngineLog({
               game_key: "win-for-life",
               engine_key: "lucky-7",
-              engine_name: "Lucky 7 Defragmenter",
-              strategy_name: "6-Ball Transversal Recombiner (7 Cross-Slip Lines + Cash Ball 1-3 Lock)",
+              engine_name: "Lucky 7 (Number Theory & Followers)",
+              strategy_name: "Pure 1 to 28 6-Ball Number-Theory Plays + Decoupled Cash Ball (1 to 3)",
               target_draw_number: targetDraw,
               predicted_numbers: lucky7WflSlips[0] || trevorWfl.simulation.winningNumbers,
               predicted_powerball: lucky7WflBonuses[0] || 1,
@@ -2222,13 +2222,19 @@ export async function reconcileAndGradeEnginePredictions(): Promise<{ verifiedCo
           const pbHist = (pbRows || []).map((r: any) => Number(r.powerball)).filter((v: number) => !isNaN(v) && v >= 1).reverse();
           if (pbHist.length >= 5) {
             const pbRot = buildDynamicBonusBallRotation(pbHist, 10).rotation;
-            const targetLen =
-              pred.engine_key === "apex-master" ||
-              pred.engine_key === "trevor-engine" ||
-              pred.engine_key === "lucky-7"
-                ? Math.max(5, Math.min(10, wheelSlips.length || (pred.engine_key === "lucky-7" ? 7 : 10)))
-                : 5;
-            linePowerballs = Array.from({ length: targetLen }, (_, idx) => pbRot[idx % pbRot.length] ?? pbRot[0]);
+            if (pred.engine_key === "lucky-7") {
+              const top3 = pbRot.slice(0, 3);
+              const t0 = top3[0] ?? 1;
+              const t1 = top3[1] ?? t0;
+              const t2 = top3[2] ?? t0;
+              linePowerballs = [t0, t1, t2, t0, t1, t2, t0];
+            } else {
+              const targetLen =
+                pred.engine_key === "apex-master" || pred.engine_key === "trevor-engine"
+                  ? Math.max(5, Math.min(10, wheelSlips.length || 10))
+                  : 5;
+              linePowerballs = Array.from({ length: targetLen }, (_, idx) => pbRot[idx % pbRot.length] ?? pbRot[0]);
+            }
           }
         } catch {}
       }
@@ -2653,8 +2659,8 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
             await upsertVerifiedWalkForwardLog({
               game_key: "play-whe",
               engine_key: "lucky-7",
-              engine_name: "Lucky 7 Defragmenter",
-              strategy_name: "7-Vector Chinapoo Defragmenter (7 Distinct Signal Marks)",
+              engine_name: "Lucky 7 (Number Theory & Followers)",
+              strategy_name: "Steiner Pool -> 7 Number-Theory & Follower Marks (Play Whe)",
               target_draw_number: auditEntry.drawNumber,
               target_draw_date: auditEntry.drawDate,
               target_time_slot: auditEntry.timeSlot,
@@ -2810,8 +2816,8 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
             await upsertVerifiedWalkForwardLog({
               game_key: "pick4",
               engine_key: "lucky-7",
-              engine_name: "Lucky 7 Defragmenter",
-              strategy_name: "Cross-Row Positional Splicer (2 Straight + 3 24-Way Box + 2 12-Way Twin Box)",
+              engine_name: "Lucky 7 (Number Theory & Followers)",
+              strategy_name: "Steiner Pool -> 7 Positional Follower & Number-Theory Sets (Pick 4)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
               target_time_slot: actual.draw_time_slot,
@@ -2955,8 +2961,8 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
             await upsertVerifiedWalkForwardLog({
               game_key: "cashpot",
               engine_key: "lucky-7",
-              engine_name: "Lucky 7 Defragmenter",
-              strategy_name: "Complement-Graph Defragmenter (7 Non-Overlapping Cross-Slip Bridges)",
+              engine_name: "Lucky 7 (Number Theory & Followers)",
+              strategy_name: "Steiner Pool -> 7 Out-of-the-Box Number-Theory & Follower Plays (1 to 20)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
               predicted_numbers: lucky7CpSlips[0] || trevorCpRes.simulation.winningNumbers,
@@ -3129,8 +3135,8 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
             await upsertVerifiedWalkForwardLog({
               game_key: "lotto-plus",
               engine_key: "lucky-7",
-              engine_name: "Lucky 7 Defragmenter",
-              strategy_name: "Cross-Slip Pair Bridge (7 Edge-Disjoint Slips + 7 Distinct Powerballs)",
+              engine_name: "Lucky 7 (Number Theory & Followers)",
+              strategy_name: "Pure 1 to 35 Number-Theory & Follower Plays + Decoupled Top-3 Powerballs (1 to 10)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
               predicted_numbers: lucky7LpSlips[0] || trevorLpRes.simulation.winningNumbers,
@@ -3279,8 +3285,8 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
             await upsertVerifiedWalkForwardLog({
               game_key: "win-for-life",
               engine_key: "lucky-7",
-              engine_name: "Lucky 7 Defragmenter",
-              strategy_name: "6-Ball Transversal Recombiner (7 Cross-Slip Lines + Cash Ball 1-3 Lock)",
+              engine_name: "Lucky 7 (Number Theory & Followers)",
+              strategy_name: "Pure 1 to 28 6-Ball Number-Theory Plays + Decoupled Cash Ball (1 to 3)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
               predicted_numbers: lucky7WflSlips[0] || trevorWflRes.simulation.winningNumbers,

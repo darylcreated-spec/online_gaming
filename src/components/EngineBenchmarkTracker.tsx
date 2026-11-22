@@ -2244,9 +2244,9 @@ export default function EngineBenchmarkTracker() {
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-1.5">
-            <h3 className="text-base font-bold text-emerald-300">Lucky 7 Defragmenter</h3>
+            <h3 className="text-base font-bold text-emerald-300">Lucky 7 Engine (Number Theory &amp; Followers)</h3>
             <p>
-              Audits and fixes Steiner-10 fragmentation per game: bridges uncovered cross-slip pairs in Cash Pot, Lotto Plus, and Win For Life (with Cash Ball 1-3 lock), splices cross-row Pick 4 digits into 7 non-duplicate Straight/Box sets, and spreads 7 non-overlapping signals/zones in Play Whe and Fast Cash.
+              Lists each game&apos;s Steiner 1 to 10 number pool first, then generates 7 out-of-the-box plays using What-Follows-What transitions, High/Low balance and breakouts, Primes/Fibonacci, mirrors, and overdue parity flips — without Match-3+ spread caps, and with Lotto Plus Powerball (1 to 10) and Win For Life Cash Ball (1 to 3) ranked independently.
             </p>
           </div>
 

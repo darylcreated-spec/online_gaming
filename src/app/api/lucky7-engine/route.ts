@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
     const includeAudit = searchParams.get("audit") !== "false";
     const auditWindow = Math.max(
       10,
-      Math.min(80, parseInt(searchParams.get("window") || "45", 10) || 45)
+      Math.min(100, parseInt(searchParams.get("window") || "60", 10) || 60)
     );
     const seedParam = searchParams.get("seed");
     const customSeed = seedParam ? parseInt(seedParam, 10) : undefined;
