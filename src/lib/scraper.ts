@@ -1274,6 +1274,90 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
 
 // === CASHPOT SCRAPING & REST API ENGINE ===
 
+const CASHPOT_LIVE_URL = "https://www.nlcbplaywhelotto.com/nlcb-cashpot-results/";
+
+export async function scrapeCashPotNlcbPlayWheLotto(): Promise<
+  Array<{ draw_number: number; draw_date: string; num1: number; num2: number; num3: number; num4: number; num5: number; multiplier: number }>
+> {
+  try {
+    const res = await fetchWithRetry(CASHPOT_LIVE_URL);
+    if (!res.ok) {
+      recordScraperTelemetry({
+        source: "nlcbplaywhelotto",
+        game: "cashpot",
+        httpStatus: res.status,
+        parsedCount: 0,
+        drift: false,
+        note: "non-ok-http"
+      });
+      return [];
+    }
+
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const results: Array<{
+      draw_number: number;
+      draw_date: string;
+      num1: number;
+      num2: number;
+      num3: number;
+      num4: number;
+      num5: number;
+      multiplier: number;
+    }> = [];
+
+    $("#results .drawDetails").each((_, card) => {
+      const el = $(card);
+      const cardText = el.text();
+      const rawDate = el.find("strong").first().text().trim() ||
+        (cardText.match(/Date:\s*([0-9]{1,2}-[A-Za-z]{3}-[0-9]{2,4})/i)?.[1] ?? "");
+      const isoDate = parseDate(rawDate);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return;
+
+      const drawNumMatch = cardText.match(/Draw\s*Number:\s*(\d+)/i);
+      const drawNum = drawNumMatch ? parseInt(drawNumMatch[1], 10) : 0;
+      if (!Number.isInteger(drawNum) || drawNum <= 0) return;
+
+      const numsRaw: number[] = [];
+      el.find(".ball.lotto-balls").each((__, b) => {
+        const val = parseInt($(b).text().trim(), 10);
+        if (Number.isInteger(val) && val >= 1 && val <= 20) numsRaw.push(val);
+      });
+      const uniqueNums = Array.from(new Set(numsRaw)).sort((a, b) => a - b);
+      if (uniqueNums.length !== 5) return;
+
+      const multText = el.find(".multiplier").text() || cardText;
+      const multMatch = multText.match(/(\d+)\s*x/i);
+      const multiplier = multMatch ? Math.max(1, Math.min(4, parseInt(multMatch[1], 10))) : 1;
+
+      results.push({
+        draw_number: drawNum,
+        draw_date: isoDate,
+        num1: uniqueNums[0],
+        num2: uniqueNums[1],
+        num3: uniqueNums[2],
+        num4: uniqueNums[3],
+        num5: uniqueNums[4],
+        multiplier
+      });
+    });
+
+    const hasMarkers = /Draw\s*Number:/i.test(html) || /Cash\s*Pot/i.test(html);
+    recordScraperTelemetry({
+      source: "nlcbplaywhelotto",
+      game: "cashpot",
+      httpStatus: res.status,
+      parsedCount: results.length,
+      drift: results.length === 0 && hasMarkers
+    });
+
+    return results;
+  } catch (err: any) {
+    console.warn("[CashPot] Live nlcbplaywhelotto notice:", err.message);
+    return [];
+  }
+}
+
 export async function scrapeCashPotLivePortal(): Promise<
   Array<{ draw_date: string; num1: number; num2: number; num3: number; num4: number; num5: number; multiplier: number }>
 > {
@@ -1415,6 +1499,19 @@ export async function syncCashPot(full: boolean = false, targetYear?: number): P
         } catch (e) {
           console.warn(`[CashPot] Month ${y}-${mStr} sync notice:`, e);
         }
+      }
+    }
+
+    // 2.5 Fast live check against nlcbplaywhelotto.com/nlcb-cashpot-results/
+    // Runs on every live sync even if Railway returned HTTP 200 (since Railway can lag 1-2 hours after 7 PM draw)
+    if (!full && !targetYear) {
+      const liveFastDraws = await scrapeCashPotNlcbPlayWheLotto();
+      for (const d of liveFastDraws) {
+        const insRes = await db.execute({
+          sql: `INSERT OR IGNORE INTO cashpot_draws (draw_number, draw_date, num1, num2, num3, num4, num5, multiplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.multiplier]
+        });
+        if (insRes.rowsAffected > 0) drawsAdded++;
       }
     }
 

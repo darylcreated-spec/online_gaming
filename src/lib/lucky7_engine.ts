@@ -687,33 +687,58 @@ function buildDecoupledBonusAnalysis(
 // Multi-Ball Out-of-the-Box Number-Theory & Follower Generator
 // (Cash Pot 5/20, Lotto Plus 5/35 PURE MAIN, Win For Life 6/28 PURE MAIN)
 // ============================================================================
+interface ComboSelectOptions {
+  allowedSet?: Set<number>;
+  minLow?: number;
+  maxLow?: number;
+  midSplit?: number;
+  mustParity?: 0 | 1;
+}
+
 function selectComboFromScoreVector(
   scoreVec: number[],
   poolCandidates: number[],
   pickSize: number,
   existingPlays: number[][],
+  ballUsage: number[],
+  maxBallCap: number,
   maxAllowedOverlap: number,
-  forcedMinLow?: number,
-  forcedMaxLow?: number,
-  midSplit?: number
+  opts: ComboSelectOptions = {}
 ): number[] {
-  const ordered = [...poolCandidates].sort((a, b) => scoreVec[b] - scoreVec[a] || a - b);
+  const { allowedSet, minLow, maxLow, midSplit, mustParity } = opts;
 
-  const tryPick = (ovCap: number, enforceHL: boolean): number[] | null => {
+  const sortByScoreAndCap = (a: number, b: number) => {
+    const capPenA = ballUsage[a] >= maxBallCap ? -1000 : -ballUsage[a] * 3.5;
+    const capPenB = ballUsage[b] >= maxBallCap ? -1000 : -ballUsage[b] * 3.5;
+    return scoreVec[b] + capPenB - (scoreVec[a] + capPenA) || a - b;
+  };
+
+  const primary = allowedSet
+    ? poolCandidates.filter((n) => allowedSet.has(n)).sort(sortByScoreAndCap)
+    : [...poolCandidates].sort(sortByScoreAndCap);
+  const secondary = allowedSet
+    ? poolCandidates.filter((n) => !allowedSet.has(n)).sort(sortByScoreAndCap)
+    : [];
+  const ordered = [...primary, ...secondary];
+
+  const tryPick = (capLimit: number, ovCap: number, enforceStrict: boolean): number[] | null => {
     const chosen: number[] = [];
     let lowCnt = 0;
     let highCnt = 0;
-    const minLow = forcedMinLow ?? 0;
-    const maxLow = forcedMaxLow ?? pickSize;
-    const maxHigh = pickSize - minLow;
+    const loMin = minLow ?? 0;
+    const loMax = maxLow ?? pickSize;
+    const hiMax = pickSize - loMin;
     const split = midSplit ?? 10;
 
     for (const cand of ordered) {
       if (chosen.includes(cand)) continue;
+      if (ballUsage[cand] >= capLimit) continue;
+      if (enforceStrict && allowedSet && !allowedSet.has(cand)) continue;
+      if (enforceStrict && mustParity !== undefined && cand % 2 !== mustParity) continue;
       const isLow = cand <= split;
-      if (enforceHL) {
-        if (isLow && lowCnt >= maxLow) continue;
-        if (!isLow && highCnt >= maxHigh) continue;
+      if (enforceStrict && minLow !== undefined) {
+        if (isLow && lowCnt >= loMax) continue;
+        if (!isLow && highCnt >= hiMax) continue;
       }
       const trial = [...chosen, cand];
       const tooClose = existingPlays.some((ex) => overlapCount(trial, ex) > ovCap);
@@ -728,14 +753,18 @@ function selectComboFromScoreVector(
     return null;
   };
 
-  // Try strict High/Low + diversity first, then relax gracefully so we NEVER produce duplicate tickets
-  return (
-    tryPick(maxAllowedOverlap, true) ||
-    tryPick(maxAllowedOverlap, false) ||
-    tryPick(pickSize - 1, true) ||
-    tryPick(pickSize - 1, false) ||
-    ordered.slice(0, pickSize).sort((a, b) => a - b)
-  );
+  // Try strict pure signal + anti-crowding ball cap first, relaxing gracefully only if pool is exhausted
+  const picked =
+    tryPick(maxBallCap, maxAllowedOverlap, true) ||
+    tryPick(maxBallCap + 1, maxAllowedOverlap, true) ||
+    tryPick(maxBallCap, maxAllowedOverlap, false) ||
+    tryPick(maxBallCap + 2, pickSize - 1, false) ||
+    ordered.slice(0, pickSize).sort((a, b) => a - b);
+
+  for (const n of picked) {
+    ballUsage[n] = (ballUsage[n] || 0) + 1;
+  }
+  return picked;
 }
 
 function buildMultiBallLucky7OutOfBox(
@@ -763,11 +792,13 @@ function buildMultiBallLucky7OutOfBox(
       ? Array.from(analytics.steinerPoolSet)
       : Array.from({ length: V }, (_, i) => i + 1);
 
-  // Allow strong anchor convergence so we NEVER artificially cap Match 4, Match 5, or Jackpot!
-  // Cash Pot (5/20): maxOv = 3 (emp proved +4.7% Match 4+!); Lotto Plus (5/35): maxOv = 2; Win For Life (6/28): maxOv = 3
+  // Anti-crowding ball cap (max 2 primary appearances per ball so no single ball hijacks 6/7 plays!)
+  // Combined with unconstrained high-tier anchor overlap (maxOv = 3 Cash Pot / WFL, 2 Lotto Plus)
+  const maxBallCap = 2;
   const maxOv = game === "lotto-plus" ? 2 : 3;
 
   const existing: number[][] = [];
+  const ballUsage = Array(V + 1).fill(0);
   const plays: Lucky7PlayCard[] = [];
 
   // Weighted 3-2-2 decoupled bonus assignment (Lotto Plus Top 3 Powerballs 1-10, Win For Life Top 3 Cash Balls 1-3)
@@ -794,7 +825,7 @@ function buildMultiBallLucky7OutOfBox(
   for (let n = 1; n <= V; n++) {
     s1[n] = analytics.followFromLast[n] * 3.4 + analytics.freqRecent[n] * 0.9 + analytics.steinerCount[n] * 1.1;
   }
-  const p1 = selectComboFromScoreVector(s1, poolCandidates, k, existing, maxOv);
+  const p1 = selectComboFromScoreVector(s1, poolCandidates, k, existing, ballUsage, maxBallCap, maxOv);
   existing.push(p1);
   plays.push({
     index: 1,
@@ -811,21 +842,16 @@ function buildMultiBallLucky7OutOfBox(
   });
 
   // --- PLAY #2: What Plays Together (Anchor Co-Occurrence Partner Chain) ---
-  // Pick the strongest overall follower/Steiner anchor and pull the exact numbers that play alongside it
-  const anchor = [...poolCandidates].sort(
-    (a, b) =>
-      analytics.followFromLast[b] * 2.2 + analytics.baseScore[b] -
-      (analytics.followFromLast[a] * 2.2 + analytics.baseScore[a])
-  )[0];
+  const anchor = p1[0] ?? poolCandidates[0];
   const s2 = Array(V + 1).fill(0);
   for (let n = 1; n <= V; n++) {
     s2[n] =
-      (n === anchor ? 120 : 0) +
+      (n === anchor ? 90 : 0) +
       analytics.cooccur[anchor][n] * 3.0 +
       analytics.followFromLast[n] * 0.8 +
       analytics.freqRecent[n] * 0.6;
   }
-  const p2 = selectComboFromScoreVector(s2, poolCandidates, k, existing, maxOv);
+  const p2 = selectComboFromScoreVector(s2, poolCandidates, k, existing, ballUsage, maxBallCap, maxOv);
   existing.push(p2);
   plays.push({
     index: 2,
@@ -848,7 +874,11 @@ function buildMultiBallLucky7OutOfBox(
   for (let n = 1; n <= V; n++) {
     s3[n] = analytics.baseScore[n] + analytics.followFromLast[n] * 1.1;
   }
-  const p3 = selectComboFromScoreVector(s3, poolCandidates, k, existing, maxOv, targetLow, targetLow, mid);
+  const p3 = selectComboFromScoreVector(s3, poolCandidates, k, existing, ballUsage, maxBallCap, maxOv, {
+    minLow: targetLow,
+    maxLow: targetLow,
+    midSplit: mid
+  });
   existing.push(p3);
   plays.push({
     index: 3,
@@ -866,14 +896,17 @@ function buildMultiBallLucky7OutOfBox(
 
   // --- PLAY #4: High / Low Polarity Breakout Surge (Asymmetric 4-1 or 5-1 Wave) ---
   const surgeHigh = lastLow >= Math.ceil(k / 2);
-  const surgeMinLow = surgeHigh ? 1 : k - 1;
-  const surgeMaxLow = surgeHigh ? 1 : k - 1;
+  const surgeLow = surgeHigh ? 1 : k - 1;
   const s4 = Array(V + 1).fill(0);
   for (let n = 1; n <= V; n++) {
     const inSurgeZone = surgeHigh ? n > mid : n <= mid;
     s4[n] = analytics.baseScore[n] + (inSurgeZone ? 18 : 0) + analytics.followFromLast[n] * 0.9;
   }
-  const p4 = selectComboFromScoreVector(s4, poolCandidates, k, existing, maxOv, surgeMinLow, surgeMaxLow, mid);
+  const p4 = selectComboFromScoreVector(s4, poolCandidates, k, existing, ballUsage, maxBallCap, maxOv, {
+    minLow: surgeLow,
+    maxLow: surgeLow,
+    midSplit: mid
+  });
   existing.push(p4);
   plays.push({
     index: 4,
@@ -889,82 +922,97 @@ function buildMultiBallLucky7OutOfBox(
     sourceSteinerRanks: computeSourceSteinerRanks(p4, steiner10)
   });
 
-  // --- PLAY #5: Number Theory (Primes, Fibonacci & Modular Roots) ---
+  // --- PLAY #5: PURE Number Theory (Strictly Primes & Fibonacci — Zero Non-Prime Crowding) ---
+  const primeFibSet = new Set<number>();
+  for (let n = 1; n <= V; n++) {
+    if (isPrimeNumber(n) || FIBONACCI_SET.has(n)) primeFibSet.add(n);
+  }
   const s5 = Array(V + 1).fill(0);
   for (let n = 1; n <= V; n++) {
     const primeBoost = isPrimeNumber(n) ? 14 : 0;
-    const fibBoost = FIBONACCI_SET.has(n) ? 11 : 0;
-    // Slight bonus for numbers with distinct non-crowded last digits (mod 10)
-    const modBonus = (n % 5 === 2 || n % 5 === 3 ? 2.5 : 1.0);
-    s5[n] = analytics.baseScore[n] + primeBoost + fibBoost + modBonus;
+    const fibBoost = FIBONACCI_SET.has(n) ? 10 : 0;
+    s5[n] =
+      primeBoost +
+      fibBoost +
+      Math.min(analytics.overdue[n], 24) * 0.55 +
+      analytics.followFromLast[n] * 0.8 +
+      analytics.freqRecent[n] * 0.6;
   }
-  const p5 = selectComboFromScoreVector(s5, poolCandidates, k, existing, maxOv);
+  const p5 = selectComboFromScoreVector(s5, poolCandidates, k, existing, ballUsage, maxBallCap, maxOv, {
+    allowedSet: primeFibSet
+  });
   existing.push(p5);
   const primeCnt = p5.filter((n) => isPrimeNumber(n)).length;
   const fibCnt = p5.filter((n) => FIBONACCI_SET.has(n)).length;
   plays.push({
     index: 5,
     methodKey: "number-theory",
-    methodName: "Number Theory (Primes + Fibonacci)",
+    methodName: "Pure Number Theory (Primes + Fibonacci)",
     numbers: p5,
     bonus: bonusSchedule[4],
     roleLabel: `${primeCnt} Primes, ${fibCnt} Fibonacci`,
-    rationale: `Applies pure number-theory structure from the Steiner pool, concentrating on Prime numbers, Fibonacci terms, and balanced modular residues.`,
+    rationale: `Draws strictly from Prime and Fibonacci numbers inside the Steiner pool (protected by the 2-play anti-crowding cap) to catch prime-heavy winning waves.`,
     highLowSplit: formatHighLowSplit(game, p5, mid),
     oddEvenSplit: formatOddEvenSplit(game, p5),
     sumTotal: p5.reduce((a, b) => a + b, 0),
     sourceSteinerRanks: computeSourceSteinerRanks(p5, steiner10)
   });
 
-  // --- PLAY #6: Mirror Complements (V + 1 - x) & Neighbor Slides (+/- 1) ---
+  // --- PLAY #6: PURE Mirror Complements (V + 1 - x), +/-1 Neighbors & Lag-1 Repeaters ---
   const mirrorSet = new Set(analytics.lastNums.map((x) => V + 1 - x).filter((m) => m >= 1 && m <= V));
   const stepSet = new Set(
     analytics.lastNums.flatMap((x) => [x - 1, x + 1]).filter((m) => m >= 1 && m <= V)
   );
+  const lag1RepeatSet = new Set(analytics.lastNums.filter((m) => m >= 1 && m <= V));
+  const pureKinematicSet = new Set<number>([...mirrorSet, ...stepSet, ...lag1RepeatSet]);
   const s6 = Array(V + 1).fill(0);
   for (let n = 1; n <= V; n++) {
-    s6[n] =
-      analytics.baseScore[n] * 0.8 +
-      (mirrorSet.has(n) ? 20 : 0) +
-      (stepSet.has(n) ? 15 : 0) +
-      analytics.followFromLast[n] * 0.9;
+    // Double-convergence balls (e.g. BOTH a V+1-x mirror AND a +/-1 neighbor) score highest!
+    const mirHit = mirrorSet.has(n) ? 24 : 0;
+    const stepHit = stepSet.has(n) ? 18 : 0;
+    const repHit = lag1RepeatSet.has(n) ? 14 : 0;
+    s6[n] = mirHit + stepHit + repHit + Math.min(analytics.overdue[n], 24) * 0.35 + analytics.followFromLast[n] * 0.45;
   }
-  const p6 = selectComboFromScoreVector(s6, poolCandidates, k, existing, maxOv);
+  const p6 = selectComboFromScoreVector(s6, poolCandidates, k, existing, ballUsage, maxBallCap + 1, maxOv, {
+    allowedSet: pureKinematicSet
+  });
   existing.push(p6);
   plays.push({
     index: 6,
     methodKey: "mirror-stepper",
-    methodName: "Mirror Complements & Neighbor Slides",
+    methodName: "Pure Mirrors & Neighbor Slides",
     numbers: p6,
     bonus: bonusSchedule[5],
-    roleLabel: `Mirror (${V + 1} - n) + Step`,
-    rationale: `Reflects the last draw through exact ${V + 1} - n mathematical mirrors and adjacent +/- 1 neighbor slides within the Steiner pool.`,
+    roleLabel: `Pure ${V + 1}-n Mirror + Step`,
+    rationale: `Draws strictly from exact ${V + 1} - n mirrors, +/- 1 neighbors, and direct repeaters of [${lastDrawStr}] with zero unrelated filler.`,
     highLowSplit: formatHighLowSplit(game, p6, mid),
     oddEvenSplit: formatOddEvenSplit(game, p6),
     sumTotal: p6.reduce((a, b) => a + b, 0),
     sourceSteinerRanks: computeSourceSteinerRanks(p6, steiner10)
   });
 
-  // --- PLAY #7: Carryover Repeat + Parity Inversion & Overdue Rebound ---
-  const wantOdd = lastOdd >= Math.ceil(k / 2) ? 0 : 1;
+  // --- PLAY #7: STRICT Parity Inversion Wave (All-Odd / All-Even Flip + Overdue Rebound) ---
+  const wantOdd: 0 | 1 = lastOdd >= Math.ceil(k / 2) ? 0 : 1;
   const repeatSet = new Set([...analytics.lastNums, ...analytics.prev2Nums]);
   const s7 = Array(V + 1).fill(0);
   for (let n = 1; n <= V; n++) {
-    const overdueBoost = Math.min(analytics.overdue[n], 25) * 1.45;
-    const parityBoost = n % 2 === wantOdd ? 12 : 0;
-    const repeatBoost = repeatSet.has(n) ? 10 : 0;
-    s7[n] = overdueBoost + parityBoost + repeatBoost + analytics.freqRecent[n] * 0.7;
+    const overdueBoost = Math.min(analytics.overdue[n], 25) * 1.4;
+    const carryBoost = repeatSet.has(n) ? 8 : 0;
+    const kinBoost = pureKinematicSet.has(n) ? 6 : 0;
+    s7[n] = overdueBoost + carryBoost + kinBoost + analytics.freqRecent[n] * 0.5;
   }
-  const p7 = selectComboFromScoreVector(s7, poolCandidates, k, existing, maxOv);
+  const p7 = selectComboFromScoreVector(s7, poolCandidates, k, existing, ballUsage, maxBallCap + 1, maxOv, {
+    mustParity: wantOdd
+  });
   existing.push(p7);
   plays.push({
     index: 7,
     methodKey: "carryover-parity",
-    methodName: "Carryover + Parity Inversion & Overdue",
+    methodName: "Strict Parity Inversion Wave",
     numbers: p7,
     bonus: bonusSchedule[6],
-    roleLabel: wantOdd === 1 ? "Odd-Flip Rebound" : "Even-Flip Rebound",
-    rationale: `Pairs recent 1-to-2 draw repeat carryovers with ${wantOdd === 1 ? "Odd" : "Even"}-dominant parity inversion and statistically overdue rebound balls.`,
+    roleLabel: wantOdd === 1 ? "All-Odd Inversion Wave" : "All-Even Inversion Wave",
+    rationale: `Strictly flips parity to ${wantOdd === 1 ? "All-Odd" : "All-Even"} after last draw's ${lastOdd} Odd / ${k - lastOdd} Even split, blending overdue rebounds and carryovers.`,
     highLowSplit: formatHighLowSplit(game, p7, mid),
     oddEvenSplit: formatOddEvenSplit(game, p7),
     sumTotal: p7.reduce((a, b) => a + b, 0),
