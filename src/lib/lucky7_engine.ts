@@ -1221,9 +1221,15 @@ function buildPick4Lucky7OutOfBox(
   const mirrors = new Set(last.map((d) => 9 - d));
   const p4 = makeDistinct4((d) => (mirrors.has(d) ? 35 : 0) + base[d] * 0.5);
 
-  // Play #5: Pure Neighbor Slide (d +/- 1 mod 10) + Primes 24-Way Box
+  // Play #5: Pure Neighbor Slide (d +/- 1 mod 10) + Primes + Cold-Digit Priority 24-Way Box
   const steppers = new Set(last.flatMap((d) => [(d + 1) % 10, (d + 9) % 10]));
-  const p5 = makeDistinct4((d) => (steppers.has(d) ? 24 : 0) + (isPrimeNumber(d) ? 10 : 0) + base[d] * 0.4);
+  const p5 = makeDistinct4(
+    (d) =>
+      (steppers.has(d) ? 24 : 0) +
+      (isPrimeNumber(d) ? 10 : 0) +
+      (digitUsage[d] === 0 ? 18 : 0) +
+      base[d] * 0.4
+  );
 
   // Play #6: Anchor Neighbor-Cascade Twin {d-1, d, d, d+1} (12-Way Twin #1 — targets consecutive clusters!)
   const lastUniq = Array.from(new Set(last)).sort(
@@ -1237,25 +1243,75 @@ function buildPick4Lucky7OutOfBox(
   }
   registerBox(p6);
 
-  // Play #7: Distinct Overdue Parity-Inversion Twin (12-Way Twin #2 — strictly disjoint anchor from Play #6!)
+  // Play #7: 10/10 Cold-Digit Guard + Overdue Parity-Inversion Twin (Guarantees 100% 0..9 digit coverage!)
+  const missingDigits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    .filter((d) => digitUsage[d] === 0)
+    .sort((a, b) => overdue[b] - overdue[a] || base[b] - base[a]);
   const lastOddCnt = last.filter((d) => d % 2 === 1).length;
   const wantOdd = lastOddCnt >= 2 ? 0 : 1;
-  const twin2Cands = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    .filter((d) => d !== cascadeAnchor)
-    .sort(
-      (a, b) =>
-        overdue[b] * 2.2 + (b % 2 === wantOdd ? 12 : 0) - digitUsage[b] * 5 -
-        (overdue[a] * 2.2 + (a % 2 === wantOdd ? 12 : 0) - digitUsage[a] * 5)
-    );
-  const twin2 = twin2Cands[0] ?? 0;
-  const partners = twin2Cands
-    .filter((d) => d !== twin2 && d !== cascadeAnchor)
-    .sort((a, b) => cooccur[twin2][b] * 2 - digitUsage[b] * 5 - (cooccur[twin2][a] * 2 - digitUsage[a] * 5));
-  let p7 = [twin2, partners[0] ?? 1, twin2, partners[1] ?? 2];
-  let idx = 2;
-  while (usedBoxes.has(boxKey(p7)) && idx < partners.length) {
-    p7 = [twin2, partners[0] ?? 1, twin2, partners[idx]];
-    idx++;
+
+  let p7: number[];
+  let twin2 = 0;
+  let p7Role = "12-Way Disjoint Twin";
+  let p7Rationale = "";
+
+  if (missingDigits.length >= 4) {
+    p7 = missingDigits.slice(0, 4);
+    p7Role = "24-Way 10/10 Cold-Digit Sweep";
+    p7Rationale = `Guarantees 10/10 digit coverage by sweeping the 4 uncovered cold digits [${p7.join("-")}] into a distinct 24-Way Box.`;
+  } else if (missingDigits.length > 0) {
+    twin2 =
+      missingDigits[0] !== cascadeAnchor
+        ? missingDigits[0]
+        : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+            .filter((d) => d !== cascadeAnchor)
+            .sort(
+              (a, b) =>
+                overdue[b] * 2 + (b % 2 === wantOdd ? 12 : 0) -
+                (overdue[a] * 2 + (a % 2 === wantOdd ? 12 : 0))
+            )[0] ?? 0;
+    const remainingMissing = missingDigits.filter((d) => d !== twin2);
+    const rankedPartners = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      .filter((d) => d !== twin2 && !remainingMissing.includes(d))
+      .sort(
+        (a, b) =>
+          cooccur[twin2][b] * 2.2 + (b % 2 === wantOdd ? 8 : 0) - digitUsage[b] * 4 -
+          (cooccur[twin2][a] * 2.2 + (a % 2 === wantOdd ? 8 : 0) - digitUsage[a] * 4)
+      );
+    const partnerPool = [...remainingMissing, ...rankedPartners];
+    if (remainingMissing.length >= 3) {
+      p7 = [twin2, remainingMissing[0], remainingMissing[1], remainingMissing[2]];
+      p7Role = "24-Way 10/10 Cold-Digit Guard";
+      p7Rationale = `Locks all uncovered cold digits [${missingDigits.join(", ")}] so every digit 0 to 9 is defended across the 7 sets.`;
+    } else {
+      p7 = [twin2, partnerPool[0] ?? 1, twin2, partnerPool[1] ?? 2];
+      let idx = 2;
+      while (usedBoxes.has(boxKey(p7)) && idx < partnerPool.length) {
+        p7 = [twin2, partnerPool[0] ?? 1, twin2, partnerPool[idx]];
+        idx++;
+      }
+      p7Role = "12-Way Cold-Digit Guard Twin";
+      p7Rationale = `Guarantees 10/10 digit coverage by anchoring uncovered cold digit(s) [${missingDigits.join(", ")}] into a disjoint 12-Way Twin.`;
+    }
+  } else {
+    const twin2Cands = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      .filter((d) => d !== cascadeAnchor)
+      .sort(
+        (a, b) =>
+          overdue[b] * 2.2 + (b % 2 === wantOdd ? 12 : 0) - digitUsage[b] * 5 -
+          (overdue[a] * 2.2 + (a % 2 === wantOdd ? 12 : 0) - digitUsage[a] * 5)
+      );
+    twin2 = twin2Cands[0] ?? 0;
+    const partners = twin2Cands
+      .filter((d) => d !== twin2 && d !== cascadeAnchor)
+      .sort((a, b) => cooccur[twin2][b] * 2 - digitUsage[b] * 5 - (cooccur[twin2][a] * 2 - digitUsage[a] * 5));
+    p7 = [twin2, partners[0] ?? 1, twin2, partners[1] ?? 2];
+    let idx = 2;
+    while (usedBoxes.has(boxKey(p7)) && idx < partners.length) {
+      p7 = [twin2, partners[0] ?? 1, twin2, partners[idx]];
+      idx++;
+    }
+    p7Rationale = `Doubles overdue ${wantOdd === 1 ? "Odd" : "Even"} digit ${twin2} (strictly separate from Play #6) with top co-occurring partner digits while maintaining 10/10 digit coverage.`;
   }
   registerBox(p7);
 
@@ -1304,10 +1360,10 @@ function buildPick4Lucky7OutOfBox(
     },
     {
       methodKey: "overdue-parity-twin",
-      methodName: "Overdue Parity Inversion Twin",
+      methodName: "10/10 Cold-Digit & Overdue Twin",
       nums: p7,
-      role: "12-Way Disjoint Twin",
-      rationale: `Doubles overdue ${wantOdd === 1 ? "Odd" : "Even"} digit ${twin2} (strictly separate from Play #6) with top co-occurring partner digits.`
+      role: p7Role,
+      rationale: p7Rationale
     }
   ];
 
