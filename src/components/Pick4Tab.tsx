@@ -41,6 +41,7 @@ import Pick4AuditPanel from "@/components/Pick4AuditPanel";
 import Pick4ForensicPanel from "@/components/Pick4ForensicPanel";
 import TrevorEnginePanel from "@/components/TrevorEnginePanel";
 import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
+import CrossEngineConsensusPanel from "@/components/CrossEngineConsensusPanel";
 import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { copyTextToClipboard } from "@/lib/export_helpers";
 
@@ -56,7 +57,7 @@ interface Pick4Draw {
 }
 
 export default function Pick4Tab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "lucky7" | "trevor" | "math" | "diff-9" | "audit" | "forensic" | "backtest" | "archive" | "explain">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "trevor" | "math" | "diff-9" | "audit" | "forensic" | "backtest" | "archive" | "explain">("dashboard");
   const [draws, setDraws] = useState<Pick4Draw[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
@@ -221,6 +222,18 @@ export default function Pick4Tab() {
         >
           <BarChart2 className="w-3.5 h-3.5" />
           DASHBOARD & STATS
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("consensus")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "consensus"
+              ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+              : "text-purple-400/90 hover:text-purple-300 hover:bg-purple-500/10"
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          CONSENSUS LOCK
         </button>
 
         <button
@@ -433,6 +446,10 @@ export default function Pick4Tab() {
       )}
 
       {/* Subtab: Mathematical Engine */}
+      {activeSubTab === "consensus" && (
+        <CrossEngineConsensusPanel game="pick4" />
+      )}
+
       {activeSubTab === "lucky7" && (
         <Lucky7EnginePanel game="pick4" />
       )}

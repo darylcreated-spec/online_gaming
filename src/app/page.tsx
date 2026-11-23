@@ -22,6 +22,7 @@ import LottoAuditPanel from "@/components/LottoAuditPanel";
 import LottoForensicPanel from "@/components/LottoForensicPanel";
 import TrevorEnginePanel from "@/components/TrevorEnginePanel";
 import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
+import CrossEngineConsensusPanel from "@/components/CrossEngineConsensusPanel";
 import EngineBenchmarkTracker from "@/components/EngineBenchmarkTracker";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PushNotificationBell from "@/components/PushNotificationBell";
@@ -105,8 +106,8 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "fast-cash" | "syndicate" | "engine-tracker" | "settings">("welcome");
   const [utilitySubTool, setUtilitySubTool] = useState<"scanner" | "nl-query">("scanner");
-  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "lucky-7" | "trevor-engine" | "math-engine" | "diff-35" | "quant-100" | "forensic" | "audit" | "history" | "builder" | "explain">("dashboard");
-  const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "lucky7" | "trevor" | "transition" | "math-engine" | "diff" | "history" | "translator" | "relationship" | "hits" | "explain" | "network" | "audit" | "forensic">("dashboard");
+  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "consensus" | "lucky-7" | "trevor-engine" | "math-engine" | "diff-35" | "quant-100" | "forensic" | "audit" | "history" | "builder" | "explain">("dashboard");
+  const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "trevor" | "transition" | "math-engine" | "diff" | "history" | "translator" | "relationship" | "hits" | "explain" | "network" | "audit" | "forensic">("dashboard");
   
   const [mobileSheet, setMobileSheet] = useState<null | "games" | "more">(null);
   const [desktopGamesOpen, setDesktopGamesOpen] = useState(false);
@@ -623,6 +624,7 @@ export default function Home() {
             <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 w-full md:w-fit overflow-x-auto flex-nowrap sleek-scrollbar gap-1 font-sans">
               {[
                 { id: "dashboard", label: "Overview and Stats", icon: BarChart2 },
+                { id: "consensus", label: "Consensus Lock", icon: ShieldCheck },
                 { id: "lucky-7", label: "Lucky 7", icon: GitMerge },
                 { id: "trevor-engine", label: "Trevor Engine", icon: Crosshair },
                 { id: "math-engine", label: "Math Engine", icon: Brain },
@@ -680,6 +682,12 @@ export default function Home() {
               timeframe={timeframe}
               setTimeframe={setTimeframe}
             />
+          </div>
+        )}
+
+        {activeTab === "lotto-plus" && lottoSubTab === "consensus" && (
+          <div className="tab-content-enter">
+            <CrossEngineConsensusPanel game="lotto-plus" />
           </div>
         )}
 

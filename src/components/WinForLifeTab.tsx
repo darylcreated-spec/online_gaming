@@ -9,6 +9,7 @@ import WinForLifeQuant100Panel from "@/components/WinForLifeQuant100Panel";
 import WinForLifeForensicPanel from "@/components/WinForLifeForensicPanel";
 import TrevorEnginePanel from "@/components/TrevorEnginePanel";
 import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
+import CrossEngineConsensusPanel from "@/components/CrossEngineConsensusPanel";
 import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { downloadBlobFile } from "@/lib/export_helpers";
 
@@ -136,7 +137,7 @@ const validateTicket = (ticket: number[]) => {
 };
 
 export default function WinForLifeTab() {
-  const [subTab, setSubTab] = useState<"dashboard" | "lucky7" | "trevor" | "math-engine" | "diff-28" | "quant-100" | "forensic" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
+  const [subTab, setSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "trevor" | "math-engine" | "diff-28" | "quant-100" | "forensic" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   
@@ -491,6 +492,7 @@ export default function WinForLifeTab() {
       <div className="flex bg-slate-900/90 p-1 rounded-xl border border-slate-800 w-full md:w-fit mb-6 overflow-x-auto flex-nowrap scrollbar-none gap-1">
         {[
           { id: "dashboard", label: "DASHBOARD & STATS", icon: BarChart2 },
+          { id: "consensus", label: "CONSENSUS LOCK", icon: ShieldCheck },
           { id: "lucky7", label: "LUCKY 7", icon: GitMerge },
           { id: "trevor", label: "TREVOR ENGINE", icon: Crosshair },
           { id: "math-engine", label: "MATHEMATICAL ENGINE", icon: Brain },
@@ -1156,6 +1158,10 @@ export default function WinForLifeTab() {
       )}
 
       {/* SUBTAB: MATHEMATICAL ENGINE */}
+      {subTab === "consensus" && (
+        <CrossEngineConsensusPanel game="win-for-life" />
+      )}
+
       {subTab === "lucky7" && (
         <Lucky7EnginePanel game="win-for-life" />
       )}

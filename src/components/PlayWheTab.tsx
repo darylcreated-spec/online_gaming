@@ -46,6 +46,7 @@ import PlayWheDiff37Panel from "@/components/PlayWheDiff37Panel";
 import PlayWheForensicPanel from "@/components/PlayWheForensicPanel";
 import TrevorEnginePanel from "@/components/TrevorEnginePanel";
 import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
+import CrossEngineConsensusPanel from "@/components/CrossEngineConsensusPanel";
 import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { triggerHaptic } from "@/lib/haptics";
 
@@ -105,12 +106,12 @@ export default function PlayWheTab({
   showExplainer,
   onShowExplainerChange
 }: {
-  activeSubTab?: "translator" | "dashboard" | "lucky7" | "trevor" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network";
-  onSubTabChange?: (tab: "translator" | "dashboard" | "lucky7" | "trevor" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network") => void;
+  activeSubTab?: "translator" | "dashboard" | "consensus" | "lucky7" | "trevor" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network";
+  onSubTabChange?: (tab: "translator" | "dashboard" | "consensus" | "lucky7" | "trevor" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network") => void;
   showExplainer?: boolean;
   onShowExplainerChange?: (show: boolean) => void;
 } = {}) {
-  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "lucky7" | "trevor" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network">("dashboard");
+  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "consensus" | "lucky7" | "trevor" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network">("dashboard");
   const [localShowHelp, setLocalShowHelp] = useState(false);
 
   const subTab = activeSubTab !== undefined ? activeSubTab : localSubTab;
@@ -671,6 +672,18 @@ export default function PlayWheTab({
         >
           <BarChart2 className="w-3.5 h-3.5" />
           DASHBOARD & STATS
+        </button>
+
+        <button
+          onClick={() => setSubTab("consensus")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "consensus"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-amber-400/90 hover:text-amber-300 hover:bg-amber-500/10"
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          CONSENSUS LOCK
         </button>
 
         <button
@@ -3164,6 +3177,7 @@ export default function PlayWheTab({
       {subTab === "trevor" && <TrevorEnginePanel game="play-whe" />}
 
       {/* LUCKY 7 ENGINE PANEL */}
+      {subTab === "consensus" && <CrossEngineConsensusPanel game="play-whe" />}
       {subTab === "lucky7" && <Lucky7EnginePanel game="play-whe" />}
 
       {exportMarks && (
