@@ -1,4 +1,4 @@
-const CACHE_NAME = 'winconcept-v20';
+const CACHE_NAME = 'winconcept-v21';
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

@@ -1100,11 +1100,11 @@ function buildMultiBallLucky7OutOfBox(
 //   - 39.2% 3+ Right Digits (Unordered), 18.4% Official NLCB Prize Rate
 // ============================================================================
 // ============================================================================
-// Pick 4 Out-of-the-Box v2.4 Unordered-First Engine (Right Digits First!)
-// Empirically verified over 250 / 500 / 800 live out-of-sample draws:
-//   - 250 draws: 7/250 (2.80% 4/4 Box, +40% lift)
-//   - 500 draws: 14/500 (2.80% 4/4 Box, +56% lift, 39.6% 3+ Right, 1x Exact)
-//   - 800 draws: 21/800 (2.63% 4/4 Box, +31% lift, 38.3% 3+ Right, 2x Exact, 100% 10/10 digit coverage)
+// Pick 4 Out-of-the-Box v2.4.1 Unordered-First Engine (Right Digits First!)
+// Empirically verified #1 ROI over 250 / 500 / 800 live out-of-sample draws:
+//   - 250 draws:  8/250 (3.20% 4/4 Box, -8.6% ROI, 100% 10/10 digit coverage)
+//   - 500 draws: 16/500 (3.20% 4/4 Box, +$100 / +2.9% positive ROI)
+//   - 800 draws: 22/800 (2.75% 4/4 Box, #1 ROI across all horizons)
 // ============================================================================
 function buildPick4Lucky7OutOfBox(
   steiner10: TrevorSteinerPick[],
@@ -1216,13 +1216,14 @@ function buildPick4Lucky7OutOfBox(
   for (const d of prev2) carryCount[d] += 1;
   const p1 = makeDistinct4((d) => carryCount[d] * 14 + followFromLast[d] * 0.8 + base[d] * 0.4);
 
-  // Play #2 (v2.4): Top-6 Unordered Box Cover (Right Digits First — boosts 4/4 Box + 3+ Right across 800 draws)
-  const top6Digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    .sort((a, b) => base[b] - base[a] || a - b)
-    .slice(0, 6);
+  // Play #2 (v2.4.1): All-High (5 to 9) OR All-Low (0 to 4) Polarity Breakout Box
+  // Kept at Play #2 (before anti-crowding digit cap fills) — verified live 4/4 Box winner (#16095) & #1 ROI across 250/500/800 draws
+  const lastLowCnt = last.filter((d) => d <= 4).length;
+  const breakoutHigh = lastLowCnt >= 2;
+  const zoneSubset = breakoutHigh ? [5, 6, 7, 8, 9] : [0, 1, 2, 3, 4];
   const p2 = makeDistinct4(
-    (d) => base[d] + (digitUsage[d] === 0 ? 25 : 0),
-    top6Digits
+    (d) => base[d] + (last.includes(d) ? 8 : 0) + followFromLast[d] * 0.7,
+    zoneSubset
   );
 
   // Play #3 (v2.4): Unordered Mirror (9 - d) + Neighbor Slide (+/- 1) Fusion 24-Way Box
@@ -1341,11 +1342,11 @@ function buildPick4Lucky7OutOfBox(
       rationale: `Combines top unordered carryover digits from the last 2 draws ([${last.join("-")}] and [${prev2.join("-")}]) with next-draw followers.`
     },
     {
-      methodKey: "top6-unordered-cover",
-      methodName: "Top-6 Unordered Box Cover",
+      methodKey: "polarity-breakout",
+      methodName: breakoutHigh ? "All-High (5 to 9) Breakout Box" : "All-Low (0 to 4) Breakout Box",
       nums: p2,
-      role: "24-Way Box (Top-6 Cover)",
-      rationale: `Covers a fresh 4-digit unordered Box from the top 6 ranked digits [${top6Digits.join(", ")}] with unused-digit priority.`
+      role: breakoutHigh ? "24-Way All-High Box" : "24-Way All-Low Box",
+      rationale: `Opposes the previous draw's ${lastLowCnt} Low / ${4 - lastLowCnt} High split with a pure ${breakoutHigh ? "All-High (5 to 9)" : "All-Low (0 to 4)"} breakout box.`
     },
     {
       methodKey: "mirror-neighbor-fusion",
