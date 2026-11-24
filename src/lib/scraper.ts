@@ -550,6 +550,32 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
       console.warn("[LottoPlus] Live portal notice:", portalErr.message);
     }
 
+    // 2.5 Fast live check against nlcbplaywhelotto.com/nlcb-lotto-plus-results/
+    // Runs on every live sync even if Railway returned HTTP 200 (since Railway can lag 1-2 hours after 8:30 PM draw)
+    if (!full && !targetYear) {
+      try {
+        const liveFastLotto = await scrapeLottoPlusNlcbPlayWheLotto();
+        for (const d of liveFastLotto) {
+          const insRes = await db.execute({
+            sql: `INSERT OR IGNORE INTO draws (draw_number, draw_date, num1, num2, num3, num4, num5, powerball, multiplier, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.powerball, d.multiplier, d.jackpot]
+          });
+          if (insRes.rowsAffected > 0) {
+            drawsAdded++;
+            details += `Added Lotto Plus Draw #${d.draw_number} (${d.draw_date}) from nlcbplaywhelotto. `;
+          }
+          if (d.jackpot) {
+            await db.execute({
+              sql: "INSERT OR REPLACE INTO settings (key, value) VALUES ('lotto_next_jackpot', ?)",
+              args: [d.jackpot]
+            }).catch(() => {});
+          }
+        }
+      } catch (fastLottoErr: any) {
+        console.warn("[LottoPlus] Fast live nlcbplaywhelotto notice:", fastLottoErr.message);
+      }
+    }
+
     // 3. Optional Tertiary Source: Official HTML scrape (only if full or targetYear)
     if (full || targetYear) {
       try {
@@ -566,6 +592,100 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
   } catch (error: any) {
     console.error("Sync error in JS scraper:", error);
     return { success: false, drawsAdded, details: error.message };
+  }
+}
+
+export async function scrapeLottoPlusNlcbPlayWheLotto(): Promise<
+  Array<{ draw_number: number; draw_date: string; num1: number; num2: number; num3: number; num4: number; num5: number; powerball: number; multiplier: string; jackpot: string }>
+> {
+  try {
+    const res = await fetchWithRetry(BASE_URL);
+    if (!res.ok) {
+      recordScraperTelemetry({
+        source: "nlcbplaywhelotto",
+        game: "lotto-plus",
+        httpStatus: res.status,
+        parsedCount: 0,
+        drift: false,
+        note: "non-ok-http"
+      });
+      return [];
+    }
+
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const results: Array<{
+      draw_number: number;
+      draw_date: string;
+      num1: number;
+      num2: number;
+      num3: number;
+      num4: number;
+      num5: number;
+      powerball: number;
+      multiplier: string;
+      jackpot: string;
+    }> = [];
+
+    const headerDateText = $("#results > strong").first().text().trim();
+    const jackpotText = $("#results #jackpot").first().text().trim();
+
+    $("#results .drawDetails").each((_, card) => {
+      const el = $(card);
+      const cardText = el.text();
+      const rawDate =
+        el.find("strong").first().text().trim() ||
+        headerDateText ||
+        (cardText.match(/DATE:\s*([0-9]{1,2}-[A-Za-z]{3}-[0-9]{2,4})/i)?.[1] ?? "");
+      const isoDate = parseDate(rawDate);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return;
+
+      const drawNumMatch = (el.find(".drawnum").text() || cardText).match(/Draw\s*#\s*(\d+)/i);
+      const drawNum = drawNumMatch ? parseInt(drawNumMatch[1], 10) : 0;
+      if (!Number.isInteger(drawNum) || drawNum <= 0) return;
+
+      const numsRaw: number[] = [];
+      el.children(".ball").not(".gold-ball").not(".white-ball").each((__, b) => {
+        const val = parseInt($(b).text().trim(), 10);
+        if (Number.isInteger(val) && val >= 1 && val <= 35) numsRaw.push(val);
+      });
+      const uniqueNums = Array.from(new Set(numsRaw)).sort((a, b) => a - b);
+      if (uniqueNums.length !== 5) return;
+
+      const pbVal = parseInt(el.find(".ball.gold-ball").first().text().trim(), 10);
+      if (!Number.isInteger(pbVal) || pbVal < 1 || pbVal > 10) return;
+
+      const multText = el.find(".multiplier .ball, .ball.white-ball").first().text().trim() || el.find(".multiplier").text();
+      const multMatch = multText.match(/(\d+\s*x)/i);
+      const multiplier = multMatch ? multMatch[1].replace(/\s+/g, "").toLowerCase() : "1x";
+
+      results.push({
+        draw_number: drawNum,
+        draw_date: isoDate,
+        num1: uniqueNums[0],
+        num2: uniqueNums[1],
+        num3: uniqueNums[2],
+        num4: uniqueNums[3],
+        num5: uniqueNums[4],
+        powerball: pbVal,
+        multiplier,
+        jackpot: jackpotText
+      });
+    });
+
+    const hasMarkers = /Draw\s*#\s*\d+/i.test(html) || /Lotto\s*Plus/i.test(html);
+    recordScraperTelemetry({
+      source: "nlcbplaywhelotto",
+      game: "lotto-plus",
+      httpStatus: res.status,
+      parsedCount: results.length,
+      drift: results.length === 0 && hasMarkers
+    });
+
+    return results;
+  } catch (err: any) {
+    console.warn("[LottoPlus] Live nlcbplaywhelotto notice:", err.message);
+    return [];
   }
 }
 
@@ -1077,6 +1197,94 @@ export async function saveWinForLifeDraw(draw: any): Promise<void> {
 }
 
 // Live HTML Portal Scraper for Win For Life (nlcblottoresult.com)
+export async function scrapeWinForLifeNlcbPlayWheLotto(): Promise<
+  Array<{ draw_number: number; draw_date: string; num1: number; num2: number; num3: number; num4: number; num5: number; num6: number; cash_ball: number; jackpot: string }>
+> {
+  try {
+    const res = await fetchWithRetry(WINFORLIFE_URL);
+    if (!res.ok) {
+      recordScraperTelemetry({
+        source: "nlcbplaywhelotto",
+        game: "win-for-life",
+        httpStatus: res.status,
+        parsedCount: 0,
+        drift: false,
+        note: "non-ok-http"
+      });
+      return [];
+    }
+
+    const html = await res.text();
+    const $ = cheerio.load(html);
+    const results: Array<{
+      draw_number: number;
+      draw_date: string;
+      num1: number;
+      num2: number;
+      num3: number;
+      num4: number;
+      num5: number;
+      num6: number;
+      cash_ball: number;
+      jackpot: string;
+    }> = [];
+
+    $("#results .drawDetails").each((_, card) => {
+      const el = $(card);
+      const cardText = el.text();
+      const rawDate =
+        el.find("strong").first().text().trim() ||
+        (cardText.match(/Date:\s*([0-9]{1,2}-[A-Za-z]{3}-[0-9]{2,4})/i)?.[1] ?? "");
+      const isoDate = parseDate(rawDate);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return;
+
+      const drawNumMatch = cardText.match(/DRAW\s*#\s*(\d+)/i);
+      const drawNum = drawNumMatch ? parseInt(drawNumMatch[1], 10) : 0;
+      if (!Number.isInteger(drawNum) || drawNum <= 0) return;
+
+      const numsRaw: number[] = [];
+      el.find(".ball.bronze-ball").each((__, b) => {
+        const val = parseInt($(b).text().trim(), 10);
+        if (Number.isInteger(val) && val >= 1 && val <= 28) numsRaw.push(val);
+      });
+      const uniqueNums = Array.from(new Set(numsRaw)).sort((a, b) => a - b);
+      if (uniqueNums.length !== 6) return;
+
+      const cbRaw = el.find(".multiplier .ball, .ball.silver-ball").first().text().trim() ||
+        (cardText.match(/Cash\s*Ball:\s*(\d+)/i)?.[1] ?? "");
+      const cashBall = parseInt(cbRaw, 10);
+      if (!Number.isInteger(cashBall) || cashBall < 1 || cashBall > 3) return;
+
+      results.push({
+        draw_number: drawNum,
+        draw_date: isoDate,
+        num1: uniqueNums[0],
+        num2: uniqueNums[1],
+        num3: uniqueNums[2],
+        num4: uniqueNums[3],
+        num5: uniqueNums[4],
+        num6: uniqueNums[5],
+        cash_ball: cashBall,
+        jackpot: "$20,000/mo"
+      });
+    });
+
+    const hasMarkers = /DRAW\s*#\s*\d+/i.test(html) || /Cash\s*Ball/i.test(html);
+    recordScraperTelemetry({
+      source: "nlcbplaywhelotto",
+      game: "win-for-life",
+      httpStatus: res.status,
+      parsedCount: results.length,
+      drift: results.length === 0 && hasMarkers
+    });
+
+    return results;
+  } catch (err: any) {
+    console.warn("[WinForLife] Live nlcbplaywhelotto notice:", err.message);
+    return [];
+  }
+}
+
 export async function scrapeWinForLifeLivePortal(): Promise<any[]> {
   try {
     const res = await fetchWithRetry("https://nlcblottoresult.com/nlcb-win-for-life-results/");
@@ -1232,6 +1440,23 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
       }
     } catch (portalErr: any) {
       console.warn("[WinForLife] Live portal notice:", portalErr.message);
+    }
+
+    // 2.5 Fast live check against nlcbplaywhelotto.com/nlcb-win-for-life-results/
+    // Runs on every live sync even if Railway returned HTTP 200 (eliminates 7:00 PM Win For Life lag)
+    if (!full && !targetYear) {
+      try {
+        const liveFastWfl = await scrapeWinForLifeNlcbPlayWheLotto();
+        for (const d of liveFastWfl) {
+          const insRes = await db.execute({
+            sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [d.draw_number, d.draw_date, d.num1, d.num2, d.num3, d.num4, d.num5, d.num6, d.cash_ball, d.jackpot]
+          });
+          if (insRes.rowsAffected > 0) drawsAdded++;
+        }
+      } catch (fastWflErr: any) {
+        console.warn("[WinForLife] Fast live nlcbplaywhelotto notice:", fastWflErr.message);
+      }
     }
 
     // Self-healing guard: remove any out-of-order duplicate rows (e.g. draw_number >= 473 with older date < 2026-10-16)
