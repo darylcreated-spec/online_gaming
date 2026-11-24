@@ -271,7 +271,7 @@ export default function CrossEngineConsensusPanel({ game }: CrossEngineConsensus
             </div>
 
             <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
-              {data.gameName} Multi-Engine Consensus &amp; Pre-Draw Lock
+              {`${data.gameName}: Multi-Engine Consensus & Pre-Draw Lock`}
             </h2>
             <p className="text-sm text-slate-300 leading-relaxed max-w-3xl">
               {game === "pick4"
