@@ -1338,28 +1338,37 @@ export default function EngineBenchmarkTracker() {
               c => activeGame === "all" || c.game_key === activeGame
             );
 
-            // Surface ONLY the user's custom pinned tickets + 1 current (most recent) 5-draw run per game
+            // Surface ONLY active custom user-tracked tickets + strictly 1 active/newest 5-draw run per game
             const watchlist: MultiDrawPlayCampaign[] = [];
             const seenIds = new Set<string>();
             const seenGames = new Set<string>();
 
-            // 1. Always show custom user-tracked tickets first
+            // 1. Always show ACTIVE custom user-tracked tickets first
             for (const c of scoped) {
-              if (c.engine_key === "user-custom" || c.is_user_pinned) {
+              if (c.engine_key === "user-custom" && c.campaign_state === "ACTIVE_IN_PROGRESS") {
                 watchlist.push(c);
                 seenIds.add(c.campaign_id);
-                seenGames.add(c.game_key);
               }
             }
 
-            // 2. Add the single latest active (or most recent) run for each remaining game
+            // 2. Add strictly the single newest ACTIVE (in-progress) run for each game (prioritizing pinned active)
+            const activeOrdered = [
+              ...scoped.filter(c => c.campaign_state === "ACTIVE_IN_PROGRESS" && c.is_user_pinned && c.engine_key !== "user-custom"),
+              ...scoped.filter(c => c.campaign_state === "ACTIVE_IN_PROGRESS" && !c.is_user_pinned && c.engine_key !== "user-custom")
+            ];
+            for (const c of activeOrdered) {
+              if (seenIds.has(c.campaign_id) || seenGames.has(c.game_key)) continue;
+              watchlist.push(c);
+              seenIds.add(c.campaign_id);
+              seenGames.add(c.game_key);
+            }
+
+            // 3. Fallback: if a game has zero active runs, show its single most recent run
             for (const c of scoped) {
-              if (seenIds.has(c.campaign_id)) continue;
-              if (!seenGames.has(c.game_key)) {
-                watchlist.push(c);
-                seenIds.add(c.campaign_id);
-                seenGames.add(c.game_key);
-              }
+              if (seenIds.has(c.campaign_id) || seenGames.has(c.game_key)) continue;
+              watchlist.push(c);
+              seenIds.add(c.campaign_id);
+              seenGames.add(c.game_key);
             }
 
             // Remaining older completed runs go into the collapsible history drawer
