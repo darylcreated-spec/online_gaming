@@ -74,8 +74,7 @@ export default function EngineBenchmarkTracker() {
   const [expandedWheelGame, setExpandedWheelGame] = useState<string | null>(null);
   const [copiedGame, setCopiedGame] = useState<string | null>(null);
   const [copiedSyndicateGame, setCopiedSyndicateGame] = useState<string | null>(null);
-  const [multiDrawViewMode, setMultiDrawViewMode] = useState<"stepper" | "ledger">("stepper");
-  const [multiDrawFilterState, setMultiDrawFilterState] = useState<"ALL" | "ACTIVE" | "COMPLETED">("ALL");
+  const [showPastMultiDrawHistory, setShowPastMultiDrawHistory] = useState<boolean>(false);
   const [lockingGame, setLockingGame] = useState<string | null>(null);
   const [showLeaderboardDrawer, setShowLeaderboardDrawer] = useState<boolean>(false);
   const [showDiagnosticsDrawer, setShowDiagnosticsDrawer] = useState<boolean>(false);
@@ -1086,7 +1085,7 @@ export default function EngineBenchmarkTracker() {
                       })()}
                     </div>
 
-                    {/* Per-Game Portfolio Rules & 5-Draw Group Tracker Drawer */}
+                    {/* Per-Game Play Rules & Costs Drawer */}
                     <div className="pt-1">
                       <button
                         onClick={() => setExpandedRulesGame(expandedRulesGame === pick.game_key ? null : pick.game_key)}
@@ -1094,52 +1093,21 @@ export default function EngineBenchmarkTracker() {
                       >
                         <span className="flex items-center gap-1.5">
                           <Target className="w-3.5 h-3.5 text-amber-400" />
-                          {expandedRulesGame === pick.game_key ? "Hide Portfolio Rules & 5-Draw Tracker" : "Play Rules & 5-Draw Group Tracker"}
+                          {expandedRulesGame === pick.game_key ? "Hide Play Rules & Costs" : "Play Rules & Costs"}
                         </span>
                         {expandedRulesGame === pick.game_key ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                       </button>
 
                       {expandedRulesGame === pick.game_key && (() => {
                         const slipCount = pick.wheel_slips?.length || pick.condensed_wheel?.length || 1;
-                        const gameLatestCamp = (data?.multiDrawCampaigns || []).find(c => c.game_key === pick.game_key);
                         return (
-                          <div className="mt-2 p-3 rounded-xl bg-slate-950/90 border border-amber-500/25 space-y-2.5 font-mono text-xs">
-                            <div className="text-xs text-amber-200/90 leading-relaxed bg-amber-950/20 border border-amber-500/20 rounded-lg p-2">
+                          <div className="mt-2 p-3 rounded-xl bg-slate-950/90 border border-amber-500/25 space-y-2 font-sans text-xs">
+                            <div className="text-xs text-amber-200/90 leading-relaxed bg-amber-950/20 border border-amber-500/20 rounded-lg p-2.5">
                               <strong className="text-amber-300 uppercase block mb-0.5">
-                                {getGameLabel(pick.game_key)} Portfolio Scope:
+                                {getGameLabel(pick.game_key)} Play Rules &amp; Payouts:
                               </strong>
                               {getGamePortfolioNotice(pick.game_key, slipCount)}
                             </div>
-
-                            {gameLatestCamp && (
-                              <div className="space-y-1.5">
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="text-slate-400">
-                                    Tracked Group (Draw {gameLatestCamp.anchor_draw_number} to {gameLatestCamp.anchor_draw_number + 4}):
-                                  </span>
-                                  <span className="text-emerald-300 font-bold">
-                                    {gameLatestCamp.draws_completed}/5 Verified
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-5 gap-1">
-                                  {gameLatestCamp.steps.map(st => (
-                                    <div
-                                      key={st.step}
-                                      className={`p-1.5 rounded border text-center text-xs ${
-                                        st.status !== "VERIFIED"
-                                          ? "bg-slate-900/50 border-slate-800 border-dashed text-slate-500"
-                                          : st.is_prize_winner
-                                          ? "bg-emerald-950/50 border-emerald-500/50 text-emerald-300 font-bold"
-                                          : "bg-slate-900 border-slate-800 text-slate-400"
-                                      }`}
-                                    >
-                                      <div className="font-bold">D{st.step}</div>
-                                      <div>{st.status === "VERIFIED" ? (st.is_prize_winner ? `+$${st.payout_tt}` : `${st.best_slip_match}m`) : "Wait"}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
                           </div>
                         );
                       })()}
@@ -1191,11 +1159,11 @@ export default function EngineBenchmarkTracker() {
                       type="button"
                       onClick={() => handleManualAction("lock_campaign", pick.game_key, pick.target_draw_number)}
                       disabled={lockingGame === pick.game_key}
-                      className="py-1.5 px-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-mono font-semibold transition-colors flex items-center gap-1 cursor-pointer"
-                      title="Pin and track this suggested play across its upcoming 3-Draw and 5-Draw windows"
+                      className="py-1.5 px-2.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-sans font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Watch this same ticket across the next 5 consecutive draws in the Advance Play Tracker below"
                     >
                       <Target className="w-3.5 h-3.5" />
-                      {lockingGame === pick.game_key ? "Locking..." : "Track 3 & 5 Draws"}
+                      {lockingGame === pick.game_key ? "Saving..." : "Hold for 5 Draws"}
                     </button>
                     <button
                       type="button"
@@ -1212,104 +1180,68 @@ export default function EngineBenchmarkTracker() {
         </div>
       )}
 
-      {/* 2.8. MULTI-DRAW PLAY WINDOW VERIFICATION TRACKER (Simplified 1-Draw, 3-Draw & 5-Draw Tracker) */}
+      {/* 2.8. ADVANCE PLAY TRACKER (Simplified Plain-English 5-Draw Hold & Replay Tracker) */}
       {data?.multiDrawSummary && data.multiDrawSummary.length > 0 && (
         <div className="bg-[#0f1418] rounded-2xl border border-cyan-500/30 p-5 space-y-5 shadow-[0_0_30px_rgba(6,182,212,0.06)]">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
-            <div>
+          {/* Plain-English Header + Clear Separation from Consensus Lock */}
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 border-b border-slate-800/80 pb-4">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <Target className="w-5 h-5 text-cyan-400" />
                 <h2 className="text-lg sm:text-xl font-bold text-white">
-                  Multi-Draw Play Tracker (1-Draw, 3-Draw &amp; 5-Draw Windows)
+                  Advance Play Tracker (Hold Same Numbers for 5 Draws)
                 </h2>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
-                Follows one suggested Champion portfolio across 5 consecutive draws to verify whether it wins on Draw 1, within 3 Draws, or within 5 Draws. Click any game card below to filter.
+              <p className="text-sm text-slate-300 leading-relaxed max-w-3xl">
+                Tracks what happens if you replay the <strong className="text-white">exact same ticket</strong> across 3 or 5 consecutive draws. Looking for fresh numbers for just the next single draw? Use the <strong className="text-cyan-300">Consensus Lock</strong> tab inside each game instead.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center bg-[#171c20] rounded-lg p-0.5 border border-slate-800 text-xs font-mono">
-                <button
-                  onClick={() => setMultiDrawViewMode("stepper")}
-                  className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${
-                    multiDrawViewMode === "stepper"
-                      ? "bg-cyan-500 text-slate-950 font-bold"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  Draw-by-Draw Cards
-                </button>
-                <button
-                  onClick={() => setMultiDrawViewMode("ledger")}
-                  className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${
-                    multiDrawViewMode === "ledger"
-                      ? "bg-emerald-500 text-slate-950 font-bold"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  Summary Table
-                </button>
-              </div>
-
-              <div className="flex items-center bg-[#171c20] rounded-lg p-0.5 border border-slate-800 text-xs font-mono">
-                {(["ALL", "ACTIVE", "COMPLETED"] as const).map(st => (
-                  <button
-                    key={st}
-                    onClick={() => setMultiDrawFilterState(st)}
-                    className={`px-2.5 py-1.5 rounded text-xs font-semibold transition-all ${
-                      multiDrawFilterState === st
-                        ? "bg-slate-700 text-white font-bold"
-                        : "text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    {st === "ALL" ? "All" : st === "ACTIVE" ? "In-Progress" : "Completed"}
-                  </button>
-                ))}
-              </div>
-
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               {(selectedGame !== "all" || multiDrawGameFilter !== "all") && (
                 <button
+                  type="button"
                   onClick={() => {
                     if (selectedGame !== "all") setSelectedGame("all");
                     setMultiDrawGameFilter("all");
                   }}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-mono text-cyan-300 font-semibold cursor-pointer"
+                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-cyan-300 cursor-pointer"
                 >
                   Show All Games
                 </button>
               )}
-
               <button
+                type="button"
                 onClick={() => setShowCustomTrackerDrawer(!showCustomTrackerDrawer)}
-                className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-mono text-amber-300 font-bold cursor-pointer flex items-center gap-1"
+                className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-bold text-amber-300 cursor-pointer inline-flex items-center gap-1.5"
               >
                 <Target className="w-3.5 h-3.5" />
-                {showCustomTrackerDrawer ? "Close Custom Tracker" : "Track Custom Group (5 Draws)"}
+                {showCustomTrackerDrawer ? "Close Ticket Form" : "Track My Own Ticket (5 Draws)"}
               </button>
             </div>
           </div>
 
+          {/* Custom User Ticket Form */}
           {showCustomTrackerDrawer && (
-            <div className="p-4 rounded-xl bg-slate-950/80 border border-amber-500/30 space-y-3 font-mono">
+            <div className="p-4 rounded-xl bg-slate-950/80 border border-amber-500/30 space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h3 className="text-base font-bold text-amber-300 uppercase">
-                    Track Your Group of Numbers (Up to 5 Consecutive Draws)
+                  <h3 className="text-sm font-bold text-amber-300 uppercase tracking-wide">
+                    Track Your Own Numbers for the Next 5 Draws
                   </h3>
-                  <p className="text-xs text-slate-400">
-                    Enter 1 or more lines (one slip per line, comma or space separated). The tracker will automatically grade all lines as each of the next 5 draws completes.
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Type or paste your ticket lines below (one ticket per line). We will grade them automatically after each of the next 5 draws.
                   </p>
                 </div>
                 <select
                   value={customGameKey}
                   onChange={e => setCustomGameKey(e.target.value)}
-                  className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white font-bold"
+                  className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white font-semibold"
                 >
                   <option value="cashpot">Cash Pot (5 of 20)</option>
                   <option value="win-for-life">Win For Life (6 of 28)</option>
                   <option value="lotto-plus">Lotto Plus (5 of 35)</option>
-                  <option value="play-whe">Play Whe (Marks 1–36)</option>
+                  <option value="play-whe">Play Whe (Marks 1 to 36)</option>
                   <option value="pick4">Pick 4 (4 Digits)</option>
                 </select>
               </div>
@@ -1318,185 +1250,210 @@ export default function EngineBenchmarkTracker() {
                 value={customGroupInput}
                 onChange={e => setCustomGroupInput(e.target.value)}
                 placeholder={"Example (one ticket per line):\n2, 3, 5, 11, 17\n4, 9, 12, 16, 20"}
-                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-400"
               />
               <div className="flex items-center justify-end gap-2">
                 <button
+                  type="button"
                   onClick={() => setShowCustomTrackerDrawer(false)}
                   className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleLockCustomGroup}
                   disabled={customLocking}
-                  className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase cursor-pointer disabled:opacity-50"
+                  className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold cursor-pointer disabled:opacity-50"
                 >
-                  {customLocking ? "Locking..." : "Lock & Track for 5 Draws"}
+                  {customLocking ? "Saving..." : "Start 5-Draw Tracking"}
                 </button>
               </div>
             </div>
           )}
 
-          {/* Clickable 5-Game Summary Cards (Click any card to switch game) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 font-mono">
-            {data.multiDrawSummary.map(sum => {
-              const activeGame = selectedGame !== "all" ? selectedGame : multiDrawGameFilter;
-              const isCardSelected = activeGame === sum.game_key;
-              return (
-                <button
-                  key={sum.game_key}
-                  onClick={() => {
-                    triggerHaptic("selection");
-                    if (selectedGame !== "all") setSelectedGame("all");
-                    setMultiDrawGameFilter(isCardSelected ? "all" : sum.game_key);
-                  }}
-                  className={`p-3.5 rounded-xl border text-left space-y-2.5 flex flex-col justify-between transition-all cursor-pointer ${
-                    isCardSelected
-                      ? "bg-cyan-950/35 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.18)]"
-                      : "bg-[#14191f] border-slate-800 hover:border-cyan-500/40"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1 w-full">
-                    <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
+          {/* Step 1: Plain-English Win Rate by Game (Click any card to focus one game) */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                How often holding the same ticket wins (Tap a game to filter)
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {data.multiDrawSummary.map(sum => {
+                const activeGame = selectedGame !== "all" ? selectedGame : multiDrawGameFilter;
+                const isCardSelected = activeGame === sum.game_key;
+                return (
+                  <button
+                    type="button"
+                    key={sum.game_key}
+                    onClick={() => {
+                      triggerHaptic("selection");
+                      if (selectedGame !== "all") setSelectedGame("all");
+                      setMultiDrawGameFilter(isCardSelected ? "all" : sum.game_key);
+                    }}
+                    className={`p-3.5 rounded-xl border text-left space-y-2.5 flex flex-col justify-between transition-all cursor-pointer ${
                       isCardSelected
-                        ? "bg-cyan-500 text-slate-950 border-cyan-400"
-                        : "bg-cyan-500/15 text-cyan-300 border-cyan-500/30"
-                    }`}>
-                      {getGameLabel(sum.game_key)}
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      Avg Hit: <strong className="text-emerald-400">{sum.avg_draws_to_first_hit}d</strong>
-                    </span>
-                  </div>
+                        ? "bg-cyan-950/35 border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.18)]"
+                        : "bg-[#14191f] border-slate-800 hover:border-cyan-500/40"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 w-full">
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
+                        isCardSelected
+                          ? "bg-cyan-500 text-slate-950 border-cyan-400"
+                          : "bg-cyan-500/15 text-cyan-300 border-cyan-500/30"
+                      }`}>
+                        {getGameLabel(sum.game_key)}
+                      </span>
+                      <span className={`text-xs font-semibold ${isCardSelected ? "text-cyan-300" : "text-slate-400"}`}>
+                        {isCardSelected ? "Focused" : "Tap to Filter"}
+                      </span>
+                    </div>
 
-                  <div className="space-y-1.5 text-xs w-full">
-                    <div className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/80 border border-slate-800/80">
-                      <span className="text-slate-400">1-Draw Win:</span>
-                      <span className="text-white font-bold">{sum.w1_slip_win_rate_pct}%</span>
+                    <div className="space-y-1.5 text-xs w-full">
+                      <div className="flex items-center justify-between px-2 py-1 rounded bg-slate-900/80 border border-slate-800/80">
+                        <span className="text-slate-300">On Draw 1</span>
+                        <span className="text-white font-mono font-bold">{sum.w1_slip_win_rate_pct}%</span>
+                      </div>
+                      <div className="flex items-center justify-between px-2 py-1 rounded bg-cyan-950/30 border border-cyan-500/30">
+                        <span className="text-cyan-200">Within 3 Draws</span>
+                        <span className="text-cyan-200 font-mono font-bold">{sum.w3_slip_win_rate_pct}%</span>
+                      </div>
+                      <div className="flex items-center justify-between px-2 py-1 rounded bg-emerald-950/30 border border-emerald-500/30">
+                        <span className="text-emerald-200">Within 5 Draws</span>
+                        <span className="text-emerald-300 font-mono font-bold">{sum.w5_slip_win_rate_pct}%</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between px-2 py-1 rounded bg-cyan-950/30 border border-cyan-500/30">
-                      <span className="text-cyan-300 font-semibold">3-Draw Win:</span>
-                      <span className="text-cyan-200 font-bold">{sum.w3_slip_win_rate_pct}%</span>
-                    </div>
-                    <div className="flex items-center justify-between px-2 py-1 rounded bg-emerald-950/30 border border-emerald-500/30">
-                      <span className="text-emerald-300 font-semibold">5-Draw Win:</span>
-                      <span className="text-emerald-300 font-bold">{sum.w5_slip_win_rate_pct}%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-800/70 w-full">
-                    <span>{sum.total_campaigns_evaluated} Windows</span>
-                    <span className={isCardSelected ? "text-cyan-300 font-bold" : "text-amber-400 font-semibold"}>
-                      {isCardSelected ? "Selected" : "Click to Filter"}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Campaign List / Table */}
+          {/* Step 2: Clean Active Watchlist (1 Current Run per Game + Any Custom User Tickets) */}
           {(() => {
             const activeGame = selectedGame !== "all" ? selectedGame : multiDrawGameFilter;
-            const filteredRaw = (data.multiDrawCampaigns || []).filter(c => {
-              if (activeGame !== "all" && c.game_key !== activeGame) return false;
-              if (multiDrawFilterState === "ACTIVE") return c.campaign_state === "ACTIVE_IN_PROGRESS";
-              if (multiDrawFilterState === "COMPLETED") return c.campaign_state === "COMPLETED_5_DRAWS";
-              return true;
-            });
+            const scoped = (data.multiDrawCampaigns || []).filter(
+              c => activeGame === "all" || c.game_key === activeGame
+            );
 
-            // Interleave across games when viewing "all" so Cash Pot doesn't push other games out of view
-            let campaigns = filteredRaw;
-            if (activeGame === "all") {
-              const byGame: Record<string, MultiDrawPlayCampaign[]> = {};
-              for (const c of filteredRaw) {
-                if (!byGame[c.game_key]) byGame[c.game_key] = [];
-                byGame[c.game_key].push(c);
+            // Surface ONLY the user's custom pinned tickets + 1 current (most recent) 5-draw run per game
+            const watchlist: MultiDrawPlayCampaign[] = [];
+            const seenIds = new Set<string>();
+            const seenGames = new Set<string>();
+
+            // 1. Always show custom user-tracked tickets first
+            for (const c of scoped) {
+              if (c.engine_key === "user-custom" || c.is_user_pinned) {
+                watchlist.push(c);
+                seenIds.add(c.campaign_id);
+                seenGames.add(c.game_key);
               }
-              const interleaved: MultiDrawPlayCampaign[] = [];
-              const gameKeys = Object.keys(byGame);
-              const maxLen = Math.max(0, ...gameKeys.map(k => byGame[k].length));
-              for (let i = 0; i < maxLen; i++) {
-                for (const k of gameKeys) {
-                  if (byGame[k][i]) interleaved.push(byGame[k][i]);
-                }
-              }
-              campaigns = interleaved;
             }
 
-            if (campaigns.length === 0) {
-              return (
-                <div className="p-6 text-center text-slate-400 font-mono text-xs">
-                  No multi-draw campaigns match your current filter.
-                </div>
-              );
+            // 2. Add the single latest active (or most recent) run for each remaining game
+            for (const c of scoped) {
+              if (seenIds.has(c.campaign_id)) continue;
+              if (!seenGames.has(c.game_key)) {
+                watchlist.push(c);
+                seenIds.add(c.campaign_id);
+                seenGames.add(c.game_key);
+              }
             }
+
+            // Remaining older completed runs go into the collapsible history drawer
+            const pastRuns = scoped.filter(
+              c => !seenIds.has(c.campaign_id) && c.campaign_state === "COMPLETED_5_DRAWS"
+            );
 
             const fmtNums = (gKey: string, arr: number[]) =>
               arr.map(n => (gKey === "pick4" ? String(n) : String(n).padStart(2, "0"))).join("-");
 
-            if (multiDrawViewMode === "stepper") {
+            if (watchlist.length === 0) {
               return (
-                <div className="space-y-3.5 max-h-[640px] overflow-y-auto pr-1">
-                  {campaigns.slice(0, 15).map(camp => {
+                <div className="p-6 text-center text-slate-400 text-sm bg-slate-950/50 rounded-xl border border-slate-800">
+                  No active 5-draw tickets for this game yet. Click <strong className="text-amber-300">Hold for 5 Draws</strong> on any Champion card above or <strong className="text-amber-300">Track My Own Ticket</strong> to start watching one.
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Currently Watching ({watchlist.length} {watchlist.length === 1 ? "Ticket" : "Tickets"})
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Each box below shows the result of holding the same ticket from Draw 1 through Draw 5.
+                  </p>
+                </div>
+
+                <div className="space-y-3.5">
+                  {watchlist.map(camp => {
                     const isSlipsOpen = expandedCampaignId === camp.campaign_id;
+                    const isCustom = camp.engine_key === "user-custom";
+                    const totalWins = camp.window_5.slip_win_count;
+                    const totalWonTT = camp.window_5.cumulative_payout_tt;
+
                     return (
                       <div
                         key={camp.campaign_id}
-                        className="p-4 rounded-xl bg-[#13181d] border border-slate-800 space-y-3 font-mono"
+                        className="p-4 rounded-xl bg-[#13181d] border border-slate-800 space-y-3"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                        {/* Clean Single-Line Ticket Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-800 text-cyan-300 border border-slate-700">
+                            <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-800 text-cyan-300 border border-slate-700">
                               {getGameLabel(camp.game_key)}
                             </span>
-                            <span className="text-xs font-bold text-white">
-                              Play Locked at Draw #{camp.anchor_draw_number}
-                              {camp.anchor_draw_date ? ` (${camp.anchor_draw_date})` : ""}
+                            {isCustom && (
+                              <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                                Your Custom Ticket
+                              </span>
+                            )}
+                            <span className="text-sm font-bold text-white">
+                              Draws #{camp.anchor_draw_number} to #{camp.anchor_draw_number + 4}
                             </span>
                             <button
+                              type="button"
                               onClick={() => setExpandedCampaignId(isSlipsOpen ? null : camp.campaign_id)}
-                              className="px-2 py-0.5 rounded text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 font-semibold cursor-pointer"
+                              className="px-2.5 py-1 rounded-lg text-xs bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 font-semibold cursor-pointer"
                             >
-                              {isSlipsOpen ? "Hide Played Slips" : `View ${camp.wheel_slips.length} Played Slips`}
+                              {isSlipsOpen ? "Hide Numbers" : `See Numbers (${camp.wheel_slips.length} ${camp.wheel_slips.length === 1 ? "line" : "lines"})`}
                             </button>
                           </div>
 
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                              camp.window_3.slip_prize_hit
-                                ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
-                                : camp.window_3.completed
-                                ? "bg-slate-900 border-slate-700 text-slate-400"
-                                : "bg-cyan-950/70 border-cyan-500/40 text-cyan-300"
-                            }`}>
-                              3-Draw: {camp.window_3.slip_prize_hit ? `WON ${camp.window_3.slip_win_count}/3 ($${camp.window_3.cumulative_payout_tt} TT)` : camp.window_3.completed ? "0/3 Won" : `${camp.window_3.draws_completed}/3 Draws`}
-                            </span>
-                            <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                              camp.window_5.slip_prize_hit
-                                ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
-                                : camp.window_5.completed
-                                ? "bg-slate-900 border-slate-700 text-slate-400"
-                                : "bg-amber-950/70 border-amber-500/40 text-amber-300"
-                            }`}>
-                              5-Draw: {camp.window_5.slip_prize_hit ? `WON ${camp.window_5.slip_win_count}/5 ($${camp.window_5.cumulative_payout_tt} TT)` : camp.window_5.completed ? "0/5 Won" : `${camp.window_5.draws_completed}/5 Draws`}
-                            </span>
+                            {totalWins > 0 ? (
+                              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 border border-emerald-400/40 text-emerald-300">
+                                Won ${totalWonTT.toLocaleString()} TT ({totalWins} of {camp.draws_completed} draws)
+                              </span>
+                            ) : camp.draws_completed >= 5 ? (
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-900 border border-slate-700 text-slate-400">
+                                Finished (No Prize)
+                              </span>
+                            ) : (
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-950/70 border border-cyan-500/40 text-cyan-300">
+                                In Progress ({camp.draws_completed} of 5 draws finished)
+                              </span>
+                            )}
                           </div>
                         </div>
 
+                        {/* Collapsible Played Slips */}
                         {isSlipsOpen && (
-                          <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-1.5 text-xs">
+                          <div className="p-3 rounded-lg bg-slate-950/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs font-mono">
                             {camp.wheel_slips.map((sl, slIdx) => (
-                              <div key={slIdx} className="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
-                                <span className="text-slate-500">Slip #{slIdx + 1}</span>
+                              <div key={slIdx} className="px-2.5 py-1.5 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                <span className="text-slate-400">Line {slIdx + 1}</span>
                                 <span className="text-emerald-300 font-bold">{fmtNums(camp.game_key, sl)}</span>
                               </div>
                             ))}
                           </div>
                         )}
 
-                        {/* 5-Step Consecutive Draw Progress Grid */}
+                        {/* Simple 5-Draw Progress Row */}
                         <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
                           {camp.steps.map(st => {
                             const isVerified = st.status === "VERIFIED";
@@ -1506,29 +1463,28 @@ export default function EngineBenchmarkTracker() {
                             return (
                               <div
                                 key={st.step}
-                                className={`p-2.5 rounded-lg border flex flex-col justify-between space-y-1.5 ${
+                                className={`p-3 rounded-xl border flex flex-col justify-between space-y-2 ${
                                   !isVerified
-                                    ? "bg-slate-950/60 border-slate-800/80 border-dashed text-slate-500"
+                                    ? "bg-slate-950/60 border-slate-800/80 border-dashed text-slate-400"
                                     : isWin
                                     ? "bg-emerald-950/35 border-emerald-500/50"
                                     : "bg-slate-900/70 border-slate-800"
                                 }`}
                               >
                                 <div className="flex items-center justify-between text-xs">
-                                  <span className="font-bold text-slate-300">
-                                    Draw {st.step} {st.step === 1 ? "(1D)" : st.step === 3 ? "(3D)" : st.step === 5 ? "(5D)" : ""}
-                                  </span>
-                                  <span className="text-cyan-400 font-bold">#{st.target_draw_number}</span>
+                                  <span className="font-bold text-slate-200">Draw {st.step}</span>
+                                  <span className="text-cyan-400 font-mono font-bold">#{st.target_draw_number}</span>
                                 </div>
 
                                 {isVerified ? (
                                   <>
                                     <div className="text-xs text-slate-400">
-                                      Result: <strong className="text-white">{fmtNums(camp.game_key, st.actual_numbers || [])}</strong>
+                                      <span className="block text-[11px] text-slate-500">Winning Numbers</span>
+                                      <strong className="text-white font-mono">{fmtNums(camp.game_key, st.actual_numbers || [])}</strong>
                                     </div>
                                     <div className="text-xs">
-                                      <span className="text-slate-500 block">Best Slip #{st.best_slip_index || 1}:</span>
-                                      <div className="flex flex-wrap gap-0.5 mt-0.5">
+                                      <span className="block text-[11px] text-slate-500 mb-1">Closest Line</span>
+                                      <div className="flex flex-wrap gap-1 font-mono">
                                         {bestSlip.map((n, bIdx) => {
                                           const hit = camp.game_key === "pick4"
                                             ? st.actual_numbers?.[bIdx] === n || actualSet.has(n)
@@ -1536,7 +1492,7 @@ export default function EngineBenchmarkTracker() {
                                           return (
                                             <span
                                               key={bIdx}
-                                              className={`px-1 rounded text-xs font-bold ${
+                                              className={`px-1.5 py-0.5 rounded text-xs font-bold ${
                                                 hit ? "bg-emerald-500/25 text-emerald-300 border border-emerald-500/40" : "bg-slate-800 text-slate-400"
                                               }`}
                                             >
@@ -1546,17 +1502,19 @@ export default function EngineBenchmarkTracker() {
                                         })}
                                       </div>
                                     </div>
-                                    <div className={`text-xs font-bold px-1.5 py-0.5 rounded text-center ${
+                                    <div className={`text-xs font-bold px-2 py-1 rounded-lg text-center ${
                                       isWin
                                         ? "bg-emerald-500/20 text-emerald-300"
-                                        : "bg-slate-800 text-slate-400"
+                                        : "bg-slate-800/80 text-slate-400"
                                     }`}>
-                                      {isWin ? `WON $${st.payout_tt} (${formatPlainStrategy(st.prize_tier.split("(")[0].trim())})` : `No Prize (${st.best_slip_match} Match)`}
+                                      {isWin
+                                        ? `Won $${st.payout_tt} (${formatPlainStrategy(st.prize_tier.split("(")[0].trim())})`
+                                        : `No Prize (${st.best_slip_match} matched)`}
                                     </div>
                                   </>
                                 ) : (
-                                  <div className="py-4 text-center text-xs text-amber-400/80 font-semibold">
-                                    Awaiting Draw #{st.target_draw_number}
+                                  <div className="py-5 text-center text-xs text-amber-300/90 font-semibold">
+                                    Waiting for Draw #{st.target_draw_number}
                                   </div>
                                 )}
                               </div>
@@ -1567,95 +1525,91 @@ export default function EngineBenchmarkTracker() {
                     );
                   })}
                 </div>
-              );
-            }
 
-            return (
-              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-[#171c20] border-b border-slate-800 text-xs text-slate-400 uppercase sticky top-0">
-                    <tr>
-                      <th className="py-3 px-3">Anchor Draw</th>
-                      <th className="py-3 px-3">Game &amp; Play</th>
-                      <th className="py-3 px-3 text-center">Progress</th>
-                      <th className="py-3 px-3">1-Draw (#T)</th>
-                      <th className="py-3 px-3">3-Draw Window (#T..#T+2)</th>
-                      <th className="py-3 px-3">5-Draw Window (#T..#T+4)</th>
-                      <th className="py-3 px-3 text-right">5D Payout</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    {campaigns.slice(0, 35).map(camp => (
-                      <tr key={camp.campaign_id} className="hover:bg-slate-900/40">
-                        <td className="py-2.5 px-3 font-bold text-white whitespace-nowrap">
-                          {camp.anchor_draw_date && (
-                            <span className="block text-xs text-cyan-400 font-normal">{camp.anchor_draw_date}</span>
-                          )}
-                          Draw {camp.anchor_draw_number} to {camp.anchor_draw_number + 4}
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <span className="px-1.5 py-0.5 rounded text-xs bg-slate-800 text-cyan-300 mr-1.5">
-                            {getGameLabel(camp.game_key)}
-                          </span>
-                          <span className="text-emerald-300 font-bold">
-                            {camp.predicted_numbers.map(n => (camp.game_key === "pick4" ? String(n) : String(n).padStart(2, "0"))).join("-")}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                            camp.draws_completed === 5
-                              ? "bg-emerald-950/70 text-emerald-300 border border-emerald-500/30"
-                              : "bg-amber-950/70 text-amber-300 border border-amber-500/30"
-                          }`}>
-                            {camp.draws_completed}/5 Draws
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3">
-                          {camp.window_1.completed ? (
-                            <span className={camp.window_1.slip_prize_hit ? "text-emerald-400 font-bold" : "text-slate-400"}>
-                              {camp.window_1.slip_prize_hit ? formatPlainStrategy(camp.window_1.best_prize) : `Match ${camp.window_1.best_match}`}
-                            </span>
-                          ) : (
-                            <span className="text-amber-400/80">Pending</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                            camp.window_3.slip_prize_hit
-                              ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
-                              : camp.window_3.core_target_hit
-                              ? "bg-cyan-950/80 text-cyan-300 border border-cyan-500/40"
-                              : "bg-slate-900 text-slate-400"
-                          }`}>
-                            {camp.window_3.slip_prize_hit
-                              ? `Won (${camp.window_3.slip_win_count} of 3 draws, hit on Draw ${camp.window_3.first_hit_step})`
-                              : camp.window_3.core_target_hit
-                              ? "Core Numbers Matched"
-                              : `${camp.window_3.draws_completed} of 3 Checked`}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                            camp.window_5.slip_prize_hit
-                              ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
-                              : camp.window_5.core_target_hit
-                              ? "bg-cyan-950/80 text-cyan-300 border border-cyan-500/40"
-                              : "bg-slate-900 text-slate-400"
-                          }`}>
-                            {camp.window_5.slip_prize_hit
-                              ? `Won (${camp.window_5.slip_win_count} of 5 draws, hit on Draw ${camp.window_5.first_hit_step})`
-                              : camp.window_5.core_target_hit
-                              ? "Core Numbers Matched"
-                              : `${camp.window_5.draws_completed} of 5 Checked`}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-emerald-400">
-                          ${camp.window_5.cumulative_payout_tt.toLocaleString()} TT
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {/* Step 3: Optional Past Completed 5-Draw History (Hidden by Default) */}
+                {pastRuns.length > 0 && (
+                  <div className="pt-2 border-t border-slate-800/80">
+                    <button
+                      type="button"
+                      onClick={() => setShowPastMultiDrawHistory(!showPastMultiDrawHistory)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center justify-between cursor-pointer transition-colors"
+                    >
+                      <span>
+                        {showPastMultiDrawHistory
+                          ? "Hide Past Completed 5-Draw Runs"
+                          : `Show Past Completed 5-Draw History (${pastRuns.length} completed)`}
+                      </span>
+                      {showPastMultiDrawHistory ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                    </button>
+
+                    {showPastMultiDrawHistory && (
+                      <div className="mt-3 overflow-x-auto max-h-[420px] overflow-y-auto rounded-xl border border-slate-800">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-[#171c20] border-b border-slate-800 text-xs text-slate-400 uppercase sticky top-0">
+                            <tr>
+                              <th className="py-3 px-3">5-Draw Window</th>
+                              <th className="py-3 px-3">Game &amp; Main Line</th>
+                              <th className="py-3 px-3">Draw 1</th>
+                              <th className="py-3 px-3">Within 3 Draws</th>
+                              <th className="py-3 px-3">Within 5 Draws</th>
+                              <th className="py-3 px-3 text-right">Total Won</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/60">
+                            {pastRuns.slice(0, 25).map(camp => (
+                              <tr key={camp.campaign_id} className="hover:bg-slate-900/40">
+                                <td className="py-2.5 px-3 font-mono font-bold text-white whitespace-nowrap">
+                                  {camp.anchor_draw_date && (
+                                    <span className="block text-[11px] text-cyan-400 font-normal">{camp.anchor_draw_date}</span>
+                                  )}
+                                  #{camp.anchor_draw_number} to #{camp.anchor_draw_number + 4}
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  <span className="px-1.5 py-0.5 rounded text-xs bg-slate-800 text-cyan-300 font-semibold mr-1.5">
+                                    {getGameLabel(camp.game_key)}
+                                  </span>
+                                  <span className="text-emerald-300 font-mono font-bold">
+                                    {fmtNums(camp.game_key, camp.predicted_numbers)}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  <span className={camp.window_1.slip_prize_hit ? "text-emerald-400 font-bold" : "text-slate-400"}>
+                                    {camp.window_1.slip_prize_hit ? "Won" : "No Prize"}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                                    camp.window_3.slip_prize_hit
+                                      ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
+                                      : "bg-slate-900 text-slate-400"
+                                  }`}>
+                                    {camp.window_3.slip_prize_hit
+                                      ? `Won (first hit on Draw ${camp.window_3.first_hit_step})`
+                                      : "No Prize"}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                                    camp.window_5.slip_prize_hit
+                                      ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40"
+                                      : "bg-slate-900 text-slate-400"
+                                  }`}>
+                                    {camp.window_5.slip_prize_hit
+                                      ? `Won (${camp.window_5.slip_win_count} of 5 draws)`
+                                      : "No Prize"}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-400">
+                                  ${camp.window_5.cumulative_payout_tt.toLocaleString()} TT
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })()}
