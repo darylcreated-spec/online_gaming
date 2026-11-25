@@ -240,7 +240,7 @@ async function loadGameHistory(game: ConsensusGameKey): Promise<TrevorHistorical
 
   if (game === "play-whe") {
     const rows = await query<any>(
-      "SELECT draw_number, draw_date, draw_time_slot, winning_number FROM playwhe_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 1200"
+      "SELECT draw_number, draw_date, draw_time_slot, winning_number FROM playwhe_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 2000"
     );
     return (rows || [])
       .reverse()
@@ -255,7 +255,7 @@ async function loadGameHistory(game: ConsensusGameKey): Promise<TrevorHistorical
 
   if (game === "pick4") {
     const rows = await query<any>(
-      "SELECT draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4 FROM pick4_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 1200"
+      "SELECT draw_number, draw_date, draw_time_slot, digit1, digit2, digit3, digit4 FROM pick4_draws ORDER BY CAST(draw_number AS INTEGER) DESC LIMIT 2000"
     );
     return (rows || [])
       .reverse()
@@ -270,7 +270,7 @@ async function loadGameHistory(game: ConsensusGameKey): Promise<TrevorHistorical
 
   await ensureFastCashSchema();
   const rows = await queryFastCash<any>(
-    "SELECT draw_number, draw_date, draw_time, winning_code, winning_index FROM fastcash_draws ORDER BY draw_number DESC LIMIT 1200"
+    "SELECT draw_number, draw_date, draw_time, winning_code, winning_index FROM fastcash_draws ORDER BY draw_number DESC LIMIT 2000"
   );
   return (rows || [])
     .reverse()
