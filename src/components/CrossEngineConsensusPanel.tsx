@@ -225,7 +225,7 @@ export default function CrossEngineConsensusPanel({ game }: CrossEngineConsensus
         </div>
         <div className="text-base font-bold text-white">Aggregating All Engines for Live Consensus...</div>
         <p className="text-sm text-slate-400 max-w-md mx-auto">
-          Cross-checking Steiner-10, Lucky 7, Trevor, Forensic, Quant 100%, Diff Involution, and Winning Formula while auto-grading any pending locked draws.
+          Cross-checking Steiner-10, Lucky 7, Forensic, Quant 100%, Diff Involution, and Winning Formula while auto-grading any pending locked draws.
         </p>
       </div>
     );
@@ -661,7 +661,7 @@ export default function CrossEngineConsensusPanel({ game }: CrossEngineConsensus
               <span>Inspect All {data.totalEnginesChecked} Engines Side-by-Side (Draw #{data.nextTargetDrawNumber})</span>
             </div>
             <div className="text-xs text-slate-400">
-              Expand to see the exact slips from Steiner-10, Lucky 7, Trevor, Forensic, Quant 100%, Diff, and Winning Formula.
+              Expand to see the exact slips from Steiner-10, Lucky 7, Forensic, Quant 100%, Diff, and Winning Formula.
             </div>
           </div>
           {showAllEngines ? (
