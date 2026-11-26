@@ -39,7 +39,6 @@ import GameHeaderBanner from "@/components/GameHeaderBanner";
 import CashPotAuditPanel from "@/components/CashPotAuditPanel";
 import CashPotDiff20Panel from "@/components/CashPotDiff20Panel";
 import CashPotForensicPanel from "@/components/CashPotForensicPanel";
-import TrevorEnginePanel from "@/components/TrevorEnginePanel";
 import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
 import CrossEngineConsensusPanel from "@/components/CrossEngineConsensusPanel";
 import CashPotRngLabPanel from "@/components/CashPotRngLabPanel";
@@ -60,7 +59,7 @@ interface CashPotDraw {
 }
 
 export default function CashPotTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "rng-lab" | "trevor" | "math" | "diff" | "audit" | "forensic" | "wheeling" | "archive" | "explain">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "rng-lab" | "math" | "diff" | "audit" | "forensic" | "wheeling" | "archive" | "explain">("dashboard");
   const [draws, setDraws] = useState<CashPotDraw[]>([]);
   const [latestDraw, setLatestDraw] = useState<CashPotDraw | null>(null);
   const [loading, setLoading] = useState(true);
@@ -223,7 +222,6 @@ export default function CashPotTab() {
           { id: "consensus", label: "CONSENSUS LOCK", icon: ShieldCheck },
           { id: "lucky7", label: "LUCKY 7", icon: GitMerge },
           { id: "rng-lab", label: "RNG LAB", icon: Sliders },
-          { id: "trevor", label: "TREVOR ENGINE", icon: Crosshair },
           { id: "math", label: "MATHEMATICAL ENGINE", icon: Brain },
           { id: "diff", label: "SUM-28 / DIFF ENGINE", icon: Sigma },
           { id: "audit", label: "100% QUANT AUDIT", icon: ShieldCheck },
@@ -517,11 +515,6 @@ export default function CashPotTab() {
       {/* Subtab Content: Adaptive RNG & Walk-Forward Backtest Lab */}
       {activeSubTab === "rng-lab" && (
         <CashPotRngLabPanel />
-      )}
-
-      {/* Subtab Content: Trevor Engine */}
-      {activeSubTab === "trevor" && (
-        <TrevorEnginePanel game="cashpot" />
       )}
 
       {/* Subtab Content: Mathematical Engine */}

@@ -3,7 +3,7 @@
  * ===================
  * Unified In-App Cross-Engine Consensus & Pre-Draw Lock Engine across ALL 6 NLCB games.
  *
- * Aggregates every active quantitative engine per game (Steiner Top 10, Lucky 7, Trevor Engine,
+ * Aggregates every active quantitative engine per game (Steiner Top 10, Lucky 7,
  * Forensic Engine, Quant 100%, Diff Involution Engine, Winning Formula / Fast Cash Sector Engine),
  * identifies unanimous consensus numbers and multi-engine slip convergences, persists timestamped
  * pre-draw locks in Turso DB (`consensus_pre_draw_locks`), and automatically grades locked cards
@@ -14,7 +14,6 @@ import { db, query } from "@/lib/db";
 import { ensureFastCashSchema, queryFastCash } from "@/lib/fastcash_db";
 import { executeLucky7Engine, Lucky7GameKey } from "@/lib/lucky7_engine";
 import {
-  executeTrevorEngine,
   formatTrevorBall,
   getTrevorGameMeta,
   TrevorHistoricalDraw
@@ -405,9 +404,8 @@ export async function computeCrossEngineConsensus(
 
   const engineSummaries: ConsensusEngineSummary[] = [];
 
-  // 1. Always execute Lucky 7 (which also supplies Steiner Top 10) and Trevor Engine
+  // 1. Always execute Lucky 7 (which also supplies Steiner Top 10)
   const lucky7 = executeLucky7Engine(game, histDraws, { includeAudit: false });
-  const trevor = executeTrevorEngine(game, histDraws, { totalPlays: 500 });
 
   engineSummaries.push({
     engineKey: "steiner-10",
@@ -430,31 +428,6 @@ export async function computeCrossEngineConsensus(
         : undefined,
     primaryLabel: "7 Out-of-the-Box Number-Theory & Follower Plays"
   });
-
-  if (game === "play-whe" || game === "fast-cash") {
-    const trTop5 = trevor.simulation.winningSecondary?.top5 || trevor.simulation.winningNumbers;
-    engineSummaries.push({
-      engineKey: "trevor-engine",
-      engineName: "Trevor Engine (500-Play)",
-      slips: trTop5.map((m) => [m]),
-      primaryLabel: "Top 5 Frequency Marks"
-    });
-  } else if (game === "pick4") {
-    engineSummaries.push({
-      engineKey: "trevor-engine",
-      engineName: "Trevor Engine (500-Play)",
-      slips: trevor.simulation.trevorPortfolio5.slice(0, 5),
-      primaryLabel: "Top 5 Positional Frequency Sets"
-    });
-  } else {
-    engineSummaries.push({
-      engineKey: "trevor-engine",
-      engineName: "Trevor Engine (500-Play)",
-      slips: trevor.simulation.trevorPortfolio10.slice(0, 5),
-      bonusBalls: trevor.simulation.trevorPortfolio10Bonus?.slice(0, 5),
-      primaryLabel: "Top 5 of 10 500-Play Frequency Slips"
-    });
-  }
 
   let nextTargetSlot: string | undefined = undefined;
 

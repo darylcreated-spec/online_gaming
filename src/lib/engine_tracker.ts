@@ -3347,7 +3347,7 @@ export async function getEngineLeaderboardStats(
 
   if (gameKey && gameKey !== "all") {
     rawLogs = await query<any>(
-      `SELECT * FROM prediction_engine_logs WHERE status = 'VERIFIED' AND game_key = ? ORDER BY target_draw_number DESC, id DESC LIMIT ?`,
+      `SELECT * FROM prediction_engine_logs WHERE status = 'VERIFIED' AND engine_key != 'trevor-engine' AND game_key = ? ORDER BY target_draw_number DESC, id DESC LIMIT ?`,
       [gameKey, horizon * 4]
     );
   } else {
@@ -3357,7 +3357,7 @@ export async function getEngineLeaderboardStats(
     const perGameArrays = await Promise.all(
       games.map(g =>
         query<any>(
-          `SELECT * FROM prediction_engine_logs WHERE status = 'VERIFIED' AND game_key = ? ORDER BY target_draw_number DESC, id DESC LIMIT ?`,
+          `SELECT * FROM prediction_engine_logs WHERE status = 'VERIFIED' AND engine_key != 'trevor-engine' AND game_key = ? ORDER BY target_draw_number DESC, id DESC LIMIT ?`,
           [g, perGameLimit]
         ).catch(() => [])
       )
