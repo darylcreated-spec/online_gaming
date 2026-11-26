@@ -126,7 +126,8 @@ export default function CashPotRngLabPanel() {
 
   const handleAutoTune = () => {
     triggerHaptic("selection");
-    runSimulation({ autoTune: true });
+    setAntiCrowding(true);
+    runSimulation({ autoTune: true, customAntiCrowding: true });
   };
 
   const handleRunManual = () => {
@@ -374,7 +375,7 @@ export default function CashPotRngLabPanel() {
               </span>
             </div>
             <span className="text-xs text-slate-400 block">
-              Pure Random: <strong className="text-slate-200 font-mono">{data.randomBenchmark.expectedMatch3RatePct}%</strong> ({" "}
+              Pure Random: <strong className="text-slate-200 font-mono">{data.randomBenchmark.expectedMatch3RatePct}%</strong> (
               <span className={data.randomBenchmark.liftPctPoints >= 0 ? "text-emerald-300 font-mono font-bold" : "text-rose-300 font-mono font-bold"}>
                 {data.randomBenchmark.liftPctPoints >= 0 ? "+" : ""}
                 {data.randomBenchmark.liftPctPoints} pts
