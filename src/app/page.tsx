@@ -21,12 +21,13 @@ import LottoQuant100Panel from "@/components/LottoQuant100Panel";
 import LottoAuditPanel from "@/components/LottoAuditPanel";
 import LottoForensicPanel from "@/components/LottoForensicPanel";
 import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
+import UniversalRngLabPanel from "@/components/UniversalRngLabPanel";
 import CrossEngineConsensusPanel from "@/components/CrossEngineConsensusPanel";
 import EngineBenchmarkTracker from "@/components/EngineBenchmarkTracker";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PushNotificationBell from "@/components/PushNotificationBell";
 import MemberCheckInPill from "@/components/MemberCheckInPill";
-import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck, Cpu, Zap, Gamepad2, Menu, X, DollarSign, Crosshair, GitMerge } from "lucide-react";
+import { Activity, BarChart2, Calendar, ClipboardList, Camera, HelpCircle, ChevronDown, Layers, Compass, RefreshCw, Users, Brain, Flame, Binary, ShieldCheck, Cpu, Zap, Gamepad2, Menu, X, DollarSign, Crosshair, GitMerge, Sliders } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
 import { getCacheItem, setCacheItem } from "@/lib/idb_cache";
 import WinConceptLogoEmblem from "@/components/WinConceptLogoEmblem";
@@ -105,8 +106,8 @@ const PlayWheIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"welcome" | "lotto-plus" | "scanner" | "play-whe" | "win-for-life" | "cashpot" | "pick4" | "fast-cash" | "syndicate" | "engine-tracker" | "settings">("welcome");
   const [utilitySubTool, setUtilitySubTool] = useState<"scanner" | "nl-query">("scanner");
-  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "consensus" | "lucky-7" | "math-engine" | "diff-35" | "quant-100" | "forensic" | "audit" | "history" | "builder" | "explain">("dashboard");
-  const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "transition" | "math-engine" | "diff" | "history" | "translator" | "relationship" | "hits" | "explain" | "network" | "audit" | "forensic">("dashboard");
+  const [lottoSubTab, setLottoSubTab] = useState<"dashboard" | "consensus" | "lucky-7" | "rng-lab" | "math-engine" | "diff-35" | "quant-100" | "forensic" | "audit" | "history" | "builder" | "explain">("dashboard");
+  const [playWheSubTab, setPlayWheSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "rng-lab" | "transition" | "math-engine" | "diff" | "history" | "translator" | "relationship" | "hits" | "explain" | "network" | "audit" | "forensic">("dashboard");
   
   const [mobileSheet, setMobileSheet] = useState<null | "games" | "more">(null);
   const [desktopGamesOpen, setDesktopGamesOpen] = useState(false);
@@ -625,6 +626,7 @@ export default function Home() {
                 { id: "dashboard", label: "Overview and Stats", icon: BarChart2 },
                 { id: "consensus", label: "Consensus Lock", icon: ShieldCheck },
                 { id: "lucky-7", label: "Lucky 7", icon: GitMerge },
+                { id: "rng-lab", label: "RNG Lab", icon: Sliders },
                 { id: "math-engine", label: "Math Engine", icon: Brain },
                 { id: "diff-35", label: "Sum-35 Engine", icon: Binary },
                 { id: "quant-100", label: "Full Archive Model", icon: ShieldCheck },
@@ -692,6 +694,12 @@ export default function Home() {
         {activeTab === "lotto-plus" && lottoSubTab === "lucky-7" && (
           <div className="tab-content-enter">
             <Lucky7EnginePanel game="lotto-plus" />
+          </div>
+        )}
+
+        {activeTab === "lotto-plus" && lottoSubTab === "rng-lab" && (
+          <div className="tab-content-enter">
+            <UniversalRngLabPanel game="lotto-plus" />
           </div>
         )}
 

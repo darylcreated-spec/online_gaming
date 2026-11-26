@@ -8,6 +8,7 @@ import WinForLifeDiff28Panel from "@/components/WinForLifeDiff28Panel";
 import WinForLifeQuant100Panel from "@/components/WinForLifeQuant100Panel";
 import WinForLifeForensicPanel from "@/components/WinForLifeForensicPanel";
 import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
+import UniversalRngLabPanel from "@/components/UniversalRngLabPanel";
 import CrossEngineConsensusPanel from "@/components/CrossEngineConsensusPanel";
 import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { downloadBlobFile } from "@/lib/export_helpers";
@@ -136,7 +137,7 @@ const validateTicket = (ticket: number[]) => {
 };
 
 export default function WinForLifeTab() {
-  const [subTab, setSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "math-engine" | "diff-28" | "quant-100" | "forensic" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
+  const [subTab, setSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "rng-lab" | "math-engine" | "diff-28" | "quant-100" | "forensic" | "history" | "builder" | "predictions" | "network" | "explain">("dashboard");
   const [stats, setStats] = useState<any>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   
@@ -493,6 +494,7 @@ export default function WinForLifeTab() {
           { id: "dashboard", label: "DASHBOARD & STATS", icon: BarChart2 },
           { id: "consensus", label: "CONSENSUS LOCK", icon: ShieldCheck },
           { id: "lucky7", label: "LUCKY 7", icon: GitMerge },
+          { id: "rng-lab", label: "RNG LAB", icon: Sliders },
           { id: "math-engine", label: "MATHEMATICAL ENGINE", icon: Brain },
           { id: "diff-28", label: "SUM-28 QUANT ENGINE", icon: Binary },
           { id: "quant-100", label: "100% QUANT ENGINE", icon: ShieldCheck },
@@ -1162,6 +1164,10 @@ export default function WinForLifeTab() {
 
       {subTab === "lucky7" && (
         <Lucky7EnginePanel game="win-for-life" />
+      )}
+
+      {subTab === "rng-lab" && (
+        <UniversalRngLabPanel game="win-for-life" />
       )}
 
       {subTab === "math-engine" && (

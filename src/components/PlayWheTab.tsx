@@ -38,13 +38,15 @@ import {
   Binary,
   Printer,
   Crosshair,
-  GitMerge
+  GitMerge,
+  Sliders
 } from "lucide-react";
 import GameHeaderBanner from "@/components/GameHeaderBanner";
 import PlayWheAuditPanel from "@/components/PlayWheAuditPanel";
 import PlayWheDiff37Panel from "@/components/PlayWheDiff37Panel";
 import PlayWheForensicPanel from "@/components/PlayWheForensicPanel";
 import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
+import UniversalRngLabPanel from "@/components/UniversalRngLabPanel";
 import CrossEngineConsensusPanel from "@/components/CrossEngineConsensusPanel";
 import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { triggerHaptic } from "@/lib/haptics";
@@ -105,12 +107,12 @@ export default function PlayWheTab({
   showExplainer,
   onShowExplainerChange
 }: {
-  activeSubTab?: "translator" | "dashboard" | "consensus" | "lucky7" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network";
-  onSubTabChange?: (tab: "translator" | "dashboard" | "consensus" | "lucky7" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network") => void;
+  activeSubTab?: "translator" | "dashboard" | "consensus" | "lucky7" | "rng-lab" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network";
+  onSubTabChange?: (tab: "translator" | "dashboard" | "consensus" | "lucky7" | "rng-lab" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network") => void;
   showExplainer?: boolean;
   onShowExplainerChange?: (show: boolean) => void;
 } = {}) {
-  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "consensus" | "lucky7" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network">("dashboard");
+  const [localSubTab, setLocalSubTab] = useState<"translator" | "dashboard" | "consensus" | "lucky7" | "rng-lab" | "transition" | "math-engine" | "diff" | "audit" | "forensic" | "relationship" | "history" | "hits" | "explain" | "network">("dashboard");
   const [localShowHelp, setLocalShowHelp] = useState(false);
 
   const subTab = activeSubTab !== undefined ? activeSubTab : localSubTab;
@@ -695,6 +697,18 @@ export default function PlayWheTab({
         >
           <GitMerge className="w-3.5 h-3.5" />
           LUCKY 7
+        </button>
+
+        <button
+          onClick={() => setSubTab("rng-lab")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            subTab === "rng-lab"
+              ? "bg-amber-500 text-slate-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              : "text-amber-400/90 hover:text-amber-300 hover:bg-amber-500/10"
+          }`}
+        >
+          <Sliders className="w-3.5 h-3.5" />
+          RNG LAB
         </button>
         
         <button
@@ -3163,6 +3177,7 @@ export default function PlayWheTab({
       {/* LUCKY 7 ENGINE PANEL */}
       {subTab === "consensus" && <CrossEngineConsensusPanel game="play-whe" />}
       {subTab === "lucky7" && <Lucky7EnginePanel game="play-whe" />}
+      {subTab === "rng-lab" && <UniversalRngLabPanel game="play-whe" />}
 
       {exportMarks && (
         <BetSlipExportModal

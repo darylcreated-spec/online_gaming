@@ -23,7 +23,8 @@ import {
   ShieldCheck,
   Printer,
   Crosshair,
-  GitMerge
+  GitMerge,
+  Sliders
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -40,6 +41,7 @@ import Pick4Diff9Panel from "@/components/Pick4Diff9Panel";
 import Pick4AuditPanel from "@/components/Pick4AuditPanel";
 import Pick4ForensicPanel from "@/components/Pick4ForensicPanel";
 import Lucky7EnginePanel from "@/components/Lucky7EnginePanel";
+import UniversalRngLabPanel from "@/components/UniversalRngLabPanel";
 import CrossEngineConsensusPanel from "@/components/CrossEngineConsensusPanel";
 import BetSlipExportModal from "@/components/BetSlipExportModal";
 import { copyTextToClipboard } from "@/lib/export_helpers";
@@ -56,7 +58,7 @@ interface Pick4Draw {
 }
 
 export default function Pick4Tab() {
-  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "math" | "diff-9" | "audit" | "forensic" | "backtest" | "archive" | "explain">("dashboard");
+  const [activeSubTab, setActiveSubTab] = useState<"dashboard" | "consensus" | "lucky7" | "rng-lab" | "math" | "diff-9" | "audit" | "forensic" | "backtest" | "archive" | "explain">("dashboard");
   const [draws, setDraws] = useState<Pick4Draw[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
@@ -245,6 +247,18 @@ export default function Pick4Tab() {
         >
           <GitMerge className="w-3.5 h-3.5" />
           LUCKY 7
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab("rng-lab")}
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold font-mono tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+            activeSubTab === "rng-lab"
+              ? "bg-purple-500 text-slate-950 font-black shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+              : "text-purple-400/90 hover:text-purple-300 hover:bg-purple-500/10"
+          }`}
+        >
+          <Sliders className="w-3.5 h-3.5" />
+          RNG LAB
         </button>
 
         <button
@@ -439,6 +453,10 @@ export default function Pick4Tab() {
 
       {activeSubTab === "lucky7" && (
         <Lucky7EnginePanel game="pick4" />
+      )}
+
+      {activeSubTab === "rng-lab" && (
+        <UniversalRngLabPanel game="pick4" />
       )}
 
       {activeSubTab === "math" && (
