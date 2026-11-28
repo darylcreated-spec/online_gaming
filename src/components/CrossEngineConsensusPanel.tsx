@@ -277,6 +277,15 @@ export default function CrossEngineConsensusPanel({ game }: CrossEngineConsensus
               <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-semibold">
                 {data.totalEnginesChecked} Engines Cross-Checked
               </span>
+              {game !== "fast-cash" && (
+                <span
+                  className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-xs font-semibold inline-flex items-center gap-1.5"
+                  title="Automatically grades completed draws and freezes all engines plus Zero-Overlap 5 before every NLCB draw."
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Auto-Audit 24/7
+                </span>
+              )}
             </div>
 
             <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">

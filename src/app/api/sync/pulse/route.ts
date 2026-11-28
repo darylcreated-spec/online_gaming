@@ -3,6 +3,8 @@ import { runDrawWatchdog, WatchdogReport } from "@/lib/draw_watchdog";
 import { acquireSyncLock, releaseSyncLock } from "@/lib/cron_auth";
 import { runUnifiedSyncPipeline, SyncGameKey } from "@/lib/sync_orchestrator";
 import { syncLatestFastCash } from "@/lib/fastcash_scraper";
+import { ensureAutonomousPreDrawLocks } from "@/lib/consensus_engine";
+import { snapshotAllEnginePredictions } from "@/lib/engine_tracker";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -131,10 +133,28 @@ export async function POST(request: Request) {
     const pendingGames = getPendingGamesFromWatchdog(watchdog);
 
     if (pendingGames.length === 0) {
+      // Throttled self-healing auto-lock check (once every 120s at most) so upcoming draws never go unrecorded
+      let consensusAutoLock = null;
+      const autoLockGate = await acquireSyncLock("public_auto_lock", 120, 45);
+      if (autoLockGate.acquired) {
+        try {
+          consensusAutoLock = await ensureAutonomousPreDrawLocks();
+          for (const act of consensusAutoLock.actions) {
+            if (act.action !== "GRADED_ONLY") {
+              await snapshotAllEnginePredictions(act.game).catch(() => {});
+            }
+          }
+        } catch (autoErr: any) {
+          console.warn("[API /api/sync/pulse] Auto-lock notice:", autoErr?.message);
+        } finally {
+          await releaseSyncLock("public_auto_lock", autoLockGate.ownerId, true);
+        }
+      }
       return NextResponse.json({
         success: true,
         skipped: true,
         totalDrawsAdded: 0,
+        consensusAutoLock,
         watchdog
       });
     }

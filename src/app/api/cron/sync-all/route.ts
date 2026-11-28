@@ -8,6 +8,8 @@ import {
 import { recordSyncAudit } from "@/lib/db";
 import { runDrawWatchdog, WatchdogReport } from "@/lib/draw_watchdog";
 import { runUnifiedSyncPipeline, SyncGameKey } from "@/lib/sync_orchestrator";
+import { ensureAutonomousPreDrawLocks } from "@/lib/consensus_engine";
+import { snapshotAllEnginePredictions } from "@/lib/engine_tracker";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -89,12 +91,25 @@ async function handleSync(request: Request) {
 
       const pendingGames = getPendingGamesFromWatchdog(watchdog);
       if (pendingGames.length === 0) {
+        // Fast (~35ms) self-healing check: ensure every core game is graded & locked for next draw N+1
+        let consensusAutoLock = null;
+        try {
+          consensusAutoLock = await ensureAutonomousPreDrawLocks();
+          for (const act of consensusAutoLock.actions) {
+            if (act.action !== "GRADED_ONLY") {
+              await snapshotAllEnginePredictions(act.game).catch(() => {});
+            }
+          }
+        } catch (autoErr: any) {
+          console.warn("[Auto-Sync] Autonomous consensus lock check notice:", autoErr?.message);
+        }
         return NextResponse.json(
           {
             success: true,
             skipped: true,
             reason: "All 5 NLCB games are already up to date.",
             totalDrawsAdded: 0,
+            consensusAutoLock,
             durationMs: Date.now() - syncStartTime
           },
           { headers: { "Cache-Control": "no-store" } }

@@ -21,6 +21,7 @@ import {
   reconcileAndGradeEnginePredictions,
   snapshotAllEnginePredictions
 } from "./engine_tracker";
+import { ensureAutonomousPreDrawLocks } from "./consensus_engine";
 import { runFullSystemCalibration } from "./engine_calibrator";
 import { CHINAPOO_CHART } from "./playwhe";
 import { runDrawWatchdog, WatchdogReport } from "./draw_watchdog";
@@ -184,6 +185,21 @@ export async function runUnifiedSyncPipeline(options: UnifiedSyncOptions = {}) {
     if (results.engineTracking) {
       results.engineTracking.snapshotsRecorded = totalSnapshots;
     }
+  }
+
+  // Autonomous Zero-Hindsight Consensus Auto-Grader & Pre-Draw Auto-Locker (24/7)
+  // Grades finished locks and automatically freezes upcoming draw N+1 (including Consensus Zero-Overlap 5)
+  try {
+    const autoLockRes = await ensureAutonomousPreDrawLocks(Array.from(activeGames));
+    results.consensusAutoLock = autoLockRes;
+    // Also ensure Engine Tracker has N+1 snapshots for any game newly auto-locked
+    for (const act of autoLockRes.actions) {
+      if (act.action !== "GRADED_ONLY" && !snapshotTargets.includes(act.game) && !snapshotTargets.includes("all")) {
+        await snapshotAllEnginePredictions(act.game).catch(() => {});
+      }
+    }
+  } catch (autoLockErr: any) {
+    results.consensusAutoLock = { error: autoLockErr?.message || "Auto-lock warning" };
   }
 
   let watchdogReport: WatchdogReport | undefined;
