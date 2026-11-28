@@ -91,6 +91,40 @@ export interface LockedPreDrawRecord {
   gradedAt?: string;
 }
 
+export interface ConsensusCoveringSlip {
+  index: number;
+  numbers: number[];
+  bonusBall?: number;
+  role: string;
+  consensusScore: number;
+}
+
+export interface ConsensusCoveringPortfolio {
+  slips: ConsensusCoveringSlip[];
+  uniqueNumbersCovered: number;
+  poolSize: number;
+  coveragePct: number;
+  maxPairwiseOverlap: number;
+  avgPairwiseOverlap: number;
+  totalStakeTT: number;
+  bonusStratificationLabel?: string;
+  strategySummary: string;
+}
+
+export interface ConsensusLockScoreboardRow {
+  engineName: string;
+  drawsEvaluated: number;
+  winningDraws: number;
+  drawWinRatePct: number;
+  totalWinningSlips: number;
+  avgStakePerDrawTT: number;
+  totalStakedTT: number;
+  totalPayoutTT: number;
+  netProfitTT: number;
+  roiPct: number;
+  bestMatchEver: number;
+}
+
 export interface CrossEngineConsensusResult {
   game: ConsensusGameKey;
   gameName: string;
@@ -111,11 +145,15 @@ export interface CrossEngineConsensusResult {
   consensusBonusTop1?: number;
   consensusBonusTop3?: number[];
   consensusPlaySheet5: number[][];
+  consensusPlaySheet5Bonuses?: number[];
+  consensusCoveringPortfolio: ConsensusCoveringPortfolio;
   consensusNumbers: ConsensusNumberRank[];
   sharedConvergences: ConsensusConvergenceCard[];
   engineSummaries: ConsensusEngineSummary[];
   currentDrawLocked: boolean;
   lockedHistory: LockedPreDrawRecord[];
+  lockScoreboard: ConsensusLockScoreboardRow[];
+  totalGradedLocks: number;
 }
 
 // ============================================================================
@@ -173,6 +211,496 @@ function scoreSlipAgainstActual(game: ConsensusGameKey, slip: number[], actual: 
 
 function sortBoxKey(arr: number[]): string {
   return [...arr].sort((a, b) => a - b).join("-");
+}
+
+function getPick4BoxPayoutTT(digits: number[]): number {
+  const counts = new Map<number, number>();
+  for (const d of digits) counts.set(d, (counts.get(d) || 0) + 1);
+  const pattern = Array.from(counts.values()).sort((a, b) => b - a).join("");
+  if (pattern === "1111") return 200;  // 24-Way Box
+  if (pattern === "211") return 400;   // 12-Way Box
+  if (pattern === "22") return 800;    // 6-Way Box
+  if (pattern === "31") return 1200;   // 4-Way Box
+  return 5000;                         // 4-of-a-kind Straight
+}
+
+function scoreOfficialSlipPayoutTT(
+  game: ConsensusGameKey,
+  slip: number[],
+  slipBonus: number | undefined,
+  actual: number[],
+  actualBonus: number | undefined
+): { matchCount: number; payoutTT: number; isWin: boolean } {
+  const matchCount = scoreSlipAgainstActual(game, slip, actual);
+  if (game === "play-whe") {
+    const isWin = matchCount >= 1;
+    return { matchCount, payoutTT: isWin ? 26 : 0, isWin };
+  }
+  if (game === "fast-cash") {
+    const isWin = matchCount >= 1;
+    return { matchCount, payoutTT: isWin ? 35 : 0, isWin };
+  }
+  if (game === "pick4") {
+    if (matchCount === 4) {
+      const isExactStraight =
+        slip.length === 4 && actual.length === 4 && slip.every((d, i) => d === actual[i]);
+      // Evaluate under standard $1 Unordered Box payout (official NLCB Box tiers)
+      const payoutTT = getPick4BoxPayoutTT(actual);
+      return { matchCount: isExactStraight ? 4 : 4, payoutTT, isWin: true };
+    }
+    return { matchCount, payoutTT: 0, isWin: false };
+  }
+  if (game === "cashpot") {
+    const mult = Math.max(1, Math.min(4, Number(actualBonus || 1)));
+    if (matchCount === 5) return { matchCount, payoutTT: 25000, isWin: true }; // No multiplier on Match 5
+    if (matchCount === 4) return { matchCount, payoutTT: 75 * mult, isWin: true };
+    if (matchCount === 3) return { matchCount, payoutTT: 5 * mult, isWin: true };
+    return { matchCount, payoutTT: 0, isWin: false };
+  }
+  if (game === "lotto-plus") {
+    const pbHit =
+      slipBonus !== undefined &&
+      actualBonus !== undefined &&
+      Number(slipBonus) === Number(actualBonus);
+    if (matchCount === 5) return { matchCount, payoutTT: pbHit ? 2000000 : 10000, isWin: true };
+    if (matchCount === 4) return { matchCount, payoutTT: pbHit ? 3000 : 250, isWin: true };
+    if (matchCount === 3) return { matchCount, payoutTT: pbHit ? 200 : 25, isWin: true };
+    if (matchCount === 2 && pbHit) return { matchCount, payoutTT: 15, isWin: true };
+    if (matchCount === 1 && pbHit) return { matchCount, payoutTT: 5, isWin: true };
+    return { matchCount, payoutTT: 0, isWin: false };
+  }
+  // Win For Life (6/28 + Cash Ball 1-3 doubles Match 3+)
+  const cbHit =
+    slipBonus !== undefined &&
+    actualBonus !== undefined &&
+    Number(slipBonus) >= 1 &&
+    Number(slipBonus) <= 3 &&
+    Number(slipBonus) === Number(actualBonus);
+  const mult = cbHit ? 2 : 1;
+  if (matchCount === 6) return { matchCount, payoutTT: 4800000, isWin: true };
+  if (matchCount === 5) return { matchCount, payoutTT: 1000 * mult, isWin: true };
+  if (matchCount === 4) return { matchCount, payoutTT: 50 * mult, isWin: true };
+  if (matchCount === 3) return { matchCount, payoutTT: 10 * mult, isWin: true };
+  return { matchCount, payoutTT: 0, isWin: false };
+}
+
+function getEngineStakePerDrawTT(
+  game: ConsensusGameKey,
+  slips: number[][],
+  unitCostTT: number
+): number {
+  if (game === "play-whe" || game === "fast-cash") {
+    // Each individual mark on a slip costs $1 (e.g. Steiner 3-mark cards cost $3/card)
+    const totalMarks = slips.reduce((acc, s) => acc + Math.max(1, s.length), 0);
+    return totalMarks * unitCostTT;
+  }
+  return slips.length * unitCostTT;
+}
+
+function buildZeroOverlapConsensusPortfolio(params: {
+  game: ConsensusGameKey;
+  unitCostTT: number;
+  minVal: number;
+  maxVal: number;
+  consensusNumbers: ConsensusNumberRank[];
+  sharedConvergences: ConsensusConvergenceCard[];
+  bonusTopPicks?: number[];
+}): ConsensusCoveringPortfolio {
+  const { game, unitCostTT, minVal, maxVal, consensusNumbers, sharedConvergences, bonusTopPicks } = params;
+  const poolSize = maxVal - minVal + 1;
+
+  // Build complete ranked score map across entire domain [minVal .. maxVal]
+  const scoreByNum = new Map<number, number>();
+  for (const c of consensusNumbers) {
+    scoreByNum.set(c.number, c.engineAgreement * 12 + c.totalSlipVotes * 1.5);
+  }
+  const allRanked: number[] = [];
+  for (let n = minVal; n <= maxVal; n++) allRanked.push(n);
+  allRanked.sort(
+    (a, b) => (scoreByNum.get(b) || 0) - (scoreByNum.get(a) || 0) || a - b
+  );
+
+  // 1. Single-Number Games (Play Whe 1/36, Fast Cash 1/38) -> 5 Strictly Distinct Picks ($5)
+  if (game === "play-whe" || game === "fast-cash") {
+    const picked: number[] = [];
+    const roles = [
+      "Top Consensus Anchor",
+      "Secondary Consensus Anchor",
+      "Tertiary Consensus Anchor",
+      "Mid-Tier Diversification Pick",
+      "Contrarian Coverage Bridge"
+    ];
+    // Top 3 consensus picks + #4 and a distinct mid-pack bridge so zero duplicates ever occur
+    for (const n of allRanked) {
+      if (picked.length >= 5) break;
+      if (!picked.includes(n)) picked.push(n);
+    }
+    const slips: ConsensusCoveringSlip[] = picked.map((n, idx) => ({
+      index: idx + 1,
+      numbers: [n],
+      role: roles[idx] || `Distinct Pick #${idx + 1}`,
+      consensusScore: Math.round((scoreByNum.get(n) || 0) * 10) / 10
+    }));
+    return {
+      slips,
+      uniqueNumbersCovered: picked.length,
+      poolSize,
+      coveragePct: Math.round((picked.length / poolSize) * 1000) / 10,
+      maxPairwiseOverlap: 0,
+      avgPairwiseOverlap: 0,
+      totalStakeTT: picked.length * unitCostTT,
+      strategySummary: `5 strictly distinct ${game === "play-whe" ? "Chinapoo marks" : "roulette pockets"} (0 duplicates, ${((picked.length / poolSize) * 100).toFixed(1)}% exact single-draw coverage for $${picked.length * unitCostTT} TT).`
+    };
+  }
+
+  // 2. Pick 4 (4 x 0..9) -> 5 Distinct Unordered Boxes covering ALL 10/10 digits ($5)
+  if (game === "pick4") {
+    const d = allRanked; // all 10 digits 0..9 ranked by cross-engine agreement
+    const usedBoxKeys = new Set<string>();
+    const rawBoxes: { digits: number[]; role: string }[] = [];
+
+    const tryAddBox = (digits: number[], role: string): boolean => {
+      if (digits.length !== 4) return false;
+      const bk = sortBoxKey(digits);
+      if (usedBoxKeys.has(bk)) return false;
+      usedBoxKeys.add(bk);
+      rawBoxes.push({ digits, role });
+      return true;
+    };
+
+    // Slip 1: 24-Way Core Anchor (Top 4 distinct consensus digits)
+    tryAddBox([d[0], d[1], d[2], d[3]], "24-Way Core Anchor");
+    // Slip 2: 24-Way Zero-Overlap Complement (Next 4 distinct digits)
+    tryAddBox([d[4], d[5], d[6], d[7]], "24-Way Zero-Overlap Complement");
+    // Slip 3: 24-Way Full-Digit Bridge (Remaining 2 digits + Top 2 consensus anchors -> 10/10 digits covered!)
+    tryAddBox([d[8], d[9], d[0], d[1]], "24-Way Full-Digit Bridge");
+    // Prefer any shared cross-engine Box convergence if distinct, else 12-Way Twin anchors
+    for (const conv of sharedConvergences) {
+      if (rawBoxes.length >= 4) break;
+      tryAddBox(conv.sharedNumbers, "Cross-Engine Box Convergence");
+    }
+    // Fill up to 5 with 12-Way Twin Boxes (twins occur in ~43.2% of Pick 4 draws!)
+    const twinCandidates: [number[], string][] = [
+      [[d[0], d[0], d[2], d[5]], "12-Way Twin Anchor #1"],
+      [[d[1], d[1], d[3], d[6]], "12-Way Twin Anchor #2"],
+      [[d[2], d[2], d[0], d[4]], "12-Way Twin Anchor #3"],
+      [[d[3], d[3], d[1], d[7]], "12-Way Twin Anchor #4"]
+    ];
+    for (const [cand, role] of twinCandidates) {
+      if (rawBoxes.length >= 5) break;
+      tryAddBox(cand, role);
+    }
+
+    const uniqDigits = new Set<number>();
+    rawBoxes.forEach((b) => b.digits.forEach((x) => uniqDigits.add(x)));
+
+    let maxOv = 0;
+    let sumOv = 0;
+    let pairs = 0;
+    for (let i = 0; i < rawBoxes.length; i++) {
+      for (let j = i + 1; j < rawBoxes.length; j++) {
+        const ov = multisetMatchCount(rawBoxes[i].digits, rawBoxes[j].digits);
+        if (ov > maxOv) maxOv = ov;
+        sumOv += ov;
+        pairs++;
+      }
+    }
+
+    const slips: ConsensusCoveringSlip[] = rawBoxes.map((b, idx) => ({
+      index: idx + 1,
+      numbers: b.digits,
+      role: b.role,
+      consensusScore: Math.round(b.digits.reduce((acc, x) => acc + (scoreByNum.get(x) || 0), 0) * 10) / 10
+    }));
+
+    return {
+      slips,
+      uniqueNumbersCovered: uniqDigits.size,
+      poolSize: 10,
+      coveragePct: Math.round((uniqDigits.size / 10) * 1000) / 10,
+      maxPairwiseOverlap: maxOv,
+      avgPairwiseOverlap: pairs > 0 ? Math.round((sumOv / pairs) * 100) / 100 : 0,
+      totalStakeTT: slips.length * unitCostTT,
+      strategySummary: `5 distinct Unordered Boxes covering ${uniqDigits.size}/10 digits (3 x 24-Way distinct + 2 x 12-Way twin anchors = up to 96 permutations for $${slips.length * unitCostTT} TT).`
+    };
+  }
+
+  // 3. Multi-Ball Games (Cash Pot 5/20, Lotto Plus 5/35, Win For Life 6/28)
+  const pickSize = game === "win-for-life" ? 6 : 5;
+  const slipCount = 5;
+  const usage = Array(maxVal + 1).fill(0);
+  const pairUsage = Array.from({ length: maxVal + 1 }, () => Array(maxVal + 1).fill(0));
+  const chosenSlips: number[][] = [];
+  const halfPoint = Math.floor(maxVal / 2);
+
+  // Strict zero-ball-reuse when 5 * pickSize <= poolSize (Lotto Plus: 25 <= 35),
+  // full-drum 100% coverage with minimal overlap when 5 * pickSize > poolSize (Cash Pot 25 > 20, WFL 30 > 28)
+  const canBeDisjoint = slipCount * pickSize <= poolSize;
+
+  for (let s = 0; s < slipCount; s++) {
+    const current: number[] = [];
+    const currentSet = new Set<number>();
+
+    for (let k = 0; k < pickSize; k++) {
+      let bestBall = -1;
+      let bestScore = -Infinity;
+
+      const curOdd = current.filter((x) => x % 2 !== 0).length;
+      const curLow = current.filter((x) => x <= halfPoint).length;
+
+      for (let b = 1; b <= maxVal; b++) {
+        if (currentSet.has(b)) continue;
+        if (canBeDisjoint && usage[b] > 0) continue;
+
+        let sc = (scoreByNum.get(b) || 0) * 1.25;
+        // Heavy penalty on reusing a ball before all pool balls are covered once
+        sc -= usage[b] * 750;
+        // Heavy penalty on repeating any pair already covered in an earlier slip
+        let repeatedPairs = 0;
+        for (const prev of current) {
+          repeatedPairs += pairUsage[b][prev];
+        }
+        sc -= repeatedPairs * 420;
+
+        // Overlap penalty against every existing slip to keep maxPairwiseOverlap minimal
+        let maxOverlapIfAdded = 0;
+        for (const prevSlip of chosenSlips) {
+          let ov = prevSlip.includes(b) ? 1 : 0;
+          if (ov > 0) {
+            for (const cur of current) {
+              if (prevSlip.includes(cur)) ov++;
+            }
+          }
+          if (ov > maxOverlapIfAdded) maxOverlapIfAdded = ov;
+        }
+        sc -= maxOverlapIfAdded * maxOverlapIfAdded * 160;
+
+        // Gentle structural balance on parity & low/high so no slip is all-odd or all-low
+        if (k >= 2) {
+          const isOdd = b % 2 !== 0;
+          const isLow = b <= halfPoint;
+          if (isOdd && curOdd >= Math.ceil(pickSize * 0.65)) sc -= 18;
+          if (!isOdd && current.length - curOdd >= Math.ceil(pickSize * 0.65)) sc -= 18;
+          if (isLow && curLow >= Math.ceil(pickSize * 0.65)) sc -= 18;
+          if (!isLow && current.length - curLow >= Math.ceil(pickSize * 0.65)) sc -= 18;
+        }
+
+        // Deterministic tie-break using consensus rank order
+        sc -= b * 0.001;
+
+        if (sc > bestScore) {
+          bestScore = sc;
+          bestBall = b;
+        }
+      }
+
+      if (bestBall > 0) {
+        current.push(bestBall);
+        currentSet.add(bestBall);
+      }
+    }
+
+    current.sort((a, b) => a - b);
+    chosenSlips.push(current);
+    for (const b of current) usage[b]++;
+    for (let i = 0; i < current.length; i++) {
+      for (let j = i + 1; j < current.length; j++) {
+        pairUsage[current[i]][current[j]]++;
+        pairUsage[current[j]][current[i]]++;
+      }
+    }
+  }
+
+  // Build strictly stratified bonus balls
+  let stratifiedBonuses: number[] | undefined = undefined;
+  let bonusStratificationLabel: string | undefined = undefined;
+  if (game === "win-for-life") {
+    const base = [1, 2, 3];
+    const seedOrder: number[] = [];
+    for (const b of bonusTopPicks || []) {
+      if (b >= 1 && b <= 3 && !seedOrder.includes(b)) seedOrder.push(b);
+    }
+    for (const b of base) if (!seedOrder.includes(b)) seedOrder.push(b);
+    stratifiedBonuses = Array.from({ length: slipCount }, (_, i) => seedOrder[i % 3]);
+    bonusStratificationLabel = "100% Cash Ball 1-3 Stratified (Every Cash Ball Covered)";
+  } else if (game === "lotto-plus") {
+    const seedOrder: number[] = [];
+    for (const b of bonusTopPicks || []) {
+      if (b >= 1 && b <= 10 && !seedOrder.includes(b)) seedOrder.push(b);
+    }
+    for (let b = 1; b <= 10; b++) if (!seedOrder.includes(b)) seedOrder.push(b);
+    stratifiedBonuses = seedOrder.slice(0, slipCount);
+    bonusStratificationLabel = "5 Distinct Powerballs (50% Exact Powerball Coverage)";
+  }
+
+  const uniqueBalls = new Set<number>();
+  chosenSlips.forEach((sl) => sl.forEach((b) => uniqueBalls.add(b)));
+
+  let maxOv = 0;
+  let sumOv = 0;
+  let pairCnt = 0;
+  for (let i = 0; i < chosenSlips.length; i++) {
+    const setA = new Set(chosenSlips[i]);
+    for (let j = i + 1; j < chosenSlips.length; j++) {
+      const ov = chosenSlips[j].filter((b) => setA.has(b)).length;
+      if (ov > maxOv) maxOv = ov;
+      sumOv += ov;
+      pairCnt++;
+    }
+  }
+
+  const roles = [
+    "Consensus Core Anchor",
+    "Zero-Overlap Complement",
+    "Full-Drum Covering Wing A",
+    "Full-Drum Covering Wing B",
+    "Minimal-Overlap Sweeper"
+  ];
+
+  const slips: ConsensusCoveringSlip[] = chosenSlips.map((nums, idx) => ({
+    index: idx + 1,
+    numbers: nums,
+    bonusBall: stratifiedBonuses ? stratifiedBonuses[idx] : undefined,
+    role: roles[idx] || `Covering Slip #${idx + 1}`,
+    consensusScore: Math.round(nums.reduce((acc, n) => acc + (scoreByNum.get(n) || 0), 0) * 10) / 10
+  }));
+
+  const coveragePct = Math.round((uniqueBalls.size / poolSize) * 1000) / 10;
+  const strategySummary = canBeDisjoint
+    ? `5 completely disjoint lines covering ${uniqueBalls.size}/${poolSize} balls (${coveragePct}%) with 0 repeated balls and 5 distinct Powerballs ($${slipCount * unitCostTT} TT).`
+    : `5 minimal-overlap lines covering ${uniqueBalls.size}/${poolSize} balls (${coveragePct}% of the drum, max overlap ${maxOv}) prioritized by 6-engine consensus ($${slipCount * unitCostTT} TT).`;
+
+  return {
+    slips,
+    uniqueNumbersCovered: uniqueBalls.size,
+    poolSize,
+    coveragePct,
+    maxPairwiseOverlap: maxOv,
+    avgPairwiseOverlap: pairCnt > 0 ? Math.round((sumOv / pairCnt) * 100) / 100 : 0,
+    totalStakeTT: slipCount * unitCostTT,
+    bonusStratificationLabel,
+    strategySummary
+  };
+}
+
+function computeCostAdjustedLockScoreboard(
+  game: ConsensusGameKey,
+  unitCostTT: number,
+  allLocks: LockedPreDrawRecord[]
+): { scoreboard: ConsensusLockScoreboardRow[]; totalGradedLocks: number } {
+  const graded = allLocks.filter((l) => l.status === "GRADED" && l.actualNumbers && l.actualNumbers.length > 0);
+  const accMap = new Map<
+    string,
+    {
+      drawsEvaluated: number;
+      winningDraws: number;
+      totalWinningSlips: number;
+      totalStakedTT: number;
+      totalPayoutTT: number;
+      bestMatchEver: number;
+    }
+  >();
+
+  const getBucket = (name: string) => {
+    let b = accMap.get(name);
+    if (!b) {
+      b = {
+        drawsEvaluated: 0,
+        winningDraws: 0,
+        totalWinningSlips: 0,
+        totalStakedTT: 0,
+        totalPayoutTT: 0,
+        bestMatchEver: 0
+      };
+      accMap.set(name, b);
+    }
+    return b;
+  };
+
+  for (const lock of graded) {
+    const actual = lock.actualNumbers!;
+    const actualBonus = lock.actualBonus;
+
+    // 1. Track the 1-line Consensus Master Ticket honestly
+    const masterBucket = getBucket("Consensus Master (1 Line)");
+    masterBucket.drawsEvaluated++;
+    const masterStake =
+      game === "play-whe" || game === "fast-cash"
+        ? Math.max(1, lock.consensusTicket.length) * unitCostTT
+        : unitCostTT;
+    const masterRes = scoreOfficialSlipPayoutTT(
+      game,
+      lock.consensusTicket,
+      lock.consensusBonus,
+      actual,
+      actualBonus
+    );
+    masterBucket.totalStakedTT += masterStake;
+    masterBucket.totalPayoutTT += masterRes.payoutTT;
+    if (masterRes.isWin) {
+      masterBucket.winningDraws++;
+      masterBucket.totalWinningSlips++;
+    }
+    if (masterRes.matchCount > masterBucket.bestMatchEver) {
+      masterBucket.bestMatchEver = masterRes.matchCount;
+    }
+
+    // 2. Track every active engine frozen in engineSummaries (excluding retired Trevor Engine)
+    for (const eng of lock.engineSummaries || []) {
+      if (eng.engineKey === "trevor-engine" || /trevor/i.test(eng.engineName)) continue;
+      const slips = eng.slips || [];
+      if (slips.length === 0) continue;
+
+      const bucket = getBucket(eng.engineName);
+      bucket.drawsEvaluated++;
+      bucket.totalStakedTT += getEngineStakePerDrawTT(game, slips, unitCostTT);
+
+      let drawWon = false;
+      let drawPayout = 0;
+      let drawBest = 0;
+      slips.forEach((s, idx) => {
+        const bVal = eng.bonusBalls ? eng.bonusBalls[idx] : undefined;
+        const r = scoreOfficialSlipPayoutTT(game, s, bVal, actual, actualBonus);
+        if (r.matchCount > drawBest) drawBest = r.matchCount;
+        if (r.isWin) {
+          drawWon = true;
+          bucket.totalWinningSlips++;
+          drawPayout += r.payoutTT;
+        }
+      });
+
+      if (drawWon) bucket.winningDraws++;
+      bucket.totalPayoutTT += drawPayout;
+      if (drawBest > bucket.bestMatchEver) bucket.bestMatchEver = drawBest;
+    }
+  }
+
+  const scoreboard: ConsensusLockScoreboardRow[] = Array.from(accMap.entries()).map(([engineName, b]) => {
+    const netProfitTT = Math.round((b.totalPayoutTT - b.totalStakedTT) * 100) / 100;
+    const roiPct = b.totalStakedTT > 0 ? Math.round(((b.totalPayoutTT - b.totalStakedTT) / b.totalStakedTT) * 1000) / 10 : 0;
+    return {
+      engineName,
+      drawsEvaluated: b.drawsEvaluated,
+      winningDraws: b.winningDraws,
+      drawWinRatePct: b.drawsEvaluated > 0 ? Math.round((b.winningDraws / b.drawsEvaluated) * 1000) / 10 : 0,
+      totalWinningSlips: b.totalWinningSlips,
+      avgStakePerDrawTT: b.drawsEvaluated > 0 ? Math.round((b.totalStakedTT / b.drawsEvaluated) * 10) / 10 : 0,
+      totalStakedTT: Math.round(b.totalStakedTT * 100) / 100,
+      totalPayoutTT: Math.round(b.totalPayoutTT * 100) / 100,
+      netProfitTT,
+      roiPct,
+      bestMatchEver: b.bestMatchEver
+    };
+  });
+
+  scoreboard.sort(
+    (a, b) =>
+      b.roiPct - a.roiPct ||
+      b.drawWinRatePct - a.drawWinRatePct ||
+      b.totalPayoutTT - a.totalPayoutTT
+  );
+
+  return { scoreboard, totalGradedLocks: graded.length };
 }
 
 // ============================================================================
@@ -294,7 +822,7 @@ async function reconcileAndLoadLocks(
   for (const d of histDraws) drawByNum.set(d.drawNumber, d);
 
   const rows = await query<any>(
-    "SELECT * FROM consensus_pre_draw_locks WHERE game_key = ? ORDER BY target_draw_number DESC LIMIT 20",
+    "SELECT * FROM consensus_pre_draw_locks WHERE game_key = ? ORDER BY target_draw_number DESC LIMIT 200",
     [game]
   );
 
@@ -864,80 +1392,50 @@ export async function computeCrossEngineConsensus(
     }
   }
 
-  // 5. Build the Consensus Master Ticket & 5-Play Consensus Sheet
-  let consensusMasterTicket: number[];
-  let consensusPlaySheet5: number[][] = [];
-
-  if (game === "play-whe" || game === "fast-cash") {
-    const top5 = consensusNumbers.slice(0, 5).map((c) => c.number);
-    consensusMasterTicket = top5;
-    consensusPlaySheet5 = top5.map((m) => [m]);
-  } else if (game === "pick4") {
-    const top4 = consensusNumbers.slice(0, 4).map((c) => c.number);
-    consensusMasterTicket = top4;
-    const sheet: number[][] = [top4];
-    const usedBk = new Set<string>([sortBoxKey(top4)]);
-    // Add shared unordered boxes + top Lucky 7 & Forensic sets to create a 5-set Consensus Sheet
-    for (const conv of sharedConvergences) {
-      const bk = sortBoxKey(conv.sharedNumbers);
-      if (!usedBk.has(bk)) {
-        usedBk.add(bk);
-        sheet.push(conv.sharedNumbers);
-      }
-    }
-    for (const p of lucky7.lucky7Plays) {
-      if (sheet.length >= 5) break;
-      const bk = sortBoxKey(p.numbers);
-      if (!usedBk.has(bk)) {
-        usedBk.add(bk);
-        sheet.push(p.numbers);
-      }
-    }
-    consensusPlaySheet5 = sheet.slice(0, 5);
-  } else {
-    consensusMasterTicket = consensusNumbers
-      .slice(0, pickSize)
-      .map((c) => c.number)
-      .sort((a, b) => a - b);
-
-    // Build 5 distinct Consensus-Driven Slips:
-    // #1: Pure Top-K Unanimous Consensus Ticket
-    // #2-#5: Highest consensus-scored slips across all engines (zero duplicates!)
-    const seenSlip = new Set<string>([consensusMasterTicket.join("-")]);
-    const sheet: number[][] = [consensusMasterTicket];
-    const scoreMap = new Map<number, number>();
-    consensusNumbers.forEach((c) => scoreMap.set(c.number, c.engineAgreement * 10 + c.totalSlipVotes));
-
-    const allSlipsScored: { slip: number[]; score: number }[] = [];
-    for (const eng of engineSummaries) {
-      for (const s of eng.slips) {
-        if (s.length !== pickSize) continue;
-        const sorted = [...s].sort((a, b) => a - b);
-        const sc = sorted.reduce((acc, n) => acc + (scoreMap.get(n) || 0), 0);
-        allSlipsScored.push({ slip: sorted, score: sc });
-      }
-    }
-    allSlipsScored.sort((a, b) => b.score - a.score);
-    for (const item of allSlipsScored) {
-      if (sheet.length >= 5) break;
-      const key = item.slip.join("-");
-      if (!seenSlip.has(key)) {
-        seenSlip.add(key);
-        sheet.push(item.slip);
-      }
-    }
-    consensusPlaySheet5 = sheet;
-  }
-
   // Independent Decoupled Bonus Consensus (Lotto Plus 1-10, Win For Life strictly 1-3!)
   const consensusBonusTop1 =
     game === "lotto-plus" || game === "win-for-life" ? lucky7.decoupledBonus?.topPick : undefined;
   const consensusBonusTop3 =
     game === "lotto-plus" || game === "win-for-life" ? lucky7.decoupledBonus?.topThreePicks : undefined;
 
-  // 6. Auto-Grade Any Pending Locks & Load Locked History
-  const lockedHistory = await reconcileAndLoadLocks(game, histDraws);
-  const currentDrawLocked = lockedHistory.some((l) => l.targetDrawNumber === nextTargetDrawNumber);
+  // 5. Build the Consensus Master Ticket & Zero-Overlap 5-Slip Consensus Covering Portfolio
+  let consensusMasterTicket: number[];
+  if (game === "play-whe" || game === "fast-cash") {
+    consensusMasterTicket = consensusNumbers.slice(0, 5).map((c) => c.number);
+  } else if (game === "pick4") {
+    consensusMasterTicket = consensusNumbers.slice(0, 4).map((c) => c.number);
+  } else {
+    consensusMasterTicket = consensusNumbers
+      .slice(0, pickSize)
+      .map((c) => c.number)
+      .sort((a, b) => a - b);
+  }
+
+  const consensusCoveringPortfolio = buildZeroOverlapConsensusPortfolio({
+    game,
+    unitCostTT: meta.unitCostTT,
+    minVal,
+    maxVal,
+    consensusNumbers,
+    sharedConvergences,
+    bonusTopPicks: consensusBonusTop3
+  });
+
+  const consensusPlaySheet5 = consensusCoveringPortfolio.slips.map((s) => s.numbers);
+  const consensusPlaySheet5Bonuses =
+    game === "lotto-plus" || game === "win-for-life"
+      ? consensusCoveringPortfolio.slips.map((s) => s.bonusBall ?? 1)
+      : undefined;
+
+  // 6. Auto-Grade Any Pending Locks, Compute Cost-Adjusted Scoreboard & Return Latest 25 History Rows
+  const allLockedHistory = await reconcileAndLoadLocks(game, histDraws);
+  const { scoreboard: lockScoreboard, totalGradedLocks } = computeCostAdjustedLockScoreboard(
+    game,
+    meta.unitCostTT,
+    allLockedHistory
+  );
+  const lockedHistory = allLockedHistory.slice(0, 25);
+  const currentDrawLocked = allLockedHistory.some((l) => l.targetDrawNumber === nextTargetDrawNumber);
 
   return {
     game,
@@ -961,11 +1459,15 @@ export async function computeCrossEngineConsensus(
     consensusBonusTop1,
     consensusBonusTop3,
     consensusPlaySheet5,
+    consensusPlaySheet5Bonuses,
+    consensusCoveringPortfolio,
     consensusNumbers,
     sharedConvergences,
     engineSummaries,
     currentDrawLocked,
-    lockedHistory
+    lockedHistory,
+    lockScoreboard,
+    totalGradedLocks
   };
 }
 
@@ -988,6 +1490,19 @@ export async function lockConsensusPreDrawSnapshot(
 
   const nowIso = new Date().toISOString();
   const topPool = consensus.consensusNumbers.slice(0, 10).map((c) => c.number);
+
+  // Freeze the Zero-Overlap 5-Slip Consensus Covering Portfolio alongside the base engines
+  // so it is auto-graded with zero hindsight on every future draw!
+  const frozenEngineCards: ConsensusEngineSummary[] = [
+    ...consensus.engineSummaries,
+    {
+      engineKey: "consensus-zero-overlap-5",
+      engineName: "Consensus Zero-Overlap 5",
+      slips: consensus.consensusCoveringPortfolio.slips.map((s) => s.numbers),
+      bonusBalls: consensus.consensusPlaySheet5Bonuses,
+      primaryLabel: `5-Slip Covering (${consensus.consensusCoveringPortfolio.uniqueNumbersCovered}/${consensus.consensusCoveringPortfolio.poolSize} Covered)`
+    }
+  ];
 
   await db.execute({
     sql: `
@@ -1018,7 +1533,7 @@ export async function lockConsensusPreDrawSnapshot(
       JSON.stringify(consensus.consensusMasterTicket),
       consensus.consensusBonusTop1 ?? null,
       JSON.stringify(topPool),
-      JSON.stringify(consensus.engineSummaries)
+      JSON.stringify(frozenEngineCards)
     ]
   });
 

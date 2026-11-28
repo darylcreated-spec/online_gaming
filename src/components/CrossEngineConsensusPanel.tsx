@@ -181,12 +181,16 @@ export default function CrossEngineConsensusPanel({ game }: CrossEngineConsensus
 
   const exportBonuses = useMemo(() => {
     if (!data || (game !== "lotto-plus" && game !== "win-for-life")) return undefined;
+    if (data.consensusPlaySheet5Bonuses && data.consensusPlaySheet5Bonuses.length === data.consensusPlaySheet5.length) {
+      return data.consensusPlaySheet5Bonuses;
+    }
     const top3 = data.consensusBonusTop3 && data.consensusBonusTop3.length > 0 ? data.consensusBonusTop3 : [1, 2, 3];
     return data.consensusPlaySheet5.map((_, idx) => top3[idx % top3.length] ?? 1);
   }, [data, game]);
 
   const handleCopy = async () => {
     if (!data) return;
+    const cov = data.consensusCoveringPortfolio;
     const lines = [
       `CROSS-ENGINE CONSENSUS — ${data.gameName.toUpperCase()} (Target Draw #${data.nextTargetDrawNumber})`,
       `Engines Checked: ${data.totalEnginesChecked}`,
@@ -196,9 +200,14 @@ export default function CrossEngineConsensusPanel({ game }: CrossEngineConsensus
           : ""
       }`,
       "",
-      "Top Consensus Play Sheet:",
-      ...data.consensusPlaySheet5.map(
-        (s, idx) => `  #${idx + 1}: ${s.map((n) => formatTrevorBall(game, n)).join("-")}`
+      `Zero-Overlap 5-Slip Covering Portfolio (${cov.uniqueNumbersCovered}/${cov.poolSize} Covered, Max Overlap ${cov.maxPairwiseOverlap}, Stake $${cov.totalStakeTT} TT):`,
+      ...cov.slips.map(
+        (s) =>
+          `  #${s.index} [${s.role}]: ${s.numbers.map((n) => formatTrevorBall(game, n)).join("-")}${
+            s.bonusBall !== undefined && data.bonusName
+              ? ` | ${data.bonusName} ${String(s.bonusBall).padStart(2, "0")}`
+              : ""
+          }`
       )
     ].join("\n");
     try {
@@ -521,29 +530,49 @@ export default function CrossEngineConsensusPanel({ game }: CrossEngineConsensus
           )}
         </div>
 
-        {/* Top 5 Consensus Play Sheet */}
-        <div className={`rounded-2xl border ${theme.border} bg-[#0a0f1a] p-5 space-y-3.5 shadow-xl`}>
-          <div className="space-y-0.5 border-b border-white/10 pb-3">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Layers className={`w-4 h-4 ${theme.accentTextSoft}`} />
-              <span>Top 5 Consensus Play Sheet</span>
-            </h3>
-            <p className="text-xs text-slate-400">
-              Combines the Master Consensus pick with the highest consensus-scored engine plays (zero duplicates).
+        {/* Zero-Overlap 5-Slip Consensus Covering Portfolio */}
+        <div className={`rounded-2xl border ${theme.borderStrong} bg-[#0a0f1a] p-5 space-y-3.5 shadow-xl`}>
+          <div className="space-y-2 border-b border-white/10 pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Layers className={`w-4 h-4 ${theme.accentTextSoft}`} />
+                <span>Zero-Overlap Consensus Portfolio (5 Slips)</span>
+              </h3>
+              <span className={`px-2 py-0.5 rounded-md border text-xs font-mono font-bold ${theme.badgeBg}`}>
+                {data.consensusCoveringPortfolio.uniqueNumbersCovered}/{data.consensusCoveringPortfolio.poolSize} Covered ({data.consensusCoveringPortfolio.coveragePct}%)
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {data.consensusCoveringPortfolio.strategySummary}
             </p>
+            <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+              <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300">
+                Max Overlap: {data.consensusCoveringPortfolio.maxPairwiseOverlap}
+              </span>
+              <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300">
+                Stake: ${data.consensusCoveringPortfolio.totalStakeTT} TT
+              </span>
+              {data.consensusCoveringPortfolio.bonusStratificationLabel && (
+                <span className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-400/35 text-amber-200 font-sans font-semibold">
+                  {data.consensusCoveringPortfolio.bonusStratificationLabel}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
-            {data.consensusPlaySheet5.map((slip, sIdx) => (
+            {data.consensusCoveringPortfolio.slips.map((slipObj) => (
               <div
-                key={sIdx}
+                key={slipObj.index}
                 className="px-3.5 py-2.5 rounded-xl bg-slate-900/75 border border-white/[0.07] flex flex-wrap items-center justify-between gap-2"
               >
-                <span className="text-xs font-bold text-slate-300">
-                  {sIdx === 0 ? "Consensus #1 (Master)" : `Consensus #${sIdx + 1}`}
-                </span>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white">
+                    Slip #{slipObj.index} <span className="text-slate-400 font-normal">· {slipObj.role}</span>
+                  </div>
+                </div>
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {slip.map((n, nIdx) => (
+                  {slipObj.numbers.map((n, nIdx) => (
                     <span
                       key={nIdx}
                       className="px-2 py-1 rounded-lg bg-slate-950 border border-slate-700 font-mono font-bold text-xs text-white"
@@ -552,9 +581,9 @@ export default function CrossEngineConsensusPanel({ game }: CrossEngineConsensus
                       {game === "play-whe" ? ` ${CHINAPOO_CHART[n]?.mark || ""}` : ""}
                     </span>
                   ))}
-                  {exportBonuses && exportBonuses[sIdx] !== undefined && data.bonusName && (
+                  {slipObj.bonusBall !== undefined && data.bonusName && (
                     <span className="px-2 py-1 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-200 font-sans font-bold text-xs">
-                      {data.bonusName} {String(exportBonuses[sIdx]).padStart(2, "0")}
+                      {data.bonusName} {String(slipObj.bonusBall).padStart(2, "0")}
                     </span>
                   )}
                 </div>
@@ -563,6 +592,98 @@ export default function CrossEngineConsensusPanel({ game }: CrossEngineConsensus
           </div>
         </div>
       </div>
+
+      {/* 3.5 COST-ADJUSTED LIVE PRE-DRAW LOCK SCOREBOARD (APPLES-TO-APPLES ROI) */}
+      {data.lockScoreboard && data.lockScoreboard.length > 0 && (
+        <div className={`rounded-2xl border ${theme.border} bg-[#0a0f1a] p-5 sm:p-6 space-y-4 shadow-xl`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div className="space-y-0.5">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <TrendingUp className={`w-4 h-4 ${theme.accentTextSoft}`} />
+                <span>Cost-Adjusted Live Pre-Draw Lock Scoreboard</span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Apples-to-apples real TT$ staked vs official NLCB payouts across all {data.totalGradedLocks} zero-hindsight graded locks (ranked by Net ROI). Fair lottery draws carry a house edge; covering maximizes hit efficiency per dollar.
+              </p>
+            </div>
+            <span className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-200 text-xs font-mono shrink-0">
+              {data.totalGradedLocks} Graded Lock{data.totalGradedLocks === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-white/[0.07]">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-900/90 text-slate-400 uppercase font-mono">
+                <tr>
+                  <th className="px-3 py-2.5">Engine</th>
+                  <th className="px-3 py-2.5 text-right">Locks</th>
+                  <th className="px-3 py-2.5 text-right">Won Draws</th>
+                  <th className="px-3 py-2.5 text-right">Avg Stake</th>
+                  <th className="px-3 py-2.5 text-right">Staked</th>
+                  <th className="px-3 py-2.5 text-right">Payout</th>
+                  <th className="px-3 py-2.5 text-right">Net P/L</th>
+                  <th className="px-3 py-2.5 text-right">ROI %</th>
+                  <th className="px-3 py-2.5 text-right">Best</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.05] bg-slate-950/50">
+                {data.lockScoreboard.map((row) => {
+                  const isPos = row.netProfitTT >= 0;
+                  const isPortfolio = row.engineName === "Consensus Zero-Overlap 5";
+                  return (
+                    <tr
+                      key={row.engineName}
+                      className={isPortfolio ? "bg-emerald-500/10 hover:bg-emerald-500/15" : "hover:bg-slate-900/50"}
+                    >
+                      <td className="px-3 py-2.5 font-semibold text-white whitespace-nowrap">
+                        {row.engineName}
+                        {isPortfolio && (
+                          <span className="ml-2 px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-bold uppercase">
+                            Covering
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-slate-300 text-right whitespace-nowrap">
+                        {row.drawsEvaluated}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-slate-200 text-right whitespace-nowrap">
+                        {row.winningDraws}/{row.drawsEvaluated} ({row.drawWinRatePct.toFixed(1)}%)
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-slate-300 text-right whitespace-nowrap">
+                        ${row.avgStakePerDrawTT.toFixed(0)}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-slate-300 text-right whitespace-nowrap">
+                        ${row.totalStakedTT.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-white font-bold text-right whitespace-nowrap">
+                        ${row.totalPayoutTT.toLocaleString()}
+                      </td>
+                      <td
+                        className={`px-3 py-2.5 font-mono font-bold text-right whitespace-nowrap ${
+                          isPos ? "text-emerald-300" : "text-rose-300"
+                        }`}
+                      >
+                        {isPos ? "+" : "-"}${Math.abs(row.netProfitTT).toLocaleString()}
+                      </td>
+                      <td
+                        className={`px-3 py-2.5 font-mono font-black text-right whitespace-nowrap ${
+                          isPos ? "text-emerald-300" : "text-rose-300"
+                        }`}
+                      >
+                        {isPos ? "+" : ""}
+                        {row.roiPct.toFixed(1)}%
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-slate-300 text-right whitespace-nowrap">
+                        {row.bestMatchEver}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* 4. PRE-DRAW LOCKED SNAPSHOTS & AUTO-GRADED RESULTS HISTORY */}
       <div className={`rounded-2xl border ${theme.border} bg-[#0a0f1a] p-5 sm:p-6 space-y-4 shadow-xl`}>
