@@ -194,8 +194,8 @@ export function performTicketAutopsy(params: {
 
     if (isStraight) {
       isWinner = true;
-      prizeTier = "Straight Hit ($5,500 TT)";
-      grossPayoutTT = betAmount * 5500.0;
+      prizeTier = "Straight Hit ($5,000 TT)";
+      grossPayoutTT = betAmount * 5000.0;
     } else {
       const sortedDrawn = [...drawnDigits].sort((a, b) => a - b);
       const sortedUser = [...userDigits].sort((a, b) => a - b);
@@ -209,32 +209,32 @@ export function performTicketAutopsy(params: {
         const freq = Object.values(counts).sort((a, b) => b - a);
 
         if (freq[0] === 3) {
-          prizeTier = "Box 4-Way Hit ($1,375 TT)";
-          grossPayoutTT = betAmount * 1375.0;
+          prizeTier = "Box 4-Way Hit ($1,200 TT)";
+          grossPayoutTT = betAmount * 1200.0;
         } else if (freq[0] === 2 && freq[1] === 2) {
-          prizeTier = "Box 6-Way Hit ($915 TT)";
-          grossPayoutTT = betAmount * 915.0;
+          prizeTier = "Box 6-Way Hit ($800 TT)";
+          grossPayoutTT = betAmount * 800.0;
         } else if (freq[0] === 2) {
-          prizeTier = "Box 12-Way Hit ($455 TT)";
-          grossPayoutTT = betAmount * 455.0;
+          prizeTier = "Box 12-Way Hit ($400 TT)";
+          grossPayoutTT = betAmount * 400.0;
         } else {
-          prizeTier = "Box 24-Way Hit ($230 TT)";
-          grossPayoutTT = betAmount * 230.0;
+          prizeTier = "Box 24-Way Hit ($200 TT)";
+          grossPayoutTT = betAmount * 200.0;
         }
         unclaimedAlert = "UNCLAIMED BOX HIT: Numbers matched in mixed order! Do not discard this ticket.";
       }
     }
   } else if (normalizedGame.includes("cashpot")) {
-    const mult = officialMultiplier > 1 ? officialMultiplier : 1;
+    const mult = Math.max(1, Math.min(4, officialMultiplier || 1));
     if (exactMatchCount === 5) {
       isWinner = true;
-      prizeTier = "Match 5 Grand Jackpot!";
-      grossPayoutTT = 20000.0;
+      prizeTier = "Match 5 Grand Jackpot (No Multiplier)";
+      grossPayoutTT = 25000.0;
     } else if (exactMatchCount === 4) {
       isWinner = true;
       isSecondaryPrize = true;
-      prizeTier = `Match 4 Prize ($250 x ${mult} = $${250 * mult} TT)`;
-      grossPayoutTT = 250.0 * mult;
+      prizeTier = `Match 4 Prize (~$75 x ${mult} = ~$${75 * mult} TT)`;
+      grossPayoutTT = 75.0 * mult;
       unclaimedAlert = `SECONDARY TIER CASH HIT: Match 4 with ${mult}X Multiplier! Claim at any NLCB terminal.`;
     } else if (exactMatchCount === 3) {
       isWinner = true;
@@ -244,67 +244,63 @@ export function performTicketAutopsy(params: {
       unclaimedAlert = "SECONDARY TIER HIT: Match 3 pays instant cash. Many players overlook this prize!";
     }
   } else if (normalizedGame.includes("win-for-life") || normalizedGame.includes("winforlife")) {
-    const cbMatched = ticketBonus && officialBonus && ticketBonus === officialBonus;
+    const cbMatched = Boolean(ticketBonus && officialBonus && ticketBonus === officialBonus);
     if (exactMatchCount === 6) {
       isWinner = true;
-      prizeTier = "Match 6 Annuity ($20,000/mo for 2 Years)";
-      grossPayoutTT = 480000.0;
+      prizeTier = cbMatched
+        ? "Match 6 + Cash Ball ($20,000/mo for 20 Years)"
+        : "Match 6 Annuity ($20,000/mo for 2 Years)";
+      grossPayoutTT = cbMatched ? 4800000.0 : 480000.0;
     } else if (exactMatchCount === 5) {
       isWinner = true;
       isSecondaryPrize = true;
-      prizeTier = "Match 5 Major Prize ($1,000 TT)";
-      grossPayoutTT = 1000.0;
-      unclaimedAlert = "HIGH-VALUE SECONDARY PRIZE: Match 5 pays $1,000 TT! Valid for immediate payout.";
+      prizeTier = cbMatched ? "Match 5 + Cash Ball ($2,000 TT)" : "Match 5 Major Prize ($1,000 TT)";
+      grossPayoutTT = cbMatched ? 2000.0 : 1000.0;
+      unclaimedAlert = `HIGH-VALUE SECONDARY PRIZE: ${prizeTier}! Valid for immediate payout.`;
     } else if (exactMatchCount === 4) {
       isWinner = true;
       isSecondaryPrize = true;
-      prizeTier = "Match 4 Cash Prize ($50 TT)";
-      grossPayoutTT = 50.0;
-      unclaimedAlert = "CASH PRIZE HIT: Match 4 pays $50 TT cash.";
+      prizeTier = cbMatched ? "Match 4 + Cash Ball ($100 TT)" : "Match 4 Cash Prize ($50 TT)";
+      grossPayoutTT = cbMatched ? 100.0 : 50.0;
+      unclaimedAlert = `CASH PRIZE HIT: ${prizeTier}.`;
     } else if (exactMatchCount === 3) {
       isWinner = true;
       isSecondaryPrize = true;
-      prizeTier = "Match 3 Free Ticket / $10 Cash";
-      grossPayoutTT = 10.0;
-      unclaimedAlert = "FREE RE-PLAY WON: Match 3 entitles you to a free official re-play slip.";
+      prizeTier = cbMatched ? "Match 3 + Cash Ball ($20 TT)" : "Match 3 Free Ticket / $10 Cash";
+      grossPayoutTT = cbMatched ? 20.0 : 10.0;
+      unclaimedAlert = "PRIZE WON: Match 3 qualifies for official NLCB payout.";
     }
   } else {
-    // Lotto Plus
-    const pbMatched = ticketBonus && officialBonus && ticketBonus === officialBonus;
+    // Lotto Plus (official: 1+PB=$5, 2+PB=$15, 3=$25, 3+PB=$200, 4=$250, 4+PB=$3,000, 5=$10,000+, 5+PB=$2M+; 0+PB=$0)
+    const pbMatched = Boolean(ticketBonus && officialBonus && ticketBonus === officialBonus);
     if (exactMatchCount === 5) {
       isWinner = true;
-      prizeTier = pbMatched ? "5 Main + Powerball (GRAND JACKPOT)" : "5 Main Numbers ($50,000 TT)";
-      grossPayoutTT = pbMatched ? 2000000.0 : 50000.0;
+      prizeTier = pbMatched ? "5 Main + Powerball (GRAND JACKPOT)" : "5 Main Numbers ($10,000+ TT)";
+      grossPayoutTT = pbMatched ? 2000000.0 : 10000.0;
     } else if (exactMatchCount === 4) {
       isWinner = true;
       isSecondaryPrize = true;
-      prizeTier = pbMatched ? "4 Main + Powerball ($1,500 TT)" : "4 Main Numbers ($250 TT)";
-      grossPayoutTT = pbMatched ? 1500.0 : 250.0;
+      prizeTier = pbMatched ? "4 Main + Powerball ($3,000 TT)" : "4 Main Numbers ($250 TT)";
+      grossPayoutTT = pbMatched ? 3000.0 : 250.0;
       unclaimedAlert = `MAJOR SECONDARY PRIZE: ${prizeTier}! Do NOT throw this ticket away!`;
     } else if (exactMatchCount === 3) {
       isWinner = true;
       isSecondaryPrize = true;
-      prizeTier = pbMatched ? "3 Main + Powerball ($25 TT)" : "3 Main Numbers ($5 TT)";
-      grossPayoutTT = pbMatched ? 25.0 : 5.0;
+      prizeTier = pbMatched ? "3 Main + Powerball ($200 TT)" : "3 Main Numbers ($25 TT)";
+      grossPayoutTT = pbMatched ? 200.0 : 25.0;
       unclaimedAlert = "SECONDARY PRIZE HIT: Match 3 qualifies for official cash payout.";
     } else if (exactMatchCount === 2 && pbMatched) {
       isWinner = true;
       isSecondaryPrize = true;
-      prizeTier = "2 Main + Powerball (Free Quick Pick)";
-      grossPayoutTT = 5.0;
-      unclaimedAlert = "SNEAKY WINNER ALERT: Match 2 + Powerball wins a Free Quick Pick ticket! 60% of players discard this by mistake.";
+      prizeTier = "2 Main + Powerball ($15 TT)";
+      grossPayoutTT = 15.0;
+      unclaimedAlert = "SECONDARY WINNER ALERT: Match 2 + Powerball pays $15 TT! Do not discard.";
     } else if (exactMatchCount === 1 && pbMatched) {
       isWinner = true;
       isSecondaryPrize = true;
-      prizeTier = "1 Main + Powerball (Free Quick Pick)";
+      prizeTier = "1 Main + Powerball ($5 Free Quick Pick)";
       grossPayoutTT = 5.0;
-      unclaimedAlert = "SNEAKY WINNER ALERT: Match 1 + Powerball wins a Free Quick Pick ticket!";
-    } else if (exactMatchCount === 0 && pbMatched) {
-      isWinner = true;
-      isSecondaryPrize = true;
-      prizeTier = "Powerball Only (Free Quick Pick)";
-      grossPayoutTT = 5.0;
-      unclaimedAlert = "SNEAKY WINNER ALERT: Powerball alone wins a Free Ticket! Never discard a ticket with the correct Powerball.";
+      unclaimedAlert = "WINNER ALERT: Match 1 + Powerball wins a $5 Free Quick Pick ticket!";
     }
   }
 

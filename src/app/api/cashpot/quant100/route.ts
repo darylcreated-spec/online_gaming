@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { computeCashPotQuant100Engine } from "@/lib/cashpot_quant100_engine";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const rowsRes = await db.execute({
@@ -29,10 +31,13 @@ export async function GET(request: NextRequest) {
 
     const result = computeCashPotQuant100Engine(draws);
 
-    return NextResponse.json({
-      success: true,
-      data: result
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: result
+      },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
   } catch (error: any) {
     console.error("[API /api/cashpot/quant100 GET Error]:", error);
     return NextResponse.json({ success: false, error: error.message || "Failed to compute Cash Pot quant audit." }, { status: 500 });

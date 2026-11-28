@@ -35,7 +35,6 @@ import {
   SureCallDayInfo
 } from "@/lib/steiner_johnson_engine";
 import {
-  executeTrevorEngine,
   TrevorHistoricalDraw
 } from "@/lib/trevor_engine";
 import { executeLucky7Engine } from "@/lib/lucky7_engine";
@@ -218,10 +217,13 @@ export interface MultiDrawGameSummary {
   core_target_label: string;
 }
 
+let engineLogsTableReady = false;
+
 /**
- * Initializes the unified prediction_engine_logs table in Turso DB
+ * Initializes the unified prediction_engine_logs table in Turso DB (runs once per isolate)
  */
 export async function ensureEngineLogsTable(): Promise<void> {
+  if (engineLogsTableReady) return;
   try {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS prediction_engine_logs (
@@ -256,15 +258,6 @@ export async function ensureEngineLogsTable(): Promise<void> {
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_engine_logs_game_draw ON prediction_engine_logs(game_key, target_draw_number)`);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_engine_logs_status ON prediction_engine_logs(status)`);
     await db.execute(`CREATE INDEX IF NOT EXISTS idx_engine_logs_engine ON prediction_engine_logs(engine_key)`);
-    // Clean up any historical duplicate rows before enforcing uniqueness
-    await db.execute(`
-      DELETE FROM prediction_engine_logs
-      WHERE id NOT IN (
-        SELECT MAX(id)
-        FROM prediction_engine_logs
-        GROUP BY game_key, engine_key, target_draw_number
-      )
-    `).catch(() => {});
     await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_engine_logs_unique ON prediction_engine_logs(game_key, engine_key, target_draw_number)`).catch(() => {});
 
     await db.execute(`
@@ -283,6 +276,7 @@ export async function ensureEngineLogsTable(): Promise<void> {
         UNIQUE(game_key, engine_key, anchor_draw_number)
       )
     `).catch(() => {});
+    engineLogsTableReady = true;
   } catch (err: any) {
     console.warn("[EngineTracker] ensureEngineLogsTable warning:", err.message);
   }
@@ -471,6 +465,7 @@ export function evaluatePredictionAgainstDraw(
       });
       if (overlap > bestWheelMatch) bestWheelMatch = overlap;
 
+      // Official $1 Pick 4 Box/Straight grading ONLY (no multi-wager Front/Back 3 or Pair free-ride on a $1 stake)
       if (sStr === actStr && simulatedPayoutTT < 5000) {
         isPrize = 1;
         prizeTier = "STRAIGHT ($5,000 TT)";
@@ -482,34 +477,15 @@ export function evaluatePredictionAgainstDraw(
           prizeTier = `${boxInfo.boxType.toUpperCase()} ($${boxInfo.payout} TT)`;
           simulatedPayoutTT = boxInfo.payout;
         }
-      } else if (
-        (slip[0] === actualNums[0] && slip[1] === actualNums[1] && slip[2] === actualNums[2]) ||
-        (slip[1] === actualNums[1] && slip[2] === actualNums[2] && slip[3] === actualNums[3])
-      ) {
-        if (simulatedPayoutTT < 500) {
-          isPrize = 1;
-          prizeTier = slip[0] === actualNums[0] ? "FRONT 3 ($500 TT)" : "BACK 3 ($500 TT)";
-          simulatedPayoutTT = 500.0;
-        }
-      } else if (
-        (slip[0] === actualNums[0] && slip[1] === actualNums[1]) ||
-        (slip[2] === actualNums[2] && slip[3] === actualNums[3]) ||
-        (slip[0] === actualNums[0] && slip[3] === actualNums[3])
-      ) {
-        if (simulatedPayoutTT < 50) {
-          isPrize = 1;
-          prizeTier = "PAIR HIT ($50 TT)";
-          simulatedPayoutTT = 50.0;
-        }
       }
     }
   } else if (gameKey === "cashpot") {
-    // Official NLCB Cash Pot rules: Match 3 ($5 base x mult), Match 4 (~$75 pari-mutuel est. x mult), Match 5 Jackpot ($20,000+ NO mult).
+    // Official NLCB Cash Pot rules: Match 3 ($5 base x mult), Match 4 (~$75 pari-mutuel est. x mult), Match 5 Jackpot ($25,000+ NO mult).
     // Match 2 pays $0 (no prize) in real NLCB Cash Pot.
     const maxEvalLines = (wheelSlips && wheelSlips.length > 5) || simulatedBetTT >= 30 ? Math.min(20, wheelSlips?.length || 10) : 5;
     const playableLines = buildPlayableLines(predNums, wheelSlips || [], maxEvalLines, 5);
     matchCount = predNums.filter(n => actualSet.has(n)).length;
-    const mult = actualPowerball && actualPowerball >= 1 ? actualPowerball : 1;
+    const mult = actualPowerball && actualPowerball >= 1 ? Math.min(4, actualPowerball) : 1;
 
     let highestMatch = matchCount;
     let totalCashPayout = 0;
@@ -519,7 +495,7 @@ export function evaluatePredictionAgainstDraw(
       if (m > bestWheelMatch) bestWheelMatch = m;
       if (m > highestMatch) highestMatch = m;
       if (m === 5) {
-        totalCashPayout += 20000.0; // Multiplier does NOT apply to Match 5 Jackpot
+        totalCashPayout += 25000.0; // Multiplier does NOT apply to Match 5 Jackpot
         winningSlipCount++;
       } else if (m === 4) {
         totalCashPayout += 75.0 * mult; // Pari-mutuel Match 4 realistic base estimate
@@ -536,7 +512,7 @@ export function evaluatePredictionAgainstDraw(
       const multTag = mult > 1 ? ` x${mult}` : "";
       const slipTag = winningSlipCount > 1 ? ` [${winningSlipCount} Slips]` : "";
       if (highestMatch === 5) {
-        prizeTier = `MATCH 5 JACKPOT ($20,000+ TT)${slipTag}`;
+        prizeTier = `MATCH 5 JACKPOT ($25,000+ TT)${slipTag}`;
       } else if (highestMatch === 4) {
         prizeTier = `MATCH 4 (~$75 TT${multTag})${slipTag}`;
       } else {
@@ -544,20 +520,21 @@ export function evaluatePredictionAgainstDraw(
       }
     }
   } else if (gameKey === "lotto-plus") {
-    const maxEvalLines = simulatedBetTT >= 6 ? Math.min(10, Math.round(simulatedBetTT)) : 5;
+    const maxEvalLines = Math.max(1, Math.min(10, Math.round(simulatedBetTT / 5)));
     const playableLines = buildPlayableLines(predNums, wheelSlips || [], maxEvalLines, 5);
     matchCount = predNums.filter(n => actualSet.has(n)).length;
 
     const scoreLottoLine = (m: number, pbMatch: boolean): { payout: number; tier: string } => {
-      if (m === 5) return { payout: pbMatch ? 2000000.0 : 50000.0, tier: pbMatch ? "MATCH 5 + PB JACKPOT ($2M TT)" : "MATCH 5 ($50,000 TT)" };
-      if (m === 4) return { payout: pbMatch ? 1500.0 : 300.0, tier: pbMatch ? "MATCH 4 + PB ($1,500 TT)" : "MATCH 4 ($300 TT)" };
-      if (m === 3) return { payout: pbMatch ? 100.0 : 25.0, tier: pbMatch ? "MATCH 3 + PB ($100 TT)" : "MATCH 3 ($25 TT)" };
-      if (m === 2 && pbMatch) return { payout: 10.0, tier: "MATCH 2 + PB ($10 TT)" };
-      if (m === 1 && pbMatch) return { payout: 5.0, tier: "MATCH 1 + PB ($5 TT)" };
+      if (m === 5) return { payout: pbMatch ? 2000000.0 : 10000.0, tier: pbMatch ? "MATCH 5 + Powerball JACKPOT ($2M TT)" : "MATCH 5 ($10,000+ TT)" };
+      if (m === 4) return { payout: pbMatch ? 3000.0 : 250.0, tier: pbMatch ? "MATCH 4 + Powerball ($3,000 TT)" : "MATCH 4 ($250 TT)" };
+      if (m === 3) return { payout: pbMatch ? 200.0 : 25.0, tier: pbMatch ? "MATCH 3 + Powerball ($200 TT)" : "MATCH 3 ($25 TT)" };
+      if (m === 2 && pbMatch) return { payout: 15.0, tier: "MATCH 2 + Powerball ($15 TT)" };
+      if (m === 1 && pbMatch) return { payout: 5.0, tier: "MATCH 1 + Powerball ($5 TT)" };
       return { payout: 0, tier: "NONE" };
     };
 
     let bestLinePayout = 0;
+    let totalLottoPayout = 0;
     let bestLineTier = "NONE";
     playableLines.forEach((line, idx) => {
       const m = line.filter(n => actualSet.has(n)).length;
@@ -568,16 +545,17 @@ export function evaluatePredictionAgainstDraw(
           : predPowerball;
       const pbMatch = linePb !== undefined && actualPowerball !== undefined && linePb === actualPowerball;
       const scored = scoreLottoLine(m, pbMatch);
+      totalLottoPayout += scored.payout;
       if (scored.payout > bestLinePayout) {
         bestLinePayout = scored.payout;
         bestLineTier = scored.tier;
       }
     });
 
-    if (bestLinePayout > 0) {
+    if (totalLottoPayout > 0) {
       isPrize = 1;
       prizeTier = bestLineTier;
-      simulatedPayoutTT = bestLinePayout;
+      simulatedPayoutTT = totalLottoPayout;
     }
   } else if (gameKey === "win-for-life") {
     const maxEvalLines = Math.max(1, Math.min(10, Math.round(simulatedBetTT / 10)));
@@ -1389,30 +1367,14 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
           });
           recordedCount++;
 
-          // 5. TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent Marks)
-          const trevorPwHist: TrevorHistoricalDraw[] = draws.slice(-1500).map(d => ({
+          // 5. LUCKY 7 ENGINE (7-Vector Chinapoo Defragmenter — 7 Distinct Signals, 2000-draw parity)
+          const lucky7PwHist: TrevorHistoricalDraw[] = draws.slice(-2000).map(d => ({
             drawNumber: d.draw_number,
             drawDate: d.draw_date,
             timeSlot: d.draw_time_slot,
             numbers: [d.winning_number]
           }));
-          const trevorPw = executeTrevorEngine("play-whe", trevorPwHist, { totalPlays: 500 });
-          const trevorPwTop5 = trevorPw.simulation.winningSecondary?.top5 || trevorPw.simulation.winningNumbers;
-          await insertOrUpdateEngineLog({
-            game_key: "play-whe",
-            engine_key: "trevor-engine",
-            engine_name: "Trevor Engine (500-Play Steiner)",
-            strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Top 5 Frequent Marks)",
-            target_draw_number: targetDraw,
-            target_time_slot: targetSlot,
-            predicted_numbers: trevorPwTop5,
-            wheel_slips: [trevorPwTop5],
-            simulated_bet_tt: 5.0
-          });
-          recordedCount++;
-
-          // 6. LUCKY 7 ENGINE (7-Vector Chinapoo Defragmenter — 7 Distinct Signals)
-          const lucky7Pw = executeLucky7Engine("play-whe", trevorPwHist, { includeAudit: false });
+          const lucky7Pw = executeLucky7Engine("play-whe", lucky7PwHist, { includeAudit: false });
           const lucky7PwMarks = lucky7Pw.lucky7Plays.map(p => p.numbers[0]);
           await insertOrUpdateEngineLog({
             game_key: "play-whe",
@@ -1528,30 +1490,14 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             });
             recordedCount++;
 
-            // 5. TREVOR ENGINE (Top 10 Positional Steiner Picks -> 500 Random Plays -> Top Frequency Sets)
-            const trevorP4Hist: TrevorHistoricalDraw[] = draws.slice(-1500).map(d => ({
+            // 5. LUCKY 7 ENGINE (Cross-Row Positional Splicer — 7 Disjoint Straight/Box Sets, 2000-draw parity)
+            const lucky7P4Hist: TrevorHistoricalDraw[] = draws.slice(-2000).map(d => ({
               drawNumber: d.draw_number,
               drawDate: d.draw_date,
               timeSlot: d.draw_time_slot,
               numbers: [d.digit1, d.digit2, d.digit3, d.digit4]
             }));
-            const trevorP4 = executeTrevorEngine("pick4", trevorP4Hist, { totalPlays: 500 });
-            const trevorP4Sets = trevorP4.simulation.trevorPortfolio5.slice(0, 4);
-            await insertOrUpdateEngineLog({
-              game_key: "pick4",
-              engine_key: "trevor-engine",
-              engine_name: "Trevor Engine (500-Play Steiner)",
-              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (4 Positional Frequency Sets)",
-              target_draw_number: targetDraw,
-              target_time_slot: forensic.nextTargetTimeSlot || formula?.targetPeriod,
-              predicted_numbers: trevorP4.simulation.winningNumbers,
-              wheel_slips: trevorP4Sets,
-              simulated_bet_tt: trevorP4Sets.length * 1.0
-            });
-            recordedCount++;
-
-            // 6. LUCKY 7 ENGINE (Cross-Row Positional Splicer — 7 Disjoint Straight/Box Sets)
-            const lucky7P4 = executeLucky7Engine("pick4", trevorP4Hist, { includeAudit: false });
+            const lucky7P4 = executeLucky7Engine("pick4", lucky7P4Hist, { includeAudit: false });
             const lucky7P4Sets = lucky7P4.lucky7Plays.map(p => p.numbers);
             await insertOrUpdateEngineLog({
               game_key: "pick4",
@@ -1560,7 +1506,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               strategy_name: "Steiner Pool -> 7 Positional Follower & Number-Theory Sets (Pick 4)",
               target_draw_number: targetDraw,
               target_time_slot: forensic.nextTargetTimeSlot || formula?.targetPeriod,
-              predicted_numbers: lucky7P4Sets[0] || trevorP4.simulation.winningNumbers,
+              predicted_numbers: lucky7P4Sets[0] || apexPick4Sets[0],
               wheel_slips: lucky7P4Sets,
               simulated_bet_tt: lucky7P4Sets.length * 1.0
             });
@@ -1664,29 +1610,14 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             });
             recordedCount++;
 
-            // 5. TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent Numbers)
-            const trevorCpHist: TrevorHistoricalDraw[] = draws.map(d => ({
+            // 5. LUCKY 7 ENGINE (Complement-Graph Defragmenter — 7 Non-Overlapping Cross-Slip Bridges)
+            const lucky7CpHist: TrevorHistoricalDraw[] = draws.map(d => ({
               drawNumber: d.draw_number,
               drawDate: d.draw_date,
               numbers: d.numbers,
               bonus: d.multiplier
             }));
-            const trevorCp = executeTrevorEngine("cashpot", trevorCpHist, { totalPlays: 500 });
-            await insertOrUpdateEngineLog({
-              game_key: "cashpot",
-              engine_key: "trevor-engine",
-              engine_name: "Trevor Engine (500-Play Steiner)",
-              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Slip Set)",
-              target_draw_number: targetDraw,
-              predicted_numbers: trevorCp.simulation.winningNumbers,
-              predicted_powerball: forensic.nextCandidateSets[0].multiplier,
-              wheel_slips: trevorCp.simulation.trevorPortfolio10,
-              simulated_bet_tt: trevorCp.simulation.trevorPortfolio10.length * 5.0
-            });
-            recordedCount++;
-
-            // 6. LUCKY 7 ENGINE (Complement-Graph Defragmenter — 7 Non-Overlapping Cross-Slip Bridges)
-            const lucky7Cp = executeLucky7Engine("cashpot", trevorCpHist, { includeAudit: false });
+            const lucky7Cp = executeLucky7Engine("cashpot", lucky7CpHist, { includeAudit: false });
             const lucky7CpSlips = lucky7Cp.lucky7Plays.map(p => p.numbers);
             await insertOrUpdateEngineLog({
               game_key: "cashpot",
@@ -1694,7 +1625,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               engine_name: "Lucky 7 (Number Theory & Followers)",
               strategy_name: "Steiner Pool -> 7 Out-of-the-Box Number-Theory & Follower Plays (1 to 20)",
               target_draw_number: targetDraw,
-              predicted_numbers: lucky7CpSlips[0] || trevorCp.simulation.winningNumbers,
+              predicted_numbers: lucky7CpSlips[0] || steinerCp.slips[0],
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
               wheel_slips: lucky7CpSlips,
               simulated_bet_tt: lucky7CpSlips.length * 5.0
@@ -1810,29 +1741,14 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             });
             recordedCount++;
 
-            // 5. TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent Numbers + Powerball)
-            const trevorLpHist: TrevorHistoricalDraw[] = draws.map(d => ({
+            // 5. LUCKY 7 ENGINE (Cross-Slip Pair Bridge — 7 Edge-Disjoint Slips + 7 Distinct Powerballs)
+            const lucky7LpHist: TrevorHistoricalDraw[] = draws.map(d => ({
               drawNumber: d.draw_number,
               drawDate: d.draw_date,
               numbers: d.numbers,
               bonus: d.powerball
             }));
-            const trevorLp = executeTrevorEngine("lotto-plus", trevorLpHist, { totalPlays: 500 });
-            await insertOrUpdateEngineLog({
-              game_key: "lotto-plus",
-              engine_key: "trevor-engine",
-              engine_name: "Trevor Engine (500-Play Steiner)",
-              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Slip Set + Powerball)",
-              target_draw_number: targetDraw,
-              predicted_numbers: trevorLp.simulation.winningNumbers,
-              predicted_powerball: trevorLp.simulation.winningBonus || 1,
-              wheel_slips: trevorLp.simulation.trevorPortfolio10,
-              simulated_bet_tt: trevorLp.simulation.trevorPortfolio10.length * 5.0
-            });
-            recordedCount++;
-
-            // 6. LUCKY 7 ENGINE (Cross-Slip Pair Bridge — 7 Edge-Disjoint Slips + 7 Distinct Powerballs)
-            const lucky7Lp = executeLucky7Engine("lotto-plus", trevorLpHist, { includeAudit: false });
+            const lucky7Lp = executeLucky7Engine("lotto-plus", lucky7LpHist, { includeAudit: false });
             const lucky7LpSlips = lucky7Lp.lucky7Plays.map(p => p.numbers);
             const lucky7LpBonuses = lucky7Lp.lucky7Plays.map(p => p.bonus || 1);
             await insertOrUpdateEngineLog({
@@ -1841,7 +1757,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               engine_name: "Lucky 7 (Number Theory & Followers)",
               strategy_name: "Pure 1 to 35 Number-Theory & Follower Plays + Decoupled Top-3 Powerballs (1 to 10)",
               target_draw_number: targetDraw,
-              predicted_numbers: lucky7LpSlips[0] || trevorLp.simulation.winningNumbers,
+              predicted_numbers: lucky7LpSlips[0] || steinerLotto.slips[0],
               predicted_powerball: lucky7LpBonuses[0] || 1,
               wheel_slips: lucky7LpSlips,
               simulated_bet_tt: lucky7LpSlips.length * 5.0
@@ -1947,29 +1863,14 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
             });
             recordedCount++;
 
-            // 5. TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent Numbers + Cash Ball 1-3)
-            const trevorWflHist: TrevorHistoricalDraw[] = draws.map(d => ({
+            // 5. LUCKY 7 ENGINE (6-Ball Transversal Recombiner + Full Cash Ball 1-3 Lock)
+            const lucky7WflHist: TrevorHistoricalDraw[] = draws.map(d => ({
               drawNumber: d.draw_number,
               drawDate: d.draw_date,
               numbers: d.numbers,
               bonus: d.cash_ball >= 1 && d.cash_ball <= 3 ? d.cash_ball : ((Math.abs(d.cash_ball) - 1) % 3) + 1
             }));
-            const trevorWfl = executeTrevorEngine("win-for-life", trevorWflHist, { totalPlays: 500 });
-            await insertOrUpdateEngineLog({
-              game_key: "win-for-life",
-              engine_key: "trevor-engine",
-              engine_name: "Trevor Engine (500-Play Steiner)",
-              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Line Set + Cash Ball 1-3)",
-              target_draw_number: targetDraw,
-              predicted_numbers: trevorWfl.simulation.winningNumbers,
-              predicted_powerball: trevorWfl.simulation.winningBonus || 1,
-              wheel_slips: trevorWfl.simulation.trevorPortfolio10,
-              simulated_bet_tt: trevorWfl.simulation.trevorPortfolio10.length * 10.0
-            });
-            recordedCount++;
-
-            // 6. LUCKY 7 ENGINE (6-Ball Transversal Recombiner + Full Cash Ball 1-3 Lock)
-            const lucky7Wfl = executeLucky7Engine("win-for-life", trevorWflHist, { includeAudit: false });
+            const lucky7Wfl = executeLucky7Engine("win-for-life", lucky7WflHist, { includeAudit: false });
             const lucky7WflSlips = lucky7Wfl.lucky7Plays.map(p => p.numbers);
             const lucky7WflBonuses = lucky7Wfl.lucky7Plays.map(p => (p.bonus && p.bonus >= 1 && p.bonus <= 3 ? p.bonus : 1));
             await insertOrUpdateEngineLog({
@@ -1978,7 +1879,7 @@ export async function snapshotAllEnginePredictions(specificGame?: string): Promi
               engine_name: "Lucky 7 (Number Theory & Followers)",
               strategy_name: "Pure 1 to 28 6-Ball Number-Theory Plays + Decoupled Cash Ball (1 to 3)",
               target_draw_number: targetDraw,
-              predicted_numbers: lucky7WflSlips[0] || trevorWfl.simulation.winningNumbers,
+              predicted_numbers: lucky7WflSlips[0] || steinerWfl.slips[0],
               predicted_powerball: lucky7WflBonuses[0] || 1,
               wheel_slips: lucky7WflSlips,
               simulated_bet_tt: lucky7WflSlips.length * 10.0
@@ -2630,31 +2531,14 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: 5.0
             });
 
-            // 5. TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Top 5 Frequent Marks)
-            const trevorPwSlice: TrevorHistoricalDraw[] = histSlice.slice(-400).map(d => ({
+            // 5. LUCKY 7 ENGINE (7-Vector Chinapoo Defragmenter — 7 Distinct Signals)
+            const lucky7PwSlice: TrevorHistoricalDraw[] = histSlice.slice(-2000).map(d => ({
               drawNumber: d.draw_number,
               drawDate: d.draw_date,
               timeSlot: d.draw_time_slot,
               numbers: [d.winning_number]
             }));
-            const trevorPwSim = executeTrevorEngine("play-whe", trevorPwSlice, { totalPlays: 500 });
-            const trevorPwMarks = trevorPwSim.simulation.winningSecondary?.top5 || trevorPwSim.simulation.winningNumbers;
-            await upsertVerifiedWalkForwardLog({
-              game_key: "play-whe",
-              engine_key: "trevor-engine",
-              engine_name: "Trevor Engine (500-Play Steiner)",
-              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Top 5 Frequent Marks)",
-              target_draw_number: auditEntry.drawNumber,
-              target_draw_date: auditEntry.drawDate,
-              target_time_slot: auditEntry.timeSlot,
-              predicted_numbers: trevorPwMarks,
-              wheel_slips: [trevorPwMarks],
-              actual_numbers: [auditEntry.drawnMark],
-              simulated_bet_tt: 5.0
-            });
-
-            // 6. LUCKY 7 ENGINE (7-Vector Chinapoo Defragmenter — 7 Distinct Signals)
-            const lucky7PwSim = executeLucky7Engine("play-whe", trevorPwSlice, { includeAudit: false });
+            const lucky7PwSim = executeLucky7Engine("play-whe", lucky7PwSlice, { includeAudit: false });
             const lucky7PwMarks = lucky7PwSim.lucky7Plays.map(p => p.numbers[0]);
             await upsertVerifiedWalkForwardLog({
               game_key: "play-whe",
@@ -2787,31 +2671,14 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: 4.0
             });
 
-            // TREVOR ENGINE (Top 10 Positional Steiner Picks -> 500 Random Plays -> 4 Frequency Sets)
-            const trevorP4Hist: TrevorHistoricalDraw[] = hist.slice(-400).map(d => ({
+            // LUCKY 7 ENGINE (Cross-Row Positional Splicer — 7 Disjoint Straight/Box Sets)
+            const lucky7P4Hist: TrevorHistoricalDraw[] = hist.slice(-2000).map(d => ({
               drawNumber: d.draw_number,
               drawDate: d.draw_date,
               timeSlot: d.draw_time_slot,
               numbers: [d.digit1, d.digit2, d.digit3, d.digit4]
             }));
-            const trevorP4Res = executeTrevorEngine("pick4", trevorP4Hist, { totalPlays: 500 });
-            const trevorP4Sets = trevorP4Res.simulation.trevorPortfolio5.slice(0, 4);
-            await upsertVerifiedWalkForwardLog({
-              game_key: "pick4",
-              engine_key: "trevor-engine",
-              engine_name: "Trevor Engine (500-Play Steiner)",
-              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (4 Positional Frequency Sets)",
-              target_draw_number: actual.draw_number,
-              target_draw_date: actual.draw_date,
-              target_time_slot: actual.draw_time_slot,
-              predicted_numbers: trevorP4Res.simulation.winningNumbers,
-              wheel_slips: trevorP4Sets,
-              actual_numbers: actualDigits,
-              simulated_bet_tt: trevorP4Sets.length * 1.0
-            });
-
-            // LUCKY 7 ENGINE (Cross-Row Positional Splicer — 7 Disjoint Straight/Box Sets)
-            const lucky7P4Res = executeLucky7Engine("pick4", trevorP4Hist, { includeAudit: false });
+            const lucky7P4Res = executeLucky7Engine("pick4", lucky7P4Hist, { includeAudit: false });
             const lucky7P4Sets = lucky7P4Res.lucky7Plays.map(p => p.numbers);
             await upsertVerifiedWalkForwardLog({
               game_key: "pick4",
@@ -2821,7 +2688,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
               target_time_slot: actual.draw_time_slot,
-              predicted_numbers: lucky7P4Sets[0] || trevorP4Res.simulation.winningNumbers,
+              predicted_numbers: lucky7P4Sets[0] || apex4Sets[0],
               wheel_slips: lucky7P4Sets,
               actual_numbers: actualDigits,
               simulated_bet_tt: lucky7P4Sets.length * 1.0
@@ -2932,31 +2799,14 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: steinerCp.slips.length * 5.0
             });
 
-            // TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent 10-Slip Set)
-            const trevorCpHist: TrevorHistoricalDraw[] = hist.map(d => ({
+            // LUCKY 7 ENGINE (Complement-Graph Defragmenter — 7 Non-Overlapping Cross-Slip Bridges)
+            const lucky7CpHist: TrevorHistoricalDraw[] = hist.map(d => ({
               drawNumber: d.draw_number,
               drawDate: d.draw_date,
               numbers: d.numbers,
               bonus: d.multiplier
             }));
-            const trevorCpRes = executeTrevorEngine("cashpot", trevorCpHist, { totalPlays: 500 });
-            await upsertVerifiedWalkForwardLog({
-              game_key: "cashpot",
-              engine_key: "trevor-engine",
-              engine_name: "Trevor Engine (500-Play Steiner)",
-              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Slip Set)",
-              target_draw_number: actual.draw_number,
-              target_draw_date: actual.draw_date,
-              predicted_numbers: trevorCpRes.simulation.winningNumbers,
-              predicted_powerball: forensic.nextCandidateSets[0].multiplier,
-              wheel_slips: trevorCpRes.simulation.trevorPortfolio10,
-              actual_numbers: actual.numbers,
-              actual_powerball: actual.multiplier,
-              simulated_bet_tt: trevorCpRes.simulation.trevorPortfolio10.length * 5.0
-            });
-
-            // LUCKY 7 ENGINE (Complement-Graph Defragmenter — 7 Non-Overlapping Cross-Slip Bridges)
-            const lucky7CpRes = executeLucky7Engine("cashpot", trevorCpHist, { includeAudit: false });
+            const lucky7CpRes = executeLucky7Engine("cashpot", lucky7CpHist, { includeAudit: false });
             const lucky7CpSlips = lucky7CpRes.lucky7Plays.map(p => p.numbers);
             await upsertVerifiedWalkForwardLog({
               game_key: "cashpot",
@@ -2965,7 +2815,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               strategy_name: "Steiner Pool -> 7 Out-of-the-Box Number-Theory & Follower Plays (1 to 20)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
-              predicted_numbers: lucky7CpSlips[0] || trevorCpRes.simulation.winningNumbers,
+              predicted_numbers: lucky7CpSlips[0] || steinerCp.slips[0],
               predicted_powerball: forensic.nextCandidateSets[0].multiplier,
               wheel_slips: lucky7CpSlips,
               actual_numbers: actual.numbers,
@@ -3104,32 +2954,14 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: steinerLotto.slips.length * 5.0
             });
 
-            // TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent 10-Slip Set + Powerball)
-            const trevorLpHist: TrevorHistoricalDraw[] = hist.map(d => ({
+            // LUCKY 7 ENGINE (Cross-Slip Pair Bridge — 7 Edge-Disjoint Slips + 7 Distinct Powerballs)
+            const lucky7LpHist: TrevorHistoricalDraw[] = hist.map(d => ({
               drawNumber: d.draw_number,
               drawDate: d.draw_date,
               numbers: d.numbers,
               bonus: d.powerball
             }));
-            const trevorLpRes = executeTrevorEngine("lotto-plus", trevorLpHist, { totalPlays: 500 });
-            await upsertVerifiedWalkForwardLog({
-              game_key: "lotto-plus",
-              engine_key: "trevor-engine",
-              engine_name: "Trevor Engine (500-Play Steiner)",
-              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Slip Set + Powerball)",
-              target_draw_number: actual.draw_number,
-              target_draw_date: actual.draw_date,
-              predicted_numbers: trevorLpRes.simulation.winningNumbers,
-              predicted_powerball: trevorLpRes.simulation.winningBonus || 1,
-              line_powerballs: trevorLpRes.simulation.trevorPortfolio10Bonus,
-              wheel_slips: trevorLpRes.simulation.trevorPortfolio10,
-              actual_numbers: actual.numbers,
-              actual_powerball: actual.powerball,
-              simulated_bet_tt: trevorLpRes.simulation.trevorPortfolio10.length * 5.0
-            });
-
-            // LUCKY 7 ENGINE (Cross-Slip Pair Bridge — 7 Edge-Disjoint Slips + 7 Distinct Powerballs)
-            const lucky7LpRes = executeLucky7Engine("lotto-plus", trevorLpHist, { includeAudit: false });
+            const lucky7LpRes = executeLucky7Engine("lotto-plus", lucky7LpHist, { includeAudit: false });
             const lucky7LpSlips = lucky7LpRes.lucky7Plays.map(p => p.numbers);
             const lucky7LpBonuses = lucky7LpRes.lucky7Plays.map(p => p.bonus || 1);
             await upsertVerifiedWalkForwardLog({
@@ -3139,7 +2971,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               strategy_name: "Pure 1 to 35 Number-Theory & Follower Plays + Decoupled Top-3 Powerballs (1 to 10)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
-              predicted_numbers: lucky7LpSlips[0] || trevorLpRes.simulation.winningNumbers,
+              predicted_numbers: lucky7LpSlips[0] || steinerLotto.slips[0],
               predicted_powerball: lucky7LpBonuses[0] || 1,
               line_powerballs: lucky7LpBonuses,
               wheel_slips: lucky7LpSlips,
@@ -3254,32 +3086,14 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               simulated_bet_tt: steinerWfl.slips.length * 10.0
             });
 
-            // TREVOR ENGINE (Top 10 Steiner Picks -> 500 Random Plays -> Most Frequent 10-Line Set + Cash Ball 1-3)
-            const trevorWflHist: TrevorHistoricalDraw[] = hist.map(d => ({
+            // LUCKY 7 ENGINE (6-Ball Transversal Recombiner + Full Cash Ball 1-3 Lock)
+            const lucky7WflHist: TrevorHistoricalDraw[] = hist.map(d => ({
               drawNumber: d.draw_number,
               drawDate: d.draw_date,
               numbers: d.numbers,
               bonus: d.cash_ball >= 1 && d.cash_ball <= 3 ? d.cash_ball : ((Math.abs(d.cash_ball) - 1) % 3) + 1
             }));
-            const trevorWflRes = executeTrevorEngine("win-for-life", trevorWflHist, { totalPlays: 500 });
-            await upsertVerifiedWalkForwardLog({
-              game_key: "win-for-life",
-              engine_key: "trevor-engine",
-              engine_name: "Trevor Engine (500-Play Steiner)",
-              strategy_name: "Top 10 Steiner Picks into 500 Random Plays (Most Frequent 10-Line Set + Cash Ball 1-3)",
-              target_draw_number: actual.draw_number,
-              target_draw_date: actual.draw_date,
-              predicted_numbers: trevorWflRes.simulation.winningNumbers,
-              predicted_powerball: trevorWflRes.simulation.winningBonus || 1,
-              wheel_slips: trevorWflRes.simulation.trevorPortfolio10,
-              line_powerballs: trevorWflRes.simulation.trevorPortfolio10Bonus,
-              actual_numbers: actual.numbers,
-              actual_powerball: actual.cash_ball,
-              simulated_bet_tt: trevorWflRes.simulation.trevorPortfolio10.length * 10.0
-            });
-
-            // LUCKY 7 ENGINE (6-Ball Transversal Recombiner + Full Cash Ball 1-3 Lock)
-            const lucky7WflRes = executeLucky7Engine("win-for-life", trevorWflHist, { includeAudit: false });
+            const lucky7WflRes = executeLucky7Engine("win-for-life", lucky7WflHist, { includeAudit: false });
             const lucky7WflSlips = lucky7WflRes.lucky7Plays.map(p => p.numbers);
             const lucky7WflBonuses = lucky7WflRes.lucky7Plays.map(p => (p.bonus && p.bonus >= 1 && p.bonus <= 3 ? p.bonus : 1));
             await upsertVerifiedWalkForwardLog({
@@ -3289,7 +3103,7 @@ export async function calibrateAndReverifyAllEngines(specificGame?: string): Pro
               strategy_name: "Pure 1 to 28 6-Ball Number-Theory Plays + Decoupled Cash Ball (1 to 3)",
               target_draw_number: actual.draw_number,
               target_draw_date: actual.draw_date,
-              predicted_numbers: lucky7WflSlips[0] || trevorWflRes.simulation.winningNumbers,
+              predicted_numbers: lucky7WflSlips[0] || steinerWfl.slips[0],
               predicted_powerball: lucky7WflBonuses[0] || 1,
               wheel_slips: lucky7WflSlips,
               line_powerballs: lucky7WflBonuses,
@@ -4024,7 +3838,13 @@ export async function computeMultiDrawHorizonVerification(
             payout_tt: 0
           });
         } else {
-          const betTT = g === "cashpot" ? wheelSlips.length * 5 : Math.max(5, wheelSlips.length);
+          const lineCnt = Math.max(1, wheelSlips.length);
+          const betTT =
+            g === "win-for-life"
+              ? lineCnt * 10
+              : g === "cashpot" || g === "lotto-plus"
+              ? lineCnt * 5
+              : lineCnt;
           const evalRes = evaluatePredictionAgainstDraw(
             g,
             predNums,

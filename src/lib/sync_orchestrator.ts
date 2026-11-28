@@ -15,7 +15,6 @@ import {
   generatePlayWhePredictions,
   getLocalDateString
 } from "./predictions";
-import { reviseAndAuditAfterDraw } from "./winning_formula_engine";
 import { broadcastDrawNotification } from "./pushNotifications";
 import { query, recordSyncAudit } from "./db";
 import {
@@ -134,11 +133,8 @@ export async function runUnifiedSyncPipeline(options: UnifiedSyncOptions = {}) {
 
   let engineVerifiedCount = 0;
   if (shouldPostProcess) {
-    try {
-      results.predictionRevision = await reviseAndAuditAfterDraw();
-    } catch (e: any) {
-      results.predictionRevision = { error: e.message };
-    }
+    // Legacy prediction_audits zombie pipeline retired (superseded by prediction_engine_logs below)
+    results.predictionRevision = { skipped: true, reason: "Superseded by prediction_engine_logs" };
 
     try {
       const reconcileEngineRes = await reconcileAndGradeEnginePredictions();

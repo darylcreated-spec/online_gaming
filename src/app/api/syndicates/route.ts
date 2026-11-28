@@ -1,9 +1,12 @@
+import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-// Helper to generate a random 4-digit code e.g. "WIN-8842"
+export const dynamic = "force-dynamic";
+
+// Helper to generate a collision-resistant code e.g. "WIN-8842"
 function generateSyndicateCode(): string {
-  const randomNum = Math.floor(1000 + Math.random() * 9000);
+  const randomNum = crypto.randomInt(1000, 10000);
   return `WIN-${randomNum}`;
 }
 
@@ -79,37 +82,38 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Fetch all syndicates (latest 20)
+    // Fetch all syndicates (latest 20) in a single aggregated query (no N+1 loop)
     const listRes = await db.execute({
-      sql: "SELECT * FROM syndicates ORDER BY id DESC LIMIT 20"
+      sql: `
+        SELECT s.id, s.code, s.name, s.creator_name, s.game_type, s.target_draw_date,
+               s.total_stake, s.ticket_count, s.notes, s.created_at,
+               COUNT(m.id) AS member_count
+        FROM syndicates s
+        LEFT JOIN syndicate_members m ON m.syndicate_id = s.id
+        GROUP BY s.id
+        ORDER BY s.id DESC
+        LIMIT 20
+      `
     });
 
-    const syndicates = await Promise.all(
-      listRes.rows.map(async (rawSynd: any) => {
-        const id = Number(rawSynd.id ?? rawSynd[0]);
-        const membersCountRes = await db.execute({
-          sql: "SELECT COUNT(*) as count FROM syndicate_members WHERE syndicate_id = ?",
-          args: [id]
-        });
-        const memberCount = Number(membersCountRes.rows[0]?.count ?? membersCountRes.rows[0]?.[0]) || 0;
+    const syndicates = listRes.rows.map((rawSynd: any) => ({
+      id: Number(rawSynd.id ?? rawSynd[0]),
+      code: String(rawSynd.code ?? rawSynd[1]),
+      name: String(rawSynd.name ?? rawSynd[2]),
+      creator_name: String(rawSynd.creator_name ?? rawSynd[3]),
+      game_type: String(rawSynd.game_type ?? rawSynd[4]),
+      target_draw_date: String(rawSynd.target_draw_date ?? rawSynd[5]),
+      total_stake: Number(rawSynd.total_stake ?? rawSynd[6]) || 0,
+      ticket_count: Number(rawSynd.ticket_count ?? rawSynd[7]) || 0,
+      notes: String(rawSynd.notes ?? rawSynd[8] ?? ""),
+      created_at: String(rawSynd.created_at ?? rawSynd[9]),
+      member_count: Number(rawSynd.member_count ?? rawSynd[10]) || 0
+    }));
 
-        return {
-          id,
-          code: String(rawSynd.code ?? rawSynd[1]),
-          name: String(rawSynd.name ?? rawSynd[2]),
-          creator_name: String(rawSynd.creator_name ?? rawSynd[3]),
-          game_type: String(rawSynd.game_type ?? rawSynd[4]),
-          target_draw_date: String(rawSynd.target_draw_date ?? rawSynd[5]),
-          total_stake: Number(rawSynd.total_stake ?? rawSynd[6]) || 0,
-          ticket_count: Number(rawSynd.ticket_count ?? rawSynd[7]) || 0,
-          notes: String(rawSynd.notes ?? rawSynd[8] ?? ""),
-          created_at: String(rawSynd.created_at ?? rawSynd[9]),
-          member_count: memberCount
-        };
-      })
+    return NextResponse.json(
+      { success: true, syndicates },
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
     );
-
-    return NextResponse.json({ success: true, syndicates });
   } catch (error: any) {
     console.error("[API /api/syndicates GET Error]:", error);
     return NextResponse.json({ success: false, error: error.message || "Failed to fetch syndicates" }, { status: 500 });
@@ -131,21 +135,35 @@ export async function POST(request: NextRequest) {
       }
 
       let code = generateSyndicateCode();
-      const initialContrib = Number(initial_contribution) || 50.0;
+      const rawInit = Number(initial_contribution);
+      const initialContrib = Number.isFinite(rawInit) && rawInit > 0 ? Math.min(rawInit, 100000) : 50.0;
 
-      const insertRes = await db.execute({
-        sql: `INSERT INTO syndicates (code, name, creator_name, game_type, target_draw_date, total_stake, ticket_count, notes)
-              VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
-        args: [
-          code,
-          name.trim(),
-          creator_name.trim(),
-          game_type || "lotto-plus",
-          target_draw_date || "Next Draw",
-          initialContrib,
-          notes || ""
-        ]
-      });
+      // Retry code generation up to 5 times in case of UNIQUE code collision
+      let insertRes: any = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+          insertRes = await db.execute({
+            sql: `INSERT INTO syndicates (code, name, creator_name, game_type, target_draw_date, total_stake, ticket_count, notes)
+                  VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
+            args: [
+              code,
+              String(name).trim().slice(0, 100),
+              String(creator_name).trim().slice(0, 80),
+              String(game_type || "lotto-plus").slice(0, 32),
+              String(target_draw_date || "Next Draw").slice(0, 40),
+              initialContrib,
+              String(notes || "").slice(0, 500)
+            ]
+          });
+          break;
+        } catch (err: any) {
+          if (attempt < 4 && String(err?.message || "").toLowerCase().includes("unique")) {
+            code = generateSyndicateCode();
+            continue;
+          }
+          throw err;
+        }
+      }
 
       const syndicateId = Number(insertRes.lastInsertRowid);
 
@@ -172,18 +190,21 @@ export async function POST(request: NextRequest) {
       }
 
       const contrib = Number(contribution_amount);
-      if (contrib <= 0) {
-        return NextResponse.json({ success: false, error: "Contribution must be greater than 0" }, { status: 400 });
+      if (!Number.isFinite(contrib) || contrib <= 0 || contrib > 100000) {
+        return NextResponse.json(
+          { success: false, error: "Contribution must be between $1 and $100,000 TTD." },
+          { status: 400 }
+        );
       }
 
       // Add member
       await db.execute({
         sql: `INSERT INTO syndicate_members (syndicate_id, member_name, contribution_amount, share_percentage)
               VALUES (?, ?, ?, 0)`,
-        args: [syndicate_id, member_name.trim(), contrib]
+        args: [syndicate_id, String(member_name).trim().slice(0, 80), contrib]
       });
 
-      // Recalculate total stake and all share percentages for this syndicate
+      // Recalculate total stake and all share percentages for this syndicate in a single batch
       const allMembersRes = await db.execute({
         sql: "SELECT id, contribution_amount FROM syndicate_members WHERE syndicate_id = ?",
         args: [syndicate_id]
@@ -191,24 +212,26 @@ export async function POST(request: NextRequest) {
 
       let newTotalStake = 0;
       allMembersRes.rows.forEach((r: any) => {
-        newTotalStake += Number(r.contribution_amount ?? r[1]) || 0;
+        const val = Number(r.contribution_amount ?? r[1]);
+        if (Number.isFinite(val) && val > 0) newTotalStake += val;
       });
 
-      for (const r of allMembersRes.rows as any[]) {
-        const memId = Number(r.id ?? r[0]);
-        const memContrib = Number(r.contribution_amount ?? r[1]) || 0;
-        const newPct = Math.round((memContrib / newTotalStake) * 10000) / 100;
-        await db.execute({
-          sql: "UPDATE syndicate_members SET share_percentage = ? WHERE id = ?",
-          args: [newPct, memId]
+      if (newTotalStake > 0) {
+        const batchStmts = (allMembersRes.rows as any[]).map((r) => {
+          const memId = Number(r.id ?? r[0]);
+          const memContrib = Math.max(0, Number(r.contribution_amount ?? r[1]) || 0);
+          const newPct = Math.round((memContrib / newTotalStake) * 10000) / 100;
+          return {
+            sql: "UPDATE syndicate_members SET share_percentage = ? WHERE id = ?",
+            args: [newPct, memId]
+          };
         });
+        batchStmts.push({
+          sql: "UPDATE syndicates SET total_stake = ? WHERE id = ?",
+          args: [newTotalStake, syndicate_id]
+        });
+        await db.batch(batchStmts, "write");
       }
-
-      // Update syndicate total stake
-      await db.execute({
-        sql: "UPDATE syndicates SET total_stake = ? WHERE id = ?",
-        args: [newTotalStake, syndicate_id]
-      });
 
       return NextResponse.json({ success: true, message: "Member joined syndicate successfully!" });
     }

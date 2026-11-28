@@ -61,7 +61,7 @@ export default function SettingsTab() {
       if (perm === "granted") {
         new Notification("The Win Concept", {
           body: "Local PWA notifications enabled! You will now receive draw alerts.",
-          icon: "/pwa-192x192.png"
+          icon: "/images/pwa-icon-192.png"
         });
       }
     }
@@ -317,7 +317,7 @@ export default function SettingsTab() {
           if (data.drawsAdded > 0 && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
             new Notification(`${config.label} Synced!`, {
               body: `Added/Updated ${data.drawsAdded} draws successfully!`,
-              icon: "/pwa-192x192.png"
+              icon: "/images/pwa-icon-192.png"
             });
           }
         } else {

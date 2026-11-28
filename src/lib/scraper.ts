@@ -530,7 +530,7 @@ export async function syncLatest(full: boolean = false, targetYear?: number): Pr
 
     // 2. Secondary Source: Live HTML Portal (nlcblottoresult.com)
     try {
-      const liveDraws = await scrapeLottoLivePortal();
+      const liveDraws = (await scrapeLottoLivePortal()).sort((a, b) => a.draw_date.localeCompare(b.draw_date));
       for (const d of liveDraws) {
         const check = await db.execute({
           sql: "SELECT 1 FROM draws WHERE draw_date = ?",
@@ -1361,10 +1361,14 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
         for (const item of list) {
           if (item && item.draw_number) {
             const dDate = item.draw_date ? item.draw_date.split("T")[0] : "";
-            const nums = [item.number1, item.number2, item.number3, item.number4, item.number5, item.number6].sort((a: number, b: number) => a - b);
+            const nums = [item.number1, item.number2, item.number3, item.number4, item.number5, item.number6].map(Number).sort((a: number, b: number) => a - b);
+            const rawCb = Number(item.cash_ball);
+            if (!dDate || nums.some((n) => !Number.isInteger(n) || n < 1 || n > 28) || !Number.isInteger(rawCb) || rawCb < 1 || rawCb > 3) {
+              continue;
+            }
             const res = await db.execute({
               sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-              args: [item.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], nums[5], item.cash_ball || 0, ""]
+              args: [item.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], nums[5], rawCb, ""]
             });
             if (res.rowsAffected > 0) {
               drawsAdded++;
@@ -1390,14 +1394,21 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
             if (mRes.ok) {
               const data = await mRes.json();
               if (Array.isArray(data) && data.length > 0) {
-                const batch = data.map((d: any) => {
-                  const nums = [d.number1, d.number2, d.number3, d.number4, d.number5, d.number6].sort((a: number, b: number) => a - b);
-                  const dDate = d.draw_date ? d.draw_date.split("T")[0] : "";
-                  return {
-                    sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    args: [d.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], nums[5], d.cash_ball || 0, ""]
-                  };
-                });
+                const batch = data
+                  .filter((d: any) => {
+                    const cb = Number(d.cash_ball);
+                    const ns = [d.number1, d.number2, d.number3, d.number4, d.number5, d.number6].map(Number);
+                    return Boolean(d.draw_number && d.draw_date) && ns.every((n) => Number.isInteger(n) && n >= 1 && n <= 28) && Number.isInteger(cb) && cb >= 1 && cb <= 3;
+                  })
+                  .map((d: any) => {
+                    const nums = [d.number1, d.number2, d.number3, d.number4, d.number5, d.number6].map(Number).sort((a: number, b: number) => a - b);
+                    const dDate = d.draw_date ? d.draw_date.split("T")[0] : "";
+                    return {
+                      sql: `INSERT OR IGNORE INTO winforlife_draws (draw_number, draw_date, num1, num2, num3, num4, num5, num6, cash_ball, jackpot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                      args: [d.draw_number, dDate, nums[0], nums[1], nums[2], nums[3], nums[4], nums[5], Number(d.cash_ball), ""]
+                    };
+                  });
+                if (batch.length === 0) continue;
                 const batchRes = await db.batch(batch);
                 const inserted = batchRes.reduce((acc, r) => acc + (r.rowsAffected || 0), 0);
                 drawsAdded += inserted;
@@ -1414,8 +1425,11 @@ export async function syncWinForLife(full: boolean = false, targetYear?: number)
 
     // 2. Secondary Source: Live HTML Portal (nlcblottoresult.com)
     try {
-      const liveDraws = await scrapeWinForLifeLivePortal();
+      const liveDraws = (await scrapeWinForLifeLivePortal()).sort((a, b) =>
+        String(a.draw_date || "").localeCompare(String(b.draw_date || ""))
+      );
       for (const d of liveDraws) {
+        if (!Number.isInteger(d.cash_ball) || d.cash_ball < 1 || d.cash_ball > 3) continue;
         const latestRes = await db.execute(
           "SELECT MAX(draw_number) as max_num, MAX(draw_date) as max_date FROM winforlife_draws"
         );

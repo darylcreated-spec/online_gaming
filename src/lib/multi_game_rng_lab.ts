@@ -1450,7 +1450,11 @@ function runPlayWheRngLab(
   const exactRatePct = round2(exactP * 100);
   const exactStdPct = round2(Math.sqrt((exactP * (1 - exactP)) / count) * 100);
   const exactExpectedNet = round2(count * (exactP * 26 - slipCount));
-  const exactExpectedNear = round2(count * (1 - Math.pow((36 - 2) / 36, slipCount)));
+  // Exact hypergeometric probability of (!exactHit && neighbor +/- 1 in k distinct marks without replacement):
+  // P(near) = (C(35, k) - C(33, k)) / C(36, k) = ((36 - k)/36) * (1 - ((35 - k)*(34 - k)) / (35 * 34))
+  const exactPNoHit = (36 - slipCount) / 36;
+  const pNoNeighborGivenNoHit = ((35 - slipCount) * (34 - slipCount)) / (35 * 34);
+  const exactExpectedNear = round2(count * exactPNoHit * (1 - pNoNeighborGivenNoHit));
 
   const trajectory = blindEval.records.map((rec, i) => {
     const expCum = round2((i + 1) * exactP);
@@ -1801,10 +1805,15 @@ function generatePick4Portfolio(
       }
 
       // Inject uncovered digits cleanly on the final lines when 10/10 guard is enabled
+      // Respect k6 === 0 (strictly 4 distinct digits) by skipping digits already present in cand
       if (missingDigits.length > 0 && attempt === 0) {
-        const injectCount = Math.min(missingDigits.length, s === slipCount - 1 ? 4 : 2);
-        for (let i = 0; i < injectCount; i++) {
-          cand[3 - i] = missingDigits[i];
+        const injectLimit = s === slipCount - 1 ? 4 : 2;
+        let injected = 0;
+        for (let i = 0; i < missingDigits.length && injected < injectLimit; i++) {
+          const d = missingDigits[i];
+          if (!allowRepeats && cand.includes(d)) continue;
+          cand[3 - injected] = d;
+          injected++;
         }
       }
 

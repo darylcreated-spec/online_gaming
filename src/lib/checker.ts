@@ -9,16 +9,15 @@ export interface CheckResult {
 /**
  * Checks a lotto ticket against winning numbers and calculates the prize tier.
  * 
- * NLCB Lotto Plus Prize Structure:
- * - 5 Match + PB: Jackpot
- * - 5 Match: Cash Prize (typically $5,000+)
- * - 4 Match + PB: Cash Prize (typically $1,500+)
- * - 4 Match: Cash Prize (typically $200)
- * - 3 Match + PB: Cash Prize (typically $150)
- * - 3 Match: Cash Prize (typically $20)
- * - 2 Match + PB: Cash Prize (typically $15)
- * - 1 Match + PB: Free Ticket
- * - 0 Match + PB: Free Ticket (Powerball only)
+ * Official NLCB Lotto Plus Prize Structure:
+ * - 5 Match + PB: Jackpot (Min $2,000,000 TT)
+ * - 5 Match: Cash Prize ($10,000+ TT pari-mutuel)
+ * - 4 Match + PB: Cash Prize ($3,000 TT)
+ * - 4 Match: Cash Prize ($250 TT)
+ * - 3 Match + PB: Cash Prize ($200 TT)
+ * - 3 Match: Cash Prize ($25 TT)
+ * - 2 Match + PB: Cash Prize ($15 TT)
+ * - 1 Match + PB: $5 TT / Free Quick Pick
  */
 export function checkTicket(
   ticketNumbers: number[],
@@ -46,13 +45,13 @@ export function checkTicket(
       prizeEstimate = "GRAND JACKPOT (Min $2,000,000 TT)";
     } else {
       tierName = "5 Main Numbers (Tier 2)";
-      prizeEstimate = "$50,000.00 TT";
+      prizeEstimate = "$10,000.00+ TT";
     }
   } else if (matchCount === 4) {
     isWinner = true;
     if (pbMatched) {
       tierName = "4 Main + Powerball (Tier 3)";
-      prizeEstimate = "$1,500.00 TT";
+      prizeEstimate = "$3,000.00 TT";
     } else {
       tierName = "4 Main Numbers (Tier 4)";
       prizeEstimate = "$250.00 TT";
@@ -61,28 +60,22 @@ export function checkTicket(
     isWinner = true;
     if (pbMatched) {
       tierName = "3 Main + Powerball (Tier 5)";
-      prizeEstimate = "$25.00 TT";
+      prizeEstimate = "$200.00 TT";
     } else {
       tierName = "3 Main Numbers (Tier 6)";
-      prizeEstimate = "$5.00 TT";
+      prizeEstimate = "$25.00 TT";
     }
   } else if (matchCount === 2) {
     if (pbMatched) {
       isWinner = true;
-      tierName = "2 Main + Powerball (Tier 7)";
-      prizeEstimate = "Free Quick Pick Ticket";
+      tierName = "2 Main + Powerball";
+      prizeEstimate = "$15.00 TTD";
     }
   } else if (matchCount === 1) {
     if (pbMatched) {
       isWinner = true;
       tierName = "1 Main + Powerball";
-      prizeEstimate = "Free Quick Pick Ticket";
-    }
-  } else if (matchCount === 0) {
-    if (pbMatched) {
-      isWinner = true;
-      tierName = "Powerball Only";
-      prizeEstimate = "Free Quick Pick Ticket";
+      prizeEstimate = "$5.00 TTD (Free Quick Pick)";
     }
   }
 
@@ -501,24 +494,20 @@ export function checkCashPotTicket(
   let prizeEstimate = "$0.00";
   let isWinner = false;
 
-  const multFactor = multiplier > 1 ? multiplier : 1;
+  const multFactor = Math.max(1, Math.min(4, multiplier || 1));
 
   if (matchCount === 5) {
     isWinner = true;
-    tierName = "Match 5 of 5 (JACKPOT)";
-    prizeEstimate = "$100,000.00 TT";
+    tierName = "Match 5 of 5 (JACKPOT — No Multiplier)";
+    prizeEstimate = "$25,000.00+ TT";
   } else if (matchCount === 4) {
     isWinner = true;
-    tierName = multiplier > 1 ? `Match 4 of 5 (${multiplier}x Multiplier)` : "Match 4 of 5";
-    prizeEstimate = `$${(1000 * multFactor).toLocaleString()}.00 TT`;
+    tierName = multFactor > 1 ? `Match 4 of 5 (${multFactor}x Multiplier)` : "Match 4 of 5";
+    prizeEstimate = `~$${(75 * multFactor).toLocaleString()}.00 TT (Pari-mutuel x ${multFactor})`;
   } else if (matchCount === 3) {
     isWinner = true;
-    tierName = multiplier > 1 ? `Match 3 of 5 (${multiplier}x Multiplier)` : "Match 3 of 5";
-    prizeEstimate = `$${(20 * multFactor).toLocaleString()}.00 TT`;
-  } else if (matchCount === 2) {
-    isWinner = true;
-    tierName = multiplier > 1 ? `Match 2 of 5 (${multiplier}x Multiplier)` : "Match 2 of 5 (Free Play)";
-    prizeEstimate = multiplier > 1 ? `$${(4 * multFactor).toLocaleString()}.00 TT` : "Free $4.00 Quick Pick";
+    tierName = multFactor > 1 ? `Match 3 of 5 (${multFactor}x Multiplier)` : "Match 3 of 5";
+    prizeEstimate = `$${(5 * multFactor).toLocaleString()}.00 TT`;
   }
 
   return {

@@ -4,6 +4,7 @@ import {
   ConsensusGameKey,
   lockConsensusPreDrawSnapshot
 } from "@/lib/consensus_engine";
+import { isAuthorizedCronRequest, unauthorizedResponse } from "@/lib/cron_auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -54,16 +55,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (force && !isAuthorizedCronRequest(request, body.secret)) {
+      return unauthorizedResponse("Admin CRON_SECRET required to overwrite an existing pre-draw lock.");
+    }
+
     const result = await lockConsensusPreDrawSnapshot(game, force);
-    return NextResponse.json({
-      success: true,
-      alreadyLocked: result.alreadyLocked,
-      lockedRecord: result.lockedRecord,
-      data: result.consensus,
-      message: result.alreadyLocked
-        ? `Draw #${result.lockedRecord.targetDrawNumber} was already locked pre-draw.`
-        : `Locked pre-draw snapshot for ${result.consensus.gameName} Draw #${result.lockedRecord.targetDrawNumber}.`
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        alreadyLocked: result.alreadyLocked,
+        lockedRecord: result.lockedRecord,
+        data: result.consensus,
+        message: result.alreadyLocked
+          ? `Draw #${result.lockedRecord.targetDrawNumber} was already locked pre-draw.`
+          : `Locked pre-draw snapshot for ${result.consensus.gameName} Draw #${result.lockedRecord.targetDrawNumber}.`
+      },
+      { headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } }
+    );
   } catch (err: any) {
     console.error("[API /api/consensus POST] Error:", err);
     return NextResponse.json(

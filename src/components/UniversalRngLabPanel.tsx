@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Sliders,
   Cpu,
@@ -164,6 +164,7 @@ export default function UniversalRngLabPanel({ game }: { game: MultiGameRngKey }
   const [copied, setCopied] = useState<boolean>(false);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
   const [showAuditLog, setShowAuditLog] = useState<boolean>(false);
+  const reqIdRef = useRef<number>(0);
 
   const theme = THEME_STYLES[data?.themeColor || getGameThemeKey(game)];
 
@@ -179,6 +180,7 @@ export default function UniversalRngLabPanel({ game }: { game: MultiGameRngKey }
       customSeed?: number;
       isInitial?: boolean;
     }) => {
+      const thisReqId = ++reqIdRef.current;
       if (opts.isInitial) setLoading(true);
       else setRunning(true);
       setError(null);
@@ -201,6 +203,7 @@ export default function UniversalRngLabPanel({ game }: { game: MultiGameRngKey }
           })
         });
         const json = await res.json();
+        if (thisReqId !== reqIdRef.current) return;
         if (!res.ok || !json.success) {
           throw new Error(json.error || "Failed to run RNG Lab.");
         }
@@ -214,10 +217,13 @@ export default function UniversalRngLabPanel({ game }: { game: MultiGameRngKey }
         setGuardEnabled(out.guardEnabled);
         setSeed(out.seed);
       } catch (err: any) {
+        if (thisReqId !== reqIdRef.current) return;
         setError(err?.message || "Failed to load RNG Lab.");
       } finally {
-        setLoading(false);
-        setRunning(false);
+        if (thisReqId === reqIdRef.current) {
+          setLoading(false);
+          setRunning(false);
+        }
       }
     },
     [game, weights, slipCount, testWindow, objective, bonusMode, guardEnabled, seed]

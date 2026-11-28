@@ -130,7 +130,8 @@ export interface Diff35AnalysisResult {
 }
 
 export function diff35(n: number): number {
-  const d = 35 - n;
+  const clamped = Math.max(1, Math.min(35, Math.round(n)));
+  const d = 35 - clamped;
   return d === 0 ? 35 : d;
 }
 
@@ -139,8 +140,15 @@ export function computeSum35DiffEngine(draws: LottoDrawRecord[]): Diff35Analysis
     throw new Error("At least 10 historical draws required for Sum-35 Quantitative Engine.");
   }
 
+  // Filter strictly to modern 5/35 draws (1..35) so legacy 5/36 balls never invert below 1
+  const modernDraws = draws.filter(d => {
+    const nums = [Number(d.num1), Number(d.num2), Number(d.num3), Number(d.num4), Number(d.num5)];
+    return nums.every(n => Number.isInteger(n) && n >= 1 && n <= 35);
+  });
+  const activeSource = modernDraws.length >= 10 ? modernDraws : draws;
+
   // Sort chronological ascending
-  const sorted = [...draws].sort((a, b) => a.draw_number - b.draw_number);
+  const sorted = [...activeSource].sort((a, b) => a.draw_number - b.draw_number);
   const N = sorted.length;
 
   const cleanDraws = sorted.map(d => ({
@@ -178,16 +186,28 @@ export function computeSum35DiffEngine(draws: LottoDrawRecord[]): Diff35Analysis
     rankedByDiff.sort((a, b) => b.diffScore - a.diffScore || b.directScore - a.directScore || a.n - b.n);
     const S2 = rankedByDiff.slice(0, 5).map(x => x.n).sort((a, b) => a - b);
 
-    // Set 3: Harmonic Mean Reversion Dual (target theoretical mean ~90)
-    // Combines original numbers with 35-complements to balance sum
+    // Set 3: Harmonic Mean Reversion Dual (target theoretical mean ~90, strictly deduplicated 1..35)
     const comps = currNums.map(diff35);
-    const S3 = [currNums[0], currNums[1], comps[2], comps[3], comps[4]].sort((a, b) => a - b);
+    const s3Set = Array.from(
+      new Set([currNums[0], currNums[1], comps[2], comps[3], comps[4]].filter(n => n >= 1 && n <= 35))
+    );
+    for (const candidate of rankedByDiff) {
+      if (s3Set.length >= 5) break;
+      if (!s3Set.includes(candidate.n)) s3Set.push(candidate.n);
+    }
+    const S3 = s3Set.slice(0, 5).sort((a, b) => a - b);
 
-    // Set 4: Modular Drift Transformation ( (35 - n + 1) mod 35 )
-    const S4 = currNums.map(n => {
-      let v = (diff35(n) + 1) % 35;
-      return v === 0 ? 35 : v;
-    }).sort((a, b) => a - b);
+    // Set 4: Modular Drift Transformation ( (35 - n + 1) mod 35, strictly deduplicated 1..35 )
+    const s4Raw = currNums.map(n => {
+      const v = (diff35(n) + 1) % 35;
+      return v <= 0 ? 35 : v;
+    });
+    const s4Set = Array.from(new Set(s4Raw.filter(n => n >= 1 && n <= 35)));
+    for (const candidate of rankedByDiff) {
+      if (s4Set.length >= 5) break;
+      if (!s4Set.includes(candidate.n)) s4Set.push(candidate.n);
+    }
+    const S4 = s4Set.slice(0, 5).sort((a, b) => a - b);
 
     // Set 5: Cross-Symmetric Dual Resonance (Bayesian weighted score)
     const resonance = [];

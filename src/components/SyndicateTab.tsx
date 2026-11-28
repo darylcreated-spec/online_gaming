@@ -111,9 +111,9 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
   };
 
   // Fetch Community Chat
-  const fetchChat = async () => {
+  const fetchChat = async (tag: string = chatTag) => {
     try {
-      const res = await fetch(`/api/chat?tag=${chatTag}`);
+      const res = await fetch(`/api/chat?tag=${encodeURIComponent(tag)}`, { cache: "no-store" });
       const data = await res.json();
       if (data.success && data.messages) {
         setChatMessages(data.messages);
@@ -125,17 +125,15 @@ export default function SyndicateTab({ onSelectGame }: SyndicateTabProps) {
 
   useEffect(() => {
     fetchSyndicates();
-    fetchChat();
-
-    const interval = setInterval(() => {
-      fetchChat();
-    }, 8000);
-
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    fetchChat();
+    fetchChat(chatTag);
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+      fetchChat(chatTag);
+    }, 8000);
+    return () => clearInterval(interval);
   }, [chatTag]);
 
   useEffect(() => {

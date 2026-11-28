@@ -145,21 +145,7 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
     nums: [Number(d.num1), Number(d.num2), Number(d.num3), Number(d.num4), Number(d.num5)].sort((a,b)=>a-b)
   }));
 
-  // Build complete 35x35 co-occurrence graph
-  const adj = Array.from({ length: 36 }, () => Array(36).fill(0));
-  const globalFreq = new Array(36).fill(0);
-
-  cleanDraws.forEach(d => {
-    d.nums.forEach(n => globalFreq[n]++);
-    for (let i = 0; i < 5; i++) {
-      for (let j = i + 1; j < 5; j++) {
-        adj[d.nums[i]][d.nums[j]]++;
-        adj[d.nums[j]][d.nums[i]]++;
-      }
-    }
-  });
-
-  // Calculate 100% Invariant Compliance across all modern draws
+  // Calculate 100% Invariant Compliance across all modern draws (descriptive only; never fed into walk-forward)
   let crtMod5Violations = 0;
   let crtMod7Violations = 0;
   cleanDraws.forEach(d => {
@@ -167,8 +153,8 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
     if (new Set(d.nums.map(x => x % 7)).size < 2) crtMod7Violations++;
   });
 
-  // Generator for the 5 Quant Sets at historical index t
-  function generateQuantSetsAt(t: number) {
+  // Strictly causal generator for the 5 Quant Sets at historical index t using ONLY draws[0..t]
+  function generateQuantSetsAt(t: number, causalAdj: number[][], causalFreq: number[]) {
     const lastDraw = cleanDraws[t];
     const lastNums = lastDraw.nums;
 
@@ -190,7 +176,6 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
     }
 
     // Set 1: CRT Galois Ring Orthogonal Basis (Z_5 x Z_7)
-    // Selects 1 number from each residue class mod 5 {0, 1, 2, 3, 4} combining dynamic kinematic resonance + window momentum
     const prev2Nums = t > 1 ? cleanDraws[t - 2].nums : lastNums;
     const recent12Freq = new Array(36).fill(0);
     for (let w = Math.max(0, t - 11); w <= t; w++) {
@@ -209,13 +194,12 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
       return bucket.sort((a, b) => scoreMod5Ball(b) - scoreMod5Ball(a))[0];
     }).sort((a,b)=>a-b);
 
-    // Set 2: Topological Graph Eigen-Centrality
-    // Scores balls by harmonic resonance with the latest draw's numbers
+    // Set 2: Topological Graph Eigen-Centrality (strictly causal up to draw t)
     const eigenScores = new Array(36).fill(0);
     lastNums.forEach(ln => {
       for (let n = 1; n <= 35; n++) {
         if (n !== ln) {
-          eigenScores[n] += adj[ln][n] * 1.8 + globalFreq[n] * 0.4;
+          eigenScores[n] += causalAdj[ln][n] * 1.8 + causalFreq[n] * 0.4;
         }
       }
     });
@@ -225,7 +209,6 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
     const S2 = rankedEigen.slice(0, 5).map(x => x.n).sort((a,b)=>a-b);
 
     // Set 3: Harmonic Mean Reversion Dual (sigma_35 Involution)
-    // Combines original numbers with 35-complements to hit Gaussian centroid ~90
     const comps = lastNums.map(diff35);
     const s3Unique = Array.from(new Set([lastNums[0], lastNums[1], comps[2], comps[3], comps[4]]));
     let s3Fill = 1;
@@ -239,7 +222,6 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
     const S3 = s3Unique.slice(0, 5).sort((a,b)=>a-b);
 
     // Set 4: Phase-Space Delay Embedding & Velocity Extrapolation
-    // Takens' delay velocity vector v_t = X_t - X_{t-1}
     const prevNums = t > 0 ? cleanDraws[t - 1].nums : lastNums;
     const S4 = lastNums.map((n, idx) => {
       const v = n - prevNums[idx];
@@ -248,7 +230,6 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
       while (projected > 35) projected -= 35;
       return projected === 0 ? 35 : projected;
     });
-    // Ensure distinct 5 balls
     const s4Unique = Array.from(new Set(S4));
     let fillCandidate = 1;
     while (s4Unique.length < 5) {
@@ -260,8 +241,7 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
     }
     const S4Final = s4Unique.slice(0, 5).sort((a,b)=>a-b);
 
-    // Set 5: Stefan Mandel Minimal Covering Sieve
-    // Evaluates Poisson arrival overdue gaps + manifold reinforcement
+    // Set 5: Stefan Mandel Minimal Covering Sieve (strictly causal frequency up to draw t)
     const gaps = new Array(36).fill(0);
     for (let n = 1; n <= 35; n++) {
       let g = 0;
@@ -273,7 +253,7 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
     }
     const mandelRank = [];
     for (let n = 1; n <= 35; n++) {
-      const arrivalRate = globalFreq[n] / (t + 1);
+      const arrivalRate = causalFreq[n] / (t + 1);
       const score = (gaps[n] * arrivalRate) * 1.5 + (manifoldSet.has(n) ? 4.0 : 0) + windowFreq[n];
       mandelRank.push({ n, score });
     }
@@ -335,18 +315,38 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
     return { S1: S1Final, S2: S2Final, S3: S3Final, S4: S4Balanced, S5: S5Final, manifold: Array.from(manifoldSet).sort((a,b)=>a-b) };
   }
 
-  // --- HISTORICAL AUDIT ACROSS ALL DRAWS ---
+  // --- STRICTLY CAUSAL HISTORICAL AUDIT ACROSS ALL DRAWS ---
+  const adj = Array.from({ length: 36 }, () => Array(36).fill(0));
+  const globalFreq = new Array(36).fill(0);
+  const addDrawToCausalState = (nums: number[]) => {
+    nums.forEach(n => { if (n >= 1 && n <= 35) globalFreq[n]++; });
+    for (let i = 0; i < nums.length; i++) {
+      for (let j = i + 1; j < nums.length; j++) {
+        const a = nums[i], b = nums[j];
+        if (a >= 1 && a <= 35 && b >= 1 && b <= 35) {
+          adj[a][b]++;
+          adj[b][a]++;
+        }
+      }
+    }
+  };
+
   let totalDrawsTested = 0;
   const bestHitsDist = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   let manifold100HitCount = 0;
   const allAuditEntries: Quant100VerificationEntry[] = [];
 
   const loopStart = maxAuditWindow && maxAuditWindow > 0 ? Math.max(10, (N - 1) - maxAuditWindow) : 10;
+  // Warm up causal adj/globalFreq strictly over draws [0 .. loopStart - 1]
+  for (let w = 0; w < loopStart && w < N; w++) {
+    addDrawToCausalState(cleanDraws[w].nums);
+  }
   for (let t = loopStart; t < N - 1; t++) {
+    addDrawToCausalState(cleanDraws[t].nums);
     totalDrawsTested++;
     const actualNext = cleanDraws[t + 1];
     const actualSet = new Set(actualNext.nums);
-    const { S1, S2, S3, S4, S5, manifold } = generateQuantSetsAt(t);
+    const { S1, S2, S3, S4, S5, manifold } = generateQuantSetsAt(t, adj, globalFreq);
 
     const countHits = (set: number[]) => {
       let h = 0;
@@ -396,7 +396,10 @@ export function computeLottoQuant100Engine(rawDraws: LottoDrawRecord[], maxAudit
   // --- GENERATE PREDICTIONS FOR THE VERY NEXT DRAW ---
   const latestIndex = N - 1;
   const latestDraw = cleanDraws[latestIndex];
-  const nextSets = generateQuantSetsAt(latestIndex);
+  if (latestIndex >= loopStart) {
+    addDrawToCausalState(latestDraw.nums);
+  }
+  const nextSets = generateQuantSetsAt(latestIndex, adj, globalFreq);
 
   const formatSet = (
     id: string,

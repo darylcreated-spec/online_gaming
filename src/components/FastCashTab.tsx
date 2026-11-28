@@ -61,16 +61,17 @@ export default function FastCashTab() {
       if (typeof document !== "undefined" && document.visibilityState === "hidden") {
         return;
       }
-      setCountdownSec((prev) => {
-        if (prev <= 1) {
-          handleSyncLatest(true);
-          return 180;
-        }
-        return prev - 1;
-      });
+      setCountdownSec((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
     return () => clearInterval(timer);
-  }, [autoRefresh, depth]);
+  }, [autoRefresh]);
+
+  useEffect(() => {
+    if (!autoRefresh || countdownSec > 0) return;
+    setCountdownSec(180);
+    handleSyncLatest(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countdownSec, autoRefresh]);
 
   const handleSyncLatest = async (silent = false) => {
     setSyncing(true);

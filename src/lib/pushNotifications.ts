@@ -2,17 +2,45 @@ import webpush from "web-push";
 import { db } from "./db";
 
 const DEFAULT_VAPID_PUBLIC_KEY = "BHnh6uCqnpcUhimHv-LIWRGEgclaL6jPez4GK8hGbhQ7k9vJfR7hiGlp_nSiXwVz-J5Wyt1c_E4ItNHwctNFyQA";
-const DEFAULT_VAPID_PRIVATE_KEY = "_9CJtEhu1AADGxLrA7TWOH-o4F4e2NeK9LeF6iPypSY";
 const DEFAULT_VAPID_SUBJECT = "mailto:admin@onlineresults.tt";
 
-const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY;
-const privateKey = process.env.VAPID_PRIVATE_KEY || DEFAULT_VAPID_PRIVATE_KEY;
-const subject = process.env.VAPID_SUBJECT || DEFAULT_VAPID_SUBJECT;
+const publicKey = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY).trim();
+const privateKey = (process.env.VAPID_PRIVATE_KEY || "").trim();
+const subject = (process.env.VAPID_SUBJECT || DEFAULT_VAPID_SUBJECT).trim();
 
-try {
-  webpush.setVapidDetails(subject, publicKey, privateKey);
-} catch (e: any) {
-  console.warn("[PushNotifications] VAPID initialization warning:", e.message);
+const ALLOWED_PUSH_HOST_SUFFIXES = [
+  "fcm.googleapis.com",
+  "android.googleapis.com",
+  "updates.push.services.mozilla.com",
+  "push.services.mozilla.com",
+  "web.push.apple.com",
+  "push.apple.com",
+  "notify.windows.com",
+  "wns.windows.com"
+];
+
+export function isValidPushEndpoint(endpoint: string): boolean {
+  if (!endpoint || typeof endpoint !== "string" || endpoint.length > 2048) return false;
+  try {
+    const parsed = new URL(endpoint);
+    if (parsed.protocol !== "https:") return false;
+    const host = parsed.hostname.toLowerCase();
+    return ALLOWED_PUSH_HOST_SUFFIXES.some(
+      (allowed) => host === allowed || host.endsWith(`.${allowed}`)
+    );
+  } catch {
+    return false;
+  }
+}
+
+if (publicKey && privateKey) {
+  try {
+    webpush.setVapidDetails(subject, publicKey, privateKey);
+  } catch (e: any) {
+    console.warn("[PushNotifications] VAPID initialization warning:", e.message);
+  }
+} else {
+  console.warn("[PushNotifications] VAPID_PRIVATE_KEY env var is not set; outbound push delivery disabled.");
 }
 
 export interface PushSubscriptionData {

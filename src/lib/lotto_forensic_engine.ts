@@ -859,13 +859,13 @@ export function runLottoWalkForwardHitMissAudit(
       isWinningTier = true;
       fiveHitsCount++;
     } else if (bestPortfolioHitCount === 5) {
-      prizeWon = "Match 5 Major Prize ($50,000 TT)";
-      payoutTT = 50000;
+      prizeWon = "Match 5 Major Prize ($10,000+ TT)";
+      payoutTT = 10000;
       isWinningTier = true;
       fiveHitsCount++;
     } else if (bestPortfolioHitCount === 4 && powerballMatched) {
-      prizeWon = "Match 4 + PB Prize ($1,500 TT)";
-      payoutTT = 1500;
+      prizeWon = "Match 4 + Powerball Prize ($3,000 TT)";
+      payoutTT = 3000;
       isWinningTier = true;
       fourHitsCount++;
     } else if (bestPortfolioHitCount === 4) {
@@ -874,19 +874,28 @@ export function runLottoWalkForwardHitMissAudit(
       isWinningTier = true;
       fourHitsCount++;
     } else if (bestPortfolioHitCount === 3 && powerballMatched) {
-      prizeWon = "Match 3 + PB Prize ($30 TT)";
-      payoutTT = 30;
+      prizeWon = "Match 3 + Powerball Prize ($200 TT)";
+      payoutTT = 200;
       isWinningTier = true;
       threeHitsCount++;
     } else if (bestPortfolioHitCount === 3) {
-      prizeWon = "Match 3 Free Quick Pick ($5 TT)";
-      payoutTT = 5;
+      prizeWon = "Match 3 Cash Prize ($25 TT)";
+      payoutTT = 25;
       isWinningTier = true;
       threeHitsCount++;
+    } else if (bestPortfolioHitCount === 2 && powerballMatched) {
+      prizeWon = "Match 2 + Powerball ($15 TT)";
+      payoutTT = 15;
+      isWinningTier = true;
+      twoHitsCount++;
     } else if (bestPortfolioHitCount === 2) {
       prizeWon = "Match 2 (Near Prize Tier)";
       payoutTT = 0;
       twoHitsCount++;
+    } else if (bestPortfolioHitCount === 1 && powerballMatched) {
+      prizeWon = "Match 1 + Powerball ($5 Free Play)";
+      payoutTT = 5;
+      isWinningTier = true;
     } else if (bestPortfolioHitCount === 1) {
       prizeWon = "Match 1";
       payoutTT = 0;
@@ -976,7 +985,8 @@ export function executeLottoForensicEngine(draws: LottoDraw[], auditSampleSize: 
   let win5FiveHitCount = 0;
   let totalWalk = 0;
 
-  for (let i = 50; i < sortedDraws.length; i++) {
+  // Strictly forward out-of-sample walk-forward rolling window capture rates across historical draws
+  for (let i = 50; i <= sortedDraws.length - 5; i++) {
     const prior = sortedDraws.slice(0, i);
     const { pool18: stepPool, dualCore22: stepDual } = computeUnifiedSynthesisScores(prior);
     const pSet = new Set(stepPool);
@@ -984,17 +994,17 @@ export function executeLottoForensicEngine(draws: LottoDraw[], auditSampleSize: 
 
     if (sortedDraws[i].numbers.filter(n => pSet.has(n)).length >= 3) single3Count++;
 
-    const hit2 = [0, 1].some(offset => i - offset >= 0 && sortedDraws[i - offset].numbers.filter(n => pSet.has(n)).length >= 3);
+    const hit2 = [0, 1].some(offset => i + offset < sortedDraws.length && sortedDraws[i + offset].numbers.filter(n => pSet.has(n)).length >= 3);
     if (hit2) win2CaptureCount++;
 
-    const hit3 = [0, 1, 2].some(offset => i - offset >= 0 && sortedDraws[i - offset].numbers.filter(n => pSet.has(n)).length >= 3);
+    const hit3 = [0, 1, 2].some(offset => i + offset < sortedDraws.length && sortedDraws[i + offset].numbers.filter(n => pSet.has(n)).length >= 3);
     if (hit3) win3CaptureCount++;
 
-    const hit5 = [0, 1, 2, 3, 4].some(offset => i - offset >= 0 && sortedDraws[i - offset].numbers.filter(n => pSet.has(n)).length >= 3);
+    const hit5 = [0, 1, 2, 3, 4].some(offset => i + offset < sortedDraws.length && sortedDraws[i + offset].numbers.filter(n => pSet.has(n)).length >= 3);
     if (hit5) win5CaptureCount++;
 
-    // 5-draw window 5/5 full jackpot capture rate across 22-ball dual-core
-    const hit5All = [0, 1, 2, 3, 4].some(offset => i - offset >= 0 && sortedDraws[i - offset].numbers.filter(n => dSet.has(n)).length === 5);
+    // Strictly forward 5-draw window 5/5 full jackpot capture rate across 22-ball dual-core
+    const hit5All = [0, 1, 2, 3, 4].some(offset => i + offset < sortedDraws.length && sortedDraws[i + offset].numbers.filter(n => dSet.has(n)).length === 5);
     if (hit5All) win5FiveHitCount++;
 
     totalWalk++;

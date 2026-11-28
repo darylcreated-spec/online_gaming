@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 // GET: Fetch latest 50 community chat messages
 export async function GET(request: NextRequest) {
   try {
@@ -26,7 +28,10 @@ export async function GET(request: NextRequest) {
       created_at: String(row.created_at ?? row[5])
     })).reverse(); // Oldest to newest for chat flow
 
-    return NextResponse.json({ success: true, messages });
+    return NextResponse.json(
+      { success: true, messages },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
   } catch (error: any) {
     console.error("[API /api/chat GET Error]:", error);
     return NextResponse.json({ success: false, error: error.message || "Failed to load chat messages" }, { status: 500 });

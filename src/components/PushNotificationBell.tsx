@@ -48,8 +48,14 @@ export default function PushNotificationBell() {
       if (res.success) {
         setIsSubscribed(true);
         setFeedback("Draw alerts turned on.");
+        // Show a local device confirmation only (never broadcast to all subscribers)
         try {
-          await fetch("/api/push/test", { method: "POST" });
+          if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+            new Notification("NLCB Live Alerts Active", {
+              body: "You will receive instant notifications whenever official winning numbers are drawn!",
+              icon: "/images/pwa-icon-192.png"
+            });
+          }
         } catch {
           // ignore
         }

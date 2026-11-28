@@ -736,27 +736,28 @@ export function runCashPotWalkForwardHitMissAudit(
     let payoutTT = 0;
     let isWinningTier = false;
 
-    const effectiveMult = targetDraw.multiplier || 1;
+    // Official NLCB Cash Pot rules: Match 5 = $25,000+ (NO multiplier), Match 4 = pari-mutuel x mult, Match 3 = $5 x mult, Match 2 = $0
+    const effectiveMult = Math.max(1, Math.min(4, targetDraw.multiplier || 1));
 
     if (bestPortfolioHitCount === 5) {
-      payoutTT = 20000 * effectiveMult;
-      prizeWon = `Match 5 GRAND PRIZE ($${payoutTT.toLocaleString()} TT)`;
+      payoutTT = 25000;
+      prizeWon = `Match 5 GRAND PRIZE ($25,000+ TT, No Multiplier)`;
       isWinningTier = true;
       fiveHitsCount++;
     } else if (bestPortfolioHitCount === 4) {
-      payoutTT = 500 * effectiveMult;
-      prizeWon = `Match 4 2nd Prize ($${payoutTT.toLocaleString()} TT)`;
+      payoutTT = 75 * effectiveMult;
+      prizeWon = `Match 4 2nd Prize (~$${payoutTT.toLocaleString()} TT)`;
       isWinningTier = true;
       fourHitsCount++;
     } else if (bestPortfolioHitCount === 3) {
-      payoutTT = 25 * effectiveMult;
+      payoutTT = 5 * effectiveMult;
       prizeWon = `Match 3 3rd Prize ($${payoutTT.toLocaleString()} TT)`;
       isWinningTier = true;
       threeHitsCount++;
     } else if (bestPortfolioHitCount === 2) {
-      payoutTT = 5;
-      prizeWon = "Match 2 Free Ticket ($5 TT)";
-      isWinningTier = true;
+      payoutTT = 0;
+      prizeWon = "Match 2 (No Prize)";
+      isWinningTier = false;
       twoHitsCount++;
     } else if (bestPortfolioHitCount === 1) {
       prizeWon = "Match 1";

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Sliders,
   Cpu,
@@ -70,6 +70,7 @@ export default function CashPotRngLabPanel() {
   const [copied, setCopied] = useState<boolean>(false);
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
   const [showAuditLog, setShowAuditLog] = useState<boolean>(false);
+  const reqIdRef = useRef<number>(0);
 
   const runSimulation = useCallback(
     async (opts: {
@@ -82,6 +83,7 @@ export default function CashPotRngLabPanel() {
       customAntiCrowding?: boolean;
       isInitial?: boolean;
     }) => {
+      const thisReqId = ++reqIdRef.current;
       if (opts.isInitial) setLoading(true);
       else setRunning(true);
       setError(null);
@@ -102,6 +104,7 @@ export default function CashPotRngLabPanel() {
           })
         });
         const json = await res.json();
+        if (thisReqId !== reqIdRef.current) return;
         if (!res.ok || !json.success) {
           throw new Error(json.error || "Failed to run Cash Pot RNG Lab.");
         }
@@ -110,10 +113,13 @@ export default function CashPotRngLabPanel() {
         setGenome(out.genome);
         setSeed(out.seed);
       } catch (err: any) {
+        if (thisReqId !== reqIdRef.current) return;
         setError(err?.message || "Failed to load Cash Pot RNG Lab.");
       } finally {
-        setLoading(false);
-        setRunning(false);
+        if (thisReqId === reqIdRef.current) {
+          setLoading(false);
+          setRunning(false);
+        }
       }
     },
     [genome, slipCount, testWindow, objective, seed, antiCrowding]

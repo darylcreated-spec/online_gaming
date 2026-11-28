@@ -6,8 +6,10 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.max(1, parseInt(searchParams.get("limit") || "20"));
+    const parsedPage = Number.parseInt(searchParams.get("page") || "1", 10);
+    const parsedLimit = Number.parseInt(searchParams.get("limit") || "20", 10);
+    const page = Number.isFinite(parsedPage) ? Math.max(1, Math.min(10000, parsedPage)) : 1;
+    const limit = Number.isFinite(parsedLimit) ? Math.max(1, Math.min(500, parsedLimit)) : 20;
     const search = searchParams.get("search") || "";
     const numberFilter = searchParams.get("number") || "";
     
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
     const selectSql = `
       SELECT * FROM winforlife_draws 
       ${whereClause} 
-      ORDER BY CAST(draw_number AS INTEGER) DESC 
+      ORDER BY draw_number DESC 
       LIMIT ? OFFSET ?
     `;
     const draws = await query(selectSql, [...args, limit, offset]);

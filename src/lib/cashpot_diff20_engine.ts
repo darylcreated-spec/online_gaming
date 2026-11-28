@@ -457,12 +457,14 @@ export class CashPotDiffEngine {
   // --- Helper Methods ---
 
   private static normalizeCombination(candidates: number[], targetSize: number, poolMax: number): number[] {
-    const valid = candidates.filter(n => n >= 1 && n <= poolMax);
+    const valid = candidates.filter(n => Number.isInteger(n) && n >= 1 && n <= poolMax);
     const unique = Array.from(new Set(valid));
 
-    while (unique.length < targetSize) {
-      const r = Math.floor(Math.random() * poolMax) + 1;
-      if (!unique.includes(r)) unique.push(r);
+    // Deterministic backfill (zero Math.random()) so outputs are 100% reproducible across Consensus & Audit
+    const seedOffset = unique.reduce((acc, n) => acc + n, 0) % poolMax;
+    for (let step = 0; step < poolMax && unique.length < targetSize; step++) {
+      const cand = ((seedOffset + step * 3) % poolMax) + 1;
+      if (!unique.includes(cand)) unique.push(cand);
     }
 
     return unique.slice(0, targetSize).sort((a, b) => a - b);

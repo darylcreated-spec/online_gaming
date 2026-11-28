@@ -3,7 +3,10 @@ import { db, query } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+let visitorTableReady = false;
+
 async function ensureVisitorTable() {
+  if (visitorTableReady) return;
   await db.execute(`
     CREATE TABLE IF NOT EXISTS app_visitor_sessions (
       visitor_id TEXT PRIMARY KEY,
@@ -25,6 +28,7 @@ async function ensureVisitorTable() {
   await db.execute(
     `CREATE INDEX IF NOT EXISTS idx_visitors_last_seen ON app_visitor_sessions(last_seen)`
   ).catch(() => {});
+  visitorTableReady = true;
 }
 
 function parseUserAgent(ua: string): { device_type: string; browser: string; os: string } {
@@ -136,7 +140,7 @@ export async function GET() {
         "SELECT COUNT(*) as cnt, COALESCE(SUM(visit_count), 0) as total_visits FROM app_visitor_sessions"
       ).catch(() => [{ cnt: 0, total_visits: 0 }]),
       query<any>(
-        "SELECT * FROM app_visitor_sessions ORDER BY last_seen DESC LIMIT 50"
+        "SELECT display_name, country, city, region, device_type, browser, os, last_tab, visit_count, first_seen, last_seen FROM app_visitor_sessions ORDER BY last_seen DESC LIMIT 50"
       ).catch(() => []),
       query<any>(
         "SELECT last_tab, COUNT(*) as cnt FROM app_visitor_sessions GROUP BY last_tab ORDER BY cnt DESC LIMIT 10"

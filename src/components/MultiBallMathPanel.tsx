@@ -393,7 +393,7 @@ export default function MultiBallMathPanel({ game }: MultiBallMathPanelProps) {
                             <span className="w-5 h-5 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs flex items-center justify-center font-bold">
                               {tier.matches}
                             </span>
-                            {tier.matches} of {isLotto ? "5" : "6"} Balls
+                            {tier.matches} of {isLotto || isCashPot ? "5" : "6"} Balls
                           </td>
                           <td className="py-2.5 px-4 text-gray-300">{tier.occurrences}</td>
                           <td className="py-2.5 px-4 font-bold text-emerald-400">{tier.empiricalRatePct}%</td>

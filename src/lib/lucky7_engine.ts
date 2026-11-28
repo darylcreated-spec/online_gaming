@@ -1856,18 +1856,18 @@ function evaluateSingleSlip(
     const nums = slip.numbers;
     const exact = nums.join("-") === act.join("-");
     const box = [...nums].sort((a, b) => a - b).join("-") === [...act].sort((a, b) => a - b).join("-");
-    const front3 = nums[0] === act[0] && nums[1] === act[1] && nums[2] === act[2];
-    const back3 = nums[1] === act[1] && nums[2] === act[2] && nums[3] === act[3];
-    const pairHit =
-      (nums[0] === act[0] && nums[1] === act[1]) ||
-      (nums[2] === act[2] && nums[3] === act[3]) ||
-      (nums[0] === act[0] && nums[3] === act[3]);
-    const posM = nums.filter((d, i) => d === act[i]).length;
-
+    // Order-independent multiset digit overlap (0..4) for Box-first analytics; only 4/4 Straight or Box counts as $1 wager win
+    const pool = [...act];
+    let multisetM = 0;
+    for (const d of nums) {
+      const idx = pool.indexOf(d);
+      if (idx !== -1) {
+        multisetM++;
+        pool.splice(idx, 1);
+      }
+    }
     if (exact || box) return { matchCount: 4, wonPrize: true };
-    if (front3 || back3) return { matchCount: 3, wonPrize: true };
-    if (pairHit) return { matchCount: 2, wonPrize: true };
-    return { matchCount: posM, wonPrize: false };
+    return { matchCount: multisetM, wonPrize: false };
   }
 
   // Multi-ball: Cash Pot, Lotto Plus (pure main 1..35 + optional bonus), Win For Life (pure main 1..28)

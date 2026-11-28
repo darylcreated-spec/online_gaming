@@ -2,13 +2,51 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { db } from "@/lib/db";
 
-// Validate SQL safety: strictly read-only SELECT / WITH queries
+export const dynamic = "force-dynamic";
+export const maxDuration = 30;
+
+const ALLOWED_TABLES = new Set([
+  "draws",
+  "playwhe_draws",
+  "cashpot_draws",
+  "winforlife_draws",
+  "pick4_draws"
+]);
+
+const SENSITIVE_TABLE_PATTERN =
+  /\b(sqlite_master|sqlite_schema|sqlite_temp_master|app_visitor_sessions|user_push_subscriptions|syndicates|syndicate_members|syndicate_tickets|sync_locks|sync_audit_log|saved_slips|consensus_pre_draw_locks|prediction_engine_logs|multi_draw_play_campaigns|community_chat|prediction_audits|pragma)\b/i;
+
+// Lightweight per-isolate rate limiter (10 queries / 60s per IP)
+const nlQueryHits = new Map<string, number[]>();
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 60_000;
+  const recent = (nlQueryHits.get(ip) || []).filter((ts) => now - ts < windowMs);
+  if (recent.length >= 10) {
+    nlQueryHits.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  nlQueryHits.set(ip, recent);
+  if (nlQueryHits.size > 200) {
+    const firstKey = nlQueryHits.keys().next().value;
+    if (firstKey) nlQueryHits.delete(firstKey);
+  }
+  return false;
+}
+
+// Validate SQL safety: strictly read-only SELECT / WITH queries against the 5 official draw tables ONLY
 function isSafeSql(sql: string): boolean {
-  const clean = sql.trim().toLowerCase();
-  if (!clean.startsWith("select") && !clean.startsWith("with") && !clean.startsWith("pragma table_info")) {
+  const trimmed = sql.trim();
+  const clean = trimmed.toLowerCase();
+  if (!clean.startsWith("select") && !clean.startsWith("with")) {
     return false;
   }
-  
+  // Reject multi-statements, comments, recursive CTE DoS, or sensitive/system tables
+  if (trimmed.includes(";") || /--|\/\*/.test(trimmed)) return false;
+  if (/\bwith\s+recursive\b/i.test(trimmed)) return false;
+  if (SENSITIVE_TABLE_PATTERN.test(trimmed)) return false;
+
   // Prohibited DDL/DML keywords
   const forbiddenPatterns = [
     /\binsert\b/i,
@@ -24,8 +62,28 @@ function isSafeSql(sql: string): boolean {
     /\bexecute\b/i,
     /\bvacuum\b/i
   ];
+  if (forbiddenPatterns.some((pattern) => pattern.test(trimmed))) return false;
 
-  return !forbiddenPatterns.some(pattern => pattern.test(sql));
+  // Collect CTE names declared in WITH clauses so FROM/JOIN checks allow CTE references
+  const cteNames = new Set<string>();
+  const cteRegex = /\b(?:with|,)\s*([a-z_][a-z0-9_]*)\s+as\s*\(/gi;
+  let cteMatch: RegExpExecArray | null;
+  while ((cteMatch = cteRegex.exec(trimmed)) !== null) {
+    cteNames.add(cteMatch[1].toLowerCase());
+  }
+
+  // Verify every FROM / JOIN target is strictly an official draw table or declared CTE
+  const tableRefRegex = /\b(?:from|join)\s+["'`[]?([a-z_][a-z0-9_]*)["'`\]]?/gi;
+  let tblMatch: RegExpExecArray | null;
+  let tableCount = 0;
+  while ((tblMatch = tableRefRegex.exec(trimmed)) !== null) {
+    const tbl = tblMatch[1].toLowerCase();
+    tableCount++;
+    if (!ALLOWED_TABLES.has(tbl) && !cteNames.has(tbl)) {
+      return false;
+    }
+  }
+  return tableCount > 0;
 }
 
 const DB_SCHEMA_PROMPT = `
@@ -108,12 +166,26 @@ RULES:
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   try {
+    const clientIp =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+    if (isRateLimited(clientIp)) {
+      return NextResponse.json(
+        { success: false, error: "Rate limit exceeded. Please wait a minute before running more AI queries." },
+        { status: 429, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
-    const queryText = (body.query || "").trim();
+    const queryText = String(body.query || "").trim();
     const customApiKey = body.apiKey || null;
 
     if (!queryText) {
       return NextResponse.json({ success: false, error: "Please provide a query." }, { status: 400 });
+    }
+    if (queryText.length > 500) {
+      return NextResponse.json({ success: false, error: "Query is too long (maximum 500 characters)." }, { status: 400 });
     }
 
     const apiKey = customApiKey || process.env.GEMINI_API_KEY || null;
@@ -191,9 +263,12 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Ensure safe LIMIT
-    if (!/limit\s+\d+/i.test(sqlToExecute)) {
+    // Ensure safe LIMIT (strictly capped at <= 100 rows)
+    const limitMatch = sqlToExecute.match(/\blimit\s+(\d+)/i);
+    if (!limitMatch) {
       sqlToExecute += " LIMIT 50";
+    } else if (parseInt(limitMatch[1], 10) > 100) {
+      sqlToExecute = sqlToExecute.replace(/\blimit\s+\d+/gi, "LIMIT 100");
     }
 
     // 2. Execute SQL query on Turso DB

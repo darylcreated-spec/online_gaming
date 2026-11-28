@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { BarChart2, Calendar, ClipboardList, RefreshCw, Sliders, Cpu, Eye, Compass, Info, Save, Download, Trash2, GitBranch, Play, HelpCircle, Brain, Zap, Shield, Binary, ShieldCheck, X, Printer, Crosshair, GitMerge } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptics";
@@ -361,20 +363,29 @@ export default function WinForLifeTab() {
     if (generatedTickets.length === 0) return;
     setIsSavingSlips(true);
     try {
-      const promises = generatedTickets.map(ticket => {
-        return fetch('/api/slips', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            numbers: ticket,
-            powerball: selectedCb || 1,
-            game: 'win-for-life',
-            group_name: 'WFL Generated'
-          })
-        });
-      });
-      await Promise.all(promises);
-      alert(`Successfully saved ${generatedTickets.length} slips!`);
+      const results = await Promise.all(
+        generatedTickets.map(async (ticket) => {
+          const res = await fetch('/api/slips', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: 'WFL Generated',
+              game_type: 'win-for-life',
+              numbers: ticket.join(','),
+              powerball: selectedCb || 1
+            })
+          });
+          if (!res.ok) return false;
+          const json = await res.json().catch(() => ({}));
+          return Boolean(json.success);
+        })
+      );
+      const savedCount = results.filter(Boolean).length;
+      if (savedCount === 0) {
+        alert('Failed to save slips. Please try again.');
+      } else {
+        alert(`Successfully saved ${savedCount} of ${generatedTickets.length} slips!`);
+      }
     } catch (err) {
       console.error(err);
       alert('Failed to save slips.');
@@ -580,22 +591,23 @@ export default function WinForLifeTab() {
                   <div className="text-sm font-bold text-white uppercase tracking-wider">
                     {(() => {
                       const now = new Date();
-                      const ttTime = new Date(now.getTime() - 4 * 60 * 60 * 1000);
-                      let nextDraw = new Date(ttTime);
-                      nextDraw.setHours(19, 0, 0, 0);
-                      const day = ttTime.getDay();
+                      const ast = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+                      const day = ast.getUTCDay();
+                      const hour = ast.getUTCHours();
+                      let daysToAdd = 0;
                       if (day === 2) {
-                        if (ttTime.getHours() >= 19) nextDraw.setDate(ttTime.getDate() + 3);
+                        daysToAdd = hour >= 19 ? 3 : 0;
                       } else if (day === 5) {
-                        if (ttTime.getHours() >= 19) nextDraw.setDate(ttTime.getDate() + 4);
+                        daysToAdd = hour >= 19 ? 4 : 0;
                       } else if (day === 0 || day === 1) {
-                        nextDraw.setDate(ttTime.getDate() + (2 - day));
+                        daysToAdd = 2 - day;
                       } else if (day === 3 || day === 4) {
-                        nextDraw.setDate(ttTime.getDate() + (5 - day));
-                      } else if (day === 6) {
-                        nextDraw.setDate(ttTime.getDate() + 3);
+                        daysToAdd = 5 - day;
+                      } else {
+                        daysToAdd = 3;
                       }
-                      return nextDraw.toLocaleDateString("en-TT", { weekday: "long", month: "short", day: "numeric" });
+                      const nextDraw = new Date(Date.UTC(ast.getUTCFullYear(), ast.getUTCMonth(), ast.getUTCDate() + daysToAdd, 12, 0, 0));
+                      return nextDraw.toLocaleDateString("en-TT", { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" });
                     })()}
                   </div>
                   <div className="text-xs text-amber-400 font-black">
@@ -868,7 +880,7 @@ export default function WinForLifeTab() {
                         setExportPayload({
                           slips: mevTickets.map((t: any) => t.numbers),
                           bonusBalls: mevTickets.map((t: any, i: number) => {
-                            const raw = Number(t.cashBall ?? t.powerball ?? ((i % 3) + 1));
+                            const raw = Number(t.bonusBall ?? t.cashBall ?? t.powerball ?? ((i % 3) + 1));
                             return raw >= 1 && raw <= 3 ? raw : ((Math.abs(raw) - 1) % 3) + 1;
                           }),
                           targetDrawNumber: championPick?.target_draw_number
@@ -1736,7 +1748,7 @@ export default function WinForLifeTab() {
                           key={num}
                           onClick={() => setSelectedCb(isSelected ? null : num)}
                           className={`w-12 h-10 flex items-center justify-center font-bold text-xs border tracking-wider transition cursor-pointer ${
-                            isSelected ? "bg-emerald-555 border-emerald-555 text-slate-950 font-black animate-pulse" : "bg-[#0B0C0E] border-[#1F232B] text-slate-400 hover:text-white"
+                            isSelected ? "bg-emerald-500 border-emerald-400 text-slate-950 font-black animate-pulse" : "bg-[#0B0C0E] border-[#1F232B] text-slate-400 hover:text-white"
                           }`}
                         >
                           BALL {num}
@@ -1936,7 +1948,7 @@ export default function WinForLifeTab() {
                           <div className="flex gap-1">
                             {predNums.map((n: number, i: number) => (
                               <span key={i} className={`w-5.5 h-5.5 rounded-sm flex items-center justify-center font-bold text-xs ${
-                                drawNums && drawNums.includes(n) ? "bg-emerald-450 text-slate-950 font-black animate-pulse" : "bg-slate-900 border border-white/5 text-gray-400"
+                                drawNums && drawNums.includes(n) ? "bg-emerald-400 text-slate-950 font-black animate-pulse" : "bg-slate-900 border border-white/5 text-gray-400"
                               }`}>
                                 {n}
                               </span>

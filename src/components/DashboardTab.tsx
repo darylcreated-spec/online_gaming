@@ -561,7 +561,7 @@ export default function DashboardTab({
                     triggerHaptic("selection");
                     setExportPayload({
                       slips: mevTickets.map((t: any) => t.numbers),
-                      bonusBalls: mevTickets.map((t: any) => t.powerball),
+                      bonusBalls: mevTickets.map((t: any) => Number(t.bonusBall ?? t.powerball ?? 1)),
                       targetDrawNumber: championPick?.target_draw_number
                     });
                   }}
@@ -615,7 +615,7 @@ export default function DashboardTab({
                       ))}
                       <span className="text-gray-500 font-bold text-xs mx-0.5">+</span>
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-white to-gray-200 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.3)] border border-white/30">
-                        {String(ticket.powerball).padStart(2, "0")}
+                        {String(ticket.bonusBall ?? ticket.powerball ?? 1).padStart(2, "0")}
                       </div>
                     </div>
 

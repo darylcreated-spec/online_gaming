@@ -47,11 +47,13 @@ export default function LiveDrawTicker({
       intervalHrs: number;
     }[] = [];
 
+    const astYear = astDate.getUTCFullYear();
+    const astMonth = astDate.getUTCMonth();
+    const astDay = astDate.getUTCDate();
+
+    // Construct an exact UTC timestamp for (AST date + dayOffset) at hours:minutes AST (UTC-4)
     const makeASTDate = (dayOffset: number, hours: number, minutes: number) => {
-      const d = new Date(now);
-      d.setUTCHours(hours + 4, minutes, 0, 0);
-      d.setUTCDate(d.getUTCDate() + dayOffset);
-      return d;
+      return new Date(Date.UTC(astYear, astMonth, astDay + dayOffset, hours + 4, minutes, 0, 0));
     };
 
     const dailySlots = [
@@ -61,7 +63,10 @@ export default function LiveDrawTicker({
       { name: "Evening", h: 19, m: 0, interval: 3.0 },
     ];
 
-    for (let dayOffset = 0; dayOffset <= 2; dayOffset++) {
+    // Play Whe & Pick 4 draw Mon-Sat (skip Sunday === 0)
+    for (let dayOffset = 0; dayOffset <= 3; dayOffset++) {
+      const checkDay = (astDate.getUTCDay() + dayOffset) % 7;
+      if (checkDay === 0) continue;
       for (const slot of dailySlots) {
         const target = makeASTDate(dayOffset, slot.h, slot.m);
         if (target.getTime() > now.getTime()) {
@@ -110,9 +115,20 @@ export default function LiveDrawTicker({
     const secondsRemaining = Math.max(0, Math.floor((earliest.date.getTime() - now.getTime()) / 1000));
     const totalIntervalSeconds = earliest.intervalHrs * 3600;
 
-    const isToday = earliest.date.getUTCDate() === now.getUTCDate();
-    const isTomorrow = earliest.date.getUTCDate() === (now.getUTCDate() + 1);
-    const dayLabel = isToday ? "Today" : isTomorrow ? "Tomorrow" : earliest.date.toLocaleDateString("en-US", { weekday: "short" });
+    const earliestAst = new Date(earliest.date.getTime() - 4 * 60 * 60 * 1000);
+    const astDayStartMs = Date.UTC(astYear, astMonth, astDay);
+    const earliestAstDayStartMs = Date.UTC(
+      earliestAst.getUTCFullYear(),
+      earliestAst.getUTCMonth(),
+      earliestAst.getUTCDate()
+    );
+    const dayDiff = Math.round((earliestAstDayStartMs - astDayStartMs) / 86400000);
+    const dayLabel =
+      dayDiff === 0
+        ? "Today"
+        : dayDiff === 1
+        ? "Tomorrow"
+        : earliestAst.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
 
     const astHoursRaw = (earliest.date.getUTCHours() - 4 + 24) % 24;
     const hour12 = astHoursRaw % 12 || 12;

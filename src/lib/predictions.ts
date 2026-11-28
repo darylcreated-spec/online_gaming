@@ -1,11 +1,10 @@
 import { db } from "./db";
 import { ewmaTopN, rtmReboundTopN, autocorrelationTopN } from "./mathStats";
 
-// Helper to format Date objects as YYYY-MM-DD local time
+// Helper to format Date objects as YYYY-MM-DD in Trinidad & Tobago AST (UTC-4)
 export function getLocalDateString(date = new Date()): string {
-  const offset = date.getTimezoneOffset();
-  const adjustedDate = new Date(date.getTime() - offset * 60 * 1000);
-  return adjustedDate.toISOString().split("T")[0];
+  const astDate = new Date(date.getTime() - 4 * 60 * 60 * 1000);
+  return astDate.toISOString().split("T")[0];
 }
 
 // ============================================================

@@ -709,10 +709,11 @@ export async function computeCrossEngineConsensus(
       }
     } else if (game === "fast-cash") {
       const fcReport = await runFastCashEngine({ depth: 200 }).catch(() => null);
-      if (fcReport && Array.isArray((fcReport as any).rankings) && (fcReport as any).rankings.length > 0) {
-        const top7Pockets = (fcReport as any).rankings
+      const ranked = fcReport?.nextDrawPrediction?.rankedScores;
+      if (Array.isArray(ranked) && ranked.length > 0) {
+        const top7Pockets = ranked
           .slice(0, 7)
-          .map((r: any) => Number(r.index ?? r.pocketIndex ?? r.winning_index))
+          .map((r) => Number(r.index))
           .filter((n: number) => Number.isInteger(n) && n >= 0 && n <= 37);
         if (top7Pockets.length > 0) {
           engineSummaries.push({

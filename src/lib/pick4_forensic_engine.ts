@@ -170,6 +170,7 @@ export function evaluatePick4Ticket(pred: number[], actual: number[]): Pick4Tick
   let payoutTT = 0;
   let boxTypeWon: string | undefined = undefined;
 
+  // Grade strictly on official $1 Straight ($5,000) and Box ($200-$1,200) wagers (no multi-wager Pair/Front-3 free-ride)
   if (isStraight) {
     bestPrize = "STRAIGHT HIT ($5,000 TT)";
     payoutTT = 5000;
@@ -179,12 +180,7 @@ export function evaluatePick4Ticket(pred: number[], actual: number[]): Pick4Tick
     bestPrize = `${boxInfo.boxType.toUpperCase()} HIT ($${boxInfo.payout} TT)`;
     payoutTT = boxInfo.payout;
   } else if (isFront3 || isBack3) {
-    bestPrize = `${isFront3 ? "Front 3" : "Back 3"} Hit ($500 TT)`;
-    payoutTT = 500;
-  } else if (isFrontPair || isBackPair || isSplitPair) {
-    const pType = isFrontPair ? "Front Pair" : isBackPair ? "Back Pair" : "Split Pair";
-    bestPrize = `${pType} Hit ($50 TT)`;
-    payoutTT = 50;
+    bestPrize = `${isFront3 ? "Front 3" : "Back 3"} (Near Match)`;
   } else if (matchedPositionsCount >= 2) {
     bestPrize = `${matchedPositionsCount}/4 Positions`;
   }

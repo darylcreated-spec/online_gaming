@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { computePick4Quant100Engine } from "@/lib/pick4_quant100_engine";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const rowsRes = await db.execute({
@@ -28,10 +30,13 @@ export async function GET(request: NextRequest) {
 
     const result = computePick4Quant100Engine(draws, 100);
 
-    return NextResponse.json({
-      success: true,
-      data: result
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: result
+      },
+      { headers: { "Cache-Control": "no-store, max-age=0" } }
+    );
   } catch (error: any) {
     console.error("[API /api/pick4/quant100 GET Error]:", error);
     return NextResponse.json({ success: false, error: error.message || "Failed to compute Pick 4 quant audit." }, { status: 500 });

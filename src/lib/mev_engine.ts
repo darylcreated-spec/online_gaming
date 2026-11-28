@@ -470,10 +470,12 @@ export function runMEVEngine(
     if (config.pickCount === 6 && d.num6 !== undefined) nums.push(d.num6);
     return nums.every(n => n >= 1 && n <= config.poolMax);
   });
-  const activeDraws = filteredDraws.length >= 10 ? filteredDraws : historicalDraws;
+  const baseDraws = filteredDraws.length >= 10 ? filteredDraws : historicalDraws;
+  // Normalize strictly newest-first (DESC) because buildStatisticalModel indexes i=0 as most recent
+  const activeDraws = [...baseDraws].sort((a, b) => Number((b as any).draw_number || 0) - Number((a as any).draw_number || 0));
 
-  // Deterministic seed anchored on latest draw state for reproducible recommendations
-  const latestDraw = activeDraws[activeDraws.length - 1];
+  // Deterministic seed anchored on the NEWEST draw state (activeDraws[0])
+  const latestDraw = activeDraws[0];
   const seedBase = latestDraw
     ? (latestDraw.num1 * 131 + latestDraw.num2 * 257 + latestDraw.num3 * 521 + latestDraw.num4 * 1031 + latestDraw.num5 * 2053 + activeDraws.length * 4099 + config.poolMax)
     : activeDraws.length * 4099;
